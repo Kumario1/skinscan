@@ -1,0 +1,20 @@
+# SkinScan config — thresholds live here, not hard-coded (RULES.md §5, §4)
+detection:
+  model: yolo            # Q-A: leaning YOLO (tooling + ACNE04 precedent)
+  img_size: 640
+  conf_threshold: 0.25
+  iou_threshold: 0.45
+  severity_scale: [0, 1, 2, 3, 4]   # ordinal, matches ACNE04 (Q-B)
+
+recommendation:
+  concern_confidence_cutoff: 0.5    # below -> "possible, verify" (RULES.md §5)
+  downrank_comedogenic: true
+
+evaluation:
+  disaggregate_by: fitzpatrick      # D-016, mandatory
+  fitzpatrick_source: fitzpatrick17k
+
+paths:
+  acne04_raw: data/raw/acne04
+  catalog_raw: data/raw/sephora
+  catalog_processed: data/processed/catalog.json

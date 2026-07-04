@@ -1,0 +1,10 @@
+# pinned loosely for a learning project; tighten if repro matters
+numpy
+pandas
+pillow
+matplotlib
+scikit-learn
+pyyaml
+# detection (add when Stage 1 starts):
+# ultralytics        # YOLO
+# torch, torchvision
