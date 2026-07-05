@@ -102,8 +102,9 @@ print(n, "crops")   # aim for a few hundred+; widen the imgs slice if short
 
 ### Cell 3 — hand-sort (the real work)
 
-No code. Open `crops_unsorted/` in Drive and drag each crop into the right
-`crops_labeled/<class>/` folder. Sorting guide:
+One click per crop: the buttons move the file and show the next. Files move
+as you label, so you can stop anytime and re-run the cell to resume with
+whatever is still unsorted. Sorting guide:
 
 | put in | when you see |
 |--------|--------------|
@@ -113,8 +114,43 @@ No code. Open `crops_unsorted/` in Drive and drag each crop into the right
 | `post_acne_mark` | flat brown/red mark or pitted scar, no active lesion |
 | `not_acne` | mole, shadow, hair, clear skin — detector was wrong |
 
+```python
+import shutil
+import ipywidgets as W
+
+crops = sorted(UNSORTED.glob("*.png"))
+print(len(crops), "to sort")
+
+img, label, state = W.Image(format="png", width=300), W.Label(), {"i": 0}
+
+def show():
+    if state["i"] >= len(crops):
+        label.value = "done — all sorted"
+        return
+    p = crops[state["i"]]
+    img.value = p.read_bytes()
+    label.value = f"{state['i'] + 1}/{len(crops)}   {p.name}"
+
+def mover(cls):
+    def cb(_):
+        if state["i"] < len(crops):
+            p = crops[state["i"]]
+            if cls != "skip":
+                shutil.move(str(p), str(LABELED / cls / p.name))
+            state["i"] += 1
+            show()
+    return cb
+
+names = CLASSES + ["skip"]
+buttons = [W.Button(description=n) for n in names]
+for b, n in zip(buttons, names):
+    b.on_click(mover(n))
+display(label, img, W.HBox(buttons))
+show()
+```
+
 Rules of the game:
-- **Unsure → skip it** (leave in unsorted). A smaller clean set beats a bigger
+- **Unsure → skip.** A smaller clean set beats a bigger
   noisy one; the detector's loose boxes (D-010) are noise enough.
 - `post_acne_mark` examples are detector *false positives* that landed on a
   mark — hunt for them among low-confidence crops specifically (spec §4.2).
