@@ -249,13 +249,16 @@ train_idx = [i for i in range(len(full)) if i not in vs]
 
 train_ds = torch.utils.data.Subset(datasets.ImageFolder(LABELED, train_tf), train_idx)
 val_ds   = torch.utils.data.Subset(datasets.ImageFolder(LABELED, val_tf),   val_idx)
-train_dl = torch.utils.data.DataLoader(train_ds, batch_size=64, shuffle=True,  num_workers=2)
-val_dl   = torch.utils.data.DataLoader(val_ds,   batch_size=64, shuffle=False, num_workers=2)
 
 counts = Counter(full.targets[i] for i in train_idx)
 print({CLASSES[k]: v for k, v in sorted(counts.items())}, "| val:", len(val_idx))
-weight = torch.tensor([len(train_idx) / (len(CLASSES) * max(counts[i], 1))
-                       for i in range(len(CLASSES))])   # max(...,1): survives an empty class
+
+# oversample rare classes (augmentation makes the repeats non-identical);
+# CE stays unweighted in cell 8 — one imbalance correction, not two
+sw = [1.0 / max(counts[full.targets[i]], 1) for i in train_idx]
+sampler = torch.utils.data.WeightedRandomSampler(sw, num_samples=len(train_idx), replacement=True)
+train_dl = torch.utils.data.DataLoader(train_ds, batch_size=64, sampler=sampler, num_workers=2)
+val_dl   = torch.utils.data.DataLoader(val_ds,   batch_size=64, shuffle=False,   num_workers=2)
 ```
 
 ### Cell 8 — fine-tune
@@ -269,15 +272,17 @@ from sklearn.metrics import recall_score
 dev = "cuda" if torch.cuda.is_available() else "cpu"   # CPU is fine at this dataset size (~15 min)
 net = build_net(pretrained=True).to(dev)      # or load cell-6 pretrain weights here
 opt = torch.optim.AdamW(net.parameters(), lr=3e-4)
-lossf = torch.nn.CrossEntropyLoss(weight=weight.to(dev))
+sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=40)
+lossf = torch.nn.CrossEntropyLoss()           # sampler in cell 7 handles imbalance
 
 best = 0.0
-for epoch in range(20):
+for epoch in range(40):
     net.train()
     for x, y in train_dl:
         opt.zero_grad()
         loss = lossf(net(x.to(dev)), y.to(dev))
         loss.backward(); opt.step()
+    sched.step()
     net.eval(); P, Y = [], []
     with torch.no_grad():
         for x, y in val_dl:
