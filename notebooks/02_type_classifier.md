@@ -41,6 +41,7 @@ if os.path.isdir(REPO):
 else:
     !git clone -q https://github.com/Kumario1/skinscan.git {REPO}
 sys.path.insert(0, REPO)
+import importlib; importlib.invalidate_caches()   # in case an earlier bad clone poisoned the finder cache
 from src.classification.classifier import CLASSES, crop_with_context, build_net
 print(CLASSES)   # ['comedonal', 'cystic', 'inflammatory', 'not_acne', 'post_acne_mark']
 
@@ -98,6 +99,25 @@ for f in imgs[:120]:                       # a slice is plenty; widen if counts 
         Image.fromarray(crop).save(UNSORTED / f"{Path(f).stem}_{k}_{float(b.conf):.2f}.png")
         n += 1
 print(n, "crops")   # aim for a few hundred+; widen the imgs slice if short
+```
+
+Already stocked? Cell 2 is skippable once `crops_unsorted/` has supply. To top
+up the rare classes, harvest the remaining **severe** faces — cystic lives on
+`levle2`/`levle3` images:
+
+```python
+severe = [f for f in imgs[120:] if "levle3" in f or "levle2" in f]
+print(len(severe), "severe faces to harvest")
+n = 0
+for f in severe:
+    im = np.asarray(Image.open(f).convert("RGB"))
+    r = model.predict(f, conf=0.07, iou=0.2, imgsz=1024, verbose=False)[0]
+    for k, b in enumerate(r.boxes[:15]):
+        x0, y0, x1, y1 = b.xyxy[0].tolist()
+        crop = crop_with_context(im, (x0, y0, x1 - x0, y1 - y0))
+        Image.fromarray(crop).save(UNSORTED / f"{Path(f).stem}_{k}_{float(b.conf):.2f}.png")
+        n += 1
+print(n, "new crops")
 ```
 
 ### Cell 3 — hand-sort (the real work)
@@ -165,7 +185,8 @@ must not dwarf the real classes.
 
 ```python
 import random
-random.seed(0)
+import matplotlib.pyplot as plt
+random.seed(0)   # same seed -> same filenames -> re-running overwrites, not duplicates
 for f in random.sample(imgs, 40):
     im = np.asarray(Image.open(f).convert("RGB"))
     H, W = im.shape[:2]
@@ -173,10 +194,17 @@ for f in random.sample(imgs, 40):
     x, y = random.randint(W//4, 3*W//4), random.randint(H//4, 3*H//4)
     crop = crop_with_context(im, (x, y, 30, 30))
     Image.fromarray(crop).save(LABELED / "not_acne" / f"neg_{Path(f).stem}_{x}_{y}.png")
+
+negs = sorted((LABELED / "not_acne").glob("neg_*.png"))
+print(len(negs), "negatives — delete lesion-hits by index, e.g. negs[3].unlink()")
+fig, axes = plt.subplots(5, 8, figsize=(16, 10))
+for ax in axes.flat: ax.axis("off")
+for j, (ax, p) in enumerate(zip(axes.flat, negs)):
+    ax.imshow(Image.open(p)); ax.set_title(str(j), fontsize=8)
 ```
 
-Eyeball these after — a "negative" that landed on a lesion poisons the class.
-Delete offenders. Add FFHQ crops the same way if you have FFHQ downloaded.
+A "negative" that landed on a lesion poisons the class — delete offenders
+before moving on. Add FFHQ crops the same way if you have FFHQ downloaded.
 
 ### Cell 5 — counts → fallback decision
 
@@ -326,7 +354,11 @@ is a liar under class imbalance.
 ```python
 from sklearn.metrics import recall_score
 dev = "cuda" if torch.cuda.is_available() else "cpu"   # CPU is fine at this dataset size (~15 min)
-net = build_net(pretrained=True).to(dev)      # or load cell-6 pretrain weights here
+net = build_net(pretrained=True).to(dev)
+kpt = WORK / "kaggle_pretrain.pt"
+if kpt.exists():                              # cell 6 ran -> start from lesion features
+    net.load_state_dict(torch.load(kpt, map_location=dev))
+print("init:", "kaggle pretrain" if kpt.exists() else "imagenet")
 opt = torch.optim.AdamW(net.parameters(), lr=3e-4)
 sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=40)
 lossf = torch.nn.CrossEntropyLoss()           # sampler in cell 7 handles imbalance
