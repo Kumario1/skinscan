@@ -291,6 +291,7 @@ for epoch in range(20):
 ### Cell 9 — predictions BEFORE metrics
 
 ```python
+import random
 import matplotlib.pyplot as plt
 net.load_state_dict(torch.load(WORK / "type_classifier_v0.pt")); net.eval()
 fig, axes = plt.subplots(4, 8, figsize=(16, 8))
