@@ -235,8 +235,11 @@ val_tf = transforms.Compose([transforms.ToTensor(), transforms.Normalize(MEAN, S
 full = datasets.ImageFolder(LABELED)
 assert full.classes == CLASSES, f"class order drift: {full.classes}"   # load-bearing
 
-def src_stem(path):        # "<imgstem>_<k>_<conf>.png" -> imgstem
-    return "_".join(Path(path).stem.split("_")[:-2])
+def src_stem(path):        # "<imgstem>_<k>_<conf>.png" / "neg_<imgstem>_<x>_<y>.png" -> imgstem
+    s = Path(path).stem
+    if s.startswith("neg_"):
+        s = s[4:]          # negatives group with their source face, not apart from it
+    return "_".join(s.split("_")[:-2])
 def is_val(path):          # deterministic ~20% of source images
     return int(hashlib.md5(src_stem(path).encode()).hexdigest(), 16) % 5 == 0
 
