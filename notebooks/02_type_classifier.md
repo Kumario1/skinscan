@@ -197,19 +197,75 @@ Collapse mechanics: move the crops into `not_acne/` and **leave the empty
 head stays 5-class, and the class simply never gets predicted (the intended
 v1 behavior). No code or schema changes.
 
-### Cell 6 — (optional) Kaggle pretrain
+### Cell 6 — (optional) Kaggle pretrain — dataset verified 2026-07-05
 
-⚠ The candidate dataset (`zulqarnain11/acne-classification-using-cnn`) is
-**unverified** — class list and quality unknown (spec §4.2). Run cells 7–10
-WITHOUT this first; that's your baseline. Come back only if per-class recall
-needs the help.
+The dataset behind the `zulqarnain11` notebook is `tiswan14/acne-dataset-image`:
+2778 train images, 5 lesion-type classes — Blackheads 735, Cyst 645, Papules
+621, Pustules 584, Whiteheads 193. The notebook's own model (from-scratch
+Keras CNN) is **not** used — weaker than our ImageNet start and the wrong
+framework. The dataset is the value, above all **Cyst 645** vs our ~15 crops.
 
-If you do: download it, **inspect it like cell 3 of notebook 01** (open
-files, read the folder names), map its classes onto ours (or fewer), train
-`build_net(pretrained=True)` on it for a few epochs at whole-image scale, and
-use those weights as the starting point in cell 8 instead of plain ImageNet.
-Its value is features, not plug-and-play weights — the head gets retrained on
-crops regardless.
+Run cells 7–10 WITHOUT this first; that's your baseline. Come back when
+per-class recall needs the help (v0 verdict: it does — cystic .11,
+inflammatory .14). Still: **look before you train.**
+
+```python
+!pip install kagglehub -q
+import random, kagglehub
+import matplotlib.pyplot as plt
+from PIL import Image
+from torchvision import datasets
+
+kpath = Path(kagglehub.dataset_download("tiswan14/acne-dataset-image")) / "AcneDataset"
+kfull = datasets.ImageFolder(kpath / "train")
+print(kfull.classes, len(kfull), "images")
+fig, axes = plt.subplots(2, 5, figsize=(15, 6))
+for ax, i in zip(axes.flat, random.sample(range(len(kfull)), 10)):
+    p, y = kfull.samples[i]
+    ax.imshow(Image.open(p)); ax.set_title(kfull.classes[y], fontsize=8); ax.axis("off")
+```
+
+Are these lesion-scale close-ups (≈ our crop domain — great) or whole faces
+(features still transfer, expect less)? Note what you see, then pretrain:
+
+```python
+import torch
+from torchvision import transforms
+
+MEAN, STD = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]   # must match cell 7 / LesionClassifier
+dev = "cuda" if torch.cuda.is_available() else "cpu"
+
+KMAP = {"Blackheads": "comedonal", "Whiteheads": "comedonal",
+        "Papules": "inflammatory", "Pustules": "inflammatory",
+        "Cyst": "cystic"}
+kclasses = datasets.ImageFolder(kpath / "train").classes
+kidx = {i: CLASSES.index(KMAP[c]) for i, c in enumerate(kclasses)}
+
+ktf = transforms.Compose([
+    transforms.Resize((112, 112)),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(), transforms.Normalize(MEAN, STD),
+])
+ktrain = datasets.ImageFolder(kpath / "train", ktf, target_transform=lambda y: kidx[y])
+kdl = torch.utils.data.DataLoader(ktrain, batch_size=64, shuffle=True, num_workers=2)
+
+pre = build_net(pretrained=True).to(dev)
+kopt = torch.optim.AdamW(pre.parameters(), lr=3e-4)
+klossf = torch.nn.CrossEntropyLoss()
+for epoch in range(3):                     # features, not a final model — 3 epochs is the point
+    pre.train(); tot = 0.0
+    for x, y in kdl:
+        kopt.zero_grad()
+        loss = klossf(pre(x.to(dev)), y.to(dev))
+        loss.backward(); kopt.step(); tot += loss.item()
+    print(f"pretrain epoch {epoch}: loss {tot / len(kdl):.3f}")
+torch.save(pre.state_dict(), WORK / "kaggle_pretrain.pt")
+```
+
+Then in cell 8, right after `build_net(...)`:
+`net.load_state_dict(torch.load(WORK / "kaggle_pretrain.pt"))` — the fine-tune
+on our crops re-trains everything; the pretrain just moves the starting point
+from "ImageNet objects" to "acne lesions".
 
 ### Cell 7 — datasets, leak-free split, weighted loss
 

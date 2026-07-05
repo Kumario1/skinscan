@@ -146,12 +146,13 @@ ImageNet-pretrained backbone (MobileNetV3-small or ResNet18), head reconfigured
 to 5 classes, fine-tuned at low LR. Small + fast + Colab-T4-friendly.
 
 **Training = hybrid** (user decision):
-1. **Pretrain** the backbone on a Kaggle acne-type dataset (candidate:
-   `kaggle.com/code/zulqarnain11/acne-classification-using-cnn`, which classifies
-   *region/whole* images). ⚠ Its exact dataset, class list, and quality are
-   **unverified** — the Kaggle page is JS-rendered and could not be fetched;
-   confirm when we wire it in. Map its classes onto our 5 (or fewer) for the
-   pretraining head. Its value is *features*, not plug-and-play weights.
+1. **Pretrain** the backbone on the Kaggle acne-type dataset
+   `tiswan14/acne-dataset-image` (the set behind the zulqarnain11 notebook —
+   **verified 2026-07-05**): 2778 train images, 5 lesion-type classes
+   (Blackheads 735 / Cyst 645 / Papules 621 / Pustules 584 / Whiteheads 193),
+   mapped onto our comedonal / inflammatory / cystic. Its value is *features*,
+   not plug-and-play weights — the notebook's own from-scratch Keras CNN is
+   not used.
 2. **Fine-tune** on the **self-labeled crop set** — a few hundred lesion crops
    from running Stage 1 on **ACNE04** images (train-eligible), hand-sorted into
    the 5 classes. This is the **real deliverable of the stage**: it is the only
