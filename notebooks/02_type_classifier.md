@@ -63,29 +63,41 @@ Prefer harvesting the detector's **val** images first — boxes on images the
 detector trained on are unrealistically clean. Top up from train images if
 counts run thin.
 
-Fresh session? Re-stage the ACNE04 images first (notebook 01 cells 2–4), or
-point `imgs` at a Drive copy of them.
+Assumes `Detection.tar` / `Classification.tar` sit in your Drive root and the
+stage-1 weights at `MyDrive/skinscan_best_y8m.pt` — where notebook 01 left
+them. The cell restages ACNE04 itself, so it works in a fresh session.
 
 ```python
 !pip install ultralytics -q
-from ultralytics import YOLO
+import os
 import numpy as np
 from PIL import Image
-import glob
+from ultralytics import YOLO
 
-model = YOLO("/content/drive/MyDrive/skinscan/acne_y8n_v0_best.pt")  # adjust path
-imgs = glob.glob("/content/acne04_yolo/images/val/*.jpg")            # adjust path
+# restage ACNE04 from the Drive tars (as in notebook 01)
+!mkdir -p /content/acne04_raw
+!cp "/content/drive/MyDrive/Detection.tar" "/content/drive/MyDrive/Classification.tar" /content/acne04_raw/
+!cd /content/acne04_raw && tar -xf Detection.tar && tar -xf Classification.tar
+
+SPLIT  = "/content/acne04_raw/Detection/VOC2007/ImageSets/Main/NNEW_test_0.txt"   # detector-val ids
+IMGDIR = "/content/acne04_raw/Classification/JPEGImages"
+val_ids = [os.path.splitext(ln.split()[0])[0] for ln in open(SPLIT) if ln.strip()]
+imgs = [f"{IMGDIR}/{s}.jpg" for s in val_ids if os.path.exists(f"{IMGDIR}/{s}.jpg")]
+print(len(imgs), "val images")
+
+model = YOLO("/content/drive/MyDrive/skinscan_best_y8m.pt")   # stage 1 weights (Drive)
 
 n = 0
-for f in imgs:
+for f in imgs[:120]:                       # a slice is plenty; widen if counts run thin
     im = np.asarray(Image.open(f).convert("RGB"))
-    r = model.predict(f, conf=0.25, imgsz=640, verbose=False)[0]
-    for k, b in enumerate(r.boxes):
+    # conf/iou/imgsz = stage 1's LOCKED operating point — harvest what inference will see
+    r = model.predict(f, conf=0.07, iou=0.2, imgsz=1024, verbose=False)[0]
+    for k, b in enumerate(r.boxes[:15]):   # top-15 by conf per face keeps one face from flooding the set
         x0, y0, x1, y1 = b.xyxy[0].tolist()
         crop = crop_with_context(im, (x0, y0, x1 - x0, y1 - y0))   # pad/size from config defaults
         Image.fromarray(crop).save(UNSORTED / f"{Path(f).stem}_{k}_{float(b.conf):.2f}.png")
         n += 1
-print(n, "crops")   # aim for a few hundred+; harvest more images if short
+print(n, "crops")   # aim for a few hundred+; widen the imgs slice if short
 ```
 
 ### Cell 3 — hand-sort (the real work)
