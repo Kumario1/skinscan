@@ -266,7 +266,7 @@ is a liar under class imbalance.
 
 ```python
 from sklearn.metrics import recall_score
-dev = "cuda"
+dev = "cuda" if torch.cuda.is_available() else "cpu"   # CPU is fine at this dataset size (~15 min)
 net = build_net(pretrained=True).to(dev)      # or load cell-6 pretrain weights here
 opt = torch.optim.AdamW(net.parameters(), lr=3e-4)
 lossf = torch.nn.CrossEntropyLoss(weight=weight.to(dev))
