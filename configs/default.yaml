@@ -1,4 +1,5 @@
 # SkinScan config — thresholds live here, not hard-coded (RULES.md §5, §4)
+# Loaded by src/config.py; CLI flags override.
 detection:
   model: yolo            # Q-A: leaning YOLO (tooling + ACNE04 precedent)
   weights: models/detection/acne04_yolov8m_best.pt
