@@ -335,6 +335,38 @@ Then in cell 8, right after `build_net(...)`:
 on our crops re-trains everything; the pretrain just moves the starting point
 from "ImageNet objects" to "acne lesions".
 
+### Cell 6c — cystic transfusion (external images, in-domain crops)
+
+Raw external photos must NOT go straight into the train folders — the model
+learns the photo *style*, not the lesion (train/serve mismatch, spec §4.2).
+Instead run them through OUR detector + cropper so they arrive in the same
+geometry as every other crop. `kg_` prefix → cell 7 forces them into TRAIN
+only; val stays pure ACNE04. Sort the output with the labeler — third-party
+labels, trust but verify. Needs `kpath` (cell 6a) and the stage-1 `model`
+(cell 2 — or load it here).
+
+```python
+cyst_dir = kpath / "train" / "Cyst"
+files = sorted(cyst_dir.glob("*"))[:300]
+n = 0
+for f in files:
+    im = np.asarray(Image.open(f).convert("RGB"))
+    r = model.predict(str(f), conf=0.07, iou=0.2, imgsz=640, verbose=False)[0]
+    if len(r.boxes):
+        for k, b in enumerate(r.boxes[:3]):
+            x0, y0, x1, y1 = b.xyxy[0].tolist()
+            crop = crop_with_context(im, (x0, y0, x1 - x0, y1 - y0))
+            Image.fromarray(crop).save(UNSORTED / f"kg_{f.stem}_{k}_{float(b.conf):.2f}.png")
+            n += 1
+    else:                       # detector found nothing -> center square, same output geometry
+        H, W = im.shape[:2]
+        s = min(H, W) // 2
+        crop = crop_with_context(im, ((W - s) / 2, (H - s) / 2, s, s))
+        Image.fromarray(crop).save(UNSORTED / f"kg_{f.stem}_0_0.00.png")
+        n += 1
+print(n, "kaggle cystic candidates -> confirm via the labeler (most are one 'cystic' click)")
+```
+
 ### Cell 7 — datasets, leak-free split, weighted loss
 
 Split by **source image**, not by crop — two crops from the same face must
@@ -365,6 +397,8 @@ def src_stem(path):        # "<imgstem>_<k>_<conf>.png" / "neg_<imgstem>_<x>_<y>
         s = s[4:]          # negatives group with their source face, not apart from it
     return "_".join(s.split("_")[:-2])
 def is_val(path):          # deterministic ~20% of source images
+    if Path(path).stem.startswith("kg_"):
+        return False       # external (cell 6c) crops train only — val stays real ACNE04
     return int(hashlib.md5(src_stem(path).encode()).hexdigest(), 16) % 5 == 0
 
 val_idx   = [i for i, (p, _) in enumerate(full.samples) if is_val(p)]
