@@ -7,7 +7,7 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.classification.run_acne04_pipeline import classifier_image_size, draw_input_collage
+from src.classification.run_acne04_pipeline import acne_type_counts, classifier_image_size, draw_input_collage
 
 
 def test_draw_input_collage_exact_size():
@@ -29,7 +29,19 @@ def test_classifier_image_size_reads_metadata():
         assert classifier_image_size(model) == 192
 
 
+def test_acne_type_counts_uses_model_class_order():
+    detections = [
+        {"prediction": "Pustules"},
+        {"prediction": "Blackheads"},
+        {"prediction": "Pustules"},
+        {"detector_conf": 0.8},
+    ]
+    classes = ["Blackheads", "Cyst", "Papules", "Pustules", "Whiteheads"]
+    assert acne_type_counts(detections, classes) == {"Blackheads": 1, "Pustules": 2}
+
+
 if __name__ == "__main__":
     test_draw_input_collage_exact_size()
     test_classifier_image_size_reads_metadata()
+    test_acne_type_counts_uses_model_class_order()
     print("ok")

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import math
 from pathlib import Path
@@ -16,6 +17,7 @@ def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--detector", type=Path, default=Path("models/detection/acne04_yolov8m_best.pt"))
     p.add_argument("--classifier", type=Path, default=Path("models/classification/acne_model.keras"))
+    p.add_argument("--image", type=Path, help="single uploaded/full-face image to run end-to-end")
     p.add_argument("--images", type=Path, default=Path("data/raw/acne04/Classification/JPEGImages"))
     p.add_argument("--out", type=Path, default=Path("runs/acne04_pipeline_check"))
     p.add_argument("--limit", type=int, default=8)
@@ -36,7 +38,14 @@ def require(path, label):
 
 
 def image_files(root):
+    if root.is_file():
+        return [root]
     return sorted(p for p in root.iterdir() if p.suffix.lower() in {".jpg", ".jpeg", ".png"})
+
+
+def selected_images(image, images, limit):
+    paths = image_files(image) if image else image_files(images)
+    return paths if image else paths[:limit]
 
 
 def classifier_image_size(model_path, fallback=224):
@@ -76,12 +85,65 @@ def draw_sheet(items, out_path, cell=None):
     sheet.save(out_path)
 
 
+def acne_type_counts(detections, classes=None):
+    counts = Counter(d["prediction"] for d in detections if "prediction" in d)
+    if classes:
+        return {name: counts[name] for name in classes if counts[name]}
+    return dict(sorted(counts.items()))
+
+
+def analyze_image(img_path, model, clf, out_dir, *, crop_size, crop_pad, max_boxes, conf, iou, imgsz, collage_tiles):
+    image = np.asarray(Image.open(img_path).convert("RGB"))
+    result = model.predict(
+        str(img_path),
+        conf=conf,
+        iou=iou,
+        imgsz=imgsz,
+        verbose=False,
+    )[0]
+    sheet_items = []
+    detections = []
+    for box in result.boxes[:max_boxes]:
+        x0, y0, x1, y1 = box.xyxy[0].tolist()
+        crop = crop_with_context(image, (x0, y0, x1 - x0, y1 - y0), pad=crop_pad, size=crop_size)
+        crop_path = out_dir / f"{img_path.stem}_crop_{len(detections) + 1:02d}.jpg"
+        Image.fromarray(crop).save(crop_path, quality=92)
+        record = {
+            "box": [x0, y0, x1, y1],
+            "detector_conf": float(box.conf),
+            "input_crop": str(crop_path),
+        }
+        if clf:
+            probs = clf.predict(crop)
+            label, prob = max(probs.items(), key=lambda kv: kv[1])
+            sheet_items.append((crop, f"{label} {prob:.2f}"))
+            record.update({"prediction": label, "probability": prob, "probs": probs})
+        else:
+            sheet_items.append((crop, f"conf {float(box.conf):.2f}"))
+        detections.append(record)
+
+    collage_path = out_dir / f"{img_path.stem}_input_collage.jpg"
+    draw_input_collage([crop for crop, _ in sheet_items], collage_path, crop_size, collage_tiles)
+    draw_sheet(sheet_items, out_dir / f"{img_path.stem}_crops.jpg", cell=crop_size)
+    type_counts = acne_type_counts(detections, clf.classes if clf else None)
+    return {
+        "image": str(img_path),
+        "crop_size": crop_size,
+        "collage_max_tiles": collage_tiles,
+        "input_collage": str(collage_path),
+        "detection_count": len(detections),
+        "acne_types": list(type_counts),
+        "acne_type_counts": type_counts,
+        "detections": detections,
+    }
+
+
 def main():
     args = parse_args()
     require(args.detector, "YOLO detector weights")
     if not args.crops_only:
         require(args.classifier, "Keras acne type classifier")
-    require(args.images, "ACNE04 image directory")
+    require(args.image if args.image else args.images, "input image path")
 
     from ultralytics import YOLO
 
@@ -95,46 +157,23 @@ def main():
         raise SystemExit("--collage-tiles must be positive")
     records = []
 
-    for img_path in image_files(args.images)[:args.limit]:
-        image = np.asarray(Image.open(img_path).convert("RGB"))
-        result = model.predict(
-            str(img_path),
+    for img_path in selected_images(args.image, args.images, args.limit):
+        record = analyze_image(
+            img_path,
+            model,
+            clf,
+            args.out,
+            crop_size=crop_size,
+            crop_pad=args.crop_pad,
+            max_boxes=args.max_boxes,
             conf=args.conf,
             iou=args.iou,
             imgsz=args.imgsz,
-            verbose=False,
-        )[0]
-        sheet_items = []
-        image_records = []
-        for box in result.boxes[:args.max_boxes]:
-            x0, y0, x1, y1 = box.xyxy[0].tolist()
-            crop = crop_with_context(image, (x0, y0, x1 - x0, y1 - y0), pad=args.crop_pad, size=crop_size)
-            crop_path = args.out / f"{img_path.stem}_crop_{len(image_records) + 1:02d}.jpg"
-            Image.fromarray(crop).save(crop_path, quality=92)
-            record = {
-                "box": [x0, y0, x1, y1],
-                "detector_conf": float(box.conf),
-                "input_crop": str(crop_path),
-            }
-            if clf:
-                probs = clf.predict(crop)
-                label, prob = max(probs.items(), key=lambda kv: kv[1])
-                sheet_items.append((crop, f"{label} {prob:.2f}"))
-                record.update({"prediction": label, "probability": prob, "probs": probs})
-            else:
-                sheet_items.append((crop, f"conf {float(box.conf):.2f}"))
-            image_records.append(record)
-        collage_path = args.out / f"{img_path.stem}_input_collage.jpg"
-        draw_input_collage([crop for crop, _ in sheet_items], collage_path, crop_size, args.collage_tiles)
-        draw_sheet(sheet_items, args.out / f"{img_path.stem}_crops.jpg", cell=crop_size)
-        records.append({
-            "image": str(img_path),
-            "crop_size": crop_size,
-            "collage_max_tiles": args.collage_tiles,
-            "input_collage": str(collage_path),
-            "detections": image_records,
-        })
-        print(img_path.name, len(image_records), "detections")
+            collage_tiles=args.collage_tiles,
+        )
+        records.append(record)
+        types = ", ".join(record["acne_types"]) or "none"
+        print(img_path.name, record["detection_count"], "detections", "types:", types)
 
     (args.out / "predictions.json").write_text(json.dumps(records, indent=2) + "\n")
     print("wrote", args.out)
