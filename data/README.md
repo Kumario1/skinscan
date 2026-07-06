@@ -26,7 +26,7 @@ Detector-to-classifier smoke test expects:
 
 ```text
 models/detection/acne04_yolov8m_best.pt
-models/classification/acne_type_efficientnetb0.keras
+models/classification/acne_model.keras
 data/raw/acne04/Classification/JPEGImages/
 ```
 
