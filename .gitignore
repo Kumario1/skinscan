@@ -3,10 +3,13 @@ data/raw/
 data/processed/
 data/self_collected/
 models/
+*.tar
 *.pt
 *.pth
 *.onnx
 *.mlmodel
+*.keras
+runs/
 
 # python
 __pycache__/
