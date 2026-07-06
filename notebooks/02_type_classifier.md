@@ -160,6 +160,61 @@ Caveat: the detector trained on these faces, so its boxes here are cleaner
 than at deployment — fine for classifier train data, and the face-level split
 in cell 7 keeps eval honest.
 
+### Cell 2d — one external image → crops (check, then stage)
+
+Feed any image (yours, web, a specific acne type ACNE04 is thin on) through
+OUR detector so the crops share the training domain. **Same move as the cell 6c
+transfusion — which backfired for cystic (domain gap).** Safe only with the
+guardrails: `ext_` prefix keeps them train-only (val stays ACNE04, cell 7), and
+you must re-check the target class's val recall after — if it doesn't rise, the
+external images didn't transfer; pull them like the kaggle cysts. Modest counts;
+use images you have the right to use.
+
+Preview first — did the detector actually find the acne?
+
+```python
+IMG = "/content/example.jpg"      # <- upload via Colab's file panel, or a Drive path
+
+try: model
+except NameError:
+    from ultralytics import YOLO
+    model = YOLO("/content/drive/MyDrive/skinscan_best_y8m.pt")
+
+import numpy as np, matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from PIL import Image
+
+im = np.asarray(Image.open(IMG).convert("RGB"))
+r = model.predict(IMG, conf=0.07, iou=0.2, imgsz=1024, verbose=False)[0]
+boxes = [b.xyxy[0].tolist() for b in r.boxes]
+crops = [crop_with_context(im, (x0, y0, x1 - x0, y1 - y0)) for (x0, y0, x1, y1) in boxes]
+print(len(boxes), "detections — check the boxes before saving")
+
+fig, ax = plt.subplots(figsize=(6, 6)); ax.imshow(im); ax.axis("off")
+for (x0, y0, x1, y1) in boxes:
+    ax.add_patch(patches.Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False, edgecolor="red", lw=2))
+plt.show()
+
+fig, axes = plt.subplots(3, 8, figsize=(16, 6))
+for a in axes.flat: a.axis("off")
+for a, c in zip(axes.flat, crops[:24]): a.imshow(c)
+plt.show()
+```
+
+Boxes look right? Stage them (then sort in cell 3):
+
+```python
+from pathlib import Path
+stem = Path(IMG).stem                       # give each source image a unique name
+for k, c in enumerate(crops):
+    Image.fromarray(c).save(UNSORTED / f"ext_{stem}_{k}_0.00.png")
+print(len(crops), "crops staged as ext_ (train-only) -> sort in cell 3")
+```
+
+If the detector missed the acne or boxed the wrong things, don't save — a
+detector that can't find comedones on this photo can't harvest them, and a
+hand-drawn box is a different tool (not built here).
+
 ### Cell 3 — hand-sort (the real work)
 
 One click per crop: the buttons move the file and show the next. Files move
@@ -442,8 +497,8 @@ def src_stem(path):        # "<imgstem>_<k>_<conf>.png" / "neg_<imgstem>_<x>_<y>
         s = s[4:]          # negatives group with their source face, not apart from it
     return "_".join(s.split("_")[:-2])
 def is_val(path):          # deterministic ~20% of source images
-    if Path(path).stem.startswith("kg_"):
-        return False       # external (cell 6c) crops train only — val stays real ACNE04
+    if Path(path).stem.startswith(("kg_", "ext_")):
+        return False       # external crops (cell 2d / 6c) train only — val stays real ACNE04
     return int(hashlib.md5(src_stem(path).encode()).hexdigest(), 16) % 5 == 0
 
 val_idx   = [i for i, (p, _) in enumerate(full.samples) if is_val(p)]
