@@ -40,7 +40,7 @@ flowchart LR
 | Detector weights | `models/detection/acne04_yolov8m_best.pt` | no | Stage 1 acne spot locator |
 | Detector data | `data/raw/acne04/` | no | ACNE04 images + box labels |
 | Classifier code | `src/classification/` | yes | Crop helper, EfficientNet classifier, classifier trainer |
-| Classifier weights | `models/classification/acne_type_efficientnetb0.keras` | no | Stage 2 acne type classifier |
+| Classifier weights | `models/classification/acne_model.keras` | no | Stage 2 acne type classifier |
 | Classifier data | `data/raw/typeclassification/AcneDataset/` | no | Kaggle acne type dataset |
 | Recommendation code | `src/recommendation/` | yes | Concern-to-ingredient rules |
 | Config | `configs/default.yaml` | yes | Current model paths and thresholds |
@@ -137,8 +137,8 @@ Inspect dataset counts:
 Expected classifier output:
 
 ```text
-models/classification/acne_type_efficientnetb0.keras
-models/classification/acne_type_efficientnetb0.keras.labels.json
+models/classification/acne_model.keras
+models/classification/acne_model.keras.labels.json
 ```
 
 The classifier has not replaced the detector. It only runs after the detector

@@ -13,7 +13,7 @@ from pathlib import Path
 from .classifier import RAW_ACNE_CLASSES, build_kaggle_efficientnet
 
 DEFAULT_DATA = Path("data/raw/typeclassification/AcneDataset")
-DEFAULT_OUT = Path("models/classification/acne_type_efficientnetb0.keras")
+DEFAULT_OUT = Path("models/classification/acne_model.keras")
 
 
 def parse_args():

@@ -10,7 +10,7 @@ detection:
 classification:
   crop_pad: 1.5        # context factor around Stage 1 boxes — the morphology knob (spec §4.2)
   crop_size: 224
-  weights: models/classification/acne_type_efficientnetb0.keras
+  weights: models/classification/acne_model.keras
   local_data: data/raw/typeclassification/AcneDataset
 
 recommendation:
