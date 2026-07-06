@@ -8,7 +8,7 @@ import math
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 
 from .classifier import AcneTypeClassifier, crop_with_context
 
@@ -92,8 +92,13 @@ def acne_type_counts(detections, classes=None):
     return dict(sorted(counts.items()))
 
 
+def load_rgb(path):
+    """EXIF-corrected pixels — must match the orientation YOLO sees (cv2 applies EXIF)."""
+    return np.asarray(ImageOps.exif_transpose(Image.open(path)).convert("RGB"))
+
+
 def analyze_image(img_path, model, clf, out_dir, *, crop_size, crop_pad, max_boxes, conf, iou, imgsz, collage_tiles):
-    image = np.asarray(Image.open(img_path).convert("RGB"))
+    image = load_rgb(img_path)
     result = model.predict(
         str(img_path),
         conf=conf,
