@@ -1,15 +1,16 @@
 # SkinScan config — thresholds live here, not hard-coded (RULES.md §5, §4)
 detection:
   model: yolo            # Q-A: leaning YOLO (tooling + ACNE04 precedent)
-  img_size: 640
-  conf_threshold: 0.25
-  iou_threshold: 0.45
+  weights: models/detection/acne04_yolov8m_best.pt
+  img_size: 1024
+  conf_threshold: 0.07
+  iou_threshold: 0.2
   severity_scale: [0, 1, 2, 3, 4]   # ordinal, matches ACNE04 (Q-B)
 
 classification:
   crop_pad: 1.5        # context factor around Stage 1 boxes — the morphology knob (spec §4.2)
   crop_size: 224
-  weights: models/acne_type_efficientnetb0.keras
+  weights: models/classification/acne_type_efficientnetb0.keras
   local_data: data/raw/typeclassification/AcneDataset
 
 recommendation:
