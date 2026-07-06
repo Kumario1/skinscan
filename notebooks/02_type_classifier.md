@@ -215,6 +215,50 @@ If the detector missed the acne or boxed the wrong things, don't save — a
 detector that can't find comedones on this photo can't harvest them, and a
 hand-drawn box is a different tool (not built here).
 
+**A whole folder?** Same thing in a loop. The folder-level "is this good"
+check is the **hit ratio** it prints — if few images produced any detections,
+the detector doesn't transfer to this folder's style and the crops it did make
+are probably junk. `ext_` keeps it all train-only.
+
+```python
+from pathlib import Path
+import numpy as np
+from PIL import Image
+
+EXT_DIR = "/content/comedonal_folder"    # <- your folder of images
+files = [p for p in sorted(Path(EXT_DIR).iterdir())
+         if p.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp"}]
+print(len(files), "images")
+
+try: model
+except NameError:
+    from ultralytics import YOLO
+    model = YOLO("/content/drive/MyDrive/skinscan_best_y8m.pt")
+
+n, hits, sample = 0, 0, []
+for f in files:
+    im = np.asarray(Image.open(f).convert("RGB"))
+    r = model.predict(str(f), conf=0.07, iou=0.2, imgsz=1024, verbose=False)[0]
+    if len(r.boxes): hits += 1
+    for k, b in enumerate(r.boxes[:15]):
+        x0, y0, x1, y1 = b.xyxy[0].tolist()
+        crop = crop_with_context(im, (x0, y0, x1 - x0, y1 - y0))
+        Image.fromarray(crop).save(UNSORTED / f"ext_{f.stem}_{k}_{float(b.conf):.2f}.png")
+        if k == 0 and len(sample) < 24: sample.append(crop)   # one per image, spread the preview
+        n += 1
+print(f"{hits}/{len(files)} images had detections -> {n} crops staged as ext_ (train-only)")
+print("keep this comparable to your ACNE04 count for the class — dominating it is what broke cystic")
+
+import matplotlib.pyplot as plt
+fig, axes = plt.subplots(3, 8, figsize=(16, 6))
+for a in axes.flat: a.axis("off")
+for a, c in zip(axes.flat, sample): a.imshow(c)
+plt.show()
+```
+
+Low hit ratio, or the sample grid is garbage? Pull it all back out — it's one
+prefix: `import shutil; [shutil.move(str(p), str(WORK/"ext_holdout"/p.name)) for p in UNSORTED.glob("ext_*.png")]` (make `ext_holdout` first).
+
 ### Cell 3 — hand-sort (the real work)
 
 One click per crop: the buttons move the file and show the next. Files move
