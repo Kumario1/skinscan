@@ -9,14 +9,15 @@ This is not medical software. The project uses cosmetic language only:
 
 > Current status: this repo records the first build attempt before a restart.
 > The detector, crop classifier process, rules schema, and lessons below are the
-> parts worth carrying forward.
+> parts worth carrying forward. New training work should happen in Python, not
+> in the old Colab notebooks.
 
 ```mermaid
 flowchart LR
     A["face photo"] --> B["Stage 1: YOLO lesion detector"]
     B --> C["detected boxes"]
     C --> D["Stage 2: crop type classifier"]
-    D --> E["comedonal / cystic / inflammatory / not acne / post-acne mark"]
+    D --> E["Blackheads / Cyst / Papules / Pustules / Whiteheads"]
     E --> F["Stage 3: rules-based recommender"]
     F --> G["ingredient targets + routine"]
 ```
@@ -83,16 +84,77 @@ box quality weak.
 
 ## 3. Stage 2 - lesion crop type classifier
 
-The uploaded notebook focused on the second stage: classify detector crops into
-five classes.
+The active classifier now follows the Kaggle notebook
+`dadydada/miniproject-ai-6610210284`: classify detector crops into five raw acne
+types.
 
 ```python
-CLASSES = ["comedonal", "cystic", "inflammatory", "not_acne", "post_acne_mark"]
+RAW_ACNE_CLASSES = ["Blackheads", "Cyst", "Papules", "Pustules", "Whiteheads"]
 ```
 
 The important deliverable was not just the model weights. It was the manually
 labeled crop dataset, because the classifier must learn the same crop domain it
 will see at inference time.
+
+### Current local Python training path
+
+The active training data is local and ignored by Git:
+
+```text
+data/raw/typeclassification/AcneDataset/
+  train/
+  valid/
+  test/
+```
+
+It uses the same five raw acne labels as the Kaggle notebook:
+
+```text
+Blackheads, Cyst, Papules, Pustules, Whiteheads
+```
+
+Use the Python trainer:
+
+```bash
+python -m src.classification.train_type_classifier --inspect
+python -m src.classification.train_type_classifier
+```
+
+This replicates the Kaggle setup:
+
+- `EfficientNetB0(weights="imagenet", include_top=False)`
+- `224x224` images, batch size `32`
+- freeze all EfficientNet layers except the last `30`
+- `GlobalAveragePooling2D -> BatchNormalization -> Dense(128, relu, l2=0.001)
+  -> Dropout(0.5) -> Dense(5, softmax)`
+- `Adam(1e-5)`, sparse categorical cross-entropy, class weights, 150 epochs
+- `ReduceLROnPlateau(patience=3, factor=0.3, min_lr=1e-6)`
+
+It saves:
+
+```text
+models/acne_type_efficientnetb0.keras
+models/acne_type_efficientnetb0.keras.labels.json
+```
+
+At inference, `AcneTypeClassifier.predict(crop)` returns the raw acne type
+probabilities. `predict_concerns(crop)` collapses them for the recommender:
+
+```text
+Blackheads + Whiteheads -> comedonal
+Papules + Pustules      -> inflammatory
+Cyst                    -> cystic
+```
+
+Detector-to-classifier handoff:
+
+```python
+from src.classification.classifier import AcneTypeClassifier, crop_with_context
+
+clf = AcneTypeClassifier("models/acne_type_efficientnetb0.keras")
+crops = [crop_with_context(image, box) for box in detector_boxes]
+predictions = [clf.predict(crop) for crop in crops]
+```
 
 ### Crop harvesting
 
@@ -135,65 +197,13 @@ Class counts after the labeled set was built:
 The notebook also included a review pass over the inflammatory folder to rescue
 true cystic examples that had been sorted too broadly.
 
-## 4. Kaggle pretraining experiment
+## 4. Previous crop-classifier baseline
 
-Because the self-labeled cystic set was small, the notebook tested an external
-Kaggle acne dataset before fine-tuning on the crop set.
-
-Dataset checked: `tiswan14/acne-dataset-image`
-
-```text
-classes: Blackheads, Cyst, Papules, Pustules, Whiteheads
-images: 2778
-```
-
-The classes were mapped into the SkinScan labels:
-
-- `Blackheads` + `Whiteheads` -> `comedonal`
-- `Papules` + `Pustules` -> `inflammatory`
-- `Cyst` -> `cystic`
-
-The notebook visually inspected samples before trusting the data:
+Before switching to the Kaggle EfficientNet path, the repo had a smaller
+MobileNetV3 crop-classifier experiment. It is kept here only as the baseline to
+beat.
 
 ![Kaggle sample review](assets/stage2_kaggle_sample_review.png)
-
-Then MobileNetV3-small was pretrained for three epochs:
-
-```text
-pretrain epoch 0: loss 0.938
-pretrain epoch 1: loss 0.451
-pretrain epoch 2: loss 0.238
-```
-
-This was used only as a feature starting point. The final classifier head was
-still trained on the SkinScan detector-crop dataset.
-
-## 5. Classifier training and results
-
-Training setup:
-
-- Model: MobileNetV3-small with a 5-class head.
-- Input: 112x112 lesion crops.
-- Split: by source image stem, not by crop, to avoid leakage.
-- External crops: train-only.
-- Imbalance handling: weighted sampler, not weighted cross-entropy.
-- Optimizer: AdamW at `3e-4`.
-- Scheduler: cosine annealing over 40 epochs.
-- Selection metric: validation macro recall, not accuracy.
-
-Train split counts:
-
-```text
-comedonal:       109
-cystic:           78
-inflammatory:    356
-not_acne:        144
-post_acne_mark:  501
-validation crops: 199
-```
-
-Best validation macro recall was `0.425` at epoch 10. The final report from the
-best saved checkpoint:
 
 | class | precision | recall | f1 | support |
 |---|---:|---:|---:|---:|
@@ -222,7 +232,7 @@ manual review because that confusion changes treatment logic.
 
 ![Inflammatory vs post-acne-mark audit](assets/stage2_confusion_audit.png)
 
-## 6. Stage 3 - rules-based recommender
+## 5. Stage 3 - rules-based recommender
 
 The recommender was intentionally not ML. It maps classified concerns to
 ingredient targets and then searches a product catalog.
@@ -242,7 +252,7 @@ CONCERN_ACTIVES = {
 This is the part worth keeping: the rules are auditable, the schema is explicit,
 and the ML model can improve later without changing recommendation logic.
 
-## 7. What carries forward into the restart
+## 6. What carries forward into the restart
 
 Keep:
 
@@ -252,7 +262,8 @@ Keep:
   `src/classification/classifier.py`.
 - The manually sorted crop-labeling process.
 - The rules-based recommendation schema and engine.
-- The baseline metrics above as the numbers to beat.
+- The local Python training entry point.
+- The old baseline metrics above as the numbers to beat.
 
 Restart or improve:
 
@@ -264,10 +275,10 @@ Restart or improve:
 ## Repo layout
 
 ```text
+data/                 local raw datasets live under data/raw/ and stay gitignored
 src/detection/        ACNE04 conversion and label visualization
-src/classification/   crop helper, class list, MobileNetV3 wrapper
+src/classification/   crop helper, class list, EfficientNet wrapper, trainer
 src/recommendation/   concern-to-ingredient rules and catalog lookup
-notebooks/            Colab notebooks for detector and classifier experiments
 docs/                 decisions, schemas, and project notes
-assets/               README figures extracted from completed notebooks
+assets/               README figures extracted from completed experiments
 ```

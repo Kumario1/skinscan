@@ -5,6 +5,4 @@ pillow
 matplotlib
 scikit-learn
 pyyaml
-# detection (add when Stage 1 starts):
-# ultralytics        # YOLO
-# torch, torchvision
+tensorflow
