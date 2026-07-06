@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status (2026-07-05):** Tasks 1–3 executed locally (commit steps left to user). Tasks 4–9 are Colab + labeling work.
+**Status (2026-07-05):** Tasks 1–3 done. Task 4 done: 431 crops harvested from 120 detector-val faces at the locked operating point. Task 5/6: 192 hand-sorted — comedonal 54, inflammatory 51, post_acne_mark 47, cystic 24, not_acne 16 (+cell-4 negatives pending); 239 unsorted remain as top-up supply. **Decision: post_acne_mark ≥ 30 → GO, no collapse.** Task 7/8 v0 baseline (CPU, 162 train / 70 val): best macro-recall **0.491** @ epoch 8 — not_acne .79, comedonal .61, mark .53, inflammatory **.14** (bleeds into mark), cystic **.11** (15 train crops). v1 round: sort remaining 239 + severe-face harvest for cystic + oversampling/cosine/40 epochs (commit 7795daf). **v1 result (1290 train / 229 val, kaggle pretrain loaded): best-ckpt macro-recall 0.484 @ ep18, acc 0.54** — not_acne .70, mark .59, inflammatory .54, comedonal .32 (starved: 94 train vs mark's 636), cystic .27. v2 round: cell 2c mild/train-split harvest (comedonal+cystic supply) + inflammatory↔mark audit cell (drift vs ceiling) — commit b04e0d6. **v2 result: transfusion BACKFIRED.** 627 cystic crops (~8:1 kaggle:ACNE04) → cystic recall regressed 0.27→**0.09** (24/33 cystic→inflammatory); sampler balances classes not sub-domains, so "cystic" = "kaggle-cyst" and real ACNE04 cysts read inflammatory. Macro 0.44, acc 0.48. **Reverting kg_ crops** (sidelined to crops_kaggle_holdout) back to v1 baseline. **Key finding across v0–v2: macro stuck 0.44–0.49 across oversampling/pretrain/transfusion → data-or-task ceiling, not recipe.** The two failing classes (comedonal .27, cystic .09) are the *size*-defined ones, and crop_with_context (1.5× pad → resize 112) normalizes absolute size away → architectural ceiling. Fork: (A) ship v1-as-v0 with confidence-gated caveats (spec's concern_confidence_cutoff) + move to regions/assemble; (B) size-signal re-harvest (fixed-pixel window). Leaning A.
 
 **Goal:** Ship the Stage 2 five-class lesion-crop classifier: curated self-labeled crop set, runnable Colab training notebook (`.ipynb`), trained weights that round-trip through `LesionClassifier`, and the §6 eval.
 
@@ -131,7 +131,7 @@ for i, part in enumerate(parts):
                     else nbf.v4.new_code_cell(part))
 nbf.validate(nb)
 code = sum(c.cell_type == "code" for c in nb.cells)
-assert code == 9, f"expected 9 code cells, got {code}"
+assert code >= 10, f"suspiciously few code cells: {code}"   # floor, not exact — cells get added as the curriculum grows
 assert any("from src.classification.classifier import CLASSES" in c.source
            for c in nb.cells if c.cell_type == "code"), "cell 1 import missing"
 nbf.write(nb, "notebooks/02_type_classifier.ipynb")
