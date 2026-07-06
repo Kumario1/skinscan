@@ -230,6 +230,34 @@ End-to-end crop predictions:
 
 ![Pipeline crop predictions](assets/stage2_pipeline_single_crop_overview.jpg)
 
+## My Image Test
+
+I also ran the full detector-to-classifier pipeline on a self-collected image:
+
+```bash
+.venv/bin/python -m src.classification.run_acne04_pipeline \
+  --image data/self_collected/acne-before-scaled-e1764168292784.png \
+  --out runs/my_image_test
+```
+
+Result summary:
+
+```text
+detections: 16
+predicted acne types: Pustules
+type counts: Pustules=16
+classifier confidence range: 0.47-1.00
+detector confidence range: 0.19-0.37
+```
+
+Detection overlay:
+
+![My image detection overlay](assets/my_image_test_detection_overlay.jpg)
+
+Detected lesion crops and type predictions:
+
+![My image crop predictions](assets/my_image_test_crop_predictions.jpg)
+
 ## Stage 3: Recommender
 
 The recommender is rules-based, not ML.
