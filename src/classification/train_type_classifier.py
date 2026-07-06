@@ -95,7 +95,7 @@ def main():
     import numpy as np
     import tensorflow as tf
     from sklearn.metrics import classification_report, confusion_matrix
-    from tensorflow.keras.callbacks import ReduceLROnPlateau
+    from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 
     train_ds, valid_ds, test_ds = load_datasets(args)
     class_names = train_ds.class_names
@@ -110,14 +110,19 @@ def main():
         metrics=["accuracy"],
     )
 
+    args.out.parent.mkdir(parents=True, exist_ok=True)
     history = model.fit(
         train_ds,
         validation_data=valid_ds,
         epochs=args.epochs,
         class_weight=class_weights(),
-        callbacks=[ReduceLROnPlateau(patience=3, factor=0.3, min_lr=1e-6)],
+        callbacks=[
+            ReduceLROnPlateau(patience=3, factor=0.3, min_lr=1e-6),
+            ModelCheckpoint(str(args.out), monitor="val_accuracy", save_best_only=True, verbose=1),
+        ],
     )
 
+    model = tf.keras.models.load_model(args.out)
     test_loss, test_acc = model.evaluate(test_ds)
     print("Test Loss :", test_loss)
     print("Test Accuracy :", test_acc)
@@ -129,8 +134,6 @@ def main():
     print("\n--- Confusion Matrix ---")
     print(confusion_matrix(y_true, y_pred))
 
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    model.save(args.out)
     args.out.with_suffix(args.out.suffix + ".labels.json").write_text(
         json.dumps({
             "source": "https://www.kaggle.com/code/dadydada/miniproject-ai-6610210284",
