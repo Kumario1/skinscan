@@ -11,9 +11,11 @@ import json
 from pathlib import Path
 
 from .classifier import RAW_ACNE_CLASSES, build_kaggle_efficientnet
+from ..config import load_config
 
-DEFAULT_DATA = Path("data/raw/typeclassification/AcneDataset")
-DEFAULT_OUT = Path("models/classification/acne_model.keras")
+_cfg = load_config()
+DEFAULT_DATA = Path(_cfg["classification"]["local_data"])
+DEFAULT_OUT = Path(_cfg["classification"]["weights"])
 
 
 def parse_args():
@@ -22,7 +24,7 @@ def parse_args():
     p.add_argument("--out", type=Path, default=DEFAULT_OUT)
     p.add_argument("--epochs", type=int, default=150)
     p.add_argument("--batch-size", type=int, default=32)
-    p.add_argument("--image-size", type=int, default=224)
+    p.add_argument("--image-size", type=int, default=_cfg["classification"]["crop_size"])
     p.add_argument("--inspect", action="store_true")
     return p.parse_args()
 

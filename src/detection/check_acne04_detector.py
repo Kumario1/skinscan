@@ -8,17 +8,20 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
+from ..config import load_config
+
 
 def parse_args():
+    cfg = load_config()
     p = argparse.ArgumentParser()
-    p.add_argument("--weights", type=Path, default=Path("models/detection/acne04_yolov8m_best.pt"))
+    p.add_argument("--weights", type=Path, default=Path(cfg["detection"]["weights"]))
     p.add_argument("--images", type=Path, default=Path("data/raw/acne04/Classification/JPEGImages"))
     p.add_argument("--annotations", type=Path, default=Path("data/raw/acne04/Detection/VOC2007/Annotations"))
     p.add_argument("--split", type=Path, default=Path("data/raw/acne04/Detection/VOC2007/ImageSets/Main/NNEW_test_0.txt"))
     p.add_argument("--out", type=Path, default=Path("runs/detection_check"))
-    p.add_argument("--conf", type=float, default=0.07)
-    p.add_argument("--iou", type=float, default=0.2)
-    p.add_argument("--imgsz", type=int, default=1024)
+    p.add_argument("--conf", type=float, default=cfg["detection"]["conf_threshold"])
+    p.add_argument("--iou", type=float, default=cfg["detection"]["iou_threshold"])
+    p.add_argument("--imgsz", type=int, default=cfg["detection"]["img_size"])
     p.add_argument("--render-limit", type=int, default=12)
     p.add_argument("--limit", type=int, default=0, help="debug only: limit split images")
     return p.parse_args()

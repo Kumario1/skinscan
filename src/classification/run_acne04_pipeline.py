@@ -11,24 +11,26 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageOps
 
 from .classifier import AcneTypeClassifier, crop_with_context
+from ..config import load_config
 
 
 def parse_args():
+    cfg = load_config()
     p = argparse.ArgumentParser()
-    p.add_argument("--detector", type=Path, default=Path("models/detection/acne04_yolov8m_best.pt"))
-    p.add_argument("--classifier", type=Path, default=Path("models/classification/acne_model.keras"))
+    p.add_argument("--detector", type=Path, default=Path(cfg["detection"]["weights"]))
+    p.add_argument("--classifier", type=Path, default=Path(cfg["classification"]["weights"]))
     p.add_argument("--image", type=Path, help="single uploaded/full-face image to run end-to-end")
     p.add_argument("--images", type=Path, default=Path("data/raw/acne04/Classification/JPEGImages"))
     p.add_argument("--out", type=Path, default=Path("runs/acne04_pipeline_check"))
     p.add_argument("--limit", type=int, default=8)
     p.add_argument("--max-boxes", type=int, default=16)
     p.add_argument("--crop-size", type=int, default=0, help="classifier input size; default reads metadata or uses 224")
-    p.add_argument("--crop-pad", type=float, default=1.5)
+    p.add_argument("--crop-pad", type=float, default=cfg["classification"]["crop_pad"])
     p.add_argument("--collage-tiles", type=int, default=9)
     p.add_argument("--crops-only", action="store_true", help="skip classifier and only write detector crop inputs")
-    p.add_argument("--conf", type=float, default=0.07)
-    p.add_argument("--iou", type=float, default=0.2)
-    p.add_argument("--imgsz", type=int, default=1024)
+    p.add_argument("--conf", type=float, default=cfg["detection"]["conf_threshold"])
+    p.add_argument("--iou", type=float, default=cfg["detection"]["iou_threshold"])
+    p.add_argument("--imgsz", type=int, default=cfg["detection"]["img_size"])
     return p.parse_args()
 
 
