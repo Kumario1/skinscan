@@ -217,6 +217,51 @@ Rules of the game:
 - Self-collected phone photos are **test-only (D-014)** — never sort them into
   these training folders. They get their own dir in cell 10.
 
+### Cell 3b — relabel pass (audit an existing class for contamination)
+
+When a confusion audit (cell 10) shows a folder is contaminated — e.g. flat
+marks sorted as `cystic` — walk that folder and re-file. Point `REVIEW` at the
+class to clean; buttons move each crop to the right class, keep it, or delete
+junk. Same resume-on-rerun behaviour as the labeler.
+
+```python
+import shutil
+import ipywidgets as W
+from IPython.display import display
+
+REVIEW = "cystic"   # <- folder to audit; change to review another class
+src = sorted((LABELED / REVIEW).glob("*.png"))
+print(len(src), f"crops in {REVIEW} — reclassify, keep, or delete")
+
+img, label, state = W.Image(format="png", width=300), W.Label(), {"i": 0}
+
+def show():
+    if state["i"] >= len(src):
+        label.value = "done"; return
+    p = src[state["i"]]
+    img.value = p.read_bytes()
+    label.value = f"{state['i']+1}/{len(src)}   {p.name}"
+
+def act(target):
+    def cb(_):
+        if state["i"] < len(src):
+            p = src[state["i"]]
+            if target == "delete":
+                p.unlink()
+            elif target != REVIEW:            # "keep" == REVIEW -> leave in place
+                shutil.move(str(p), str(LABELED / target / p.name))
+            state["i"] += 1; show()
+    return cb
+
+keys = [REVIEW] + [c for c in CLASSES if c != REVIEW] + ["delete"]
+names = [f"keep ({REVIEW})"] + [c for c in CLASSES if c != REVIEW] + ["delete"]
+buttons = [W.Button(description=n) for n in names]
+for b, k in zip(buttons, keys):
+    b.on_click(act(k))
+display(label, img, W.HBox(buttons))
+show()
+```
+
 ### Cell 4 — cheap negatives for `not_acne` (D-013)
 
 Random on-face patches from ACNE04 images at locations the detector did NOT
