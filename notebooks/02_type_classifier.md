@@ -120,6 +120,46 @@ for f in severe:
 print(n, "new crops")
 ```
 
+Comedonal starved? It lives on **mild** faces. The detector's train split
+(~1165 faces) is fair game for classifier training — spec's "top up from
+train" clause. Standalone cell (restages + loads the detector itself):
+
+```python
+!pip install ultralytics -q
+import os
+import numpy as np
+from PIL import Image
+from ultralytics import YOLO
+
+!mkdir -p /content/acne04_raw
+!cp "/content/drive/MyDrive/Detection.tar" "/content/drive/MyDrive/Classification.tar" /content/acne04_raw/
+!cd /content/acne04_raw && tar -xf Detection.tar && tar -xf Classification.tar
+
+IMGDIR  = "/content/acne04_raw/Classification/JPEGImages"
+TRSPLIT = "/content/acne04_raw/Detection/VOC2007/ImageSets/Main/NNEW_trainval_0.txt"
+tr_ids = [os.path.splitext(ln.split()[0])[0] for ln in open(TRSPLIT) if ln.strip()]
+timgs = [f"{IMGDIR}/{s}.jpg" for s in tr_ids if os.path.exists(f"{IMGDIR}/{s}.jpg")]
+mild   = [f for f in timgs if "levle0" in f or "levle1" in f][:80]   # comedonal supply
+severe = [f for f in timgs if "levle3" in f][:40]                    # cystic supply
+print(len(mild), "mild,", len(severe), "severe")
+
+model = YOLO("/content/drive/MyDrive/skinscan_best_y8m.pt")
+n = 0
+for f in mild + severe:
+    im = np.asarray(Image.open(f).convert("RGB"))
+    r = model.predict(f, conf=0.07, iou=0.2, imgsz=1024, verbose=False)[0]
+    for k, b in enumerate(r.boxes[:15]):
+        x0, y0, x1, y1 = b.xyxy[0].tolist()
+        crop = crop_with_context(im, (x0, y0, x1 - x0, y1 - y0))
+        Image.fromarray(crop).save(UNSORTED / f"{Path(f).stem}_{k}_{float(b.conf):.2f}.png")
+        n += 1
+print(n, "new crops")
+```
+
+Caveat: the detector trained on these faces, so its boxes here are cleaner
+than at deployment — fine for classifier train data, and the face-level split
+in cell 7 keeps eval honest.
+
 ### Cell 3 — hand-sort (the real work)
 
 One click per crop: the buttons move the file and show the next. Files move
@@ -419,6 +459,27 @@ print(classification_report(Y, P, target_names=CLASSES, zero_division=0))
 ConfusionMatrixDisplay.from_predictions(Y, P, display_labels=CLASSES,
                                         xticks_rotation=45)
 ```
+
+When one confusion pair dominates the matrix, look at those exact errors
+before changing anything — label drift and information ceiling need different
+responses (relabel pass vs accept-and-document):
+
+```python
+import matplotlib.pyplot as plt
+A, B = CLASSES.index("inflammatory"), CLASSES.index("post_acne_mark")   # the pair under audit
+errs = [i for i, (yy, pp) in enumerate(zip(Y, P)) if {yy, pp} == {A, B}]
+print(len(errs), "confusions between", CLASSES[A], "and", CLASSES[B])
+fig, axes = plt.subplots(4, 8, figsize=(16, 9))
+for ax in axes.flat: ax.axis("off")
+for ax, e in zip(axes.flat, errs[:32]):
+    p, yy = full.samples[val_idx[e]]
+    ax.imshow(Image.open(p))
+    ax.set_title(f"true {CLASSES[yy][:9]}\npred {CLASSES[P[e]][:9]}", fontsize=7)
+```
+
+If you can call most of them at a glance, the labels drifted — do a relabel
+pass on the offending folder. If half are genuinely ambiguous, that's the
+information ceiling (spec §3) — document it and stop paying for it.
 
 Watch specifically (spec §6): `cystic` recall (rare — a missed cyst is a
 missed see-a-professional) and `post_acne_mark` recall (thinnest class). If
