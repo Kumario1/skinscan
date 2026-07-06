@@ -409,6 +409,12 @@ actives)? Not all confusions cost the same.
 
 ```python
 from sklearn.metrics import classification_report, ConfusionMatrixDisplay
+# score the BEST checkpoint, not whatever epoch cell 8 ended on
+net.load_state_dict(torch.load(WORK / "type_classifier_v0.pt", map_location=dev)); net.eval()
+P, Y = [], []
+with torch.no_grad():
+    for x, y in val_dl:
+        P += net(x.to(dev)).argmax(1).cpu().tolist(); Y += y.tolist()
 print(classification_report(Y, P, target_names=CLASSES, zero_division=0))
 ConfusionMatrixDisplay.from_predictions(Y, P, display_labels=CLASSES,
                                         xticks_rotation=45)
