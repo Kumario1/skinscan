@@ -1,0 +1,9 @@
+name,brand,category,ingredients,price
+SA Cleanser,BrandA,cleanser,"Aqua, Salicylic Acid, Cocamidopropyl Betaine",15.99
+Vitamin C Serum,BrandB,serum,"Ascorbic Acid (Vitamin C), Aqua",22.00
+HA Moisturizer,BrandC,moisturizer,"Sodium Hyaluronate, Glycerin, Aqua",
+Coconut Moisturizer,BrandD,moisturizer,"COCONUT OIL, Ceramides, Aqua",18.5
+Daily SPF,BrandE,spf,"Aqua, Homosalate, Avobenzone",12.99
+Tinted Foundation,BrandF,Makeup,"Aqua, Titanium Dioxide, Niacinamide",40.00
+BP Spot Treatment,BrandG,treatment,"Benzoyl Peroxide 2.5%, Aqua",?
+Basic Moisturizer,BrandH,moisturizer,"Aqua, Parfum",9.99
