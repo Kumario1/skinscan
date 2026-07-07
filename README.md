@@ -47,6 +47,8 @@ iou:     0.2
 imgsz:   1024
 ```
 
+Training provenance: [notebooks/01_acne04_detector.md](notebooks/01_acne04_detector.md) (Colab walkthrough that produced these weights).
+
 On ACNE04 validation, the best saved sweep point is:
 
 ```text

@@ -48,3 +48,5 @@ Run:
 ```bash
 .venv/bin/python -m src.detection.check_acne04_detector
 ```
+
+Stage 1 training walkthrough: ../notebooks/01_acne04_detector.md
