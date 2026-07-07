@@ -14,6 +14,12 @@ RAW_TO_CONCERN = {
 }
 
 
+def read_model_metadata(model_path):
+    model_path = Path(model_path)
+    meta = model_path.with_suffix(model_path.suffix + ".labels.json")
+    return json.loads(meta.read_text()) if meta.exists() else {}
+
+
 def concern_probs(raw_probs):
     """Aggregate raw class probabilities into D-008 schema concern IDs."""
     out = {c: 0.0 for c in sorted(set(RAW_TO_CONCERN.values()))}
@@ -74,9 +80,7 @@ class AcneTypeClassifier:
     def __init__(self, model_path, classes=None):
         import tensorflow as tf
 
-        model_path = Path(model_path)
-        meta = model_path.with_suffix(model_path.suffix + ".labels.json")
-        metadata = json.loads(meta.read_text()) if meta.exists() else {}
+        metadata = read_model_metadata(model_path)
         self.classes = list(classes or metadata.get("classes", RAW_ACNE_CLASSES))
         self.image_size = int(metadata.get("image_size", 224))
         self.model = tf.keras.models.load_model(model_path)

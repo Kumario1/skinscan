@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from PIL import Image, ImageDraw
 
 from ..config import load_config
+from ..utils import require
+from .voc_to_yolo import parse_voc_xml
 
 
 def parse_args():
@@ -27,22 +28,13 @@ def parse_args():
     return p.parse_args()
 
 
-def require(path, label):
-    if not path.exists():
-        raise SystemExit(f"missing {label}: {path}")
-
-
 def split_ids(path):
     return [Path(line.split()[0]).stem for line in path.read_text().splitlines() if line.strip()]
 
 
 def gt_boxes(root, stem):
-    xml = ET.parse(root / f"{stem}.xml").getroot()
-    boxes = []
-    for obj in xml.findall("object"):
-        b = obj.find("bndbox")
-        boxes.append([float(b.find(k).text) for k in ("xmin", "ymin", "xmax", "ymax")])
-    return boxes
+    _, _, boxes = parse_voc_xml(str(root / f"{stem}.xml"))
+    return [[b.xmin, b.ymin, b.xmax, b.ymax] for b in boxes]
 
 
 def box_iou(a, b):
