@@ -10,8 +10,9 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageOps
 
-from .classifier import AcneTypeClassifier, crop_with_context
+from .classifier import AcneTypeClassifier, crop_with_context, read_model_metadata
 from ..config import load_config
+from ..utils import require
 
 
 def parse_args():
@@ -34,11 +35,6 @@ def parse_args():
     return p.parse_args()
 
 
-def require(path, label):
-    if not path.exists():
-        raise SystemExit(f"missing {label}: {path}")
-
-
 def image_files(root):
     if root.is_file():
         return [root]
@@ -51,10 +47,7 @@ def selected_images(image, images, limit):
 
 
 def classifier_image_size(model_path, fallback=224):
-    meta = Path(model_path).with_suffix(Path(model_path).suffix + ".labels.json")
-    if not meta.exists():
-        return fallback
-    return int(json.loads(meta.read_text()).get("image_size", fallback))
+    return int(read_model_metadata(model_path).get("image_size", fallback))
 
 
 def draw_input_collage(crops, out_path, size, max_tiles=9):
