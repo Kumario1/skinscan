@@ -7,3 +7,4 @@ scikit-learn
 pyyaml
 tensorflow
 ultralytics
+pytest  # test runner; files also run standalone via __main__

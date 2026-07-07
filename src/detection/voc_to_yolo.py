@@ -10,7 +10,7 @@ official LDL release is converted through a VOC-XML intermediate; other copies
 ship flat-text or COCO JSON. Run `inspect_raw()` on your actual download FIRST,
 confirm which format you have, then point the converter at the right parser.
 The geometry (`voc_box_to_yolo`) is format-independent and is the part that
-actually matters for correctness — it's unit-tested.
+actually matters for correctness — it's unit-tested (tests/test_voc_to_yolo.py).
 """
 from __future__ import annotations
 import os
