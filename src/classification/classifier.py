@@ -4,16 +4,23 @@ from pathlib import Path
 
 import numpy as np
 
-CONCERN_CLASSES = ["comedonal", "cystic", "inflammatory", "not_acne", "post_acne_mark"]
 RAW_ACNE_CLASSES = ["Blackheads", "Cyst", "Papules", "Pustules", "Whiteheads"]
 RAW_TO_CONCERN = {
-    "Blackheads": "comedonal",
-    "Whiteheads": "comedonal",
-    "Cyst": "cystic",
-    "Papules": "inflammatory",
-    "Pustules": "inflammatory",
+    "Blackheads": "acne_comedonal",
+    "Whiteheads": "acne_comedonal",
+    "Cyst": "acne_cystic",
+    "Papules": "acne_inflammatory",
+    "Pustules": "acne_inflammatory",
 }
-CLASSES = CONCERN_CLASSES  # old name kept for callers
+
+
+def concern_probs(raw_probs):
+    """Aggregate raw class probabilities into D-008 schema concern IDs."""
+    out = {c: 0.0 for c in sorted(set(RAW_TO_CONCERN.values()))}
+    for raw, prob in raw_probs.items():
+        if raw in RAW_TO_CONCERN:
+            out[RAW_TO_CONCERN[raw]] += prob
+    return out
 
 
 def crop_with_context(image, box, pad=1.5, size=224):
@@ -86,11 +93,7 @@ class AcneTypeClassifier:
         return dict(zip(self.classes, probs.astype(float).tolist()))
 
     def predict_concerns(self, crop):
-        out = {"comedonal": 0.0, "cystic": 0.0, "inflammatory": 0.0}
-        for raw, prob in self.predict(crop).items():
-            if raw in RAW_TO_CONCERN:
-                out[RAW_TO_CONCERN[raw]] += prob
-        return out
+        return concern_probs(self.predict(crop))
 
 
 LesionClassifier = AcneTypeClassifier
