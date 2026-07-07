@@ -74,12 +74,14 @@ def load_datasets(args):
     return train_ds, valid_ds, test_ds
 
 
-def class_weights():
+def class_weights(root):
     import numpy as np
     from sklearn.utils.class_weight import compute_class_weight
 
-    counts = [735, 645, 621, 584, 193]
-    classes = np.array([0, 1, 2, 3, 4])
+    counts = [n for _, n in count_split(root, "train")]
+    if not counts or any(n == 0 for n in counts):
+        raise SystemExit(f"empty class directory under {root}/train")
+    classes = np.arange(len(counts))
     y = np.repeat(classes, counts)
     return dict(zip(classes, compute_class_weight("balanced", classes=classes, y=y)))
 
@@ -117,7 +119,7 @@ def main():
         train_ds,
         validation_data=valid_ds,
         epochs=args.epochs,
-        class_weight=class_weights(),
+        class_weight=class_weights(args.data),
         callbacks=[
             ReduceLROnPlateau(patience=3, factor=0.3, min_lr=1e-6),
             ModelCheckpoint(str(args.out), monitor="val_accuracy", save_best_only=True, verbose=1),
