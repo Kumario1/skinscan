@@ -108,26 +108,29 @@ def analyze_image(img_path, model, clf, out_dir, *, crop_size, crop_pad, max_box
         imgsz=imgsz,
         verbose=False,
     )[0]
-    sheet_items = []
+    crops = []
     detections = []
     for box in result.boxes[:max_boxes]:
         x0, y0, x1, y1 = box.xyxy[0].tolist()
         crop = crop_with_context(image, (x0, y0, x1 - x0, y1 - y0), pad=crop_pad, size=crop_size)
         crop_path = out_dir / f"{img_path.stem}_crop_{len(detections) + 1:02d}.jpg"
         Image.fromarray(crop).save(crop_path, quality=92)
-        record = {
+        crops.append(crop)
+        detections.append({
             "box": [x0, y0, x1, y1],
             "detector_conf": float(box.conf),
             "input_crop": str(crop_path),
-        }
-        if clf:
-            probs = clf.predict(crop)
+        })
+
+    sheet_items = []
+    if clf:
+        for crop, record, probs in zip(crops, detections, clf.predict_batch(crops)):
             label, prob = max(probs.items(), key=lambda kv: kv[1])
             sheet_items.append((crop, f"{label} {prob:.2f}"))
             record.update({"prediction": label, "probability": prob, "probs": probs})
-        else:
-            sheet_items.append((crop, f"conf {float(box.conf):.2f}"))
-        detections.append(record)
+    else:
+        for crop, record in zip(crops, detections):
+            sheet_items.append((crop, f"conf {record['detector_conf']:.2f}"))
 
     collage_path = out_dir / f"{img_path.stem}_input_collage.jpg"
     draw_input_collage([crop for crop, _ in sheet_items], collage_path, crop_size, collage_tiles)

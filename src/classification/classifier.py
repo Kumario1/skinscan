@@ -81,16 +81,25 @@ class AcneTypeClassifier:
         self.image_size = int(metadata.get("image_size", 224))
         self.model = tf.keras.models.load_model(model_path)
 
-    def predict(self, crop):
+    def _prepare(self, crop):
         from PIL import Image
-        from tensorflow.keras.applications.efficientnet import preprocess_input
 
         crop = np.asarray(crop)
         if crop.shape[:2] != (self.image_size, self.image_size):
             crop = np.asarray(Image.fromarray(crop).resize((self.image_size, self.image_size), Image.BILINEAR))
-        x = preprocess_input(crop.astype(np.float32)[None, ...])
-        probs = self.model.predict(x, verbose=0)[0]
-        return dict(zip(self.classes, probs.astype(float).tolist()))
+        return crop.astype(np.float32)
+
+    def predict_batch(self, crops):
+        from tensorflow.keras.applications.efficientnet import preprocess_input
+
+        if not len(crops):
+            return []
+        x = preprocess_input(np.stack([self._prepare(c) for c in crops]))
+        probs = self.model.predict(x, verbose=0)
+        return [dict(zip(self.classes, p.astype(float).tolist())) for p in probs]
+
+    def predict(self, crop):
+        return self.predict_batch([crop])[0]
 
     def predict_concerns(self, crop):
         return concern_probs(self.predict(crop))
@@ -104,8 +113,11 @@ class StubClassifier:
         p = np.asarray(probs if probs is not None else [0.25, 0.2, 0.2, 0.2, 0.15], dtype=np.float32)
         self.probs = p / p.sum()
 
+    def predict_batch(self, crops):
+        return [dict(zip(RAW_ACNE_CLASSES, self.probs.tolist())) for _ in crops]
+
     def predict(self, crop):
-        return dict(zip(RAW_ACNE_CLASSES, self.probs.tolist()))
+        return self.predict_batch([crop])[0]
 
 
 if __name__ == "__main__":
