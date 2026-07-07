@@ -136,16 +136,20 @@ detection but weak multi-class severity — we'll reproduce and reason about tha
 
 ---
 
-### D-018 — Stage 1 model: YOLOv8n, COCO-pretrained, fine-tune-all, single-class · LOCKED
+### D-018 — Stage 1 model: YOLOv8m, COCO-pretrained, fine-tune-all, single-class · LOCKED
+**Changed 2026-07-06:** originally locked as YOLOv8-nano; the shipped,
+validated detector is YOLOv8-medium (`models/detection/acne04_yolov8m_best.pt`,
+F1=0.722 at conf 0.07 / IoU 0.2, imgsz 1024 — see README §1). Entry updated to
+match the shipped model per this file's own change rule; the model itself is
+NOT changing. Original reasoning (still applies, with -nano → -medium):
 Transfer learning, not from-scratch (1,457 images can't train a detector from
-random init) and not a VLM API (teaches no CV, D-001). Ultralytics YOLOv8-nano,
-COCO-pretrained weights, head reconfigured to 1 class (`lesion`), all layers
-fine-tuned at a low LR (lr0≈0.001) to shift features gently without
-catastrophic forgetting. Nano fits a free Colab T4; step up to -small only if
-it underfits (config change, not a rewrite). Severity is NOT detected — it's
-derived from lesion count/density per region (D-004), which is why we keep
-ACNE04's Classification (count) labels. New eval vocabulary: IoU, mAP.
-Workflow rule: eyeball predictions BEFORE reading metrics.
+random init) and not a VLM API (teaches no CV, D-001). COCO-pretrained
+weights, head reconfigured to 1 class (`lesion`), all layers fine-tuned at a
+low LR (lr0≈0.001) to shift features gently without catastrophic forgetting.
+Severity is NOT detected — it's derived from lesion count/density per region
+(D-004), which is why we keep ACNE04's Classification (count) labels. New eval
+vocabulary: IoU, mAP. Workflow rule: eyeball predictions BEFORE reading
+metrics.
 
 - **D-012** (hyperpigmentation/dry-skin data) — NON-BLOCKING. Acne path is
   fully unblocked; resolve when we get there.
