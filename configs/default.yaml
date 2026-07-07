@@ -26,3 +26,6 @@ paths:
   acne04_raw: data/raw/acne04
   catalog_raw: data/raw/sephora
   catalog_processed: data/processed/catalog.json
+
+concern_report:                     # consumed by the future Stage 2->3 bridge
+  severity_count_thresholds: [1, 5, 10, 20]   # lesion count -> severity 1..4 (Q-B, ACNE04-aligned)
