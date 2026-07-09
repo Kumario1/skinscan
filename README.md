@@ -2,7 +2,9 @@
 
 **A two-stage acne analysis pipeline.** Feed it a face image; it first finds
 candidate acne lesions, then classifies each detected crop as one of five acne
-types: **Blackheads, Cyst, Papules, Pustules, Whiteheads**.
+types — **Blackheads, Cyst, Papules, Pustules, Whiteheads** — or as
+**Not_acne**, a sixth "reject" class so detector false positives (shadows,
+pores, glasses, hair) get thrown out instead of forced onto a real acne type.
 
 The important idea is separation: the detector answers **where are the spots?**
 and the classifier answers **what type does this crop look like?** The
@@ -17,7 +19,7 @@ flowchart LR
     D --> B["candidate lesion boxes"]
     B --> C["context crop around each box"]
     C --> E["EfficientNetB0 type classifier"]
-    E --> P["5-class probabilities"]
+    E --> P["6-class probabilities (5 acne types + Not_acne)"]
     P --> R["concern mapping + routine rules"]
 ```
 
@@ -25,8 +27,9 @@ Current run summary:
 
 ```text
 Stage 1 detector: YOLOv8m on ACNE04, F1=0.722 at conf=0.07 / IoU=0.2
-Stage 2 classifier: EfficientNetB0 on acne type crops, test accuracy=91.18%
-Custom image test: 16 detections, all classified as Pustules
+Stage 2 classifier: EfficientNetB0, 6 classes (5 acne types + Not_acne), test accuracy=91.18%, macro F1=0.92
+Not_acne reject:   99.7% of detector boxes on held-out clear-skin (FFHQ) faces
+Custom image test: 25 detections, all now classified Not_acne (was 16, all forced to Pustules)
 ```
 
 ---
@@ -79,11 +82,18 @@ How to read this image:
 The classifier is an EfficientNetB0 transfer-learning model trained on cropped
 lesion images. It only sees a crop, not the full face.
 
-Raw output classes:
+Raw output classes (alphabetical; `Not_acne` at index 2):
 
 ```python
-["Blackheads", "Cyst", "Papules", "Pustules", "Whiteheads"]
+["Blackheads", "Cyst", "Not_acne", "Papules", "Pustules", "Whiteheads"]
 ```
+
+`Not_acne` is a negative/reject class. The detector runs at a deliberately low
+confidence threshold, so some boxes it forwards are shadows, pores, or hair
+rather than lesions. A five-way softmax has no way to say "none of these" and
+forces every crop onto an acne type (see §4). The sixth class gives the model a
+learned reject region; its probability mass is intentionally dropped by the
+concern mapping, so a `Not_acne` crop contributes to no concern.
 
 Training setup:
 
@@ -124,6 +134,13 @@ Per-class test report:
 | Papules | 0.88 | 0.87 | 0.88 | 202 |
 | Pustules | 0.88 | 0.87 | 0.88 | 205 |
 | Whiteheads | 0.98 | 0.96 | 0.97 | 57 |
+
+The table covers the five acne classes only (`Not_acne` rows excluded, per the
+negative-class design). Adding the sixth class did not regress them — macro F1
+holds at **0.92** (0.14-point change). `Not_acne` itself is measured by its
+reject rate: on a held-out FFHQ clear-skin sheet the detector never saw during
+negative harvesting, **99.7%** (382/383) of detector boxes are correctly
+classified `Not_acne`.
 
 Training curves:
 
@@ -177,39 +194,49 @@ How to interpret a pipeline run:
 
 ## 4. My image test
 
-I ran the full detector-to-classifier pipeline on a self-collected image:
+This image is the project's canonical failure case — a self-collected photo of
+essentially clear skin. I ran the full detector-to-classifier pipeline on it:
 
 ```bash
 .venv/bin/python -m src.classification.run_acne04_pipeline \
   --image data/self_collected/acne-before-scaled-e1764168292784.png \
-  --out runs/my_image_test
+  --max-boxes 100 --out runs/my_image_test
 ```
 
-Result summary:
+**Before the `Not_acne` class**, the five-way softmax had no reject option, so
+every candidate box was forced onto an acne type:
 
 ```text
 detections: 16
-predicted acne types: Pustules
 type counts: Pustules=16
 classifier confidence range: 0.47-1.00
 detector confidence range: 0.19-0.37
 ```
 
+Sixteen crops of clear skin, all reported **Pustules**, some at 1.00 confidence —
+the classic out-of-distribution softmax failure. A high classifier probability on
+a weak detector box (detector conf 0.19-0.37) is not evidence of a lesion.
+
+**After adding `Not_acne` and retraining**, the same image rejects cleanly:
+
+```text
+detections: 25
+type counts: Not_acne=25
+classifier confidence range: 0.59-1.00 (mean 0.98)
+detector confidence range: 0.07-0.37
+```
+
+Every detector box now classifies **Not_acne**, so the spurious pustules are
+gone. Because the concern mapping drops `Not_acne`, this image produces zero acne
+concerns — the correct outcome for clear skin.
+
 Detection overlay:
 
 ![My image detection overlay](assets/my_image_test_detection_overlay.jpg)
 
-Detected lesion crops and type predictions:
+Detected lesion crops and predictions (all Not_acne after retrain):
 
 ![My image crop predictions](assets/my_image_test_crop_predictions.jpg)
-
-Interpretation:
-
-The classifier was consistent: every crop landed on **Pustules**. The detector
-confidences are moderate rather than high, so the right reading is not "16
-certain lesions"; it is "YOLO proposed 16 candidate lesions, and the classifier
-found the visible crops most similar to Pustules." The crop sheet is the audit
-view for deciding which boxes are useful.
 
 ---
 
