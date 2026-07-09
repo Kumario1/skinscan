@@ -279,6 +279,15 @@ python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 ```
 
+Download the MediaPipe FaceLandmarker bundle used for face regions and tone
+sampling (model files remain local and gitignored):
+
+```bash
+mkdir -p models
+curl --fail --location --output models/face_landmarker.task \
+  https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task
+```
+
 Detector check:
 
 ```bash
@@ -301,6 +310,35 @@ Run one image:
 
 ```bash
 .venv/bin/python -m src.classification.run_acne04_pipeline --image path/to/image.jpg
+```
+
+Render the issue #6 region and tone overlays from that run's JSON:
+
+```bash
+.venv/bin/python -m src.pipeline.regions path/to/image.jpg \
+  --boxes runs/acne04_pipeline_check/predictions.json
+.venv/bin/python -m src.pipeline.tone path/to/image.jpg \
+  --boxes runs/acne04_pipeline_check/predictions.json
+```
+
+Issue #6 visual gate on the self-collected profile:
+
+![Landmark face regions](assets/issue6_face_regions_overlay.png)
+
+Green marks the exact non-lesional forehead/visible-cheek pixels used by ITA:
+
+![ITA sampling mask](assets/issue6_tone_sampling_overlay.png)
+
+On profile photos, the smaller projected cheek is treated as occluded when its
+area is below `tone.profile_cheek_area_ratio`; this prevents nose/far-side
+pixels from dominating ITA.
+
+Run the default model-free tests, then the explicit local-artifact tier:
+
+```bash
+.venv/bin/python -m pytest
+SKINSCAN_REAL_FACE_IMAGE=path/to/self-collected.jpg \
+  .venv/bin/python -m pytest -m real_models
 ```
 
 Expected local outputs:

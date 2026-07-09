@@ -4,7 +4,9 @@ pandas
 pillow
 matplotlib
 scikit-learn
+joblib==1.5.3
 pyyaml
 tensorflow
 ultralytics
+mediapipe==0.10.35
 pytest  # test runner; files also run standalone via __main__

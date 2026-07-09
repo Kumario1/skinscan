@@ -27,6 +27,7 @@ paths:
   catalog_raw: data/raw/sephora
   catalog_processed: data/processed/catalog.json
   reviews_raw: data/raw/sephora       # Sephora review CSVs (reviews_*.csv) alongside products — D-015 extension
+  face_landmarker: models/face_landmarker.task  # MediaPipe Tasks bundle for D-020 regions
 
 concern_report:                     # consumed by the future Stage 2->3 bridge
   severity_count_thresholds: [1, 5, 10, 20]   # lesion count -> severity 1..4 (Q-B, ACNE04-aligned)
@@ -40,6 +41,7 @@ tone:                               # skin-tone triage from the photo via ITA, n
   ita_light_min: 41                 # ITA >= 41 deg -> light bucket
   ita_medium_min: 10                # ITA >= 10 deg -> medium; below -> deep
   low_light_l_threshold: 35         # CIELAB L* below this -> low-light flag (tone estimate unreliable)
+  profile_cheek_area_ratio: 0.5     # smaller projected cheek below this ratio is occluded; omit from ITA sampling
 
 ranker:                             # learned re-ranker artifacts (D-022); engine runs rules-only if absent (D-019)
   model_path: models/ranker/ranker.joblib             # HistGradientBoostingClassifier on is_recommended
