@@ -19,6 +19,7 @@ import argparse
 import csv
 import json
 import re
+from collections import Counter
 from dataclasses import asdict
 from pathlib import Path
 from typing import Optional
@@ -141,21 +142,26 @@ def _parse_price(raw) -> Optional[float]:
 
 # --- row -> product --------------------------------------------------------
 def product_from_row(row: dict, idx: int) -> Optional[Product]:
-    """Build a Product from a fixture row (columns:
-    name,brand,category,ingredients,price). Returns None if the category is not
-    in the closed vocabulary (dropped at import).
+    """Build a Product from a simple row (columns: name, brand, category,
+    ingredients, price, plus an optional product_id). Returns None if the
+    category is not in the closed vocabulary (dropped at import).
 
-    Follow-up (D-015): the real Kaggle Sephora dump uses different column names
-    and a broader category taxonomy. A `row_adapter` that renames its columns to
-    the five above and maps its categories onto CATEGORIES belongs right here,
-    at this function's input — the rest of the importer stays untouched.
+    This is the importer's per-row seam (D-015). The real Kaggle Sephora dump
+    has different column names and a broader taxonomy, so `sephora_row_to_simple`
+    below renames its columns and maps its categories onto CATEGORIES *before*
+    this point — every line here stays format-agnostic. `product_id` is passed
+    through when present (the Sephora id is load-bearing for joining reviews);
+    synthesized from the row index otherwise.
     """
     category = (row.get("category") or "").strip().lower()
     if category not in CATEGORIES:
         return None
     actives, comedogenic = parse_ingredients(row.get("ingredients") or "")
+    # Honor a source-supplied id (the Sephora adapter passes one through —
+    # load-bearing for joining reviews); simple rows have none, so synthesize.
+    product_id = (row.get("product_id") or "").strip() or f"p{idx:05d}"
     return Product(
-        product_id=f"p{idx:05d}",
+        product_id=product_id,
         name=(row.get("name") or "").strip(),
         brand=(row.get("brand") or "").strip(),
         category=category,
@@ -166,18 +172,93 @@ def product_from_row(row: dict, idx: int) -> Optional[Product]:
     )
 
 
-def import_csv(csv_path, out_path) -> dict:
+# --- Sephora adapter (the real Kaggle product_info.csv; D-015) -------------
+# Feeds product_from_row(): rename the Sephora columns and map its taxonomy onto
+# CATEGORIES, so everything downstream stays format-agnostic (D-009 unchanged).
+#
+# Keep only primary_category == "Skincare", then this exact-string table on
+# (secondary, tertiary). Transcribed from the actual CSV, not from memory; the
+# table, the non-obvious calls, and the drop policy live in CATALOG_SCHEMA.md.
+SEPHORA_CATEGORY_MAP: dict[tuple[str, str], str] = {
+    ("Cleansers", "Face Wash & Cleansers"): "cleanser",
+    ("Cleansers", "Toners"): "cleanser",
+    ("Cleansers", "Makeup Removers"): "cleanser",
+    ("Cleansers", "Face Wipes"): "cleanser",
+    ("Cleansers", ""): "cleanser",
+    ("Cleansers", "Exfoliators"): "treatment",
+    ("Treatments", "Face Serums"): "serum",
+    ("Treatments", "Facial Peels"): "treatment",
+    ("Treatments", "Blemish & Acne Treatments"): "treatment",
+    ("Masks", "Face Masks"): "treatment",
+    ("Masks", "Sheet Masks"): "treatment",
+    ("Moisturizers", "Moisturizers"): "moisturizer",
+    ("Moisturizers", "Mists & Essences"): "moisturizer",
+    ("Moisturizers", "Face Oils"): "moisturizer",
+    ("Moisturizers", "Night Creams"): "moisturizer",
+    ("Moisturizers", "Decollete & Neck Creams"): "moisturizer",
+    ("Moisturizers", ""): "moisturizer",
+    ("Sunscreen", "Face Sunscreen"): "spf",
+    ("Sunscreen", ""): "spf",
+}
+
+
+def sephora_row_to_simple(raw: dict) -> Optional[dict]:
+    """Map a raw Sephora product_info.csv row to the importer's simple row shape,
+    or return None if it isn't a mappable face-routine skincare product (wrong
+    primary category, or a (secondary, tertiary) pair not in the table)."""
+    if (raw.get("primary_category") or "").strip() != "Skincare":
+        return None
+    key = ((raw.get("secondary_category") or "").strip(),
+           (raw.get("tertiary_category") or "").strip())
+    category = SEPHORA_CATEGORY_MAP.get(key)
+    if category is None:
+        return None
+    return {
+        "product_id": (raw.get("product_id") or "").strip(),
+        "name": raw.get("product_name") or "",
+        "brand": raw.get("brand_name") or "",
+        "category": category,
+        "ingredients": raw.get("ingredients") or "",
+        "price": raw.get("price_usd"),
+    }
+
+
+def _sephora_drop_label(raw: dict) -> str:
+    """A glanceable reason a Sephora row was dropped: the primary category for
+    non-skincare, else the full "Skincare / secondary / tertiary" pair."""
+    prim = (raw.get("primary_category") or "").strip()
+    if prim != "Skincare":
+        return prim or "(uncategorized)"
+    sec = (raw.get("secondary_category") or "").strip()
+    ter = (raw.get("tertiary_category") or "").strip()
+    return f"Skincare / {sec} / {ter}"
+
+
+def import_csv(csv_path, out_path, fmt: str = "simple") -> dict:
     """Read a catalog CSV, normalize each row, write out_path as a JSON list of
-    products, and return/print a log dict. Deterministic -> idempotent."""
+    products, and return/print a log dict. Deterministic -> idempotent.
+
+    fmt="simple" reads the importer's own five-column shape (unchanged).
+    fmt="sephora" runs each row through the Sephora adapter first and adds a
+    dropped-by-category breakdown + kept-by-category tally to the log."""
     csv_path = Path(csv_path)
     out_path = Path(out_path)
 
     rows = 0
     dropped_category = 0
+    dropped_by_category: Counter[str] = Counter()
     products: list[Product] = []
     with open(csv_path, newline="", encoding="utf-8") as f:
-        for idx, row in enumerate(csv.DictReader(f)):
+        for idx, raw in enumerate(csv.DictReader(f)):
             rows += 1
+            if fmt == "sephora":
+                row = sephora_row_to_simple(raw)
+                if row is None:
+                    dropped_category += 1
+                    dropped_by_category[_sephora_drop_label(raw)] += 1
+                    continue
+            else:
+                row = raw
             product = product_from_row(row, idx)
             if product is None:
                 dropped_category += 1
@@ -185,13 +266,19 @@ def import_csv(csv_path, out_path) -> dict:
             products.append(product)
 
     with_actives = sum(1 for p in products if p.actives)
-    log = {
+    log: dict[str, object] = {
         "rows": rows,
         "kept": len(products),
         "dropped_category": dropped_category,
         "with_actives": with_actives,
         "zero_actives": len(products) - with_actives,
     }
+    if fmt == "sephora":
+        # both breakdowns get a stable, glanceable order: drops by size,
+        # keeps in canonical routine order.
+        kept = Counter(p.category for p in products)
+        log["dropped_by_category"] = dict(dropped_by_category.most_common())
+        log["kept_by_category"] = {c: kept[c] for c in CATEGORIES if kept[c]}
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
@@ -215,6 +302,12 @@ def main(argv=None):
     )
     parser.add_argument("--csv", required=True, help="input CSV path")
     parser.add_argument(
+        "--format",
+        choices=("simple", "sephora"),
+        default="simple",
+        help="input row format (default: simple; sephora = Kaggle product_info.csv)",
+    )
+    parser.add_argument(
         "--out",
         default=None,
         help="output JSON path (default: paths.catalog_processed from config)",
@@ -226,7 +319,7 @@ def main(argv=None):
         from src.config import load_config  # lazy: avoids importing yaml unless needed
         out = load_config()["paths"]["catalog_processed"]
 
-    import_csv(args.csv, out)
+    import_csv(args.csv, out, fmt=args.format)
 
 
 if __name__ == "__main__":
