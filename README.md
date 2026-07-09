@@ -27,7 +27,7 @@ Current run summary:
 
 ```text
 Stage 1 detector: YOLOv8m on ACNE04, F1=0.722 at conf=0.07 / IoU=0.2
-Stage 2 classifier: EfficientNetB0, 6 classes (5 acne types + Not_acne), test accuracy=91.18%, macro F1=0.92
+Stage 2 classifier: EfficientNetB0, 6 classes (5 acne types + Not_acne), test accuracy=91.72%, macro F1=0.93
 Not_acne reject:   99.7% of detector boxes on held-out clear-skin (FFHQ) faces
 Custom image test: 25 detections, all now classified Not_acne (was 16, all forced to Pustules)
 ```
@@ -107,7 +107,10 @@ checkpointing:  best validation accuracy
 input:          raw RGB 224x224 crops, pixel values 0-255
 ```
 
-Dataset split:
+Retrain provenance: [notebooks/retrain_stage2_colab.ipynb](notebooks/retrain_stage2_colab.ipynb) (Colab walkthrough: harvest `Not_acne` negatives → retrain → run the acceptance checks).
+
+Dataset split (five acne classes below; the `Not_acne` sixth class adds
+harvested crops, its train count held ≤ 735 = the largest acne class):
 
 ```text
 train: 2778 images
@@ -115,49 +118,51 @@ valid:  921 images
 test:   918 images
 ```
 
-Latest T4 result:
+Latest T4 result (6-class model; metrics on the five acne test classes):
 
 ```text
-best validation accuracy: 0.8979
-test loss: 0.4999
-test accuracy: 0.9118
-macro F1: 0.92
-weighted F1: 0.91
+best validation accuracy: 0.9193   (epoch 128 of 150)
+test accuracy:            0.9172
+macro F1:                 0.93
+weighted F1:              0.92
 ```
 
 Per-class test report:
 
 | Class | Precision | Recall | F1 | Support |
 |---|---:|---:|---:|---:|
-| Blackheads | 0.94 | 0.95 | 0.95 | 265 |
-| Cyst | 0.92 | 0.93 | 0.92 | 189 |
-| Papules | 0.88 | 0.87 | 0.88 | 202 |
-| Pustules | 0.88 | 0.87 | 0.88 | 205 |
-| Whiteheads | 0.98 | 0.96 | 0.97 | 57 |
+| Blackheads | 0.94 | 0.94 | 0.94 | 265 |
+| Cyst | 0.93 | 0.95 | 0.94 | 189 |
+| Papules | 0.89 | 0.85 | 0.87 | 202 |
+| Pustules | 0.89 | 0.91 | 0.90 | 205 |
+| Whiteheads | 0.98 | 0.98 | 0.98 | 57 |
 
-The table covers the five acne classes only (`Not_acne` rows excluded, per the
-negative-class design). Adding the sixth class did not regress them — macro F1
-holds at **0.92** (0.14-point change). `Not_acne` itself is measured by its
-reject rate: on a held-out FFHQ clear-skin sheet the detector never saw during
-negative harvesting, **99.7%** (382/383) of detector boxes are correctly
-classified `Not_acne`.
+The table covers the five acne classes only. Adding the sixth class did **not**
+regress them — macro F1 is **0.93** (was 0.92), and only **2 of 918** real-lesion
+test crops were misrouted to `Not_acne`. `Not_acne` is not in this test set (the
+dermatologist-boxed ACNE04 has no clear-skin crops), so it is measured by its
+reject rate instead: on a held-out FFHQ clear-skin sheet the detector never saw
+during harvesting, **99.7%** (382/383) of detector boxes are correctly classified
+`Not_acne`.
 
 Training curves:
 
 ![T4 training curves](assets/stage2_t4_training_curves.png)
 
-Confusion matrix:
+Confusion matrix (five acne classes; `Not_acne` measured by reject rate above):
 
 ![T4 confusion matrix](assets/stage2_t4_confusion_matrix.png)
 
 Interpretation:
 
-- The classifier is strongest on **Whiteheads** and **Blackheads** in this test
-  set.
-- **Papules** and **Pustules** are the hardest pair. That makes sense visually:
-  both are inflammatory-looking crops, and the distinction can be subtle.
-- The model should be treated as a crop-level type scorer, not a diagnosis.
-  Confidence is evidence for the crop label, not severity.
+- **Whiteheads** and **Cyst** are strongest here (F1 0.98 / 0.94). **Papules** is
+  the softest (recall 0.85), still mostly confused with **Pustules** — both are
+  inflammatory-looking crops, so the distinction stays subtle.
+- The sixth class was learned cleanly: the reject region did not eat into the
+  real classes (macro F1 rose 0.92 → 0.93; only 2/918 real crops misrouted to
+  `Not_acne`).
+- The model is a crop-level type scorer, not a diagnosis. Confidence is evidence
+  for the crop label, not severity.
 
 ---
 
