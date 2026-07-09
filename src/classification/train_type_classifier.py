@@ -68,10 +68,11 @@ def load_datasets(args):
         shuffle=False,
     )
 
+    class_names = train_ds.class_names  # capture before .map() — mapped datasets drop the attribute
     train_ds = train_ds.map(lambda x, y: (preprocess_input(x), y))
     valid_ds = valid_ds.map(lambda x, y: (preprocess_input(x), y))
     test_ds = test_ds.map(lambda x, y: (preprocess_input(x), y))
-    return train_ds, valid_ds, test_ds
+    return train_ds, valid_ds, test_ds, class_names
 
 
 def class_weights(root):
@@ -101,8 +102,7 @@ def main():
     from sklearn.metrics import classification_report, confusion_matrix
     from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 
-    train_ds, valid_ds, test_ds = load_datasets(args)
-    class_names = train_ds.class_names
+    train_ds, valid_ds, test_ds, class_names = load_datasets(args)
     if class_names != RAW_ACNE_CLASSES:
         raise ValueError(f"class order drift: {class_names}")
     print("Classes:", class_names)
