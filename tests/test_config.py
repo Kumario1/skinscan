@@ -18,6 +18,27 @@ def test_load_config_has_pipeline_keys():
     assert cfg["classification"]["weights"].endswith(".keras")
 
 
+def test_load_config_has_recommender_milestone_keys():
+    # Issue #2: inert config keys the verbose-recommender milestone will consume.
+    cfg = load_config()
+
+    # Profile skin-type vocabulary — the closed set matching the review data (D-021).
+    assert cfg["profile"]["skin_types"] == ["combination", "dry", "normal", "oily"]
+
+    # ITA tone-bucket cutoffs and low-light L* threshold (D-021).
+    assert cfg["tone"]["ita_light_min"] == 41
+    assert cfg["tone"]["ita_medium_min"] == 10
+    assert cfg["tone"]["low_light_l_threshold"] == 35
+
+    # Ranker artifacts + minimum evidence cell size (D-022).
+    assert isinstance(cfg["ranker"]["model_path"], str) and cfg["ranker"]["model_path"]
+    assert isinstance(cfg["ranker"]["review_stats_path"], str) and cfg["ranker"]["review_stats_path"]
+    assert cfg["ranker"]["min_cell_size"] == 5
+
+    # Raw reviews source path (D-015 extension).
+    assert isinstance(cfg["paths"]["reviews_raw"], str) and cfg["paths"]["reviews_raw"]
+
+
 def test_cli_defaults_come_from_config():
     cfg = load_config()
     from src.classification.run_acne04_pipeline import parse_args
@@ -34,5 +55,6 @@ def test_cli_defaults_come_from_config():
 
 if __name__ == "__main__":
     test_load_config_has_pipeline_keys()
+    test_load_config_has_recommender_milestone_keys()
     test_cli_defaults_come_from_config()
     print("ok")
