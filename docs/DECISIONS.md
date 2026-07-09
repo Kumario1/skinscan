@@ -45,11 +45,30 @@ different datasets (ACNE04 for detection, Kaggle type-labeled data for
 classification). Rules out a single monolithic multi-task model — worse for
 learning, harder to debug.
 
-### D-005 — Recommendation is rules-based, not learned · LOCKED
-The concern->ingredient->product chain is a hand-written rules table plus a
-lookup, NOT a trained recommender. This is the DormRoom principle: trust lives
-in the auditable logic layer. Rules out collaborative filtering / learned
-ranking for v1 (no data for it anyway, and it would hide errors).
+### D-005 — Recommendation is a hybrid: rules gate, learned ranker reorders · LOCKED
+**Amended 2026-07-09** (verbose-recommender milestone, issue #1): originally
+"rules-based, not learned" — the concern→ingredient→product chain was a
+hand-written rules table with no learned component, ruling out learned ranking
+for v1. That was right while there was no data. The milestone adds a learned
+ranker under a strict contract that keeps the trust model intact, so the entry
+is updated per this file's own change rule — the rules-based v1 is NOT silently
+reversed, it is bounded.
+
+The recommender is now **hybrid**:
+- The hand-written rules remain the auditable gate: concern → target actives →
+  candidate products, conflict resolution, comedogenic down-ranking, and the
+  dermatologist / pregnancy escalation flags. All correctness and trust live
+  here (the DormRoom principle: trust in the auditable logic layer).
+- A learned ranker may ONLY reorder rule-approved candidates *within a category*.
+  It can NEVER introduce a product the rules didn't approve, override comedogenic
+  down-ranking, or touch the dermatologist / pregnancy safety flags. The engine
+  takes it as an optional injected object with a `score(product, profile)`
+  interface, never imports sklearn itself, and treats `None` as "keep the rules
+  ordering."
+
+Ranker acceptance criteria live in D-022; the deliverable shape in D-019. Still
+rules out a learned recommender that selects or gates products — the ranker only
+orders what the rules already blessed.
 
 ### D-006 — The recommender reasons over ingredients, not products · LOCKED
 CV output -> concern -> active ingredient(s) -> products containing them.
@@ -117,6 +136,13 @@ care (D-001, no live pricing). Rules out scraping retailers: no learning
 benefit for CV, and it violates their ToS (unlike GGC's apartment complexes,
 retailers gain nothing from our traffic).
 
+**Extended 2026-07-09** (verbose-recommender milestone, issue #1): the same
+Kaggle Sephora dataset (`nadyinky/sephora-products-and-skincare-reviews`)
+supplies not just the catalog but ~1.1M reviews carrying per-reviewer skin_type,
+skin_tone, rating, and is_recommended. Those reviews become the ranker's
+training data (D-022) and feed the report's per-product review-stats lines. One
+dataset, two uses; scraping remains ruled out.
+
 ---
 
 ## Evaluation
@@ -150,6 +176,50 @@ Severity is NOT detected — it's derived from lesion count/density per region
 (D-004), which is why we keep ACNE04's Classification (count) labels. New eval
 vocabulary: IoU, mAP. Workflow rule: eyeball predictions BEFORE reading
 metrics.
+
+---
+
+## Verbose hybrid recommender milestone (issue #1)
+
+### D-019 — Deliverable: Streamlit app over an importable pipeline · LOCKED
+All analysis logic lives in importable modules; a CLI produces the report as
+`report.json` + `report.md`, and the Streamlit app is a thin wrapper (cached
+model loaders, intake form, markdown render, raw-JSON expander) with zero
+business logic. CLI and app produce the identical report for identical inputs.
+Rules out business logic in the UI layer; makes the whole analysis scriptable
+and testable without a browser. Missing ranker artifacts (D-022) → degrade to
+rules-only ordering (D-005), never fail.
+
+### D-020 — Face regions: MediaPipe FaceMesh polygons, grid fallback · LOCKED
+Lesion boxes get a region label from the closed D-008 vocabulary (forehead,
+nose, left/right cheek, chin_jaw, perioral) by point-in-polygon against
+MediaPipe FaceMesh landmarks. No face detected or MediaPipe unavailable → fall
+back to a deterministic image-thirds grid, loudly flagged in the report. This
+decides only *how* a box gets a region, not *which* regions exist (that stays
+D-008). Keeps tests and constrained environments from hard-failing on the
+landmark dependency.
+
+### D-021 — Inference-time user profile: skin type, tone, pregnancy · LOCKED
+At inference the user gives a short profile: skin_type required, from the closed
+set combination/dry/normal/oily (matching the review vocabulary, D-015 / D-022);
+skin tone estimated from non-lesional skin via ITA in CIELAB and bucketed
+light/medium/deep, framed as triage not a claim (D-002), with self-reported tone
+overriding the photo estimate; a pregnancy/nursing flag excludes retinoids with
+conservative cosmetic framing (D-002). Intake asks only questions something
+downstream consumes. Config carries the vocabulary, ITA cutoffs, and low-light
+threshold.
+
+### D-022 — Ranker acceptance criteria · LOCKED
+The learned ranker (D-005) is an sklearn HistGradientBoostingClassifier
+predicting is_recommended from product features × reviewer profile, trained on
+the Sephora reviews (D-015) with a reviewer-disjoint deterministic split. It
+ships ONLY if it beats BOTH a global-popularity baseline AND a
+Bayesian-smoothed-rating baseline, on ROC-AUC and within-reviewer pairwise
+ordering accuracy. Metrics are disaggregated by skin-tone bucket, including an
+`unknown` bucket that is always reported, never dropped (D-016 discipline on the
+recommendation axis). Fails the gate → ship rules-only (D-005 / D-019).
+
+---
 
 - **D-012** (hyperpigmentation/dry-skin data) — NON-BLOCKING. Acne path is
   fully unblocked; resolve when we get there.
