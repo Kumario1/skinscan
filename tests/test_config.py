@@ -29,6 +29,7 @@ def test_load_config_has_recommender_milestone_keys():
     assert cfg["tone"]["ita_light_min"] == 41
     assert cfg["tone"]["ita_medium_min"] == 10
     assert cfg["tone"]["low_light_l_threshold"] == 35
+    assert cfg["tone"]["profile_cheek_area_ratio"] == 0.5
 
     # Ranker artifacts + minimum evidence cell size (D-022).
     assert isinstance(cfg["ranker"]["model_path"], str) and cfg["ranker"]["model_path"]
@@ -37,6 +38,7 @@ def test_load_config_has_recommender_milestone_keys():
 
     # Raw reviews source path (D-015 extension).
     assert isinstance(cfg["paths"]["reviews_raw"], str) and cfg["paths"]["reviews_raw"]
+    assert cfg["paths"]["face_landmarker"].endswith(".task")
 
 
 def test_cli_defaults_come_from_config():
