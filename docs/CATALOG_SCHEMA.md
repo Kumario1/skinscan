@@ -77,6 +77,38 @@ algae_extract · certain cocoa/wheat-germ derivatives
 - Import is idempotent and logged: report how many products got ≥1 active vs
   zero (zero-active products are still valid carriers, e.g. plain moisturizers).
 
+## Sephora import: category mapping (D-015)
+
+The real Kaggle dump (`product_info.csv`, ~8.5k rows) is imported with
+`import_catalog.py --format sephora`. A per-row adapter renames its columns
+(`product_id → product_id` — **preserved**, load-bearing for joining reviews;
+`product_name → name`, `brand_name → brand`, `ingredients`, `price_usd → price`)
+and maps its taxonomy onto the closed five categories. Everything downstream of
+the adapter is unchanged — same normalizer, same schema.
+
+Category rule: keep only `primary_category == "Skincare"`, then this exact-string
+table on `(secondary_category, tertiary_category)`. **Verified against the actual
+CSV** (8,494 rows, 39 skincare pairs, 2026-07-09) — not written from memory.
+
+| → category | Sephora (secondary / tertiary) pairs |
+|------------|--------------------------------------|
+| cleanser | Cleansers / Face Wash & Cleansers · Cleansers / Toners · Cleansers / Makeup Removers · Cleansers / Face Wipes · Cleansers / _(empty)_ |
+| treatment | Cleansers / Exfoliators · Treatments / Facial Peels · Treatments / Blemish & Acne Treatments · Masks / Face Masks · Masks / Sheet Masks |
+| serum | Treatments / Face Serums |
+| moisturizer | Moisturizers / Moisturizers · Mists & Essences · Face Oils · Night Creams · Decollete & Neck Creams · _(empty)_ |
+| spf | Sunscreen / Face Sunscreen · Sunscreen / _(empty)_ |
+
+Non-obvious calls: Toners/Removers/Wipes are the cleansing phase; Exfoliators and
+Masks are the treatment step regardless of Sephora's grouping; Mists/Essences/
+Oils/Night/Neck creams are leave-on moisturizers.
+
+Everything else is **dropped and counted** in the import log's
+`dropped_by_category` breakdown: non-Skincare primaries (Makeup, Hair, …) and
+skincare pairs with no step in the closed vocabulary — eye care, lip balms, gift
+sets, mini sizes, high-tech tools, wellness/supplements, self-tanners, BB/CC
+creams, body sunscreen, blotting papers. On the full dump this keeps **1,634
+products** (all five categories non-empty, ~89% with ≥1 canonical active).
+
 ## What this deliberately excludes
 
 - No reviews / ratings (v1 doesn't rank on popularity).
