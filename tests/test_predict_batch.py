@@ -44,7 +44,7 @@ def test_predict_batch_uses_one_model_call():
         def predict(self, x, verbose=0):
             self.calls += 1
             self.last_shape = x.shape
-            return np.tile([0.2, 0.2, 0.2, 0.2, 0.2], (len(x), 1))
+            return np.full((len(x), len(RAW_ACNE_CLASSES)), 1.0 / len(RAW_ACNE_CLASSES))
 
     clf = AcneTypeClassifier.__new__(AcneTypeClassifier)
     clf.image_size = 224
