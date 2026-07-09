@@ -170,8 +170,13 @@ vocabulary and the stub/test fixtures.
   `assert set(RAW_TO_CONCERN) == set(RAW_ACNE_CLASSES)` to a proper-subset check
   (`set(RAW_TO_CONCERN) < set(RAW_ACNE_CLASSES)`), since `Not_acne` is
   intentionally in the class set but not in the concern map. `test_predict_batch.py`
-  needs no edit — it derives its expected set from `RAW_ACNE_CLASSES` itself
-  (`tests/test_predict_batch.py:58`).
+  needs a **one-line** edit (corrected from the original "no edit" claim): its
+  `FakeModel.predict` returned a hardcoded 5-wide vector (`[0.2]*5`,
+  `tests/test_predict_batch.py:47`), which `dict(zip(self.classes, p))`
+  (`classifier.py:103`) truncates to 5 keys once `self.classes` is 6 — failing
+  the line-58 `set(d) == set(RAW_ACNE_CLASSES)` assert. Derive the fake's width
+  from `len(RAW_ACNE_CLASSES)` so it tracks the class count. The line-58 assert
+  itself needs no change — it reads its expected set from `RAW_ACNE_CLASSES`.
 - **`AcneTypeClassifier` inference (`classifier.py:77-109`)** → **NO change.** It
   reads `classes` from the labels-metadata JSON
   (`self.classes = list(classes or metadata.get("classes", ...))`,

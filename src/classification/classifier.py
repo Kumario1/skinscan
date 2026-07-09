@@ -4,7 +4,10 @@ from pathlib import Path
 
 import numpy as np
 
-RAW_ACNE_CLASSES = ["Blackheads", "Cyst", "Papules", "Pustules", "Whiteheads"]
+# Alphabetical == the order image_dataset_from_directory yields, so Not_acne
+# lands at index 2 (STAGE2_NEGATIVES_DESIGN.md). Deliberately unmapped in
+# RAW_TO_CONCERN below: its softmax mass drops out of concern aggregation.
+RAW_ACNE_CLASSES = ["Blackheads", "Cyst", "Not_acne", "Papules", "Pustules", "Whiteheads"]
 RAW_TO_CONCERN = {
     "Blackheads": "acne_comedonal",
     "Whiteheads": "acne_comedonal",
@@ -114,7 +117,7 @@ LesionClassifier = AcneTypeClassifier
 
 class StubClassifier:
     def __init__(self, probs=None):
-        p = np.asarray(probs if probs is not None else [0.25, 0.2, 0.2, 0.2, 0.15], dtype=np.float32)
+        p = np.asarray(probs if probs is not None else [0.25, 0.2, 0.1, 0.2, 0.2, 0.15], dtype=np.float32)
         self.probs = p / p.sum()
 
     def predict_batch(self, crops):
