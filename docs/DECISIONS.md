@@ -234,9 +234,15 @@ recommendation axis). Fails the gate → ship rules-only (D-005 / D-019).
 ## D-023 — Concern-efficacy labels: LLM-mined review text is the new ranking signal (2026-07-10)
 
 **LOCKED.** Spec: `docs/superpowers/specs/2026-07-10-concern-efficacy-recommender-design.md`.
+**AMENDED 2026-07-10 (operator constraint):** The operator authorized
+OpenRouter with roughly $9 credit instead of Anthropic. Qwen3 235B A22B uses
+10-review structured calls plus durable local spooling and identical-request
+caching; the P2 hand-check explicitly validates the resulting attribution
+tradeoff before the full pass can be approved.
 Review texts are the only place *product × acne-type outcome* exists in the
-D-015 dataset. A one-time Anthropic Batch pass (Haiku, structured outputs)
-labels prefiltered reviews with (concern, outcome ∈ helped/worsened/unclear);
+D-015 dataset. A one-time OpenRouter pass (Qwen3 235B A22B, grouped
+structured outputs) labels prefiltered reviews with (concern, outcome ∈
+helped/worsened/unclear);
 labels are cached locally (`review_concern_labels.jsonl`) and the API is never
 called at inference or in tests. Ordered go/no-go gates: **P1** mention
 density (executed 2026-07-10 — **PASS**, 970 catalog products with an n≥15

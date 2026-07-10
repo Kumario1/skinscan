@@ -3,7 +3,7 @@
 Implements the offline labeling pass of the concern-efficacy recommender spec
 (docs/superpowers/specs/2026-07-10-concern-efficacy-recommender-design.md).
 Review text is the only place product x acne-type outcomes exist in the data;
-this module extracts them ONCE via the Anthropic Batch API into a local
+this module extracts them ONCE via grouped OpenRouter calls into a local
 append-only JSONL cache. Everything downstream reads the cache; inference and
 the test suite never touch the API. Subcommands: probe (free, gate P1),
 calibrate (gate P2 sample), label (the full pass).
@@ -14,8 +14,10 @@ import argparse
 import glob
 import hashlib
 import json
+import os
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import pandas as pd
@@ -54,6 +56,24 @@ LABEL_SCHEMA = {
     "required": ["labels"],
     "additionalProperties": False,
 }
+
+
+def _batch_schema(uids: list[str]) -> dict:
+    """Structured-output schema retaining attribution inside grouped calls."""
+    return {
+        "type": "object",
+        "properties": {"results": {"type": "array", "items": {
+            "type": "object",
+            "properties": {
+                "uid": {"type": "string", "enum": uids},
+                "labels": LABEL_SCHEMA["properties"]["labels"],
+            },
+            "required": ["uid", "labels"],
+            "additionalProperties": False,
+        }}},
+        "required": ["results"],
+        "additionalProperties": False,
+    }
 
 SYSTEM_PROMPT = """\
 You label skincare product reviews for mentions of skin concerns and whether \
@@ -102,37 +122,38 @@ def load_review_rows(reviews_dir, catalog_ids: set, patterns: dict,
     lowercasing; the payload keeps original case, truncated).
     """
     files = sorted(glob.glob(str(Path(reviews_dir) / "reviews_*.csv")))
-    frames = [pd.read_csv(f, usecols=USECOLS,
-                          dtype={"author_id": str, "product_id": str})
-              for f in files]
-    df = pd.concat(frames, ignore_index=True)
-    df = df[df["product_id"].isin(catalog_ids)]
-    text = (df["review_text"].fillna("") + " "
-            + df["review_title"].fillna("")).str.strip()
-    lower = text.str.lower()
-    mask = None
-    for rx in patterns.values():
-        m = lower.str.contains(rx)
-        mask = m if mask is None else (mask | m)
-    df = df.assign(text_joined=text)[mask]
-    df["skin_type"] = df["skin_type"].fillna("unknown")
-    df["skin_tone"] = df["skin_tone"].fillna("")
     rows, seen = [], set()
-    for r in df.itertuples(index=False):
-        if not r.text_joined:
-            continue
-        uid = review_uid(r.author_id, r.product_id, r.text_joined)
-        if uid in seen:
-            continue
-        seen.add(uid)
-        rows.append({
-            "uid": uid, "author_id": r.author_id, "product_id": r.product_id,
-            "skin_type": r.skin_type, "skin_tone": r.skin_tone,
-            "rating": float(r.rating) if pd.notna(r.rating) else None,
-            "is_recommended": (float(r.is_recommended)
-                               if pd.notna(r.is_recommended) else None),
-            "text": r.text_joined[:truncate_chars],
-        })
+    for file in files:
+        chunks = pd.read_csv(file, usecols=USECOLS, chunksize=100_000,
+                             dtype={"author_id": str, "product_id": str})
+        for df in chunks:
+            df = df[df["product_id"].isin(catalog_ids)].copy()
+            text = (df["review_text"].fillna("") + " "
+                    + df["review_title"].fillna("")).str.strip()
+            lower = text.str.lower()
+            mask = None
+            for rx in patterns.values():
+                match = lower.str.contains(rx)
+                mask = match if mask is None else (mask | match)
+            df = df.assign(text_joined=text)[mask]
+            df["skin_type"] = df["skin_type"].fillna("unknown")
+            df["skin_tone"] = df["skin_tone"].fillna("")
+            for r in df.itertuples(index=False):
+                if not r.text_joined:
+                    continue
+                uid = review_uid(r.author_id, r.product_id, r.text_joined)
+                if uid in seen:
+                    continue
+                seen.add(uid)
+                rows.append({
+                    "uid": uid, "author_id": r.author_id,
+                    "product_id": r.product_id, "skin_type": r.skin_type,
+                    "skin_tone": r.skin_tone,
+                    "rating": float(r.rating) if pd.notna(r.rating) else None,
+                    "is_recommended": (float(r.is_recommended)
+                                       if pd.notna(r.is_recommended) else None),
+                    "text": r.text_joined[:truncate_chars],
+                })
     return rows
 
 
@@ -251,49 +272,108 @@ def run_labeling(rows, labeler, cache_path, state_path, chunk_size,
     return summary
 
 
-class AnthropicBatchLabeler:
-    """Thin wrapper over the Anthropic Message Batches API (50% price).
+class OpenRouterLabeler:
+    """OpenRouter structured-output calls with a durable local batch spool."""
 
-    Lazy-imports anthropic so the fast suite never needs the SDK or network.
-    Zero-arg client: resolves ANTHROPIC_API_KEY (or an `ant auth` profile).
-    """
+    url = "https://openrouter.ai/api/v1/chat/completions"
 
-    def __init__(self, model: str):
-        import anthropic  # lazy: only the paid CLI paths construct this
-        self.client = anthropic.Anthropic()
+    def __init__(self, model: str, spool_dir, reviews_per_request=10,
+                 concurrency=20, session=None):
+        import requests  # lazy: free CLI paths and tests need no HTTP client
+        key = os.environ.get("OPENROUTER_API_KEY")
+        if not key:
+            raise RuntimeError("OPENROUTER_API_KEY is required")
         self.model = model
+        self.spool_dir = Path(spool_dir)
+        self.spool_dir.mkdir(parents=True, exist_ok=True)
+        self.group_size = reviews_per_request
+        self.concurrency = concurrency
+        # requests' module-level API creates one session per call; unlike a
+        # shared Session it is safe across this small thread pool.
+        self.session = session or requests
+        self.headers = {"Authorization": f"Bearer {key}",
+                        "Content-Type": "application/json",
+                        "X-Title": "SkinScan concern labeling",
+                        # Identical retry after a crash is served without billing.
+                        "X-OpenRouter-Cache": "true",
+                        "X-OpenRouter-Cache-TTL": "86400"}
+
+    def _call(self, rows):
+        uids = [r["uid"] for r in rows]
+        reviews = "\n".join(json.dumps({"uid": r["uid"], "text": r["text"]})
+                            for r in rows)
+        body = {
+            "model": self.model,
+            "temperature": 0,
+            "max_tokens": 120 * len(rows),
+            "messages": [{"role": "system", "content": SYSTEM_PROMPT},
+                         {"role": "user", "content": reviews}],
+            "response_format": {"type": "json_schema", "json_schema": {
+                "name": "review_concern_labels", "strict": True,
+                "schema": _batch_schema(uids)}},
+            "provider": {"require_parameters": True},
+        }
+        try:
+            response = self.session.post(self.url, headers=self.headers,
+                                         json=body, timeout=120)
+            response.raise_for_status()
+            choice = response.json()["choices"][0]
+            if choice.get("finish_reason") == "content_filter":
+                return [(uid, None, "refusal") for uid in uids]
+            data = json.loads(choice["message"]["content"])
+            by_uid = {item["uid"]: item["labels"] for item in data["results"]}
+            return [(uid, json.dumps({"labels": by_uid[uid]}), None)
+                    if uid in by_uid else (uid, None, "missing_result")
+                    for uid in uids]
+        except Exception as exc:  # requests and malformed provider responses retry next run
+            return [(uid, None, type(exc).__name__) for uid in uids]
 
     def submit(self, rows) -> str:
-        requests = [{
-            "custom_id": r["uid"],
-            "params": {
-                "model": self.model,
-                "max_tokens": 500,
-                "system": SYSTEM_PROMPT,
-                "messages": [{"role": "user", "content": r["text"]}],
-                "output_config": {"format": {"type": "json_schema",
-                                             "schema": LABEL_SCHEMA}},
-            },
-        } for r in rows]
-        return self.client.messages.batches.create(requests=requests).id
+        digest = hashlib.md5("|".join(r["uid"] for r in rows).encode()).hexdigest()
+        batch_id = f"openrouter_{digest}"
+        path = self.spool_dir / f"{batch_id}.jsonl"
+        existing = {}
+        if path.exists():
+            for line in path.read_text().splitlines():
+                rec = json.loads(line)
+                existing[rec[0]] = rec
+        todo = [r for r in rows if existing.get(r["uid"], [None, None, "retry"])[2]
+                is not None]
+        groups = [todo[i:i + self.group_size]
+                  for i in range(0, len(todo), self.group_size)]
+        with path.open("a") as spool, ThreadPoolExecutor(
+                max_workers=self.concurrency) as pool:
+            futures = [pool.submit(self._call, group) for group in groups]
+            for future in as_completed(futures):
+                for result in future.result():
+                    spool.write(json.dumps(result) + "\n")
+                spool.flush()
+        return batch_id
 
     def status(self, batch_id: str) -> str:
-        return self.client.messages.batches.retrieve(batch_id).processing_status
+        return "ended"
 
     def fetch(self, batch_id: str):
-        out = []
-        for res in self.client.messages.batches.results(batch_id):
-            r = res.result
-            if r.type == "succeeded":
-                msg = r.message
-                if msg.stop_reason == "refusal":
-                    out.append((res.custom_id, None, "refusal"))
-                    continue
-                text = next((b.text for b in msg.content if b.type == "text"), "")
-                out.append((res.custom_id, text, None))
-            else:
-                out.append((res.custom_id, None, r.type))  # errored/canceled/expired
-        return out
+        latest = {}
+        for line in (self.spool_dir / f"{batch_id}.jsonl").read_text().splitlines():
+            rec = json.loads(line)
+            latest[rec[0]] = tuple(rec)
+        return list(latest.values())
+
+
+def estimate_cost(rows, ccfg) -> float:
+    """Conservative token estimate for a grouped OpenRouter pass."""
+    groups = (len(rows) + ccfg["reviews_per_request"] - 1) // ccfg["reviews_per_request"]
+    input_tokens = sum(len(r["text"]) for r in rows) / 4 + 450 * groups
+    output_tokens = 80 * len(rows)
+    return (input_tokens / 1e6 * ccfg["input_price_per_million"]
+            + output_tokens / 1e6 * ccfg["output_price_per_million"])
+
+
+def _labeler(ccfg):
+    return OpenRouterLabeler(
+        ccfg["labeling_model"], ccfg["batch_spool_dir"],
+        ccfg["reviews_per_request"], ccfg["request_concurrency"])
 
 
 def _match_counts(rows, patterns):
@@ -327,7 +407,7 @@ def cmd_probe(rows, patterns) -> bool:
 
 def cmd_calibrate(rows, ccfg, n) -> dict:
     sample = sorted(rows, key=lambda r: r["uid"])[:n]   # deterministic
-    labeler = AnthropicBatchLabeler(ccfg["labeling_model"])
+    labeler = _labeler(ccfg)
     summary = run_labeling(sample, labeler, ccfg["labels_path"],
                            ccfg["batch_state_path"], ccfg["batch_chunk_size"])
     cache = load_cache(ccfg["labels_path"])
@@ -354,17 +434,22 @@ def cmd_calibrate(rows, ccfg, n) -> dict:
     return report
 
 
-def cmd_label(rows, ccfg, yes: bool) -> dict | None:
+def cmd_label(rows, ccfg, yes: bool, p2_approved=False) -> dict | None:
     cache = load_cache(ccfg["labels_path"])
     todo = [r for r in rows if r["uid"] not in cache]
-    est_in = sum(len(r["text"]) for r in todo) / 4 + 450 * len(todo)
-    est_usd = est_in / 1e6 * 0.50 + len(todo) * 80 / 1e6 * 2.50
+    est_usd = estimate_cost(todo, ccfg)
     print(f"to label: {len(todo)} of {len(rows)} "
-          f"(est input {est_in/1e6:.0f}M tok, est cost ~${est_usd:.0f} on batch Haiku)")
+          f"(est cost ${est_usd:.2f} on {ccfg['labeling_model']})")
     if not yes:
         print("dry run — pass --yes to submit")
         return None
-    labeler = AnthropicBatchLabeler(ccfg["labeling_model"])
+    if not p2_approved:
+        raise RuntimeError("full labeling requires maintainer P2 sign-off; "
+                           "rerun with --p2-approved after the 50-row check")
+    if est_usd > ccfg["max_budget_usd"]:
+        raise RuntimeError(f"estimated ${est_usd:.2f} exceeds "
+                           f"${ccfg['max_budget_usd']:.2f} budget ceiling")
+    labeler = _labeler(ccfg)
     summary = run_labeling(rows, labeler, ccfg["labels_path"],
                            ccfg["batch_state_path"], ccfg["batch_chunk_size"])
     print(json.dumps(summary, indent=2))
@@ -383,6 +468,7 @@ def main(argv=None):
             sp.add_argument("--n", type=int)
         if name == "label":
             sp.add_argument("--yes", action="store_true")
+            sp.add_argument("--p2-approved", action="store_true")
     args = ap.parse_args(argv)
     cfg = load_config()
     ccfg = cfg["concern"]
@@ -396,7 +482,7 @@ def main(argv=None):
     elif args.cmd == "calibrate":
         cmd_calibrate(rows, ccfg, args.n or ccfg["calibration_sample_size"])
     else:
-        cmd_label(rows, ccfg, args.yes)
+        cmd_label(rows, ccfg, args.yes, args.p2_approved)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 """Tests for the concern-efficacy labeling pipeline (plan 015, D-023).
 
 Pure-Python: the LLM sits behind a duck-typed labeler seam and is stubbed;
-no network, no anthropic import needed for this suite.
+no network or provider credentials needed for this suite.
 """
 import json
 import sys
@@ -13,7 +13,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.config import load_config
 from src.recommendation.concern_labels import (
     CONCERNS,
+    OpenRouterLabeler,
+    cmd_label,
     compile_prefilter,
+    estimate_cost,
     load_cache,
     load_review_rows,
     review_uid,
@@ -188,6 +191,57 @@ def test_resume_drains_submitted_batch_without_resubmitting():
         assert stub.submitted == []        # nothing resubmitted, nothing re-billed
         assert load_cache(cache)[r1["uid"]]["status"] == "ok"
         assert s["ok"] == 1 and s["submitted"] == 0
+
+
+def test_openrouter_grouped_results_are_spooled_and_reused():
+    rows = [_row(f"a{i}", "PA", f"cleared my blackheads {i}") for i in range(2)]
+
+    class Response:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            results = [{"uid": r["uid"], "labels": json.loads(LABEL_OK)["labels"]}
+                       for r in rows]
+            return {"choices": [{"finish_reason": "stop", "message": {
+                "content": json.dumps({"results": results})}}]}
+
+    class Session:
+        calls = 0
+
+        def post(self, *args, **kwargs):
+            self.calls += 1
+            return Response()
+
+    with tempfile.TemporaryDirectory() as td:
+        old = __import__("os").environ.get("OPENROUTER_API_KEY")
+        __import__("os").environ["OPENROUTER_API_KEY"] = "test-key"
+        try:
+            session = Session()
+            labeler = OpenRouterLabeler("test/model", td, 10, 1, session)
+            bid = labeler.submit(rows)
+            assert session.calls == 1 and len(labeler.fetch(bid)) == 2
+            assert labeler.submit(rows) == bid and session.calls == 1
+        finally:
+            if old is None:
+                __import__("os").environ.pop("OPENROUTER_API_KEY", None)
+            else:
+                __import__("os").environ["OPENROUTER_API_KEY"] = old
+
+
+def test_full_run_estimate_fits_configured_balance():
+    cfg = load_config()["concern"]
+    rows = [{"text": "x" * 1200}] * 202_000
+    assert estimate_cost(rows, cfg) < cfg["max_budget_usd"] <= 9
+
+
+def test_full_label_requires_p2_signoff():
+    try:
+        cmd_label([], load_config()["concern"], yes=True)
+    except RuntimeError as exc:
+        assert "P2 sign-off" in str(exc)
+    else:
+        raise AssertionError("full labeling ran without P2 sign-off")
 
 
 if __name__ == "__main__":

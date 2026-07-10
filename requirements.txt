@@ -10,4 +10,4 @@ tensorflow
 ultralytics
 mediapipe==0.10.35
 pytest  # test runner; files also run standalone via __main__
-anthropic
+requests
