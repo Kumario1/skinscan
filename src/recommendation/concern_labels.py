@@ -249,3 +249,155 @@ def run_labeling(rows, labeler, cache_path, state_path, chunk_size,
     for bid in pending:
         drain(bid)
     return summary
+
+
+class AnthropicBatchLabeler:
+    """Thin wrapper over the Anthropic Message Batches API (50% price).
+
+    Lazy-imports anthropic so the fast suite never needs the SDK or network.
+    Zero-arg client: resolves ANTHROPIC_API_KEY (or an `ant auth` profile).
+    """
+
+    def __init__(self, model: str):
+        import anthropic  # lazy: only the paid CLI paths construct this
+        self.client = anthropic.Anthropic()
+        self.model = model
+
+    def submit(self, rows) -> str:
+        requests = [{
+            "custom_id": r["uid"],
+            "params": {
+                "model": self.model,
+                "max_tokens": 500,
+                "system": SYSTEM_PROMPT,
+                "messages": [{"role": "user", "content": r["text"]}],
+                "output_config": {"format": {"type": "json_schema",
+                                             "schema": LABEL_SCHEMA}},
+            },
+        } for r in rows]
+        return self.client.messages.batches.create(requests=requests).id
+
+    def status(self, batch_id: str) -> str:
+        return self.client.messages.batches.retrieve(batch_id).processing_status
+
+    def fetch(self, batch_id: str):
+        out = []
+        for res in self.client.messages.batches.results(batch_id):
+            r = res.result
+            if r.type == "succeeded":
+                msg = r.message
+                if msg.stop_reason == "refusal":
+                    out.append((res.custom_id, None, "refusal"))
+                    continue
+                text = next((b.text for b in msg.content if b.type == "text"), "")
+                out.append((res.custom_id, text, None))
+            else:
+                out.append((res.custom_id, None, r.type))  # errored/canceled/expired
+        return out
+
+
+def _match_counts(rows, patterns):
+    """Per-concern joinable match counts + per-product cell sizes."""
+    counts = {c: 0 for c in patterns}
+    cells = {c: {} for c in patterns}
+    for row in rows:
+        low = row["text"].lower()
+        for concern, rx in patterns.items():
+            if rx.search(low):
+                counts[concern] += 1
+                cells[concern][row["product_id"]] = (
+                    cells[concern].get(row["product_id"], 0) + 1)
+    return counts, cells
+
+
+def cmd_probe(rows, patterns) -> bool:
+    counts, cells = _match_counts(rows, patterns)
+    gate_products = set()
+    print(f"joinable prefiltered rows: {len(rows)}")
+    for concern in CONCERNS:
+        n15 = [p for p, n in cells[concern].items() if n >= 15]
+        print(f"{concern}: rows {counts[concern]}, products n>=15: {len(n15)}")
+        if concern in ACNE_CONCERNS:
+            gate_products.update(n15)
+    passed = len(gate_products) >= 300
+    print(f"gate_p1: {'PASS' if passed else 'FAIL'} "
+          f"({len(gate_products)} >= 300 acne-concern products with n>=15)")
+    return passed
+
+
+def cmd_calibrate(rows, ccfg, n) -> dict:
+    sample = sorted(rows, key=lambda r: r["uid"])[:n]   # deterministic
+    labeler = AnthropicBatchLabeler(ccfg["labeling_model"])
+    summary = run_labeling(sample, labeler, ccfg["labels_path"],
+                           ccfg["batch_state_path"], ccfg["batch_chunk_size"])
+    cache = load_cache(ccfg["labels_path"])
+    sample_recs = [cache[r["uid"]] for r in sample if r["uid"] in cache]
+    ok = [r for r in sample_recs if r["status"] == "ok"]
+    outcome_bearing = [r for r in ok if any(
+        l["outcome"] in ("helped", "worsened") for l in r["labels"])]
+    yield_rate = len(outcome_bearing) / max(len(sample), 1)
+    report = {"sample_size": len(sample), "labeled_ok": len(ok),
+              "outcome_bearing": len(outcome_bearing),
+              "yield": round(yield_rate, 4), "run_summary": summary,
+              "gate_p2_yield": "PASS" if yield_rate >= 0.30 else "FAIL"}
+    out_dir = Path(ccfg["batch_state_path"]).parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "calibration_report.json").write_text(json.dumps(report, indent=2))
+    by_uid = {r["uid"]: r for r in sample}
+    hand = pd.DataFrame([{"uid": r["uid"], "text": by_uid[r["uid"]]["text"],
+                          "labels": json.dumps(r["labels"])}
+                         for r in sample_recs[:50]])
+    hand.to_csv(out_dir / "calibration_sample.csv", index=False)
+    print(json.dumps(report, indent=2))
+    print("hand-check 50 rows in runs/concern/calibration_sample.csv "
+          "(gate P2 agreement >= 85% is the maintainer's call)")
+    return report
+
+
+def cmd_label(rows, ccfg, yes: bool) -> dict | None:
+    cache = load_cache(ccfg["labels_path"])
+    todo = [r for r in rows if r["uid"] not in cache]
+    est_in = sum(len(r["text"]) for r in todo) / 4 + 450 * len(todo)
+    est_usd = est_in / 1e6 * 0.50 + len(todo) * 80 / 1e6 * 2.50
+    print(f"to label: {len(todo)} of {len(rows)} "
+          f"(est input {est_in/1e6:.0f}M tok, est cost ~${est_usd:.0f} on batch Haiku)")
+    if not yes:
+        print("dry run — pass --yes to submit")
+        return None
+    labeler = AnthropicBatchLabeler(ccfg["labeling_model"])
+    summary = run_labeling(rows, labeler, ccfg["labels_path"],
+                           ccfg["batch_state_path"], ccfg["batch_chunk_size"])
+    print(json.dumps(summary, indent=2))
+    print("next: .venv/bin/python -m src.recommendation.concern_stats")
+    return summary
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+    for name in ("probe", "calibrate", "label"):
+        sp = sub.add_parser(name)
+        sp.add_argument("--reviews-dir")
+        sp.add_argument("--catalog")
+        if name == "calibrate":
+            sp.add_argument("--n", type=int)
+        if name == "label":
+            sp.add_argument("--yes", action="store_true")
+    args = ap.parse_args(argv)
+    cfg = load_config()
+    ccfg = cfg["concern"]
+    patterns = compile_prefilter(ccfg["prefilter"])
+    catalog = load_catalog(args.catalog or cfg["paths"]["catalog_processed"])
+    catalog_ids = {p.product_id for p in catalog}
+    rows = load_review_rows(args.reviews_dir or cfg["paths"]["reviews_raw"],
+                            catalog_ids, patterns, ccfg["text_truncate_chars"])
+    if args.cmd == "probe":
+        cmd_probe(rows, patterns)
+    elif args.cmd == "calibrate":
+        cmd_calibrate(rows, ccfg, args.n or ccfg["calibration_sample_size"])
+    else:
+        cmd_label(rows, ccfg, args.yes)
+
+
+if __name__ == "__main__":
+    main()
