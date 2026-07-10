@@ -333,6 +333,15 @@ On profile photos, the smaller projected cheek is treated as occluded when its
 area is below `tone.profile_cheek_area_ratio`; this prevents nose/far-side
 pixels from dominating ITA.
 
+```bash
+# Concern-efficacy labeling (D-023). probe is free; calibrate/label call the
+# Anthropic Batch API (needs ANTHROPIC_API_KEY; ~$1 / ~$60-90 one-time):
+.venv/bin/python -m src.recommendation.concern_labels probe
+.venv/bin/python -m src.recommendation.concern_labels calibrate
+.venv/bin/python -m src.recommendation.concern_labels label --yes
+.venv/bin/python -m src.recommendation.concern_stats
+```
+
 Run the default model-free tests, then the explicit local-artifact tier:
 
 ```bash

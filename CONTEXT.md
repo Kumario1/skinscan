@@ -49,6 +49,11 @@ reorders — it never selects, gates, or overrides safety.
 reviews (count, average rating, % recommended) that feed both the report's
 per-product "why" line and a ranking baseline (D-015 / D-022).
 
+**concern-stats** — Per-product × concern efficacy aggregates mined from
+review text via one-time LLM labeling (helped/worsened counts, smoothed help
+rate; D-023). Feeds concern-conditioned ranking (gates P2/P3 pending) and the
+report's per-concern evidence lines.
+
 ## Artifact map
 
 Where the built artifacts live; paths are configurable in `configs/default.yaml`.
