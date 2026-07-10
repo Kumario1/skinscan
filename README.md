@@ -334,11 +334,11 @@ area is below `tone.profile_cheek_area_ratio`; this prevents nose/far-side
 pixels from dominating ITA.
 
 ```bash
-# Concern-efficacy labeling (D-023). probe is free; calibrate/label call the
-# Anthropic Batch API (needs ANTHROPIC_API_KEY; ~$1 / ~$60-90 one-time):
+# Concern-efficacy labeling (D-023). probe is free; calibrate/label use
+# OpenRouter (needs OPENROUTER_API_KEY; preflight-limited by max_budget_usd):
 .venv/bin/python -m src.recommendation.concern_labels probe
 .venv/bin/python -m src.recommendation.concern_labels calibrate
-.venv/bin/python -m src.recommendation.concern_labels label --yes
+.venv/bin/python -m src.recommendation.concern_labels label --yes --p2-approved
 .venv/bin/python -m src.recommendation.concern_stats
 ```
 

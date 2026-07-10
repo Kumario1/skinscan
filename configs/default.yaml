@@ -63,9 +63,15 @@ concern:                              # concern-efficacy labeling (D-023, spec 2
   labels_path: data/processed/review_concern_labels.jsonl   # append-only label cache
   stats_path: data/processed/concern_stats.json             # smoothed product x concern cells
   batch_state_path: runs/concern/batches.json               # batch-id resume state
-  labeling_model: claude-haiku-4-5    # Anthropic Batch API model for the one-time pass
+  batch_spool_dir: runs/concern/openrouter_batches           # durable synchronous-request results
+  labeling_model: qwen/qwen3-235b-a22b-2507                  # capable, inexpensive structured-output model
+  input_price_per_million: 0.09
+  output_price_per_million: 0.10
+  max_budget_usd: 8.50                 # preflight estimate ceiling; leaves retry headroom
+  reviews_per_request: 10              # amortize the system prompt without losing uid attribution
+  request_concurrency: 10
   text_truncate_chars: 1200           # review text sent to the labeler is capped here
-  batch_chunk_size: 40000             # requests per batch (API cap 100k / 256MB)
+  batch_chunk_size: 1000              # rows checkpointed per local batch
   calibration_sample_size: 2000       # gate P2 sample
   smoothing_m: 20                     # Bayesian m for concern cells (same pattern as ranker)
   sub_cell_min_n: 5                   # min n for a skin-type sub-cell to be emitted
