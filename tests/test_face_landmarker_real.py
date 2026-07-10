@@ -32,7 +32,7 @@ PROFILE_BOXES = [
 @pytest.mark.real_models
 @pytest.mark.skipif(not (MODEL.exists() and IMAGE.exists()),
                     reason="local FaceLandmarker artifact/self-collected image absent")
-def test_profile_photo_regions_match_the_candidate_overlay():
+def test_profile_photo_regions_match_the_approved_overlay():
     result = locate_regions(load_rgb(IMAGE), PROFILE_BOXES, model_path=MODEL)
 
     assert result.metadata["fallback"] is False
@@ -45,7 +45,7 @@ def test_profile_photo_regions_match_the_candidate_overlay():
 
 if __name__ == "__main__":
     if MODEL.exists() and IMAGE.exists():
-        test_profile_photo_regions_match_the_candidate_overlay()
+        test_profile_photo_regions_match_the_approved_overlay()
         print("ok")
     else:
         print("skipped: local FaceLandmarker artifact/self-collected image absent")
