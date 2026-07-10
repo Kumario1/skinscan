@@ -58,3 +58,21 @@ ranker:                             # learned re-ranker artifacts (D-022); engin
   model_path: models/ranker/ranker.joblib             # HistGradientBoostingClassifier on is_recommended
   review_stats_path: data/processed/review_stats.json  # per-product x skin-type review stats
   min_cell_size: 5                  # min reviews per cell before falling back to "all reviewers"
+
+concern:                              # concern-efficacy labeling (D-023, spec 2026-07-10)
+  labels_path: data/processed/review_concern_labels.jsonl   # append-only label cache
+  stats_path: data/processed/concern_stats.json             # smoothed product x concern cells
+  batch_state_path: runs/concern/batches.json               # batch-id resume state
+  labeling_model: claude-haiku-4-5    # Anthropic Batch API model for the one-time pass
+  text_truncate_chars: 1200           # review text sent to the labeler is capped here
+  batch_chunk_size: 40000             # requests per batch (API cap 100k / 256MB)
+  calibration_sample_size: 2000       # gate P2 sample
+  smoothing_m: 20                     # Bayesian m for concern cells (same pattern as ranker)
+  sub_cell_min_n: 5                   # min n for a skin-type sub-cell to be emitted
+  prefilter:                          # word-boundary regex fragments, per concern
+    acne_comedonal: ['blackheads?', 'whiteheads?', 'clogged pores?', 'comedon\w*']
+    acne_inflammatory: ['pimples?', 'zits?', 'pustules?', 'papules?', 'inflammatory acne', 'inflamed acne']
+    acne_cystic: ['cystic', 'cysts?', 'hormonal acne', 'hormonal breakouts?']
+    acne_general: ['acne', 'break\s?outs?', 'broke me out', 'breaking out', 'break out', 'blemish(?:es)?']
+    hyperpigmentation: ['dark spots?', 'hyperpigmentation', 'acne scar(?:s|ring)?', 'acne marks?', 'dark marks?', 'discoloration', 'melasma', 'sun spots?', 'post[- ]inflammatory']
+    dryness: ['dryness', 'dry patch(?:es)?', 'flak(?:y|iness|ing)', 'dehydrated']
