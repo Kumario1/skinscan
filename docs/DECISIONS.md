@@ -230,3 +230,20 @@ recommendation axis). Fails the gate → ship rules-only (D-005 / D-019).
 - **Q-B** — How severity is represented in the concern schema (ordinal 1–4 vs
   continuous). Affects D-008. Resolve before finalizing schema. Currently
   drafted as ordinal 0–4 matching ACNE04.
+
+## D-023 — Concern-efficacy labels: LLM-mined review text is the new ranking signal (2026-07-10)
+
+**LOCKED.** Spec: `docs/superpowers/specs/2026-07-10-concern-efficacy-recommender-design.md`.
+Review texts are the only place *product × acne-type outcome* exists in the
+D-015 dataset. A one-time Anthropic Batch pass (Haiku, structured outputs)
+labels prefiltered reviews with (concern, outcome ∈ helped/worsened/unclear);
+labels are cached locally (`review_concern_labels.jsonl`) and the API is never
+called at inference or in tests. Ordered go/no-go gates: **P1** mention
+density (executed 2026-07-10 — **PASS**, 970 catalog products with an n≥15
+acne-concern cell vs the 300 floor); **P2** calibration (≥30% outcome-bearing
+yield on a ~2k sample AND ≥85% maintainer agreement on a 50-review
+hand-check); **P3** the bake-off (a concern-conditioned candidate ships only
+if it beats the pooled StatsRanker champion on BOTH pooled metrics under the
+D-022 harness — else the engine keeps its v2 contract). Aggregates live in
+`concern_stats.json` (Bayesian-m smoothing toward per-concern priors,
+skin-type sub-cells, fallback ladder concern → acne_general → pooled rating).
