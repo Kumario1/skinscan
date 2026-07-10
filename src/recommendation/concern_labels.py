@@ -134,3 +134,118 @@ def load_review_rows(reviews_dir, catalog_ids: set, patterns: dict,
             "text": r.text_joined[:truncate_chars],
         })
     return rows
+
+
+def load_cache(path) -> dict[str, dict]:
+    """uid -> cached record. Missing file -> empty (first run)."""
+    path = Path(path)
+    if not path.exists():
+        return {}
+    out = {}
+    with path.open() as f:
+        for line in f:
+            if line.strip():
+                rec = json.loads(line)
+                out[rec["uid"]] = rec
+    return out
+
+
+def append_cache(path, records) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a") as f:
+        for rec in records:
+            f.write(json.dumps(rec) + "\n")
+
+
+def _load_state(path) -> dict:
+    path = Path(path)
+    if path.exists():
+        return json.loads(path.read_text())
+    return {"batches": {}}
+
+
+def _save_state(path, state) -> None:
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(state, indent=1))
+    tmp.replace(path)
+
+
+def _record(row: dict, status: str, labels: list) -> dict:
+    return {"uid": row["uid"], "author_id": row["author_id"],
+            "product_id": row["product_id"], "skin_type": row["skin_type"],
+            "skin_tone": row["skin_tone"], "rating": row["rating"],
+            "is_recommended": row["is_recommended"],
+            "status": status, "labels": labels}
+
+
+def _parse_labels(text: str) -> list[dict]:
+    data = json.loads(text)
+    return [l for l in data["labels"]
+            if isinstance(l, dict) and l.get("concern") in CONCERNS
+            and l.get("outcome") in VALID_OUTCOMES]
+
+
+def run_labeling(rows, labeler, cache_path, state_path, chunk_size,
+                 poll_seconds=60, sleep=time.sleep) -> dict:
+    """Label every row not yet cached. Idempotent and crash-safe:
+
+    - already-cached uids are never resubmitted (never re-billed);
+    - batches submitted by a crashed run are drained from the state file
+      BEFORE anything new is submitted;
+    - unparseable/refused replies are cached (billed once, never retried);
+      API-level failures (errored/expired) are NOT cached -> retried next run.
+    """
+    cache = load_cache(cache_path)
+    by_uid = {r["uid"]: r for r in rows}
+    state = _load_state(state_path)
+    summary = {"cached_before": 0, "submitted": 0, "ok": 0,
+               "parse_error": 0, "refusal": 0, "failed": 0}
+
+    def drain(batch_id):
+        while labeler.status(batch_id) != "ended":
+            sleep(poll_seconds)
+        new = []
+        for uid, text, failure in labeler.fetch(batch_id):
+            row = by_uid.get(uid)
+            if row is None or uid in cache:
+                continue
+            if failure == "refusal":
+                new.append(_record(row, "refusal", []))
+                summary["refusal"] += 1
+            elif failure is not None:
+                summary["failed"] += 1     # not cached -> retryable
+            else:
+                try:
+                    labels = _parse_labels(text)
+                    new.append(_record(row, "ok", labels))
+                    summary["ok"] += 1
+                except (ValueError, KeyError, TypeError, AttributeError):
+                    new.append(_record(row, "parse_error", []))
+                    summary["parse_error"] += 1
+        append_cache(cache_path, new)
+        cache.update({r["uid"]: r for r in new})
+        state["batches"][batch_id] = {"fetched": True}
+        _save_state(state_path, state)
+
+    # 1) drain leftovers from a crashed run
+    for bid, meta in list(state["batches"].items()):
+        if not meta.get("fetched"):
+            drain(bid)
+
+    # 2) submit what is still unlabeled, then drain each batch
+    todo = [r for r in rows if r["uid"] not in cache]
+    summary["cached_before"] = len(rows) - len(todo)
+    pending = []
+    for i in range(0, len(todo), chunk_size):
+        chunk = todo[i:i + chunk_size]
+        bid = labeler.submit(chunk)
+        summary["submitted"] += len(chunk)
+        state["batches"][bid] = {"fetched": False}
+        _save_state(state_path, state)
+        pending.append(bid)
+    for bid in pending:
+        drain(bid)
+    return summary

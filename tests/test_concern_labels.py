@@ -4,15 +4,20 @@ Pure-Python: the LLM sits behind a duck-typed labeler seam and is stubbed;
 no network, no anthropic import needed for this suite.
 """
 import json
+import sys
 import tempfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.config import load_config
 from src.recommendation.concern_labels import (
     CONCERNS,
     compile_prefilter,
+    load_cache,
     load_review_rows,
     review_uid,
+    run_labeling,
 )
 
 
@@ -52,3 +57,141 @@ def test_load_review_rows_prefilters_joins_and_truncates():
         assert len(rows) == 1
         assert rows[0]["product_id"] == "PA" and rows[0]["skin_type"] == "oily"
         assert len(rows[0]["text"]) == 40
+
+
+LABEL_OK = json.dumps({"labels": [{"concern": "acne_comedonal",
+                                   "outcome": "helped",
+                                   "reviewer_has_condition": True}]})
+
+
+def _row(author, pid, text, skin_type="oily"):
+    return {"uid": review_uid(author, pid, text), "author_id": author,
+            "product_id": pid, "skin_type": skin_type, "skin_tone": "fair",
+            "rating": 5.0, "is_recommended": 1.0, "text": text}
+
+
+class StubLabeler:
+    """Duck-typed batch labeler (same 3-method seam as AnthropicBatchLabeler).
+
+    replies: uid -> json text | None (None simulates an API-level error).
+    """
+
+    def __init__(self, replies):
+        self.replies = replies
+        self.submitted = []      # chunks passed to submit() this run
+        self._batches = {}
+
+    def submit(self, rows):
+        self.submitted.append(list(rows))
+        bid = f"batch_{len(self._batches)}"
+        self._batches[bid] = list(rows)
+        return bid
+
+    def status(self, batch_id):
+        return "ended"
+
+    def fetch(self, batch_id):
+        out = []
+        for row in self._batches[batch_id]:
+            text = self.replies.get(row["uid"], '{"labels": []}')
+            if text is None:
+                out.append((row["uid"], None, "errored"))
+            else:
+                out.append((row["uid"], text, None))
+        return out
+
+
+def test_run_labeling_writes_cache_and_skips_on_rerun():
+    r1 = _row("a1", "PA", "cleared my blackheads")
+    r2 = _row("a2", "PB", "it broke me out", skin_type="dry")
+    stub = StubLabeler({
+        r1["uid"]: LABEL_OK,
+        r2["uid"]: json.dumps({"labels": [{"concern": "acne_general",
+                                           "outcome": "worsened",
+                                           "reviewer_has_condition": False}]}),
+    })
+    with tempfile.TemporaryDirectory() as td:
+        cache, state = Path(td) / "labels.jsonl", Path(td) / "state.json"
+        s = run_labeling([r1, r2], stub, cache, state, chunk_size=10,
+                         poll_seconds=0)
+        assert s["ok"] == 2 and s["failed"] == 0 and s["submitted"] == 2
+        recs = load_cache(cache)
+        assert recs[r1["uid"]]["labels"][0]["concern"] == "acne_comedonal"
+        assert recs[r2["uid"]]["product_id"] == "PB"
+        assert recs[r2["uid"]]["skin_type"] == "dry"
+        assert recs[r2["uid"]]["rating"] == 5.0
+        s2 = run_labeling([r1, r2], stub, cache, state, chunk_size=10,
+                          poll_seconds=0)
+        assert s2["submitted"] == 0 and s2["cached_before"] == 2
+
+
+def test_malformed_reply_cached_as_parse_error_not_rebilled():
+    r1 = _row("a1", "PA", "cleared my blackheads")
+    stub = StubLabeler({r1["uid"]: "not json {{"})
+    with tempfile.TemporaryDirectory() as td:
+        cache, state = Path(td) / "labels.jsonl", Path(td) / "state.json"
+        s = run_labeling([r1], stub, cache, state, chunk_size=10, poll_seconds=0)
+        assert s["parse_error"] == 1
+        rec = load_cache(cache)[r1["uid"]]
+        assert rec["status"] == "parse_error" and rec["labels"] == []
+        s2 = run_labeling([r1], stub, cache, state, chunk_size=10, poll_seconds=0)
+        assert s2["submitted"] == 0   # billed once, never again
+
+
+def test_api_error_rows_not_cached_and_retried_next_run():
+    r1 = _row("a1", "PA", "cleared my blackheads")
+    stub = StubLabeler({r1["uid"]: None})
+    with tempfile.TemporaryDirectory() as td:
+        cache, state = Path(td) / "labels.jsonl", Path(td) / "state.json"
+        s = run_labeling([r1], stub, cache, state, chunk_size=10, poll_seconds=0)
+        assert s["failed"] == 1
+        assert r1["uid"] not in load_cache(cache)
+        stub.replies[r1["uid"]] = LABEL_OK        # API recovered
+        s2 = run_labeling([r1], stub, cache, state, chunk_size=10, poll_seconds=0)
+        assert s2["ok"] == 1
+
+
+def test_invalid_label_entries_filtered_but_row_ok():
+    r1 = _row("a1", "PA", "cleared my blackheads")
+    reply = json.dumps({"labels": [
+        {"concern": "acne_comedonal", "outcome": "helped",
+         "reviewer_has_condition": True},
+        {"concern": "wrinkles", "outcome": "helped",
+         "reviewer_has_condition": True},          # not in vocab -> dropped
+    ]})
+    stub = StubLabeler({r1["uid"]: reply})
+    with tempfile.TemporaryDirectory() as td:
+        cache, state = Path(td) / "labels.jsonl", Path(td) / "state.json"
+        run_labeling([r1], stub, cache, state, chunk_size=10, poll_seconds=0)
+        rec = load_cache(cache)[r1["uid"]]
+        assert rec["status"] == "ok" and len(rec["labels"]) == 1
+
+
+def test_chunking_respects_chunk_size():
+    rows = [_row(f"a{i}", "PA", f"cleared my blackheads {i}") for i in range(5)]
+    stub = StubLabeler({r["uid"]: LABEL_OK for r in rows})
+    with tempfile.TemporaryDirectory() as td:
+        cache, state = Path(td) / "labels.jsonl", Path(td) / "state.json"
+        run_labeling(rows, stub, cache, state, chunk_size=2, poll_seconds=0)
+        assert [len(c) for c in stub.submitted] == [2, 2, 1]
+
+
+def test_resume_drains_submitted_batch_without_resubmitting():
+    r1 = _row("a1", "PA", "cleared my blackheads")
+    stub = StubLabeler({r1["uid"]: LABEL_OK})
+    with tempfile.TemporaryDirectory() as td:
+        cache, state = Path(td) / "labels.jsonl", Path(td) / "state.json"
+        bid = stub.submit([r1])            # a prior run crashed after submit
+        stub.submitted.clear()
+        state.write_text(json.dumps({"batches": {bid: {"fetched": False}}}))
+        s = run_labeling([r1], stub, cache, state, chunk_size=10, poll_seconds=0)
+        assert stub.submitted == []        # nothing resubmitted, nothing re-billed
+        assert load_cache(cache)[r1["uid"]]["status"] == "ok"
+        assert s["ok"] == 1 and s["submitted"] == 0
+
+
+if __name__ == "__main__":
+    for name, fn in sorted(globals().items()):
+        if name.startswith("test_"):
+            fn()
+    print("ok")
