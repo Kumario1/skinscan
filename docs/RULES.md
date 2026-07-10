@@ -25,10 +25,52 @@ mappings. Cystic → always route to "see a professional," never treat.
 
 | Ingredient A     | Ingredient B     | Rule                                          |
 |------------------|------------------|-----------------------------------------------|
-| benzoyl_peroxide | retinol/adapalene| Don't combine same step (degradation/irritation); split AM/PM |
-| benzoyl_peroxide | vitamin_c        | Don't layer; separate routines                |
-| glycolic/lactic  | retinol          | Don't stack same night (irritation)           |
+| benzoyl_peroxide | retinol/adapalene| Don't combine same step; time-split (retinoid→PM, BP→AM) |
+| benzoyl_peroxide | vitamin_c        | Don't layer; time-split across slots (they COEXIST — see below) |
+| glycolic/lactic  | retinol          | Don't stack same night (retinoid→PM, AHA→the other slot) |
 | multiple strong exfoliants | —      | Cap at one primary chemical exfoliant per routine |
+
+### 2a. Time-split resolution (Engine v2, D-005/D-021 aware)
+
+Incompatible pairs are no longer resolved by dropping one active — they are
+split across AM/PM slots so both survive. Deterministic algorithm
+(`engine._assign_slots`):
+
+1. **Default** — every active is eligible for both slots (`{AM, PM}`).
+2. **Retinoid pin** — retinol/adapalene pin to **PM** (photosensitivity).
+3. **Exfoliant cap** — a second chemical exfoliant (glycolic/lactic/mandelic/
+   salicylic) is dropped with a "one chemical exfoliant per routine" flag.
+4. **Pair shrink** — for each INCOMPATIBLE pair that still shares a slot:
+   - if one member is already pinned to a single slot, the other takes the
+     **complement** (e.g. adapalene=PM ⇒ benzoyl_peroxide=AM);
+   - if both are still free, the **later-listed active takes its preferred slot**
+     (`PREFERRED_SLOT`: BP→AM, vitamin_c→AM, AHAs→PM) and the **earlier active
+     takes the complement**.
+5. **Terminal drop** — only a pair still sharing a slot after step 4 (both pinned
+   to the same single slot) falls back to the legacy behavior: drop the later
+   active with a "held back (conflicts with earlier active)" flag.
+
+**benzoyl_peroxide + vitamin_c** (both prefer AM): the later-listed active wins
+its preference, so **vitamin_c→AM and benzoyl_peroxide→PM**. They coexist across
+slots; neither is held back.
+
+### 2b. Pregnancy / nursing (D-021)
+
+If the `UserProfile.pregnant_or_nursing` flag is set, retinoids (retinol,
+adapalene) are stripped from the target actives **before** conflict resolution,
+with the flag: *"retinoids omitted (pregnancy/nursing) — cosmetic guidance only,
+confirm with your doctor."* Other actives (e.g. salicylic_acid, azelaic_acid)
+are unaffected. Not medical advice (D-002).
+
+### 2c. Ranker re-ordering (D-005)
+
+An optional learned ranker may be passed to `recommend(...)`. It is duck-typed
+(`ranker.score(product, profile)`) and the engine imports **no** ML. The ranker
+**only reorders** rule-approved candidates within a single slot × category — it
+can never add, remove, or re-slot a product, nor touch flags. The comedogenic
+partition (§6) ALWAYS dominates the sort key `(len(comedogenic_flags),
+-score)`, so a comedogenic product never outranks a clean one regardless of
+score. `ranker=None` degrades to the deterministic rules-only order (D-019).
 
 ## 3. Routine ordering (output structure)
 

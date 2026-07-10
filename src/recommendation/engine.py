@@ -1,17 +1,19 @@
 """Stage 3 recommender — rules over ingredients, then a catalog lookup.
 
 This is intentionally buildable and testable with ZERO ML (D-007). Feed it a
-hand-written ConcernReport, get a routine back. The concern->ingredient rules
-below are a code mirror of RULES.md §1; keep the two in sync (or later, load
-both from one YAML).
+hand-written ConcernReport, get AM/PM routines back. The concern->ingredient
+rules below are a code mirror of RULES.md §1-2; keep the two in sync (or later,
+load both from one YAML).
 
-NOTE: this is a working skeleton, not the finished rules. Values are seeded from
-RULES.md but the interaction/severity logic is deliberately minimal so we can
-grow it test-first.
+Engine v2 (issue #7): optional UserProfile (D-021), pregnancy rule, AM/PM slot
+routines from interaction constraints, and an optional duck-typed ranker hook
+(D-005). The engine still imports NO ML — the ranker only REORDERS rule-approved
+candidates and can never add/remove products or touch flags. ranker=None ->
+today's stable rules-only order exactly (D-019).
 """
 from __future__ import annotations
 from dataclasses import dataclass
-from .schema import ConcernReport, Product, CATEGORIES
+from .schema import ConcernReport, Product, UserProfile, CATEGORIES
 
 # RULES.md §1 — concern -> first-line actives (seed; expand from the doc)
 CONCERN_ACTIVES: dict[str, list[str]] = {
@@ -30,32 +32,64 @@ INCOMPATIBLE = [
     {"glycolic_acid", "retinol"},
 ]
 
+# RULES.md §2 — retinoids are photosensitising: pin to PM.
+RETINOIDS = {"retinol", "adapalene"}
+
+# RULES.md §2 — preferred slot when an INCOMPATIBLE pair still shares a slot.
+PREFERRED_SLOT = {
+    "benzoyl_peroxide": "AM",
+    "vitamin_c":        "AM",
+    "glycolic_acid":    "PM",
+    "lactic_acid":      "PM",
+    "mandelic_acid":    "PM",
+}
+
+# RULES.md §2 — cap at one primary chemical exfoliant per routine.
+CHEMICAL_EXFOLIANTS = {"glycolic_acid", "lactic_acid", "mandelic_acid", "salicylic_acid"}
+
+SLOTS = ("AM", "PM")
+
 
 @dataclass
 class Recommendation:
-    routine: dict[str, list[Product]]   # category -> products, ordered
+    # slot -> category -> products, ordered
+    routines: dict[str, dict[str, list[Product]]]
+    slot_assignment: dict[str, set[str]]   # active -> {"AM"} / {"PM"} / {"AM","PM"}
     target_actives: list[str]
-    flags: list[str]                    # e.g. "see a professional", "verify"
-    def ordered_steps(self):
-        return [(c, self.routine[c]) for c in CATEGORIES if self.routine.get(c)]
+    flags: list[str]                       # e.g. "see a professional", "verify"
+
+    @property
+    def routine(self) -> dict[str, list[Product]]:
+        """Backward-compat union of the AM+PM routines (order-preserving dedup)."""
+        merged: dict[str, list[Product]] = {c: [] for c in CATEGORIES}
+        for slot in SLOTS:
+            for c in CATEGORIES:
+                for p in self.routines[slot].get(c, []):
+                    if p not in merged[c]:
+                        merged[c].append(p)
+        return merged
+
+    def ordered_steps(self, slot: str | None = None):
+        r = self.routines[slot] if slot else self.routine
+        return [(c, r[c]) for c in CATEGORIES if r.get(c)]
 
 
 def recommend(report: ConcernReport, catalog: list[Product],
+              profile: UserProfile | None = None, ranker=None,
               conf_cutoff: float = 0.5) -> Recommendation:
     flags: list[str] = []
 
     # clear skin -> maintenance only (RULES.md §4, severity 0)
     if report.clear_skin or not report.concerns:
         target = ["ceramides", "hyaluronic_acid"]
-        routine = _build_routine(target, catalog, always_spf=True)
-        return Recommendation(routine, target, ["maintenance routine"])
+        return _finish(target, catalog, True, profile, ranker,
+                       flags + ["maintenance routine"])
 
     # cystic / severe -> soothe + escalate, do NOT pile on actives (RULES.md §4)
     if report.has_cystic or report.overall_severity >= 4:
         flags.append("see a dermatologist")
         target = ["centella", "ceramides", "hyaluronic_acid"]
-        routine = _build_routine(target, catalog, always_spf=True)
-        return Recommendation(routine, target, flags)
+        return _finish(target, catalog, True, profile, ranker, flags)
 
     # collect actives from all sufficiently-confident concerns
     target: list[str] = []
@@ -73,37 +107,119 @@ def recommend(report: ConcernReport, catalog: list[Product],
     if report.overall_severity == 3:
         flags.append("consider a professional")
 
-    target = _resolve_conflicts(target, flags)
-    routine = _build_routine(target, catalog, always_spf=needs_spf)
-    return Recommendation(routine, target, flags)
+    # RULES.md §2 — pregnancy/nursing: strip retinoids BEFORE conflict resolution.
+    if profile and profile.pregnant_or_nursing:
+        if any(a in RETINOIDS for a in target):
+            flags.append("retinoids omitted (pregnancy/nursing) — cosmetic "
+                         "guidance only, confirm with your doctor")
+        target = [a for a in target if a not in RETINOIDS]
+
+    kept, slots = _assign_slots(target, flags)
+    return _finish(kept, catalog, needs_spf, profile, ranker, flags, slots)
 
 
-def _resolve_conflicts(actives: list[str], flags: list[str]) -> list[str]:
-    """RULES.md §2 — drop the later member of any incompatible pair (v1: simple
-    priority = order of appearance). A real impl would split into AM/PM."""
+def _finish(target: list[str], catalog: list[Product], always_spf: bool,
+            profile, ranker, flags: list[str],
+            slots: dict[str, set[str]] | None = None) -> Recommendation:
+    if slots is None:  # paths that skip conflict resolution: every active both slots
+        slots = {a: {"AM", "PM"} for a in target}
+    routines = _build_routines(target, catalog, always_spf, slots, profile, ranker)
+    return Recommendation(routines, slots, target, flags)
+
+
+def _assign_slots(actives: list[str],
+                  flags: list[str]) -> tuple[list[str], dict[str, set[str]]]:
+    """RULES.md §2 — turn incompatible pairs into an AM/PM split.
+
+    Every active defaults to both slots; retinoids pin to PM (photosensitivity);
+    a second chemical exfoliant is dropped. For each INCOMPATIBLE pair still
+    sharing a slot we shrink deterministically: if one member is already pinned
+    to a single slot, the other takes the complement; if both are free, the
+    LATER-listed active takes its preferred slot and the earlier takes the
+    complement. Only a pair that still shares a slot afterwards falls back to
+    dropping the later active with the legacy "held back" flag.
+    """
     kept: list[str] = []
+    slots: dict[str, set[str]] = {}
+    exfoliant_seen = False
     for a in actives:
-        clash = any({a, k} in INCOMPATIBLE for k in kept)
-        if clash:
-            flags.append(f"{a}: held back (conflicts with earlier active)")
-            continue
+        if a in CHEMICAL_EXFOLIANTS:
+            if exfoliant_seen:
+                flags.append(f"{a}: held back (one chemical exfoliant per routine)")
+                continue
+            exfoliant_seen = True
+        slots[a] = {"PM"} if a in RETINOIDS else {"AM", "PM"}
         kept.append(a)
-    return kept
+
+    dropped: set[str] = set()
+    for i, a in enumerate(kept):
+        if a in dropped:
+            continue
+        for b in kept[i + 1:]:
+            if b in dropped or {a, b} not in INCOMPATIBLE:
+                continue
+            if not (slots[a] & slots[b]):
+                continue  # already separated (e.g. a retinoid pinned to PM)
+            if not _split(a, b, slots):
+                dropped.add(b)
+                flags.append(f"{b}: held back (conflicts with earlier active)")
+
+    kept = [a for a in kept if a not in dropped]
+    return kept, {a: slots[a] for a in kept}
 
 
-def _build_routine(target_actives: list[str], catalog: list[Product],
-                   always_spf: bool) -> dict[str, list[Product]]:
-    """Ingredient -> product lookup (D-006). For each category, pick products
-    whose actives intersect the target, down-ranking comedogenic ones."""
-    routine: dict[str, list[Product]] = {c: [] for c in CATEGORIES}
+def _complement(slot: str) -> str:
+    return "PM" if slot == "AM" else "AM"
+
+
+def _split(a: str, b: str, slots: dict[str, set[str]]) -> bool:
+    """Shrink one/both of an incompatible pair so they no longer share a slot.
+    Returns False only when both are already pinned to the same single slot."""
+    sa, sb = slots[a], slots[b]
+    if len(sa) == 1 and len(sb) == 2:
+        slots[b] = {_complement(next(iter(sa)))}
+        return True
+    if len(sb) == 1 and len(sa) == 2:
+        slots[a] = {_complement(next(iter(sb)))}
+        return True
+    if len(sa) == 2 and len(sb) == 2:
+        # both free -> later-listed active (b) claims its preferred slot.
+        pref = PREFERRED_SLOT.get(b) or _complement(PREFERRED_SLOT.get(a, "PM"))
+        slots[b] = {pref}
+        slots[a] = {_complement(pref)}
+        return True
+    return sa != sb  # both single: only resolvable if they already differ
+
+
+def _build_routines(target_actives: list[str], catalog: list[Product],
+                    always_spf: bool, slots: dict[str, set[str]],
+                    profile, ranker) -> dict[str, dict[str, list[Product]]]:
+    """Ingredient -> product lookup (D-006), per slot. A product lands in each
+    slot where at least one of its matched target actives is assigned; SPF is
+    pinned AM-only. Comedogenic products are down-ranked per slot (RULES.md §6);
+    the optional ranker only reorders within that comedogenic partition (D-005).
+    """
+    routines = {s: {c: [] for c in CATEGORIES} for s in SLOTS}
+    tset = set(target_actives)
     for p in catalog:
         if p.category == "spf":
             if always_spf:
-                routine["spf"].append(p)
+                routines["AM"]["spf"].append(p)  # RULES.md §3 — SPF is AM only
             continue
-        if set(p.actives) & set(target_actives):
-            routine[p.category].append(p)
-    # down-rank comedogenic (RULES.md §6): stable sort, flagged last
-    for c in CATEGORIES:
-        routine[c].sort(key=lambda p: len(p.comedogenic_flags))
-    return routine
+        matched = set(p.actives) & tset
+        if not matched:
+            continue
+        for slot in SLOTS:
+            if any(slot in slots[a] for a in matched):
+                routines[slot][p.category].append(p)
+
+    def sort_key(p: Product):
+        # comedogenic partition ALWAYS dominates; ranker only breaks ties within.
+        if ranker is not None:
+            return (len(p.comedogenic_flags), -ranker.score(p, profile))
+        return (len(p.comedogenic_flags),)
+
+    for slot in SLOTS:
+        for c in CATEGORIES:
+            routines[slot][c].sort(key=sort_key)
+    return routines

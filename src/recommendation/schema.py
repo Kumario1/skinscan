@@ -71,3 +71,24 @@ class Product:
 
     def __post_init__(self):
         assert self.category in CATEGORIES, f"unknown category: {self.category}"
+
+
+# --- user profile (D-021) --------------------------------------------------
+SKIN_TYPES = {"combination", "dry", "normal", "oily"}
+TONE_BUCKETS = {"light", "medium", "deep"}
+TONE_SOURCES = {"self_report", "photo", "unknown"}
+
+
+@dataclass
+class UserProfile:
+    """Optional context that steers (never overrides) the rules (D-021)."""
+    skin_type: str
+    tone_bucket: Optional[str] = None
+    tone_source: str = "unknown"           # self_report > photo > unknown
+    pregnant_or_nursing: bool = False
+
+    def __post_init__(self):
+        assert self.skin_type in SKIN_TYPES, f"unknown skin_type: {self.skin_type}"
+        assert self.tone_bucket is None or self.tone_bucket in TONE_BUCKETS, \
+            f"unknown tone_bucket: {self.tone_bucket}"
+        assert self.tone_source in TONE_SOURCES, f"unknown tone_source: {self.tone_source}"
