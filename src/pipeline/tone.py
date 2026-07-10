@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
+from functools import lru_cache
 import json
 from pathlib import Path as FilePath
 
@@ -14,11 +15,13 @@ from ..config import load_config
 
 
 SKIN_SAMPLE_REGIONS = {"forehead", "left_cheek", "right_cheek"}
-SEPHORA_TONE_BUCKETS = {
-    "light": {"porcelain", "fair", "fairlight", "light"},
-    "medium": {"lightmedium", "medium", "mediumtan", "olive", "tan"},
-    "deep": {"deep", "dark", "rich", "ebony"},
-}
+
+
+@lru_cache(maxsize=1)
+def _sephora_tone_buckets() -> dict[str, frozenset[str]]:
+    """Config carries the vocabulary (D-021); cached — called per review row."""
+    return {bucket: frozenset(values) for bucket, values
+            in load_config()["tone"]["sephora_tone_buckets"].items()}
 
 
 @dataclass(frozen=True)
@@ -35,7 +38,7 @@ def sephora_tone_bucket(value: str | None) -> str:
     """Map the review dataset vocabulary; unrecognized values remain unknown."""
     normalized = "".join(character for character in (value or "").casefold()
                          if character.isalnum())
-    return next((bucket for bucket, values in SEPHORA_TONE_BUCKETS.items()
+    return next((bucket for bucket, values in _sephora_tone_buckets().items()
                  if normalized in values), "unknown")
 
 
@@ -51,8 +54,9 @@ def tone_bucket(ita: float | None, *, light_min: float, medium_min: float) -> st
 
 def srgb_to_lab(rgb: np.ndarray) -> np.ndarray:
     """Convert uint8 or [0, 1] sRGB values to CIELAB (D65) in plain NumPy."""
-    values = np.asarray(rgb, dtype=float)
-    if values.size and values.max() > 1:
+    array = np.asarray(rgb)
+    values = array.astype(float)
+    if np.issubdtype(array.dtype, np.integer) or (values.size and values.max() > 1):
         values /= 255
     linear = np.where(
         values <= 0.04045,
@@ -76,7 +80,8 @@ def srgb_to_lab(rgb: np.ndarray) -> np.ndarray:
 
 
 def _sample_mask(image_shape: Sequence[int],
-                 polygons: Mapping[str, Sequence[tuple[float, float]]]) -> np.ndarray:
+                 polygons: Mapping[str, Sequence[tuple[float, float]]],
+                 profile_cheek_ratio: float) -> np.ndarray:
     height, width = image_shape[:2]
     y, x = np.mgrid[:height, :width]
     pixel_centers = np.column_stack((x.ravel() + 0.5, y.ravel() + 0.5))
@@ -92,8 +97,7 @@ def _sample_mask(image_shape: Sequence[int],
             )
         smaller = min(cheek_areas, key=cheek_areas.get)
         larger = max(cheek_areas.values())
-        profile_ratio = load_config()["tone"]["profile_cheek_area_ratio"]
-        if larger and cheek_areas[smaller] / larger < profile_ratio:
+        if larger and cheek_areas[smaller] / larger < profile_cheek_ratio:
             sample_regions.remove(smaller)
 
     for region, polygon in polygons.items():
@@ -115,19 +119,22 @@ def _exclude_lesions(mask: np.ndarray, boxes: Sequence[Sequence[float]], pad: fl
 def _valid_sample_mask(image_rgb: np.ndarray,
                        polygons: Mapping[str, Sequence[tuple[float, float]]],
                        lesion_boxes: Sequence[Sequence[float]],
-                       crop_pad: float) -> tuple[np.ndarray, np.ndarray]:
+                       crop_pad: float,
+                       tone_config: Mapping[str, object]) -> tuple[np.ndarray, np.ndarray]:
     """Return the exact image mask and Lab pixels used by the ITA estimate."""
-    mask = _sample_mask(image_rgb.shape, polygons)
+    mask = _sample_mask(image_rgb.shape, polygons, tone_config["profile_cheek_area_ratio"])
     _exclude_lesions(mask, lesion_boxes, crop_pad)
     pixels = np.asarray(image_rgb)[mask]
     if not len(pixels):
         return mask, np.empty((0, 3))
 
     channel_range = np.ptp(pixels, axis=1)
-    specular = (pixels.max(axis=1) >= 245) & (channel_range <= 20)
+    specular = ((pixels.max(axis=1) >= tone_config["specular_rgb_min"])
+                & (channel_range <= tone_config["specular_rgb_range"]))
     lab = srgb_to_lab(pixels)
-    skin_colored = (lab[:, 1] > 0) & (lab[:, 2] > 5)
-    valid = ~specular & (lab[:, 0] > 5) & skin_colored
+    gate = tone_config["skin_lab_gate"]
+    skin_colored = (lab[:, 1] > gate["a_min"]) & (lab[:, 2] > gate["b_min"])
+    valid = ~specular & (lab[:, 0] > gate["l_min"]) & skin_colored
     candidate_locations = np.flatnonzero(mask)
     mask.flat[candidate_locations[~valid]] = False
     return mask, lab[valid]
@@ -135,12 +142,13 @@ def _valid_sample_mask(image_rgb: np.ndarray,
 
 def estimate_tone(image_rgb: np.ndarray,
                   polygons: Mapping[str, Sequence[tuple[float, float]]] | None = None,
-                  lesion_boxes: Sequence[Sequence[float]] = (), *, min_pixels: int = 100,
+                  lesion_boxes: Sequence[Sequence[float]] = (), *, min_pixels: int | None = None,
                   light_min: float | None = None, medium_min: float | None = None,
                   low_light_l: float | None = None, crop_pad: float | None = None) -> ToneEstimate:
     """Estimate a coarse photo tone bucket from non-lesional facial pixels."""
     config = load_config()
     tone_config = config["tone"]
+    min_pixels = tone_config["min_sample_pixels"] if min_pixels is None else min_pixels
     light_min = tone_config["ita_light_min"] if light_min is None else light_min
     medium_min = tone_config["ita_medium_min"] if medium_min is None else medium_min
     low_light_l = tone_config["low_light_l_threshold"] if low_light_l is None else low_light_l
@@ -149,7 +157,7 @@ def estimate_tone(image_rgb: np.ndarray,
         from .regions import grid_polygons
         polygons = grid_polygons(image_rgb.shape)
 
-    _, lab = _valid_sample_mask(image_rgb, polygons, lesion_boxes, crop_pad)
+    _, lab = _valid_sample_mask(image_rgb, polygons, lesion_boxes, crop_pad, tone_config)
     sample_count = len(lab)
     median_l = float(np.median(lab[:, 0])) if sample_count else None
     low_light = median_l is not None and median_l < low_light_l
@@ -177,11 +185,13 @@ def render_debug_overlay(image_rgb: np.ndarray, lesion_boxes: Sequence[Sequence[
     region_result = locate_regions(
         image_rgb, lesion_boxes, face_box=face_box, model_path=model_path
     )
+    config = load_config()
     candidate_mask, _ = _valid_sample_mask(
         image_rgb,
         region_result.polygons,
         lesion_boxes,
-        load_config()["classification"]["crop_pad"],
+        config["classification"]["crop_pad"],
+        config["tone"],
     )
     estimate = estimate_tone(image_rgb, region_result.polygons, lesion_boxes)
 

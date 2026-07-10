@@ -30,6 +30,9 @@ def test_load_config_has_recommender_milestone_keys():
     assert cfg["tone"]["ita_medium_min"] == 10
     assert cfg["tone"]["low_light_l_threshold"] == 35
     assert cfg["tone"]["profile_cheek_area_ratio"] == 0.5
+    assert cfg["tone"]["min_sample_pixels"] == 100
+    assert set(cfg["tone"]["sephora_tone_buckets"]) == {"light", "medium", "deep"}
+    assert cfg["regions"]["perioral_scale"] == 1.55
 
     # Ranker artifacts + minimum evidence cell size (D-022).
     assert isinstance(cfg["ranker"]["model_path"], str) and cfg["ranker"]["model_path"]

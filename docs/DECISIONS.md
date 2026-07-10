@@ -190,10 +190,13 @@ Rules out business logic in the UI layer; makes the whole analysis scriptable
 and testable without a browser. Missing ranker artifacts (D-022) → degrade to
 rules-only ordering (D-005), never fail.
 
-### D-020 — Face regions: MediaPipe FaceMesh polygons, grid fallback · LOCKED
+### D-020 — Face regions: MediaPipe face-landmark polygons, grid fallback · LOCKED
 Lesion boxes get a region label from the closed D-008 vocabulary (forehead,
 nose, left/right cheek, chin_jaw, perioral) by point-in-polygon against
-MediaPipe FaceMesh landmarks. No face detected or MediaPipe unavailable → fall
+MediaPipe face landmarks — implemented with the Tasks FaceLandmarker (same
+468-landmark topology FaceMesh used). A centroid outside every polygon snaps
+to the nearest one and is reported in metadata (`forced_assignments`), never
+silently. No face detected or MediaPipe unavailable → fall
 back to a deterministic image-thirds grid, loudly flagged in the report. This
 decides only *how* a box gets a region, not *which* regions exist (that stays
 D-008). Keeps tests and constrained environments from hard-failing on the

@@ -37,11 +37,22 @@ concern_report:                     # consumed by the future Stage 2->3 bridge
 profile:                            # inference-time user profile (D-021)
   skin_types: [combination, dry, normal, oily]   # closed set == review skin_type vocabulary
 
+regions:                            # D-020 face-region polygons (issue #6)
+  perioral_scale: 1.55              # lip-hull dilation that forms the perioral ring
+
 tone:                               # skin-tone triage from the photo via ITA, never a claim (D-021)
   ita_light_min: 41                 # ITA >= 41 deg -> light bucket
   ita_medium_min: 10                # ITA >= 10 deg -> medium; below -> deep
   low_light_l_threshold: 35         # CIELAB L* below this -> low-light flag (tone estimate unreliable)
   profile_cheek_area_ratio: 0.5     # smaller projected cheek below this ratio is occluded; omit from ITA sampling
+  min_sample_pixels: 100            # fewer valid skin pixels than this -> tone bucket unknown
+  specular_rgb_min: 245             # max channel >= this and range <= specular_rgb_range -> highlight, excluded
+  specular_rgb_range: 20
+  skin_lab_gate: {l_min: 5, a_min: 0, b_min: 5}   # CIELAB floor for plausibly-skin pixels
+  sephora_tone_buckets:             # review tone vocabulary -> the same three buckets; anything else -> unknown
+    light: [porcelain, fair, fairlight, light]
+    medium: [lightmedium, medium, mediumtan, olive, tan]
+    deep: [deep, dark, rich, ebony]
 
 ranker:                             # learned re-ranker artifacts (D-022); engine runs rules-only if absent (D-019)
   model_path: models/ranker/ranker.joblib             # HistGradientBoostingClassifier on is_recommended
