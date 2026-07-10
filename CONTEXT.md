@@ -57,6 +57,7 @@ Where the built artifacts live; paths are configurable in `configs/default.yaml`
 |----------|----------|
 | Stage 1 detector (YOLO) | `models/detection/acne04_yolov8m_best.pt` |
 | Stage 2 type classifier (Keras) | `models/classification/acne_model.keras` |
+| FaceLandmarker bundle (MediaPipe Tasks) | `models/face_landmarker.task` |
 | Normalized product catalog | `data/processed/catalog.json` |
 | Ranker model (sklearn) | `models/ranker/ranker.joblib` |
 | Review-stats table | `data/processed/review_stats.json` |

@@ -68,17 +68,20 @@ def _convex_hull(points: np.ndarray) -> np.ndarray:
     return np.asarray(lower[:-1] + upper[:-1])
 
 
-def landmark_polygons(landmarks_xy: np.ndarray) -> dict[str, Polygon]:
+def landmark_polygons(landmarks_xy: np.ndarray,
+                      perioral_scale: float | None = None) -> dict[str, Polygon]:
     """Build the six D-020 polygons from pixel-space FaceLandmarker points."""
     if len(landmarks_xy) < 468:
         raise ValueError("FaceLandmarker must return at least 468 landmarks")
+    if perioral_scale is None:
+        perioral_scale = load_config()["regions"]["perioral_scale"]
     polygons = {
         region: landmarks_xy[list(indices)]
         for region, indices in LANDMARK_INDEX_TABLE.items()
     }
     lips = _convex_hull(landmarks_xy[list(LIP_LANDMARKS)])
     center = lips.mean(axis=0)
-    polygons["perioral"] = center + (lips - center) * 1.55
+    polygons["perioral"] = center + (lips - center) * perioral_scale
     # Insertion order resolves the small nose/far-cheek and mouth/jaw overlaps.
     return {region: polygons[region] for region in (
         "forehead", "nose", "right_cheek", "left_cheek", "perioral", "chin_jaw"
@@ -124,25 +127,34 @@ def _distance_to_polygon(point: np.ndarray, polygon: Polygon) -> float:
     return float(np.min(np.linalg.norm(point - closest, axis=1)))
 
 
-def assign_regions(boxes: Sequence[Box], polygons: Mapping[str, Polygon]) -> list[str]:
-    """Assign each xyxy box by centroid point-in-polygon."""
+def assign_regions(boxes: Sequence[Box],
+                   polygons: Mapping[str, Polygon]) -> tuple[list[str], list[int]]:
+    """Assign each xyxy box by centroid point-in-polygon.
+
+    Returns the region per box plus the indices of boxes whose centroid fell
+    outside every polygon and was snapped to the nearest one (D-002: loud).
+    """
     paths = {region: Path(points) for region, points in polygons.items()}
-    assigned = []
-    for x0, y0, x1, y1 in boxes:
+    assigned, forced = [], []
+    for index, (x0, y0, x1, y1) in enumerate(boxes):
         centroid = np.array(((x0 + x1) / 2, (y0 + y1) / 2))
         inside = next((region for region, path in paths.items()
                        if path.contains_point(centroid)), None)
-        assigned.append(inside or min(polygons, key=lambda region:
-                                      _distance_to_polygon(centroid, polygons[region])))
-    return assigned
+        if inside is None:
+            forced.append(index)
+            inside = min(polygons, key=lambda region:
+                         _distance_to_polygon(centroid, polygons[region]))
+        assigned.append(inside)
+    return assigned, forced
 
 
 def fallback_regions(image_shape: Sequence[int], boxes: Sequence[Box], *,
                      face_box: Box | None = None, reason: str) -> RegionResult:
     """Assign through the grid and return loud fallback metadata."""
     polygons = grid_polygons(image_shape, face_box)
+    regions, forced = assign_regions(boxes, polygons)
     return RegionResult(
-        regions=assign_regions(boxes, polygons),
+        regions=regions,
         polygons=polygons,
         metadata={
             "method": "grid_fallback",
@@ -150,6 +162,7 @@ def fallback_regions(image_shape: Sequence[int], boxes: Sequence[Box], *,
             "reason": reason,
             "face_detected": face_box is not None,
             "face_box": list(face_box) if face_box is not None else None,
+            "forced_assignments": forced,
         },
     )
 
@@ -197,8 +210,9 @@ def locate_regions(image_rgb: np.ndarray, boxes: Sequence[Box], *,
     polygons = landmark_polygons(landmarks)
     minimum = landmarks.min(axis=0)
     maximum = landmarks.max(axis=0)
+    regions, forced = assign_regions(boxes, polygons)
     return RegionResult(
-        regions=assign_regions(boxes, polygons),
+        regions=regions,
         polygons=polygons,
         metadata={
             "method": "mediapipe_face_landmarker",
@@ -208,6 +222,7 @@ def locate_regions(image_rgb: np.ndarray, boxes: Sequence[Box], *,
             "face_box": [float(minimum[0]), float(minimum[1]),
                          float(maximum[0]), float(maximum[1])],
             "model_path": str(model_path),
+            "forced_assignments": forced,
         },
     )
 
