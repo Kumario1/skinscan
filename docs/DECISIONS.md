@@ -253,3 +253,27 @@ if it beats the pooled StatsRanker champion on BOTH pooled metrics under the
 D-022 harness — else the engine keeps its v2 contract). Aggregates live in
 `concern_stats.json` (Bayesian-m smoothing toward per-concern priors,
 skin-type sub-cells, fallback ladder concern → acne_general → pooled rating).
+
+## D-024 — Ingredient KB + tier-2 catalog from beautyapi (CC-BY-NC-4.0) (2026-07-10)
+
+**LOCKED.** Spec: `docs/superpowers/specs/2026-07-10-ingredient-kb-design.md`.
+The `thebeautyapi/beautyproducts` HuggingFace dataset (~1k products with
+per-ingredient comedogenicity/irritancy/functions/actives-rating) is licensed
+**CC-BY-NC-4.0 (non-commercial)**. This is acceptable for this project's
+research/portfolio use (consistent with D-001/D-010 research-use posture); a
+commercial deployment would need the paid Beauty API or a differently-licensed
+source. The raw file is a documented manual download into
+`data/raw/beautyapi/beauty_data.jsonl` (gitignored, like the Sephora data) —
+tests never touch it and run entirely on `tests/fixtures/beautyapi_sample.jsonl`.
+Two derived artifacts: `ingredient_kb.json` (normalized-name → aggregated
+metadata; max comedogenicity/irritancy on conflict, union of functions, "direct
+actives" beats "supporting", collected aliases) and `catalog_tier2.json` (same
+`Product` schema plus `tier: 2` / `no_outcome_data: true`; products not mapping
+to the five catalog categories are dropped). The KB feeds an optional catalog
+enrichment (KB-derived comedogenic flags superset the hand-list; per-product
+`ingredient_match: {concern: float}`) and a pure `match_score`. **Honesty
+property preserved:** ingredient-match is only a RANKING TIEBREAKER — review-
+backed concern-stats (D-023) dominate, tier-2 fills a slot only when no tier-1
+(review-backed) candidate exists, and the `no_outcome_data` flag carries
+through. Without the KB file the importer is byte-identical to before
+(regression-tested).

@@ -342,6 +342,34 @@ pixels from dominating ITA.
 .venv/bin/python -m src.recommendation.concern_stats
 ```
 
+Ingredient KB + tier-2 catalog (D-024, spec `2026-07-10-ingredient-kb`). The raw
+dataset is a manual download, like the Sephora CSVs — the
+`thebeautyapi/beautyproducts` file is **CC-BY-NC-4.0 (non-commercial)**:
+
+```bash
+# 1. Manual download into data/raw/beautyapi/ (gitignored; ~9 MB, ~1k products):
+mkdir -p data/raw/beautyapi
+curl -L https://huggingface.co/datasets/thebeautyapi/beautyproducts/resolve/main/beauty_data.jsonl \
+  -o data/raw/beautyapi/beauty_data.jsonl
+
+# 2. Build the ingredient KB (deterministic, sorted keys):
+.venv/bin/python -m src.recommendation.ingredient_kb
+
+# 3. Enrich the tier-1 Sephora catalog with KB flags + ingredient_match:
+.venv/bin/python -m src.recommendation.import_catalog \
+  --csv data/raw/sephora/product_info.csv --format sephora \
+  --kb data/processed/ingredient_kb.json
+
+# 4. Build the tier-2 fallback catalog (Product schema + tier:2/no_outcome_data):
+.venv/bin/python -m src.recommendation.import_catalog \
+  --csv data/raw/beautyapi/beauty_data.jsonl --format beautyapi \
+  --kb data/processed/ingredient_kb.json --out data/processed/catalog_tier2.json
+```
+
+The KB/tier-2 pass is optional: without the KB file the importer output is
+byte-identical to before. Tests run entirely on
+`tests/fixtures/beautyapi_sample.jsonl` and never touch the network.
+
 Run the default model-free tests, then the explicit local-artifact tier:
 
 ```bash
