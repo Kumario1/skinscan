@@ -68,6 +68,12 @@ class Product:
     comedogenic_flags: list[str] = field(default_factory=list)
     price_usd: Optional[float] = None
     price_is_stale: bool = True
+    # Ingredient-KB enrichment (spec 2026-07-10-ingredient-kb). All three
+    # default to their tier-1/no-KB values so a catalog imported without the KB
+    # serializes byte-identically to before (the importer omits keys at default).
+    ingredient_match: dict[str, float] = field(default_factory=dict)  # concern -> [0,1]
+    tier: int = 1                          # 1 = review-backed Sephora; 2 = beautyapi fallback
+    no_outcome_data: bool = False          # True for tier-2 (no review outcomes exist)
 
     def __post_init__(self):
         assert self.category in CATEGORIES, f"unknown category: {self.category}"
