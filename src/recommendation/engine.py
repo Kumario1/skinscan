@@ -78,18 +78,20 @@ def recommend(report: ConcernReport, catalog: list[Product],
               profile: UserProfile | None = None, ranker=None,
               conf_cutoff: float = 0.5) -> Recommendation:
     flags: list[str] = []
+    concerns = [c.concern for c in report.concerns]
 
     # clear skin -> maintenance only (RULES.md §4, severity 0)
     if report.clear_skin or not report.concerns:
         target = ["ceramides", "hyaluronic_acid"]
         return _finish(target, catalog, True, profile, ranker,
-                       flags + ["maintenance routine"])
+                       flags + ["maintenance routine"], concerns=concerns)
 
     # cystic / severe -> soothe + escalate, do NOT pile on actives (RULES.md §4)
     if report.has_cystic or report.overall_severity >= 4:
         flags.append("see a dermatologist")
         target = ["centella", "ceramides", "hyaluronic_acid"]
-        return _finish(target, catalog, True, profile, ranker, flags)
+        return _finish(target, catalog, True, profile, ranker, flags,
+                       concerns=concerns)
 
     # collect actives from all sufficiently-confident concerns
     target: list[str] = []
@@ -115,15 +117,18 @@ def recommend(report: ConcernReport, catalog: list[Product],
         target = [a for a in target if a not in RETINOIDS]
 
     kept, slots = _assign_slots(target, flags)
-    return _finish(kept, catalog, needs_spf, profile, ranker, flags, slots)
+    return _finish(kept, catalog, needs_spf, profile, ranker, flags, slots,
+                   concerns=concerns)
 
 
 def _finish(target: list[str], catalog: list[Product], always_spf: bool,
             profile, ranker, flags: list[str],
-            slots: dict[str, set[str]] | None = None) -> Recommendation:
+            slots: dict[str, set[str]] | None = None,
+            concerns: list[str] = ()) -> Recommendation:
     if slots is None:  # paths that skip conflict resolution: every active both slots
         slots = {a: {"AM", "PM"} for a in target}
-    routines = _build_routines(target, catalog, always_spf, slots, profile, ranker)
+    routines = _build_routines(target, catalog, always_spf, slots, profile,
+                               ranker, concerns)
     return Recommendation(routines, slots, target, flags)
 
 
@@ -193,11 +198,18 @@ def _split(a: str, b: str, slots: dict[str, set[str]]) -> bool:
 
 def _build_routines(target_actives: list[str], catalog: list[Product],
                     always_spf: bool, slots: dict[str, set[str]],
-                    profile, ranker) -> dict[str, dict[str, list[Product]]]:
+                    profile, ranker,
+                    concerns: list[str] = ()) -> dict[str, dict[str, list[Product]]]:
     """Ingredient -> product lookup (D-006), per slot. A product lands in each
     slot where at least one of its matched target actives is assigned; SPF is
     pinned AM-only. Comedogenic products are down-ranked per slot (RULES.md §6);
     the optional ranker only reorders within that comedogenic partition (D-005).
+
+    Tier-2 fallback (spec 2026-07-10-ingredient-kb): a slot x category is filled
+    from review-backed tier-1 candidates; only when NONE exist do tier-2
+    products (no_outcome_data=True) fill it. The ingredient-match score is a
+    pure tiebreaker under the ranker — review-backed concern-stats dominate; the
+    match score only orders products with equal/absent ranker scores.
     """
     routines = {s: {c: [] for c in CATEGORIES} for s in SLOTS}
     tset = set(target_actives)
@@ -213,13 +225,24 @@ def _build_routines(target_actives: list[str], catalog: list[Product],
             if any(slot in slots[a] for a in matched):
                 routines[slot][p.category].append(p)
 
+    def match_tiebreak(p: Product) -> float:
+        if not concerns or not p.ingredient_match:
+            return 0.0
+        return max((p.ingredient_match.get(c, 0.0) for c in concerns), default=0.0)
+
     def sort_key(p: Product):
-        # comedogenic partition ALWAYS dominates; ranker only breaks ties within.
+        # comedogenic partition ALWAYS dominates; the ranker (concern-stats)
+        # breaks ties next; ingredient-match is the final tiebreaker only.
         if ranker is not None:
-            return (len(p.comedogenic_flags), -ranker.score(p, profile))
-        return (len(p.comedogenic_flags),)
+            return (len(p.comedogenic_flags), -ranker.score(p, profile),
+                    -match_tiebreak(p))
+        return (len(p.comedogenic_flags), -match_tiebreak(p))
 
     for slot in SLOTS:
         for c in CATEGORIES:
-            routines[slot][c].sort(key=sort_key)
+            candidates = routines[slot][c]
+            tier1 = [p for p in candidates if p.tier == 1]
+            chosen = tier1 if tier1 else candidates  # tier-2 fills empty slots only
+            chosen.sort(key=sort_key)
+            routines[slot][c] = chosen
     return routines

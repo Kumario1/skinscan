@@ -127,6 +127,34 @@ def parse_ingredients(raw: str) -> tuple[list[str], list[str]]:
     return sorted(actives), sorted(comedogenic)
 
 
+# --- ingredient-KB enrichment (spec 2026-07-10-ingredient-kb) --------------
+# Optional pass: when a KB is supplied, comedogenic flags become a superset of
+# the hand-list above (KB-derived flags added) and each product gets a
+# per-concern ingredient_match. ingredient_kb imports normalize_token from this
+# module, so the import is lazy here to avoid a circular import at module load.
+def enrich_product(product: Product, raw_ingredients: str, kb: dict) -> None:
+    """Fold KB signal into a product in place: union the hand-list comedogenic
+    flags with KB-derived ones, and attach ingredient_match {concern: float}."""
+    from .ingredient_kb import kb_comedogenic_flags, product_matches
+    flags = set(product.comedogenic_flags) | kb_comedogenic_flags(raw_ingredients, kb)
+    product.comedogenic_flags = sorted(flags)
+    product.ingredient_match = product_matches(raw_ingredients, kb)
+
+
+def product_dict(product: Product) -> dict:
+    """asdict, but the three KB/tier fields are omitted when at their tier-1,
+    no-KB defaults — so a catalog imported without a KB serializes exactly as it
+    did before this feature (backwards-compatible; regression-tested)."""
+    d = asdict(product)
+    if not d.get("ingredient_match"):
+        d.pop("ingredient_match", None)
+    if d.get("tier", 1) == 1:
+        d.pop("tier", None)
+    if not d.get("no_outcome_data"):
+        d.pop("no_outcome_data", None)
+    return d
+
+
 def _parse_price(raw) -> Optional[float]:
     """Prices are decorative (D-001): a float if it parses cleanly, else None."""
     if raw is None:
@@ -234,13 +262,116 @@ def _sephora_drop_label(raw: dict) -> str:
     return f"Skincare / {sec} / {ter}"
 
 
-def import_csv(csv_path, out_path, fmt: str = "simple") -> dict:
+# --- beautyapi tier-2 adapter (thebeautyapi/beautyproducts JSONL) ----------
+# The beautyapi `category` field is coarse (skincare/suncare/...), so the
+# five-way catalog category is inferred from the product NAME (suncare short-
+# circuits to spf). Rules are ordered: the first hit wins. Products whose
+# category can't be inferred are dropped (spec deliverable 4). Heuristic and
+# auditable; grow the keyword list rather than reaching for fuzzy matching.
+_NAME_CATEGORY_RULES: list[tuple[str, str]] = [
+    (r"sunscreen|\bspf\b|sun protection|\buv\b", "spf"),
+    (r"cleanser|cleansing|face wash|micellar|makeup remover|foaming", "cleanser"),
+    (r"\btoner\b", "cleanser"),
+    (r"peel|exfoliat|\bmask\b|\bacne\b|blemish|clarifying|spot treatment"
+     r"|\btreatment\b", "treatment"),
+    (r"serum|ampoule|ampule|essence|elixir|\bdrops?\b|booster|concentrate", "serum"),
+    (r"moisturiz|moisturis|\bcream\b|lotion|\bgel\b|balm|\bmist\b|emulsion"
+     r"|\bbutter\b|hydrat|\boil\b", "moisturizer"),
+]
+
+
+def infer_beautyapi_category(name: str, category) -> Optional[str]:
+    """Map a beautyapi product to one of CATEGORIES, or None to drop it."""
+    if (category or "").strip().lower() == "suncare":
+        return "spf"
+    low = (name or "").lower()
+    for pattern, cat in _NAME_CATEGORY_RULES:
+        if re.search(pattern, low):
+            return cat
+    return None
+
+
+def beautyapi_row_to_simple(raw: dict) -> Optional[dict]:
+    """Map a beautyapi JSONL product to the importer's simple row shape, or None
+    if its category can't be inferred. The INCI string is reconstructed from the
+    structured ingredient entries in position order (so parse_ingredients and
+    the KB pass work exactly as they do for the CSV formats)."""
+    category = infer_beautyapi_category(raw.get("name"), raw.get("category"))
+    if category is None:
+        return None
+    entries = sorted(raw.get("ingredients") or [],
+                     key=lambda e: e.get("position") if e.get("position") is not None else 0)
+    names = [(e.get("label_name") or e.get("name") or "").strip() for e in entries]
+    ingredients = ", ".join(n for n in names if n)
+    return {
+        "product_id": f"b{raw.get('id')}",   # 'b' prefix keeps tier-2 ids disjoint
+        "name": raw.get("name") or "",
+        "brand": raw.get("brand") or "",
+        "category": category,
+        "ingredients": ingredients,
+        "price": None,
+    }
+
+
+def import_beautyapi(jsonl_path, out_path, kb: dict | None = None) -> dict:
+    """Import the beautyproducts JSONL into a tier-2 catalog.json (same Product
+    schema, plus tier=2 and no_outcome_data=True). Products that don't map to
+    one of the five categories are dropped. Deterministic -> idempotent."""
+    jsonl_path = Path(jsonl_path)
+    out_path = Path(out_path)
+
+    rows = 0
+    dropped_category = 0
+    dropped_by_category: Counter[str] = Counter()
+    products: list[Product] = []
+    for idx, line in enumerate(jsonl_path.read_text(encoding="utf-8").splitlines()):
+        if not line.strip():
+            continue
+        rows += 1
+        raw = json.loads(line)
+        row = beautyapi_row_to_simple(raw)
+        if row is None:
+            dropped_category += 1
+            dropped_by_category[(raw.get("category") or "(none)")] += 1
+            continue
+        product = product_from_row(row, idx)
+        if product is None:
+            dropped_category += 1
+            continue
+        product.tier = 2
+        product.no_outcome_data = True
+        if kb is not None:
+            enrich_product(product, row["ingredients"], kb)
+        products.append(product)
+
+    kept = Counter(p.category for p in products)
+    log: dict[str, object] = {
+        "rows": rows,
+        "kept": len(products),
+        "dropped_category": dropped_category,
+        "with_actives": sum(1 for p in products if p.actives),
+        "dropped_by_category": dict(dropped_by_category.most_common()),
+        "kept_by_category": {c: kept[c] for c in CATEGORIES if kept[c]},
+    }
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump([product_dict(p) for p in products], f, indent=2, sort_keys=True)
+        f.write("\n")
+    print(log)
+    return log
+
+
+def import_csv(csv_path, out_path, fmt: str = "simple", kb: dict | None = None) -> dict:
     """Read a catalog CSV, normalize each row, write out_path as a JSON list of
     products, and return/print a log dict. Deterministic -> idempotent.
 
     fmt="simple" reads the importer's own five-column shape (unchanged).
     fmt="sephora" runs each row through the Sephora adapter first and adds a
-    dropped-by-category breakdown + kept-by-category tally to the log."""
+    dropped-by-category breakdown + kept-by-category tally to the log.
+
+    kb (optional): an ingredient KB from ingredient_kb.load_kb. When present,
+    each product is enriched with KB-derived comedogenic flags + ingredient
+    match scores; when absent the output is byte-identical to before (D-006)."""
     csv_path = Path(csv_path)
     out_path = Path(out_path)
 
@@ -263,6 +394,8 @@ def import_csv(csv_path, out_path, fmt: str = "simple") -> dict:
             if product is None:
                 dropped_category += 1
                 continue
+            if kb is not None:
+                enrich_product(product, row.get("ingredients") or "", kb)
             products.append(product)
 
     with_actives = sum(1 for p in products if p.actives)
@@ -282,7 +415,7 @@ def import_csv(csv_path, out_path, fmt: str = "simple") -> dict:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
-        json.dump([asdict(p) for p in products], f, indent=2, sort_keys=True)
+        json.dump([product_dict(p) for p in products], f, indent=2, sort_keys=True)
         f.write("\n")
 
     print(log)
@@ -300,17 +433,25 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Import a product CSV into a normalized catalog.json.",
     )
-    parser.add_argument("--csv", required=True, help="input CSV path")
+    parser.add_argument("--csv", required=True,
+                        help="input CSV path (or beautyproducts JSONL for --format beautyapi)")
     parser.add_argument(
         "--format",
-        choices=("simple", "sephora"),
+        choices=("simple", "sephora", "beautyapi"),
         default="simple",
-        help="input row format (default: simple; sephora = Kaggle product_info.csv)",
+        help="input row format (simple; sephora = Kaggle product_info.csv; "
+             "beautyapi = tier-2 beautyproducts JSONL)",
     )
     parser.add_argument(
         "--out",
         default=None,
         help="output JSON path (default: paths.catalog_processed from config)",
+    )
+    parser.add_argument(
+        "--kb",
+        default=None,
+        help="optional ingredient_kb.json: enriches comedogenic flags + "
+             "ingredient_match (spec 2026-07-10-ingredient-kb)",
     )
     args = parser.parse_args(argv)
 
@@ -319,7 +460,15 @@ def main(argv=None):
         from src.config import load_config  # lazy: avoids importing yaml unless needed
         out = load_config()["paths"]["catalog_processed"]
 
-    import_csv(args.csv, out, fmt=args.format)
+    kb = None
+    if args.kb:
+        from .ingredient_kb import load_kb
+        kb = load_kb(args.kb)
+
+    if args.format == "beautyapi":
+        import_beautyapi(args.csv, out, kb=kb)
+    else:
+        import_csv(args.csv, out, fmt=args.format, kb=kb)
 
 
 if __name__ == "__main__":
