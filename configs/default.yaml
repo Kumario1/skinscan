@@ -55,6 +55,11 @@ tone:                               # skin-tone triage from the photo via ITA, n
     deep: [deep, dark, rich, ebony]
 
 ranker:                             # learned re-ranker artifacts (D-022); engine runs rules-only if absent (D-019)
-  model_path: models/ranker/ranker.joblib             # HistGradientBoostingClassifier on is_recommended
+  model_path: models/ranker/ranker.joblib             # HistGradientBoostingClassifier bundle (joblib)
   review_stats_path: data/processed/review_stats.json  # per-product x skin-type review stats
-  min_cell_size: 5                  # min reviews per cell before falling back to "all reviewers"
+  eval_path: runs/ranker/eval.json    # disaggregated eval artifact (mirrors the printed table)
+  min_cell_size: 5                    # min reviews per product x skin-type cell before "all reviewers" fallback
+  brand_top_n: 50                     # keep the top-N brands by review count as features; rest -> "other"
+  bayesian_prior_count: 20            # m in the Bayesian-smoothed mean-rating baseline (global prior)
+  split_test_fraction: 0.25           # reviewer-disjoint deterministic hash split -> test fraction
+  eval_low_n_floor: 30                # per-tone-bucket test N below this -> low_n flag on that row
