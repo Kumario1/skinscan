@@ -16,9 +16,9 @@ from ..config import load_config
 Box = tuple[float, float, float, float]
 Polygon = Sequence[tuple[float, float]]
 
-# Candidate table rendered in the issue #6 self-collected-photo overlay.
-# Each sequence follows the visible boundary of one semantic region; the table
-# remains subject to the issue's human visual-approval gate.
+# Landmark table locked after the issue #6 HITL gate: overlay rendered on the
+# self-collected profile photo (assets/issue6_face_regions_overlay.png) and
+# visually approved. Each sequence follows the visible boundary of one region.
 LANDMARK_INDEX_TABLE = {
     "forehead": (21, 54, 103, 67, 109, 10, 338, 297, 332, 284, 251,
                  300, 293, 334, 296, 336, 107, 66, 105, 63, 70, 46),
