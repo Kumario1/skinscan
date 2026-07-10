@@ -51,6 +51,55 @@ self-check green). To land everything:
   Plan 004 is the preparation for it; the bridge itself will be planned when
   the maintainer picks it back up.
 
+## Milestone plans (issue #1 — verbose hybrid recommender)
+
+Issue-driven, single-plan-per-issue. Written against `main`, not the worktree
+chain above; each blocker issue is already merged to `main`.
+
+| Plan | Title | Issue | Effort | Depends on | Status |
+|------|-------|-------|--------|------------|--------|
+| 013 | Learned ranker: aggregation, training CLI, baseline-gated eval, inference class | #8 | L | #3, #6, #7 (all on `main`) | DONE (code) — gate FAILED on real data; ranker stays rules-only |
+| 014 | StatsRanker: ship the bake-off champion + dated D-022 amendment | #8 | S | 013 (branch `worktree-agent-a3cea0c90a5b9751f`) | DONE (branch `worktree-agent-a3c1f9d4c1f77e291`, commit `4e67526`; 12 ranker tests, full suite 99 passed; reviewer follow-up: re-run the training CLI so the real `review_stats.json` gains `global_mean_rating`) |
+| 015 | Concern-efficacy labels: prefilter, LLM labeling CLI, concern-stats aggregation | #1 | L | spec (see below); `main` @ `509ab60` only | DONE (code) — branch `issue-1-concern-labels` @ `f7d9165`, reviewed 2026-07-10; 14 new tests, full suite 101 passed; probe reproduced gate P1 exactly (970). Steps 7–8 (calibrate ~$1, full label ~$60–90) await operator API key + maintainer P2 sign-off |
+
+**Direction change (2026-07-10):** after 013's gate failure the maintainer
+approved a redirect — mine review TEXT for per-concern efficacy and invert the
+engine to model-selects/rules-veto. Spec:
+`docs/superpowers/specs/2026-07-10-concern-efficacy-recommender-design.md`
+(committed `509ab60`). Gate P1 (mention density) executed and PASSED (970
+products ≥ 300 floor). Plan 015 is the data layer; 016 (bake-off, gate P3) and
+017 (engine v3 inversion) will be planned once 015's calibration gate P2
+passes. Issues #9/#10 wait for the final engine contract.
+
+- 013 planned at `b197b6b` (2026-07-10). Executed by a sonnet subagent in
+  worktree `worktree-agent-a3cea0c90a5b9751f` (commit `65fb1b2`), reviewed
+  2026-07-10. **Not merged — maintainer's call.**
+- **Implementation: APPROVED.** 6 in-scope files only; `engine.py`/`schema.py`/
+  `tone.py` untouched; full suite 94 passed + 7 new ranker tests; fixture gate
+  passes deterministically (model 1.000/1.000 vs baselines 0.333/0.333); gate
+  guard correctly withholds the model on failure; degradation to rules-only
+  covered by a test.
+- **Real-data D-022 gate: FAILED (this is a genuine result, not a defect).**
+  Full ~1.1M reviews, base_rate 0.847, n_train 518,437 / n_test 173,815,
+  234,171 reviews dropped for no catalog product. Pooled: model
+  ROC-AUC 0.659 / pairwise 0.584 **loses** to popularity 0.672 / 0.596 and
+  Bayesian 0.666 / 0.609. Per D-022/D-005 the model is NOT written; the pipeline
+  runs rules-only. Likely cause: the popularity baseline memorizes per-product
+  recommend rates while the model deliberately carries no product identity (only
+  actives/category/brand/price × reviewer profile), so it can't out-predict
+  popularity on this feature set. `review_stats.json` (1,591 products) is still
+  produced and is useful to the report's evidence lines independent of the model.
+- **Ranker v2 investigated (2026-07-10) — see `ranker-v2-probe-evidence.md`.**
+  Five probes (target encodings, objective switch, reviewer-centered regression,
+  validation-tuned blend) all fail the D-022 gate; the failure is structural
+  (one score can't beat both specialist baselines with product-anonymous
+  features). Genuinely new signal (review-text mining — the PRD's declared v2 —
+  or a ranking objective via a new dependency) would be required.
+- **Forward note for the report issue:** with no shipped model, `load_ranker`
+  returns `None`, so the review-stats evidence is unreachable *through the
+  ranker*. The report should read `review_stats.json` directly (or `load_ranker`
+  should be split so stats load even when the model is absent).
+
 ## Findings considered and rejected
 
 - `assert`-based validation in `schema.py` (stripped under `python -O`): fine
