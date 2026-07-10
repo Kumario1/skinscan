@@ -45,7 +45,9 @@ split across AM/PM slots so both survive. Deterministic algorithm
      **complement** (e.g. adapalene=PM ⇒ benzoyl_peroxide=AM);
    - if both are still free, the **later-listed active takes its preferred slot**
      (`PREFERRED_SLOT`: BP→AM, vitamin_c→AM, AHAs→PM) and the **earlier active
-     takes the complement**.
+     takes the complement**; an active absent from `PREFERRED_SLOT` takes the
+     complement of the earlier active's preference (PM when that is also
+     unlisted).
 5. **Terminal drop** — only a pair still sharing a slot after step 4 (both pinned
    to the same single slot) falls back to the legacy behavior: drop the later
    active with a "held back (conflicts with earlier active)" flag.
