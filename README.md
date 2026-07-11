@@ -22,6 +22,7 @@ flowchart LR
 | Component | Dataset | Result |
 |---|---|---|
 | Stage 1 detector (YOLOv8m) | ACNE04 | **F1 = 0.722** @ conf 0.07 / IoU 0.2 |
+| SA-RPN detector (Mask R-CNN R50, 10-class) — [`sa-rpn/`](sa-rpn/) | AcneSCU | **mAP@0.50 = 0.499 bbox / 0.498 segm**, recall@0.50 = 0.743 |
 | Stage 2 classifier (EfficientNetB0, 5-class) | Kaggle acne types | **91.2% acc, macro F1 0.92** |
 | 6-class `Not_acne` retrain | + harvested negatives | 91.7% acc — **reverted** (crop-domain confound, [D-025](docs/DECISIONS.md)) |
 | Learned product ranker (HistGB) | 1.1M Sephora reviews | pairwise 0.584 — **lost** to Bayesian stats baseline (0.609), never shipped |
@@ -295,27 +296,49 @@ being silently trusted.
 
 ---
 
-## 7. In progress — Stage 2 v2 + SA-RPN replication
+## 7. SA-RPN detector — trained, evaluated, and served ✅
 
-Two active workstreams (uncommitted), both motivated by D-025:
+Full writeup, code, and reproduction: [**`sa-rpn/`**](sa-rpn/).
 
-**Stage 2 v2 dataset** ([`docs/STAGE2_V2_DATASET.md`](docs/STAGE2_V2_DATASET.md)).
-Auditing the Roboflow training data revealed a second data problem: augmented
-copies of the same source face leak across train/val/test (e.g. Blackheads —
-735 train files but only ~91 source images, 61 present in all three splits).
-The v2 plan: harvest crops by running the *deployed* detector on AcneSCU faces
-(276 faces, 31,777 fine-grained annotations) so train crops match deployment
-crops, human-review every label (`src/classification/curate_acne04_crops.py`
-audit/harvest/build CLI), and split by source face *before* augmenting. Seven
-gates must pass before v2 replaces the shipped 5-class model.
+Replicated Zhang et al.'s *Learning High-quality Proposals for Acne Detection*
+(SA-RPN — a Spatial-Aware RPN with NWD proposal scoring and deformable convs on
+Mask R-CNN R50-FPN) on AcneSCU with MMDetection. 275 clinical faces tiled into
+1024×1024 crops (4,680 train / 529 val tiles), fine-tuned from COCO for 15 epochs
+on a Lightning AI A100. Unlike the shipped YOLOv8m detector (single `lesion`
+class), this predicts **10 fine-grained lesion types with per-lesion masks**.
 
-**SA-RPN replication** ([`notebooks/train_acnescu_sa_rpn_colab.ipynb`](notebooks/train_acnescu_sa_rpn_colab.ipynb)).
-Replicating Zhang et al.'s *Learning High-quality Proposals for Acne Detection*
-(paper: AP 0.507 / AR 0.775 @ IoU 0.5) on AcneSCU with MMDetection —
-1024×1024 masked tiling preprocessor in
-`src/detection/prepare_acnescu_sa_rpn.py`, training on Colab. Caveat: the
-available mirror lacks patient IDs, so the paper's patient-disjoint split
-can't be reproduced exactly.
+| Metric | bbox | segm | | paper target |
+|---|---|---|---|---|
+| **mAP @ 0.50** | **0.499** | **0.498** | | AP 0.507 |
+| **Recall @ 0.50** | **0.743** | **0.742** | | AR 0.775 |
+| mAP @ [.50:.95] | 0.174 | 0.169 | | — |
+
+Validation mAP jumps 0.43 → 0.50 exactly at the epoch-9 LR drop, then plateaus —
+the model converged; more epochs at this recipe would not help. Detections on
+held-out crops it never trained on (red boxes = model output at conf ≥ 0.5):
+
+![validation predictions](sa-rpn/assets/pred_1.jpg)
+![validation mAP by epoch](sa-rpn/assets/val_map.png)
+
+Served as a batched [LitServe](https://github.com/Lightning-AI/LitServe) REST API
+([`sa-rpn/serve.py`](sa-rpn/serve.py)) with class-agnostic NMS and a confidence
+knob. **Caveats:** strict-IoU localization is weak (mAP@0.75 ≈ 0.08) — the next
+lever is anchor/mask-head tuning, not more training; and the available mirror
+lacks patient IDs, so the paper's patient-disjoint split can't be reproduced
+exactly (split is image-level).
+
+## 7b. In progress — Stage 2 v2 dataset
+
+**Stage 2 v2 dataset** ([`docs/STAGE2_V2_DATASET.md`](docs/STAGE2_V2_DATASET.md)),
+motivated by D-025. Auditing the Roboflow training data revealed a second data
+problem: augmented copies of the same source face leak across train/val/test
+(e.g. Blackheads — 735 train files but only ~91 source images, 61 present in all
+three splits). The v2 plan: harvest crops by running the *deployed* detector on
+AcneSCU faces (276 faces, 31,777 fine-grained annotations) so train crops match
+deployment crops, human-review every label
+(`src/classification/curate_acne04_crops.py` audit/harvest/build CLI), and split
+by source face *before* augmenting. Seven gates must pass before v2 replaces the
+shipped 5-class model.
 
 ---
 
@@ -409,6 +432,7 @@ curl -L -o data/raw/beautyapi/beauty_data.jsonl \
 ## Repo map
 
 ```text
+sa-rpn/                SA-RPN Mask R-CNN detector (§7): training, serving API, results
 docs/DECISIONS.md      every decision (D-001..D-025), including the reversals
 docs/*.md              design docs: negatives, v2 dataset, rules, schemas, fairness
 notebooks/             Colab sessions: detector training, Stage 2 retrain, SA-RPN
