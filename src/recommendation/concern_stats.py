@@ -68,6 +68,34 @@ def build_concern_stats(df: pd.DataFrame, m: float,
             "priors": priors, "cells": cells}
 
 
+class ConcernStatsRanker:
+    """Duck-typed D-005 ranker over concern_stats.json: mean smoothed help-rate
+    lift over the concern prior, across the report's concerns. Skin-type
+    sub-cell when present, else __all__. Products without cells score 0, so the
+    engine's rules-only order is untouched for them (D-019)."""
+
+    def __init__(self, stats: dict, concerns: list[str]):
+        self.stats = stats
+        self.concerns = [c for c in concerns if c in stats.get("priors", {})]
+
+    @classmethod
+    def from_file(cls, path, concerns: list[str]) -> "ConcernStatsRanker":
+        return cls(json.loads(Path(path).read_text()), concerns)
+
+    def score(self, product, profile) -> float:
+        cells = self.stats["cells"].get(product.product_id)
+        if not cells or not self.concerns:
+            return 0.0
+        lifts = []
+        for concern in self.concerns:
+            cell = cells.get(concern)
+            if not cell:
+                continue
+            sub = cell.get(profile.skin_type if profile else "") or cell["__all__"]
+            lifts.append(sub["smoothed"] - self.stats["priors"][concern])
+        return sum(lifts) / len(lifts) if lifts else 0.0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--labels")
