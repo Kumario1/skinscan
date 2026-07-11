@@ -21,3 +21,5 @@ venv/
 # local
 .DS_Store
 configs/local.yaml
+old model/
+eval_runs.zip

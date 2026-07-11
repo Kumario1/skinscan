@@ -32,6 +32,16 @@ Not_acne reject:   99.7% of detector boxes on held-out clear-skin (FFHQ) faces
 Custom image test: 25 detections, all now classified Not_acne (was 16, all forced to Pustules)
 ```
 
+> **Status (2026-07-10, D-025):** the six-class retrain above is **archived,
+> not deployed**. Its metrics are real but hide a crop-domain confound — the
+> acne-class positives are 640×640 mosaic images while the `Not_acne`
+> negatives were harvested through the inference-time crop transform, so on
+> real photos it classifies EVERY detector crop `Not_acne` (the FFHQ/phantom
+> numbers above are the confound's symptom, not a success). The shipped
+> default `models/classification/acne_model.keras` is the original
+> **5-class** model; issue #5 tracks retrain v2 with domain-matched positives
+> and a real-pipeline-crop acceptance gate.
+
 ---
 
 ## 1. Stage 1 - lesion locator
@@ -235,6 +245,12 @@ Every detector box now classifies **Not_acne**, so the spurious pustules are
 gone. Because the concern mapping drops `Not_acne`, this image produces zero acne
 concerns — the correct outcome for clear skin.
 
+> **Caveat (D-025):** this "fix" later turned out to be the confound working
+> in our favor — the v1 retrain classifies *every* real detector crop
+> `Not_acne`, on acne-covered faces too. The result above is kept as the
+> motivating example for the reject class; the v1 weights are archived and the
+> five-class model is the default again until the issue #5 retrain v2.
+
 Detection overlay:
 
 ![My image detection overlay](assets/my_image_test_detection_overlay.jpg)
@@ -319,6 +335,16 @@ Render the issue #6 region and tone overlays from that run's JSON:
   --boxes runs/acne04_pipeline_check/predictions.json
 .venv/bin/python -m src.pipeline.tone path/to/image.jpg \
   --boxes runs/acne04_pipeline_check/predictions.json
+```
+
+Full pipeline, one command — image → detections → types → regions → tone →
+ConcernReport → ranked AM/PM routine (`runs/e2e/<stem>/routine.json`; the
+concern-stats ranker and tier-2 catalog are picked up when their processed
+files exist):
+
+```bash
+.venv/bin/python -m src.pipeline.e2e --image path/to/image.jpg \
+  [--skin-type dry] [--pregnant] [--top 5]
 ```
 
 Issue #6 visual gate on the self-collected profile:
