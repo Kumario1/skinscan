@@ -8,9 +8,10 @@ builds that ranker:
   1. a training CLI that turns the Sephora reviews into (a) a satisfaction model
      (HistGradientBoostingClassifier on is_recommended) and (b) a per-product x
      skin-type review-stats table, and
-  2. an inference `Ranker` the hook consumes, plus `load_ranker()` which returns
-     None when the model artifact is absent so the app degrades to rules-only
-     (D-019).
+  2. an inference `Ranker` the hook consumes, plus `load_ranker()` — a three-way
+     loader (D-022 as amended 2026-07-10): model present -> Ranker; model absent
+     but review-stats present -> StatsRanker (the statistical champion); both
+     absent -> None, rules-only (D-019).
 
 Per D-022 the model must EARN its place: it ships only if it beats a
 global-popularity baseline AND a Bayesian-smoothed-rating baseline on both
@@ -479,7 +480,10 @@ def train_pipeline(reviews_dir, catalog_path, out_model, out_stats, out_eval,
     n_reviews = len(reviews_df)
     merged = reviews_df.merge(prod_df, left_on="product_id", right_index=True, how="inner")
     reviews_dropped = n_reviews - len(merged)
-    merged["f_skin_type"] = merged["skin_type"]  # reviewer feature; same path as reviewer_features
+    # bulk equivalent of reviewer_features(): load_reviews already filled NaN
+    # skin_type with "unknown", so this column matches the inference path — if
+    # reviewer_features() ever changes, change this line with it (anti-skew).
+    merged["f_skin_type"] = merged["skin_type"]
 
     test_mask = deterministic_test_mask(merged["author_id"], rcfg["split_test_fraction"])
     train_df = merged[~test_mask].copy()
