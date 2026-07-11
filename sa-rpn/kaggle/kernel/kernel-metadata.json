@@ -1,0 +1,13 @@
+{
+  "id": "princekumarr/acnescu-sa-rpn-training",
+  "title": "AcneSCU SA-RPN training",
+  "code_file": "train_kaggle.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": true,
+  "dataset_sources": ["princekumarr/acnescu-v1-voc"],
+  "kernel_sources": [],
+  "competition_sources": []
+}
