@@ -41,8 +41,10 @@ D-016); `unknown` is always reported, never dropped.
 or `PM` (evening). Conflicting actives are split across slots (e.g. retinoids PM,
 SPF AM-only) rather than one being dropped (`docs/RULES.md`).
 
-**ranker** — The learned re-ranker that reorders rule-approved candidate products
-within a category by predicted fit for a profile (D-005 / D-022). It only
+**ranker** — The re-ranker that reorders rule-approved candidate products within
+a category (D-005 / D-022) — today a statistical champion (Bayesian-smoothed
+pooled product rating; `StatsRanker`), with the learned slot open to any model
+that beats it under the D-022 ratchet. It only
 reorders — it never selects, gates, or overrides safety.
 
 **review-stats** — Per-product × skin-type summary statistics from the Sephora

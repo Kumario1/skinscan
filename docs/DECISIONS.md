@@ -70,6 +70,11 @@ Ranker acceptance criteria live in D-022; the deliverable shape in D-019. Still
 rules out a learned recommender that selects or gates products — the ranker only
 orders what the rules already blessed.
 
+**Note 2026-07-10:** the learned slot is currently empty — the D-022 gate
+rejected the trained model, so the reorderer shipping in the hook is the
+statistical champion (`StatsRanker`, see D-022 amendment). The hybrid contract
+(rules gate, hook only reorders, comedogenic/safety untouchable) is unchanged.
+
 ### D-006 — The recommender reasons over ingredients, not products · LOCKED
 CV output -> concern -> active ingredient(s) -> products containing them.
 Products are interchangeable carriers of ingredients. This decouples the brain
@@ -221,6 +226,25 @@ Bayesian-smoothed-rating baseline, on ROC-AUC and within-reviewer pairwise
 ordering accuracy. Metrics are disaggregated by skin-tone bucket, including an
 `unknown` bucket that is always reported, never dropped (D-016 discipline on the
 recommendation axis). Fails the gate → ship rules-only (D-005 / D-019).
+
+**Amended 2026-07-10 (gate executed — outcome recorded):** the gate ran on the
+full ~1.1M-review dataset (plan 013). The learned model FAILED it: ROC-AUC
+0.659 / pairwise 0.584 vs popularity 0.672/0.597 and Bayesian rating
+0.666/0.609. A seven-probe investigation (`plans/ranker-v2-probe-evidence.md`)
+showed the failure is structural (no sklearn variant, review-text feature, or
+per-skin-type cell passes; per-skin-type ordering measurably LOSES to pooled).
+Two consequences, per this file's change rule:
+
+1. The failure mode "ship rules-only" is amended to **"ship the statistical
+   champion"**: the engine's hook carries a `StatsRanker` ordering candidates by
+   the Bayesian-smoothed pooled product rating from `review_stats.json` — the
+   bake-off's measured winner (pairwise 0.609). Skin-type cells remain
+   evidence-only (they hurt ordering: 0.606/0.596). Rules-only remains the
+   degradation when stats artifacts are absent too.
+2. The gate becomes a **ratchet**: a future learned model ships only if it
+   beats the champion (the Bayesian baseline row in the eval — same score) on
+   BOTH pooled metrics. The trainer already enforces this: the model artifact
+   is written only on a gate pass.
 
 ---
 
