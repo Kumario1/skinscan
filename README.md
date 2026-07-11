@@ -328,6 +328,18 @@ Run one image:
 .venv/bin/python -m src.classification.run_acne04_pipeline --image path/to/image.jpg
 ```
 
+Train the learned ranker (D-022 — ships only if it beats the popularity/rating
+baselines; needs `data/processed/catalog.json` + `data/raw/sephora/reviews_*.csv`):
+
+```bash
+# Train the learned ranker (needs data/processed/catalog.json + data/raw/sephora/reviews_*.csv):
+.venv/bin/python -m src.recommendation.ranker
+```
+
+The trained model ships only if it passes the D-022 gate; otherwise the app
+orders products by the Bayesian-smoothed review stats (`StatsRanker`) — see
+`docs/DECISIONS.md` D-022 (2026-07-10 amendment).
+
 Render the issue #6 region and tone overlays from that run's JSON:
 
 ```bash

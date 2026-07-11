@@ -114,3 +114,40 @@ products** (all five categories non-empty, ~89% with ≥1 canonical active).
 - No reviews / ratings (v1 doesn't rank on popularity).
 - No concentration data (INCI lists don't provide it reliably).
 - No stock / availability.
+
+## Review-stats & ranker artifacts
+
+The reviews are a **separate artifact**, not part of the catalog schema (D-009
+unchanged) — `data/raw/sephora/reviews_*.csv` join to the catalog on the
+preserved Sephora `product_id`. The learned ranker (D-022, `ranker.py`) turns
+them into two files:
+
+**`review_stats.json`** — per-product × skin-type evidence, from train rows only:
+
+```json
+{
+  "min_cell_size": 5,
+  "base_rate": 0.83,
+  "global_mean_rating": 4.19,
+  "cells": {
+    "P480274": {
+      "__all__": {"n": 812, "mean_rating": 4.4, "pct_recommend": 0.86},
+      "oily":    {"n": 210, "mean_rating": 4.2, "pct_recommend": 0.81}
+    }
+  }
+}
+```
+
+`Ranker.evidence(product_id, skin_type)` returns the `<skin_type>` cell when its
+`n >= min_cell_size`, else the `__all__` cell tagged `{"fallback": true,
+"cell": "all_reviewers"}`; `None` when the product is absent.
+
+`global_mean_rating` (top-level) is the train-rows mean rating — the smoothing
+prior `StatsRanker` shrinks each product's pooled rating toward (D-022 amendment).
+
+**`ranker.joblib`** — the model bundle (joblib dict), written **only when the
+D-022 gate passes**: `{"model"` (HistGradientBoostingClassifier on
+`is_recommended`), `"brand_vocab"`, `"active_vocab"`, `"feature_columns"`,
+`"base_rate"}`. `feature_columns`/`brand_vocab`/`active_vocab` let inference
+reconstruct the exact training columns (anti-skew). A disaggregated
+`eval.json` (pooled + per-tone-bucket ROC-AUC/pairwise) is always written.
