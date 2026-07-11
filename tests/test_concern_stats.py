@@ -9,8 +9,9 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.recommendation.concern_stats import (
-    build_concern_stats, labels_frame, main,
+    ConcernStatsRanker, build_concern_stats, labels_frame, main,
 )
+from src.recommendation.schema import Product, UserProfile
 
 
 def _df(rows):
@@ -78,6 +79,26 @@ def test_cli_end_to_end():
         stats = json.loads(out.read_text())
         assert stats["cells"]["PA"]["acne_general"]["__all__"]["n"] == 3
         assert stats["smoothing_m"] == 20
+
+
+def test_ranker_scores_lift_and_degrades_to_zero():
+    stats = {
+        "priors": {"acne_general": 0.7, "dryness": 0.8},
+        "cells": {
+            "PA": {"acne_general": {"__all__": {"smoothed": 0.9},
+                                    "oily": {"smoothed": 0.6}}},
+            "PB": {"dryness": {"__all__": {"smoothed": 0.8}}},
+        },
+    }
+    pa = Product("PA", "a", "b", "serum")
+    ranker = ConcernStatsRanker(stats, ["acne_general"])
+    # skin-type sub-cell wins when present; __all__ otherwise
+    assert abs(ranker.score(pa, UserProfile(skin_type="oily")) - (-0.1)) < 1e-9
+    assert abs(ranker.score(pa, UserProfile(skin_type="dry")) - 0.2) < 1e-9
+    # no cell for the concern / unknown product / unknown concern -> 0.0
+    assert ranker.score(Product("PB", "a", "b", "serum"), UserProfile(skin_type="dry")) == 0.0
+    assert ranker.score(Product("PX", "a", "b", "serum"), UserProfile(skin_type="dry")) == 0.0
+    assert ConcernStatsRanker(stats, ["not_a_concern"]).score(pa, None) == 0.0
 
 
 if __name__ == "__main__":
