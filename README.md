@@ -78,31 +78,59 @@ crop can still be rejected downstream. Green = ground truth, red = predictions:
 
 ## 2. Stage 2 — acne type classifier
 
-EfficientNetB0 transfer learning on the Kaggle acne-type dataset, five classes
-(`Blackheads, Cyst, Papules, Pustules, Whiteheads`), 224×224 raw-RGB crops.
+### 2a. Attempt 1 — ACNE04 crops, labeled by hand
+
+The first classifier was trained on detector crops from ACNE04 that we labeled
+ourselves, at concern level: `comedonal, cystic, inflammatory, not_acne,
+post_acne_mark`. It didn't hold up:
+
+![Attempt 1 confusion matrix](assets/stage2_confusion_matrix.png)
+
+The diagonal is weak almost everywhere (inflammatory recall 20/56, cystic
+10/30). The error audit showed why — at crop scale, fading inflammatory
+lesions and post-acne marks are nearly the same red dot:
+
+![Attempt 1 error audit](assets/stage2_confusion_audit.png)
+
+![Attempt 1 validation predictions](assets/stage2_validation_predictions.png)
+
+Two takeaways: (1) self-labeled concern-level crops were too noisy to learn
+from; we needed a properly typed dataset. (2) One class *did* work —
+`not_acne` was the strongest row (23/36), the first evidence that a learned
+reject class is viable. Its negatives came from harvested detector
+false-positive crops (hair, shadows, fabric, plain skin):
+
+![Negative crop review](assets/stage2_negative_review.png)
+
+### 2b. Attempt 2 — Kaggle acne-type dataset, retrained on Colab
+
+We swapped to the Kaggle acne-type dataset (five real types: `Blackheads,
+Cyst, Papules, Pustules, Whiteheads`) and retrained EfficientNetB0 on a Colab
+T4 ([`notebooks/retrain_stage2_colab.ipynb`](notebooks/retrain_stage2_colab.ipynb)).
+
+Label review first, as always:
+
+![Kaggle sample review](assets/stage2_kaggle_sample_review.png)
 
 ```text
 runtime: Colab T4 · TF 2.20 · Adam(1e-5) · 150 epochs · best-val checkpoint
 split:   train 2778 / valid 921 / test 918
-result:  test accuracy 91.18% · macro F1 0.92
+result:  test accuracy ~92% · macro F1 0.92–0.93
 ```
 
-Label review before training, then confusion analysis after:
+![T4 training curves](assets/stage2_t4_training_curves.png)
 
-![Stage 2 sample review](assets/stage2_kaggle_sample_review.png)
+![T4 confusion matrix](assets/stage2_t4_confusion_matrix.png)
 
-![Stage 2 confusion matrix](assets/stage2_confusion_matrix.png)
-
-![Stage 2 validation predictions](assets/stage2_validation_predictions.png)
-
-Papules↔Pustules is the persistent soft spot (both inflammatory-looking crops);
-Whiteheads is the small tail (57 test images) but scores highest (F1 0.98).
+A clean diagonal this time. Papules↔Pustules is the remaining soft spot (both
+inflammatory-looking crops); Whiteheads is the small tail (57 test images)
+but scores highest.
 
 ---
 
-## 3. End-to-end pipeline — and the first big failure
+## 3. End-to-end pipeline
 
-Wiring detector → context crop → classifier, the JSON output keeps box,
+Wiring detector → context crop → classifier; the JSON output keeps box,
 detector confidence, crop path, and full probability vector per candidate:
 
 ```bash
@@ -113,57 +141,52 @@ detector confidence, crop path, and full probability vector per candidate:
 
 ![Pipeline crop predictions](assets/stage2_pipeline_single_crop_overview.jpg)
 
-Then we ran it on a self-collected photo of essentially clear skin:
+End-to-end test on a self-collected photo with real acne, using the new
+Kaggle-trained model — this one is a *good* result: the detector finds the
+lesions and the classifier types them as pustules, which matches the photo:
+
+![End-to-end detection overlay](assets/my_image_test_detection_overlay.jpg)
 
 ```text
-detections: 16
-type counts: Pustules = 16          ← every single crop
-classifier confidence: 0.47–1.00    ← some at 1.00
-detector confidence:   0.19–0.37    ← all weak boxes
+detections: 16 · type counts: Pustules = 16 · classifier confidence 0.47–1.00
 ```
 
-![Failure case detection overlay](assets/my_image_test_detection_overlay.jpg)
-
-![Failure case crop predictions](assets/my_image_test_crop_predictions.jpg)
-
-Sixteen crops of clear skin, all reported *Pustules*, some at 1.00 confidence.
-A five-way softmax has no way to say "none of these" — the classic
-out-of-distribution failure. This photo became the project's canonical
-regression test.
+The remaining worry: a 5-way softmax still has no way to say "none of these,"
+so weak detector boxes (shadows, pores, hair) get forced onto an acne type
+too. That's what the `Not_acne` class from attempt 1 was supposed to fix —
+next section.
 
 ---
 
-## 4. The `Not_acne` reject class — right idea, wrong dataset
+## 4. Adding `Not_acne` to the new model — right idea, wrong dataset
 
-**Design** ([`docs/STAGE2_NEGATIVES_DESIGN.md`](docs/STAGE2_NEGATIVES_DESIGN.md)):
-we compared three fixes and chose a sixth `Not_acne` class over probability
-thresholding (softmax is miscalibrated on OOD crops) and a two-stage binary
-gate (over-engineered). Negatives = FFHQ clear-skin detector false positives +
-non-lesion ACNE04 regions, harvested through the *same* `crop_with_context`
-transform the pipeline uses:
+`Not_acne` had already worked on the small self-labeled model (§2a), so we
+brought it to the Kaggle model. Design
+([`docs/STAGE2_NEGATIVES_DESIGN.md`](docs/STAGE2_NEGATIVES_DESIGN.md)): a sixth
+class beat probability thresholding (softmax miscalibrated on OOD crops) and a
+two-stage binary gate (over-engineered). Negatives = FFHQ clear-skin detector
+false positives + non-lesion ACNE04 regions, harvested through the *same*
+`crop_with_context` transform the pipeline uses.
 
-![Negative crop review](assets/stage2_negative_review.png)
-
-**Retrain** ([`notebooks/retrain_stage2_colab.ipynb`](notebooks/retrain_stage2_colab.ipynb),
-Colab T4, 150 epochs, ~2h). On paper it worked perfectly:
+On paper the 6-class retrain worked perfectly:
 
 ```text
 test accuracy 91.72% · macro F1 0.93 (up from 0.92)
 only 2/918 real lesion crops misrouted to Not_acne
 FFHQ clear-skin reject rate: 99.7% (382/383)
-canonical failure photo: 25 detections → Not_acne = 25  ✓
 ```
 
-![T4 training curves](assets/stage2_t4_training_curves.png)
+**Then the end-to-end run fell apart (D-025).** On real faces the model
+classified essentially *every* detector crop `Not_acne` — including crops that
+are unmistakably pustules, at confidence 1.00:
 
-![T4 confusion matrix](assets/stage2_t4_confusion_matrix.png)
+![Confound proof: real pustule crops classified Not_acne](assets/my_image_test_crop_predictions.jpg)
 
-**Then it fell apart (D-025).** On real acne-covered faces the model classified
-*every* detector crop `Not_acne` at ~1.0. Root cause: a **crop-domain
-confound** — the acne positives were 640×640 Roboflow mosaic images, while the
-negatives were 224px upscaled pipeline crops. The model learned crop *style*,
-not acne. Every acceptance gate we had defined passed anyway, because none of
-them fed real pipeline crops of a known-acne face through the model.
+Root cause: a **crop-domain confound** — the acne positives were 640×640
+Roboflow mosaic images, while the negatives were 224px upscaled pipeline
+crops. The model learned crop *style*, not acne. Every dataset-level
+acceptance gate passed anyway, because none of them fed real pipeline crops
+of a known-acne face through the model.
 
 ```text
 lesson: dataset-level metrics can be perfect while the deployed model is 100% broken.
@@ -242,6 +265,34 @@ the pooled StatsRanker) are pending.
 fallback catalog — used only as a ranking tiebreaker and only when no
 review-backed candidate exists.
 
+**End-to-end output.** Running `src.pipeline.e2e` on a real acne photo
+produces `runs/e2e/<stem>/routine.json` — per-region concerns, tone, safety
+flags, and a ranked AM/PM routine. Excerpt from an actual run
+(`runs/e2e_final/acne/routine.json`):
+
+```jsonc
+{
+  "concerns": [
+    {"concern": "acne_comedonal",    "region": "left_cheek", "severity": 2, "lesion_count": 6},
+    {"concern": "acne_cystic",       "region": "chin_jaw",   "severity": 1, "confidence": 0.919},
+    {"concern": "acne_inflammatory", "region": "chin_jaw",   "severity": 1, "confidence": 0.322}
+  ],
+  "tone": {"bucket": "light", "ita": 56.7},
+  "flags": ["see a dermatologist", "acne_inflammatory@chin_jaw: possible — verify"],
+  "target_actives": ["centella", "ceramides", "hyaluronic_acid"],
+  "routines": {"AM": {"cleanser": ["CLINIQUE Clarifying Lotion 2", "…"],
+                      "serum": ["The INKEY List Niacinamide Oil Control Serum", "…"],
+                      "spf": ["Supergoop! Daily Dose SPF 40", "…"]},
+               "PM": {"…": "…"}}
+}
+```
+
+The safety rules are visible in the output: a cystic concern was detected, so
+the routine switched to **soothe-only actives** (no benzoyl peroxide, no
+retinoids) and raised the *see a dermatologist* flag; a low-confidence
+inflammatory concern (0.322) is reported as "possible — verify" instead of
+being silently trusted.
+
 ---
 
 ## 7. In progress — Stage 2 v2 + SA-RPN replication
@@ -275,8 +326,8 @@ Kept on the record deliberately; half the value of the project is here.
 | # | Dead end | Symptom | Root cause | Resolution |
 |---|---|---|---|---|
 | 1 | YOLOv8-nano detector | weak recall on small dense lesions | model too small | upgraded to YOLOv8m (D-018) |
-| 2 | 5-class softmax, no reject | clear skin → 16× "Pustules" @ conf up to 1.00 | softmax can't say "none of these" | added `Not_acne` class |
-| 3 | 6-class retrain v1 | every real crop → `Not_acne` ≈ 1.0, on acne faces too | crop-domain confound: 640px mosaic positives vs 224px pipeline-crop negatives | reverted to 5-class (D-025); v2 requires real-pipeline gate |
+| 2 | Self-labeled concern-level classifier | weak diagonal; inflammatory ↔ post-acne marks indistinguishable | noisy hand labels, crop too small for concern-level classes | switched to the typed Kaggle dataset (§2b) |
+| 3 | 6-class retrain v1 | real pustule crops → `Not_acne` @ 1.00, on acne faces too | crop-domain confound: 640px mosaic positives vs 224px pipeline-crop negatives | reverted to 5-class (D-025); v2 requires real-pipeline gate |
 | 4 | Roboflow split trust | v2 audit: same source face in train *and* test | augmentation done before splitting | v2 splits by source face first |
 | 5 | Learned product ranker | pairwise 0.584 vs baseline 0.609 | product-anonymous features can't beat per-product memorized stats; 7 probes confirmed structural | shipped `StatsRanker` champion (D-022) |
 | 6 | Per-skin-type ranking cells | 0.606/0.596 — *worse* than pooled | cells too sparse | pooled stats, cells evidence-only |
