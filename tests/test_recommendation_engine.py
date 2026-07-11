@@ -45,6 +45,72 @@ def _product_ids(products):
     return [p.product_id for p in products]
 
 
+def test_soothe_routine_excludes_strong_active_products():
+    """RULES.md §4 — cystic: 'do NOT recommend aggressive actives'. A product
+    must not sneak into the soothe routine via a gentle active (e.g. an SA serum
+    that also lists hyaluronic_acid)."""
+    catalog = make_catalog() + [
+        Product("p11", "SA + HA Serum", "b", "serum",
+                actives=["salicylic_acid", "hyaluronic_acid"]),
+        Product("p12", "Plain HA Serum", "b", "serum", actives=["hyaluronic_acid"]),
+        Product("p13", "Glycolic Ceramide Cream", "b", "moisturizer",
+                actives=["glycolic_acid", "ceramides"]),
+        Product("p15", "PHA Resurfacing Toner", "b", "cleanser",
+                actives=["gluconolactone", "glycerin", "hyaluronic_acid"]),
+        # INCI-clean (citrus-juice "AHA") but named as an exfoliant — the
+        # soothe path vetoes by name too, since the vocabulary can't see it.
+        Product("p16", "AHA Liquid Exfoliating Treatment", "b", "treatment",
+                actives=["niacinamide", "hyaluronic_acid"]),
+    ]
+    report = ConcernReport("img", concerns=[Concern("acne_cystic", "chin_jaw", 2, 0.9)])
+    rec = recommend(report, catalog)
+    everything = [pid for prods in rec.routine.values() for pid in _product_ids(prods)]
+    assert "p11" not in everything, everything
+    assert "p13" not in everything, everything
+    assert "p15" not in everything, everything
+    assert "p16" not in everything, everything
+    assert "p12" in everything, everything
+
+
+def test_maintenance_routine_excludes_strong_active_products():
+    """RULES.md §4 severity 0 — maintenance is 'gentle cleanser, moisturizer,
+    SPF'; strong-active products must not match via a bundled gentle active."""
+    catalog = make_catalog() + [
+        Product("p11", "SA + HA Serum", "b", "serum",
+                actives=["salicylic_acid", "hyaluronic_acid"]),
+    ]
+    rec = recommend(ConcernReport("img", clear_skin=True), catalog)
+    everything = [pid for prods in rec.routine.values() for pid in _product_ids(prods)]
+    assert "p11" not in everything, everything
+
+
+def test_multi_active_product_respects_all_slot_pins():
+    """RULES.md §2a — a product carrying a PM-pinned retinoid must not land in
+    AM just because another of its target actives is AM-eligible."""
+    catalog = make_catalog() + [
+        Product("p14", "Adapalene + Niacinamide Gel", "b", "treatment",
+                actives=["adapalene", "niacinamide"]),
+    ]
+    report = ConcernReport("img", concerns=[
+        Concern("acne_comedonal", "forehead", 2, 0.9),
+        Concern("acne_inflammatory", "left_cheek", 2, 0.9),
+    ])
+    rec = recommend(report, catalog)
+    assert "p14" not in _product_ids(rec.routines["AM"]["treatment"])
+    assert "p14" in _product_ids(rec.routines["PM"]["treatment"])
+
+
+def test_cystic_path_keeps_low_confidence_verify_flags():
+    """RULES.md §5 — loud uncertainty applies on the escalation path too."""
+    report = ConcernReport("img", concerns=[
+        Concern("acne_cystic", "chin_jaw", 1, 0.3),
+        Concern("acne_comedonal", "left_cheek", 2, 0.9),
+    ])
+    rec = recommend(report, make_catalog())
+    assert "see a dermatologist" in rec.flags
+    assert any("acne_cystic" in f and "verify" in f for f in rec.flags), rec.flags
+
+
 def test_clear_skin_maintenance():
     report = ConcernReport("img", clear_skin=True)
     rec = recommend(report, make_catalog())
@@ -192,6 +258,10 @@ def test_ordered_steps_follows_category_order():
 
 
 if __name__ == "__main__":
+    test_soothe_routine_excludes_strong_active_products()
+    test_maintenance_routine_excludes_strong_active_products()
+    test_multi_active_product_respects_all_slot_pins()
+    test_cystic_path_keeps_low_confidence_verify_flags()
     test_clear_skin_maintenance()
     test_cystic_escalates()
     test_severity_4_escalates()

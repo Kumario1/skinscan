@@ -14,7 +14,9 @@ import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.recommendation.import_catalog import import_csv, load_catalog
+from src.recommendation.import_catalog import (
+    import_csv, load_catalog, parse_ingredients,
+)
 from src.recommendation.engine import Recommendation, recommend
 from src.recommendation.schema import ConcernReport, Product
 
@@ -103,7 +105,20 @@ def test_idempotent():
         assert out1.read_bytes() == out2.read_bytes()
 
 
+def test_exfoliant_source_vocabulary():
+    """Marketing-named exfoliants must be caught from INCI truth: betaine
+    salicylate IS a BHA; gluconolactone (PHA) and willow bark are exfoliant
+    sources the soothe path must be able to veto (RULES.md §4)."""
+    actives, _ = parse_ingredients(
+        "Water, Betaine Salicylate, Gluconolactone, "
+        "Salix Nigra (Willow) Bark Extract, Sodium Hyaluronate")
+    assert "salicylic_acid" in actives, actives
+    assert "gluconolactone" in actives, actives
+    assert "willow_bark" in actives, actives
+
+
 if __name__ == "__main__":
+    test_exfoliant_source_vocabulary()
     test_import_counts()
     test_parenthetical_alias()
     test_synonym_and_multi()
