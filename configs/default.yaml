@@ -54,7 +54,7 @@ tone:                               # skin-tone triage from the photo via ITA, n
     medium: [lightmedium, medium, mediumtan, olive, tan]
     deep: [deep, dark, rich, ebony]
 
-ranker:                             # learned re-ranker artifacts (D-022); engine runs rules-only if absent (D-019)
+ranker:                             # re-ranker artifacts (D-022 as amended 2026-07-10): model -> Ranker, stats only -> StatsRanker, neither -> rules-only (D-019)
   model_path: models/ranker/ranker.joblib             # HistGradientBoostingClassifier bundle (joblib)
   review_stats_path: data/processed/review_stats.json  # per-product x skin-type review stats
   eval_path: runs/ranker/eval.json    # disaggregated eval artifact (mirrors the printed table)

@@ -58,8 +58,8 @@ chain above; each blocker issue is already merged to `main`.
 
 | Plan | Title | Issue | Effort | Depends on | Status |
 |------|-------|-------|--------|------------|--------|
-| 013 | Learned ranker: aggregation, training CLI, baseline-gated eval, inference class | #8 | L | #3, #6, #7 (all on `main`) | DONE (code) — gate FAILED on real data; ranker stays rules-only |
-| 014 | StatsRanker: ship the bake-off champion + dated D-022 amendment | #8 | S | 013 (branch `worktree-agent-a3cea0c90a5b9751f`) | DONE (branch `worktree-agent-a3c1f9d4c1f77e291`, commit `4e67526`; 12 ranker tests, full suite 99 passed; reviewer follow-up: re-run the training CLI so the real `review_stats.json` gains `global_mean_rating`) |
+| 013 | Learned ranker: aggregation, training CLI, baseline-gated eval, inference class | #8 | L | #3, #6, #7 (all on `main`) | LANDED 2026-07-10 — merged into the integration branch (`7b7b416`); gate FAILED on real data, so the model artifact is never written |
+| 014 | StatsRanker: ship the bake-off champion + dated D-022 amendment | #8 | S | 013 (branch `worktree-agent-a3cea0c90a5b9751f`) | LANDED 2026-07-10 — re-executed on the integration branch (`dd24b9b`, equivalent to side-branch `4e67526`); 12 ranker tests, full suite 141 passed; real `review_stats.json` regenerated with `global_mean_rating` 4.311, `load_ranker()` → StatsRanker confirmed |
 | 015 | Concern-efficacy labels: prefilter, LLM labeling CLI, concern-stats aggregation | #1 | L | spec (see below); `main` @ `509ab60` only | DONE (code) — branch `issue-1-concern-labels` @ `f7d9165`, reviewed 2026-07-10; 14 new tests, full suite 101 passed; probe reproduced gate P1 exactly (970). Steps 7–8 (calibrate ~$1, full label ~$60–90) await operator API key + maintainer P2 sign-off |
 
 **Direction change (2026-07-10):** after 013's gate failure the maintainer
