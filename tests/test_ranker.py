@@ -56,7 +56,8 @@ def _train(tmp):
 def _config_at(model_path, stats_path, min_cell_size=5):
     return {"ranker": {"model_path": str(model_path),
                        "review_stats_path": str(stats_path),
-                       "min_cell_size": min_cell_size}}
+                       "min_cell_size": min_cell_size,
+                       "bayesian_prior_count": 20}}
 
 
 def test_end_to_end_fixture_gate_passes():
@@ -146,6 +147,9 @@ def test_evidence_fallback_below_min_cell_size():
 
 
 def test_degrades_to_rules_only_when_model_absent():
+    """BOTH artifacts absent -> load_ranker None -> exact rules-only order
+    (D-019; the three-way loader's last branch). Model-absent-but-stats-present
+    is covered by test_load_ranker_three_way."""
     with tempfile.TemporaryDirectory() as d:
         missing_model = Path(d) / "does_not_exist.joblib"
         ranker = R.load_ranker(config=_config_at(missing_model, Path(d) / "s.json"))
@@ -159,6 +163,74 @@ def test_degrades_to_rules_only_when_model_absent():
         report = ConcernReport("img", concerns=[Concern("dryness", "left_cheek", 1, 0.9)])
         rec = recommend(report, catalog, ranker=None)
         assert isinstance(rec, Recommendation)
+
+
+def test_stats_ranker_orders_by_smoothed_rating():
+    # the smoothing test: a 5.0-rated n=5 product must NOT outrank a
+    # well-attested 4.5 (PA -> 4.4167, PB -> (25+80)/25 = 4.2 with m=20, prior 4.0).
+    stats = {"global_mean_rating": 4.0, "cells": {
+        "PA": {"__all__": {"n": 100, "mean_rating": 4.5, "pct_recommend": 0.9}},
+        "PB": {"__all__": {"n": 5, "mean_rating": 5.0, "pct_recommend": 1.0}},
+    }}
+    ranker = R.StatsRanker(stats, 20, 5)
+    pa = Product("PA", "A", "B", "treatment")
+    pb = Product("PB", "B", "B", "treatment")
+    assert ranker.score(pa, None) > ranker.score(pb, None)
+
+
+def test_stats_ranker_unknown_product_gets_prior():
+    ranker = R.StatsRanker({"global_mean_rating": 4.0, "cells": {}}, 20, 5)
+    assert ranker.score(Product("NOPE", "N", "B", "treatment"), None) == 4.0
+
+
+def test_stats_ranker_through_engine():
+    with tempfile.TemporaryDirectory() as d:
+        _result, model_path, stats_path, _eval_path = _train(d)
+        # point the loader away from the model: stats-only -> StatsRanker.
+        cfg = _config_at(Path(d) / "no_model.joblib", stats_path)
+        ranker = R.load_ranker(config=cfg)
+        assert isinstance(ranker, R.StatsRanker)
+        catalog = [
+            Product("PB", "Ceramide Treatment", "BrandY", "treatment",
+                    actives=["ceramides"], price_usd=18.0),
+            Product("PC", "SA Balm", "BrandZ", "treatment",
+                    actives=["salicylic_acid"], comedogenic_flags=["coconut_oil"],
+                    price_usd=9.0),
+            Product("PA", "SA Treatment", "BrandX", "treatment",
+                    actives=["salicylic_acid"], price_usd=24.0),
+        ]
+        report = ConcernReport("img", concerns=[
+            Concern("acne_comedonal", "nose", 2, 0.9),
+            Concern("dryness", "left_cheek", 1, 0.9),
+        ])
+        rec = recommend(report, catalog,
+                        profile=UserProfile(skin_type="oily"), ranker=ranker)
+        ids = [p.product_id for p in rec.routines["AM"]["treatment"]]
+        assert ids[-1] == "PC", ids  # comedogenic partition still dominates
+        # PA/PB order follows their smoothed pooled ratings from the stats file.
+        assert ids[:2] == sorted(["PA", "PB"], key=lambda p: -ranker._scores[p]), ids
+
+
+def test_load_ranker_three_way():
+    with tempfile.TemporaryDirectory() as d:
+        _result, model_path, stats_path, _eval_path = _train(d)
+        assert isinstance(R.load_ranker(config=_config_at(model_path, stats_path)),
+                          R.Ranker)
+        assert isinstance(R.load_ranker(config=_config_at(Path(d) / "no.joblib", stats_path)),
+                          R.StatsRanker)
+        assert R.load_ranker(config=_config_at(Path(d) / "no.joblib",
+                                               Path(d) / "no.json")) is None
+
+
+def test_stats_ranker_evidence_matches_ranker_evidence():
+    with tempfile.TemporaryDirectory() as d:
+        _result, model_path, stats_path, _eval_path = _train(d)
+        learned = R.load_ranker(config=_config_at(model_path, stats_path))
+        stats_only = R.load_ranker(config=_config_at(Path(d) / "no.joblib", stats_path))
+        for skin_type in ("oily", "normal"):  # own cell + the fallback case
+            assert learned.evidence("PA", skin_type) == stats_only.evidence("PA", skin_type)
+        assert learned.evidence("NOPE", "oily") is None
+        assert stats_only.evidence("NOPE", "oily") is None
 
 
 def test_deterministic_split_is_stable():
@@ -176,5 +248,10 @@ if __name__ == "__main__":
     test_loaded_ranker_reorders_by_skin_type()
     test_evidence_fallback_below_min_cell_size()
     test_degrades_to_rules_only_when_model_absent()
+    test_stats_ranker_orders_by_smoothed_rating()
+    test_stats_ranker_unknown_product_gets_prior()
+    test_stats_ranker_through_engine()
+    test_load_ranker_three_way()
+    test_stats_ranker_evidence_matches_ranker_evidence()
     test_deterministic_split_is_stable()
     print("ok")

@@ -128,6 +128,7 @@ them into two files:
 {
   "min_cell_size": 5,
   "base_rate": 0.83,
+  "global_mean_rating": 4.19,
   "cells": {
     "P480274": {
       "__all__": {"n": 812, "mean_rating": 4.4, "pct_recommend": 0.86},
@@ -140,6 +141,9 @@ them into two files:
 `Ranker.evidence(product_id, skin_type)` returns the `<skin_type>` cell when its
 `n >= min_cell_size`, else the `__all__` cell tagged `{"fallback": true,
 "cell": "all_reviewers"}`; `None` when the product is absent.
+
+`global_mean_rating` (top-level) is the train-rows mean rating — the smoothing
+prior `StatsRanker` shrinks each product's pooled rating toward (D-022 amendment).
 
 **`ranker.joblib`** — the model bundle (joblib dict), written **only when the
 D-022 gate passes**: `{"model"` (HistGradientBoostingClassifier on

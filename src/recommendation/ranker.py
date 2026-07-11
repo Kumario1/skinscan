@@ -288,6 +288,7 @@ def build_review_stats(train_df, min_cell_size) -> dict:
     return {
         "min_cell_size": int(min_cell_size),
         "base_rate": float(train_df["label"].mean()),
+        "global_mean_rating": float(train_df["rating"].mean()),
         "cells": cells,
     }
 
@@ -306,6 +307,22 @@ def save_bundle(path, model, brand_vocab, feature_columns, base_rate) -> None:
         },
         path,
     )
+
+
+def evidence_cell(cells, min_cell_size, product_id, skin_type):
+    """The report's per-product 'why' cell (shared by Ranker and StatsRanker):
+    the product x skin_type cell when its n >= min_cell_size, else the '__all__'
+    cell tagged fallback; None if the product is absent."""
+    cell = cells.get(product_id)
+    if cell is None:
+        return None
+    typed = cell.get(skin_type)
+    if typed is not None and typed.get("n", 0) >= min_cell_size:
+        return {**typed, "fallback": False, "cell": skin_type}
+    all_cell = cell.get("__all__")
+    if all_cell is None:
+        return None
+    return {**all_cell, "fallback": True, "cell": "all_reviewers"}
 
 
 class Ranker:
@@ -339,41 +356,64 @@ class Ranker:
         return proba
 
     def evidence(self, product_id, skin_type) -> "dict | None":
-        """The product x skin_type cell when its n >= min_cell_size, else the
-        '__all__' cell tagged fallback; None if the product is absent."""
-        cell = self.cells.get(product_id)
-        if cell is None:
-            return None
-        typed = cell.get(skin_type)
-        if typed is not None and typed.get("n", 0) >= self.min_cell_size:
-            return {**typed, "fallback": False, "cell": skin_type}
-        all_cell = cell.get("__all__")
-        if all_cell is None:
-            return None
-        return {**all_cell, "fallback": True, "cell": "all_reviewers"}
+        return evidence_cell(self.cells, self.min_cell_size, product_id, skin_type)
 
 
-def load_ranker(config=None) -> "Ranker | None":
-    """Load the model bundle + review stats from config paths. Returns None when
-    the MODEL artifact is missing (the app passes this straight to recommend();
-    None -> exact rules-only order, D-019). Stats load if present, else empty
-    (evidence() then returns None)."""
+class StatsRanker:
+    """The bake-off champion (D-022 amendment, 2026-07-10): orders candidates by
+    the Bayesian-smoothed POOLED product rating from review_stats.json — the
+    strongest orderer the review data supports (pairwise 0.609 on the D-022
+    harness; see plans/ranker-v2-probe-evidence.md). Deliberately ignores the
+    profile: per-skin-type cell ordering was measured and LOSES to pooled
+    (0.606/0.596); skin-type cells stay evidence-only. No sklearn at inference.
+    Same duck-typed hook as the learned Ranker; higher score = better."""
+
+    def __init__(self, stats, m, min_cell_size):
+        self.cells = stats.get("cells", {})
+        self.min_cell_size = min_cell_size
+        prior = float(stats.get("global_mean_rating", 0.0))
+        self._prior = prior
+        self._scores = {
+            pid: (cell["__all__"]["n"] * cell["__all__"]["mean_rating"] + m * prior)
+                 / (cell["__all__"]["n"] + m)
+            for pid, cell in self.cells.items()
+            if cell.get("__all__")
+        }
+
+    def score(self, product, profile) -> float:
+        # profile intentionally unused (pooled beats per-profile; see class doc).
+        return self._scores.get(product.product_id, self._prior)
+
+    def evidence(self, product_id, skin_type):
+        return evidence_cell(self.cells, self.min_cell_size, product_id, skin_type)
+
+
+def load_ranker(config=None) -> "Ranker | StatsRanker | None":
+    """Three-way loader (D-022 as amended 2026-07-10):
+    - learned model artifact present  -> Ranker (a model exists only if it
+      passed the ratcheted gate at training time);
+    - model absent, review-stats present -> StatsRanker (the statistical
+      champion: Bayesian-smoothed pooled product rating);
+    - both absent -> None (rules-only catalog order, D-019)."""
     if config is None:
         config = load_config()
     rcfg = config["ranker"]
-
-    model_path = Path(rcfg["model_path"])
-    if not model_path.exists():
-        return None
-    bundle = joblib.load(model_path)
 
     stats_path = Path(rcfg["review_stats_path"])
     if stats_path.exists():
         with open(stats_path, encoding="utf-8") as f:
             stats = json.load(f)
     else:
-        stats = {}
-    return Ranker(bundle, stats, rcfg.get("min_cell_size", 5))
+        stats = None
+
+    model_path = Path(rcfg["model_path"])
+    if model_path.exists():
+        bundle = joblib.load(model_path)
+        return Ranker(bundle, stats or {}, rcfg.get("min_cell_size", 5))
+    if stats is not None:
+        return StatsRanker(stats, rcfg.get("bayesian_prior_count", 20),
+                           rcfg.get("min_cell_size", 5))
+    return None
 
 
 # --- 3g. training orchestration + CLI --------------------------------------
