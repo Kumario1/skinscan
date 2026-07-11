@@ -1,439 +1,373 @@
 # SkinScan
 
-**A two-stage acne analysis pipeline.** Feed it a face image; it first finds
-candidate acne lesions, then classifies each detected crop as one of five acne
-types — **Blackheads, Cyst, Papules, Pustules, Whiteheads** — or as
-**Not_acne**, a sixth "reject" class so detector false positives (shadows,
-pores, glasses, hair) get thrown out instead of forced onto a real acne type.
+**A two-stage acne analysis pipeline, built as a research/learning project.**
+A YOLOv8m detector finds candidate lesions on a face image; an EfficientNetB0
+classifier types each crop; a rules-based recommender turns the counts into a
+conservative skincare routine. Every stage was validated with visual proof
+sheets before metrics, and every failed experiment is kept on the record below.
 
-The important idea is separation: the detector answers **where are the spots?**
-and the classifier answers **what type does this crop look like?** The
-recommender is deliberately rules-based and only consumes the model outputs.
-
-This is not medical software. It is a computer-vision learning project that uses
-cosmetic concern language only.
+> Not medical software. Cosmetic-concern language only, no diagnosis.
 
 ```mermaid
 flowchart LR
-    I["full face image"] --> D["YOLOv8m lesion detector"]
-    D --> B["candidate lesion boxes"]
-    B --> C["context crop around each box"]
-    C --> E["EfficientNetB0 type classifier"]
-    E --> P["6-class probabilities (5 acne types + Not_acne)"]
-    P --> R["concern mapping + routine rules"]
+    I["face image"] --> D["YOLOv8m detector<br/>(where are the spots?)"]
+    D --> C["context crops (224×224)"]
+    C --> E["EfficientNetB0 classifier<br/>(what type is each crop?)"]
+    E --> R["regions + tone (ITA)"]
+    R --> S["rules engine + StatsRanker<br/>→ AM/PM routine"]
 ```
 
-Current run summary:
+## Results at a glance
 
-```text
-Stage 1 detector: YOLOv8m on ACNE04, F1=0.722 at conf=0.07 / IoU=0.2
-Stage 2 classifier: EfficientNetB0, 6 classes (5 acne types + Not_acne), test accuracy=91.72%, macro F1=0.93
-Not_acne reject:   99.7% of detector boxes on held-out clear-skin (FFHQ) faces
-Custom image test: 25 detections, all now classified Not_acne (was 16, all forced to Pustules)
-```
+| Component | Dataset | Result |
+|---|---|---|
+| Stage 1 detector (YOLOv8m) | ACNE04 | **F1 = 0.722** @ conf 0.07 / IoU 0.2 |
+| Stage 2 classifier (EfficientNetB0, 5-class) | Kaggle acne types | **91.2% acc, macro F1 0.92** |
+| 6-class `Not_acne` retrain | + harvested negatives | 91.7% acc — **reverted** (crop-domain confound, [D-025](docs/DECISIONS.md)) |
+| Learned product ranker (HistGB) | 1.1M Sephora reviews | pairwise 0.584 — **lost** to Bayesian stats baseline (0.609), never shipped |
+| Shipped ranker (`StatsRanker`) | same | pairwise **0.609** (the bake-off winner) |
 
-> **Status (2026-07-10, D-025):** the six-class retrain above is **archived,
-> not deployed**. Its metrics are real but hide a crop-domain confound — the
-> acne-class positives are 640×640 mosaic images while the `Not_acne`
-> negatives were harvested through the inference-time crop transform, so on
-> real photos it classifies EVERY detector crop `Not_acne` (the FFHQ/phantom
-> numbers above are the confound's symptom, not a success). The shipped
-> default `models/classification/acne_model.keras` is the original
-> **5-class** model; issue #5 tracks retrain v2 with domain-matched positives
-> and a real-pipeline-crop acceptance gate.
+All decisions are logged with IDs in [`docs/DECISIONS.md`](docs/DECISIONS.md); the
+dead ends are summarized in [§8](#8-wrong-paths--what-failed-and-why).
 
 ---
 
-## 1. Stage 1 - lesion locator
+## 0. Method: contracts before models
 
-The locator is a YOLOv8m detector trained for acne spot boxes. It runs on the
-full image and returns rectangular candidate lesions. Those boxes are not the
-final answer; they are the input to the classifier.
+Before training anything, we locked the data contracts (D-007..D-009): a closed
+concern vocabulary, a closed face-region vocabulary, ordinal severity 0–4, and a
+catalog schema. The CV stages were then built to *fill* those contracts, so the
+recommender never had to chase moving model outputs.
 
-Current operating point:
+```text
+concerns: acne_comedonal | acne_inflammatory | acne_cystic | hyperpigmentation | dryness
+regions:  forehead | nose | left_cheek | right_cheek | chin_jaw | perioral
+datasets: ACNE04 (detection) · Kaggle types (classification) · FFHQ (negatives)
+          · Sephora ~8k products / 1.1M reviews (ranking) · self photos (TEST-ONLY)
+```
+
+---
+
+## 1. Stage 1 — lesion detector
+
+Trained YOLOv8m on ACNE04 (1,457 dermatologist-boxed faces, 18,983 boxes),
+single class `lesion`, COCO-pretrained, full fine-tune on a Colab T4 —
+walkthrough in [`notebooks/01_acne04_detector.md`](notebooks/01_acne04_detector.md).
+We started with YOLOv8-nano and upgraded to medium (D-018) after nano
+underperformed.
+
+First step was always eyeballing the labels, not metrics:
+
+![Stage 1 label check](assets/stage1_label_check.jpg)
+
+Confidence-threshold sweep picked the locked operating point:
 
 ```text
 weights: models/detection/acne04_yolov8m_best.pt
-data:    ACNE04
-conf:    0.07
-iou:     0.2
-imgsz:   1024
+conf=0.07  iou=0.2  imgsz=1024  →  precision 0.697 / recall 0.750 / F1 0.722
 ```
 
-Training provenance: [notebooks/01_acne04_detector.md](notebooks/01_acne04_detector.md) (Colab walkthrough that produced these weights).
+The low threshold is deliberate: a missed spot is gone forever, but an extra
+crop can still be rejected downstream. Green = ground truth, red = predictions:
 
-On ACNE04 validation, the best saved sweep point is:
+![Detector GT vs predictions](assets/acne04_detector_gt_pred_sheet.jpg)
 
-```text
-precision=0.697
-recall=0.750
-F1=0.722
-```
-
-That low confidence threshold is intentional. For this pipeline, missing a real
-spot is worse than passing a few extra crops forward. The classifier and visual
-review can reject weak crops later; an undetected spot is gone.
-
-Green boxes are ACNE04 labels. Red boxes are detector predictions:
-
-![Detector check](assets/acne04_detector_gt_pred_sheet.jpg)
-
-How to read this image:
-
-- Good: red boxes land on the same lesion neighborhoods as green boxes.
-- Acceptable: red boxes are slightly larger because the classifier wants context.
-- Watch out: extra red boxes become extra classifier crops, so they affect type
-  counts even when they are not true lesions.
+![Locked operating point](assets/stage1_locked_prediction.jpg)
 
 ---
 
-## 2. Stage 2 - acne type classifier
+## 2. Stage 2 — acne type classifier
 
-The classifier is an EfficientNetB0 transfer-learning model trained on cropped
-lesion images. It only sees a crop, not the full face.
-
-Raw output classes (alphabetical; `Not_acne` at index 2):
-
-```python
-["Blackheads", "Cyst", "Not_acne", "Papules", "Pustules", "Whiteheads"]
-```
-
-`Not_acne` is a negative/reject class. The detector runs at a deliberately low
-confidence threshold, so some boxes it forwards are shadows, pores, or hair
-rather than lesions. A five-way softmax has no way to say "none of these" and
-forces every crop onto an acne type (see §4). The sixth class gives the model a
-learned reject region; its probability mass is intentionally dropped by the
-concern mapping, so a `Not_acne` crop contributes to no concern.
-
-Training setup:
+EfficientNetB0 transfer learning on the Kaggle acne-type dataset, five classes
+(`Blackheads, Cyst, Papules, Pustules, Whiteheads`), 224×224 raw-RGB crops.
 
 ```text
-runtime:        Colab T4
-TensorFlow:     2.20.0
-architecture:   EfficientNetB0 + GAP + BatchNorm + Dense(128) + Dropout
-optimizer:      Adam(1e-5)
-epochs:         150
-checkpointing:  best validation accuracy
-input:          raw RGB 224x224 crops, pixel values 0-255
+runtime: Colab T4 · TF 2.20 · Adam(1e-5) · 150 epochs · best-val checkpoint
+split:   train 2778 / valid 921 / test 918
+result:  test accuracy 91.18% · macro F1 0.92
 ```
 
-Retrain provenance: [notebooks/retrain_stage2_colab.ipynb](notebooks/retrain_stage2_colab.ipynb) (Colab walkthrough: harvest `Not_acne` negatives → retrain → run the acceptance checks).
+Label review before training, then confusion analysis after:
 
-Dataset split (five acne classes below; the `Not_acne` sixth class adds
-harvested crops, its train count held ≤ 735 = the largest acne class):
+![Stage 2 sample review](assets/stage2_kaggle_sample_review.png)
 
-```text
-train: 2778 images
-valid:  921 images
-test:   918 images
-```
+![Stage 2 confusion matrix](assets/stage2_confusion_matrix.png)
 
-Latest T4 result (6-class model; metrics on the five acne test classes):
+![Stage 2 validation predictions](assets/stage2_validation_predictions.png)
 
-```text
-best validation accuracy: 0.9193   (epoch 128 of 150)
-test accuracy:            0.9172
-macro F1:                 0.93
-weighted F1:              0.92
-```
-
-Per-class test report:
-
-| Class | Precision | Recall | F1 | Support |
-|---|---:|---:|---:|---:|
-| Blackheads | 0.94 | 0.94 | 0.94 | 265 |
-| Cyst | 0.93 | 0.95 | 0.94 | 189 |
-| Papules | 0.89 | 0.85 | 0.87 | 202 |
-| Pustules | 0.89 | 0.91 | 0.90 | 205 |
-| Whiteheads | 0.98 | 0.98 | 0.98 | 57 |
-
-The table covers the five acne classes only. Adding the sixth class did **not**
-regress them — macro F1 is **0.93** (was 0.92), and only **2 of 918** real-lesion
-test crops were misrouted to `Not_acne`. `Not_acne` is not in this test set (the
-dermatologist-boxed ACNE04 has no clear-skin crops), so it is measured by its
-reject rate instead: on a held-out FFHQ clear-skin sheet the detector never saw
-during harvesting, **99.7%** (382/383) of detector boxes are correctly classified
-`Not_acne`.
-
-Training curves:
-
-![T4 training curves](assets/stage2_t4_training_curves.png)
-
-Confusion matrix (five acne classes; `Not_acne` measured by reject rate above):
-
-![T4 confusion matrix](assets/stage2_t4_confusion_matrix.png)
-
-Interpretation:
-
-- **Whiteheads** and **Cyst** are strongest here (F1 0.98 / 0.94). **Papules** is
-  the softest (recall 0.85), still mostly confused with **Pustules** — both are
-  inflammatory-looking crops, so the distinction stays subtle.
-- The sixth class was learned cleanly: the reject region did not eat into the
-  real classes (macro F1 rose 0.92 → 0.93; only 2/918 real crops misrouted to
-  `Not_acne`).
-- The model is a crop-level type scorer, not a diagnosis. Confidence is evidence
-  for the crop label, not severity.
+Papules↔Pustules is the persistent soft spot (both inflammatory-looking crops);
+Whiteheads is the small tail (57 test images) but scores highest (F1 0.98).
 
 ---
 
-## 3. Detector-to-classifier pipeline
+## 3. End-to-end pipeline — and the first big failure
 
-The full pipeline crops each detector box with extra context, resizes to
-224x224, and sends the crop into the classifier. The output JSON keeps the box,
-detector confidence, crop path, predicted type, and full probability vector for
-each lesion candidate.
-
-```text
-face image -> boxes -> context crops -> type probabilities -> type counts
-```
-
-Detector crop inputs:
-
-![Pipeline detector crop inputs](assets/stage2_pipeline_input_collage_overview.jpg)
-
-End-to-end crop predictions:
-
-![Pipeline crop predictions](assets/stage2_pipeline_single_crop_overview.jpg)
-
-How to interpret a pipeline run:
-
-- `detection_count` is the number of candidate lesions YOLO found.
-- `acne_type_counts` is a summary of classifier top-1 labels across those crops.
-- A high classifier probability on a bad detector crop is still a bad result.
-  Always inspect the crop sheet when judging a new image.
-- Detector confidence and classifier probability are different numbers. Detector
-  confidence says "this box looks like a lesion"; classifier probability says
-  "this crop looks like this type."
-
----
-
-## 4. My image test
-
-This image is the project's canonical failure case — a self-collected photo of
-essentially clear skin. I ran the full detector-to-classifier pipeline on it:
-
-```bash
-.venv/bin/python -m src.classification.run_acne04_pipeline \
-  --image data/self_collected/acne-before-scaled-e1764168292784.png \
-  --max-boxes 100 --out runs/my_image_test
-```
-
-**Before the `Not_acne` class**, the five-way softmax had no reject option, so
-every candidate box was forced onto an acne type:
-
-```text
-detections: 16
-type counts: Pustules=16
-classifier confidence range: 0.47-1.00
-detector confidence range: 0.19-0.37
-```
-
-Sixteen crops of clear skin, all reported **Pustules**, some at 1.00 confidence —
-the classic out-of-distribution softmax failure. A high classifier probability on
-a weak detector box (detector conf 0.19-0.37) is not evidence of a lesion.
-
-**After adding `Not_acne` and retraining**, the same image rejects cleanly:
-
-```text
-detections: 25
-type counts: Not_acne=25
-classifier confidence range: 0.59-1.00 (mean 0.98)
-detector confidence range: 0.07-0.37
-```
-
-Every detector box now classifies **Not_acne**, so the spurious pustules are
-gone. Because the concern mapping drops `Not_acne`, this image produces zero acne
-concerns — the correct outcome for clear skin.
-
-> **Caveat (D-025):** this "fix" later turned out to be the confound working
-> in our favor — the v1 retrain classifies *every* real detector crop
-> `Not_acne`, on acne-covered faces too. The result above is kept as the
-> motivating example for the reject class; the v1 weights are archived and the
-> five-class model is the default again until the issue #5 retrain v2.
-
-Detection overlay:
-
-![My image detection overlay](assets/my_image_test_detection_overlay.jpg)
-
-Detected lesion crops and predictions (all Not_acne after retrain):
-
-![My image crop predictions](assets/my_image_test_crop_predictions.jpg)
-
----
-
-## 5. Recommendation layer
-
-The recommender is not a learned model. It maps model outputs into conservative
-cosmetic concern buckets:
-
-```text
-Blackheads, Whiteheads -> comedonal
-Cyst                   -> cystic
-Papules, Pustules      -> inflammatory
-```
-
-Then rules map concerns to ingredients:
-
-```text
-comedonal acne     -> salicylic acid / adapalene / azelaic acid
-inflammatory acne  -> benzoyl peroxide / azelaic acid / niacinamide
-cystic acne        -> soothing support + professional-care flag
-```
-
-This layer stays rules-based so the pipeline remains inspectable. The model
-scores say what the image looks like; the rules decide how to phrase routine
-guidance.
-
----
-
-## Run it
-
-Install:
-
-```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
-```
-
-Download the MediaPipe FaceLandmarker bundle used for face regions and tone
-sampling (model files remain local and gitignored):
-
-```bash
-mkdir -p models
-curl --fail --location --output models/face_landmarker.task \
-  https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task
-```
-
-Detector check:
-
-```bash
-.venv/bin/python -m src.detection.check_acne04_detector
-```
-
-Train the type classifier:
-
-```bash
-.venv/bin/python -m src.classification.train_type_classifier
-```
-
-Run the full pipeline on the default ACNE04 images:
-
-```bash
-.venv/bin/python -m src.classification.run_acne04_pipeline
-```
-
-Run one image:
+Wiring detector → context crop → classifier, the JSON output keeps box,
+detector confidence, crop path, and full probability vector per candidate:
 
 ```bash
 .venv/bin/python -m src.classification.run_acne04_pipeline --image path/to/image.jpg
 ```
 
-Train the learned ranker (D-022 — ships only if it beats the popularity/rating
-baselines; needs `data/processed/catalog.json` + `data/raw/sephora/reviews_*.csv`):
+![Pipeline crop inputs](assets/stage2_pipeline_input_collage_overview.jpg)
 
-```bash
-# Train the learned ranker (needs data/processed/catalog.json + data/raw/sephora/reviews_*.csv):
-.venv/bin/python -m src.recommendation.ranker
+![Pipeline crop predictions](assets/stage2_pipeline_single_crop_overview.jpg)
+
+Then we ran it on a self-collected photo of essentially clear skin:
+
+```text
+detections: 16
+type counts: Pustules = 16          ← every single crop
+classifier confidence: 0.47–1.00    ← some at 1.00
+detector confidence:   0.19–0.37    ← all weak boxes
 ```
 
-The trained model ships only if it passes the D-022 gate; otherwise the app
-orders products by the Bayesian-smoothed review stats (`StatsRanker`) — see
-`docs/DECISIONS.md` D-022 (2026-07-10 amendment).
+![Failure case detection overlay](assets/my_image_test_detection_overlay.jpg)
 
-Render the issue #6 region and tone overlays from that run's JSON:
+![Failure case crop predictions](assets/my_image_test_crop_predictions.jpg)
 
-```bash
-.venv/bin/python -m src.pipeline.regions path/to/image.jpg \
-  --boxes runs/acne04_pipeline_check/predictions.json
-.venv/bin/python -m src.pipeline.tone path/to/image.jpg \
-  --boxes runs/acne04_pipeline_check/predictions.json
+Sixteen crops of clear skin, all reported *Pustules*, some at 1.00 confidence.
+A five-way softmax has no way to say "none of these" — the classic
+out-of-distribution failure. This photo became the project's canonical
+regression test.
+
+---
+
+## 4. The `Not_acne` reject class — right idea, wrong dataset
+
+**Design** ([`docs/STAGE2_NEGATIVES_DESIGN.md`](docs/STAGE2_NEGATIVES_DESIGN.md)):
+we compared three fixes and chose a sixth `Not_acne` class over probability
+thresholding (softmax is miscalibrated on OOD crops) and a two-stage binary
+gate (over-engineered). Negatives = FFHQ clear-skin detector false positives +
+non-lesion ACNE04 regions, harvested through the *same* `crop_with_context`
+transform the pipeline uses:
+
+![Negative crop review](assets/stage2_negative_review.png)
+
+**Retrain** ([`notebooks/retrain_stage2_colab.ipynb`](notebooks/retrain_stage2_colab.ipynb),
+Colab T4, 150 epochs, ~2h). On paper it worked perfectly:
+
+```text
+test accuracy 91.72% · macro F1 0.93 (up from 0.92)
+only 2/918 real lesion crops misrouted to Not_acne
+FFHQ clear-skin reject rate: 99.7% (382/383)
+canonical failure photo: 25 detections → Not_acne = 25  ✓
 ```
 
-Full pipeline, one command — image → detections → types → regions → tone →
-ConcernReport → ranked AM/PM routine (`runs/e2e/<stem>/routine.json`; the
-concern-stats ranker and tier-2 catalog are picked up when their processed
-files exist):
+![T4 training curves](assets/stage2_t4_training_curves.png)
+
+![T4 confusion matrix](assets/stage2_t4_confusion_matrix.png)
+
+**Then it fell apart (D-025).** On real acne-covered faces the model classified
+*every* detector crop `Not_acne` at ~1.0. Root cause: a **crop-domain
+confound** — the acne positives were 640×640 Roboflow mosaic images, while the
+negatives were 224px upscaled pipeline crops. The model learned crop *style*,
+not acne. Every acceptance gate we had defined passed anyway, because none of
+them fed real pipeline crops of a known-acne face through the model.
+
+```text
+lesson: dataset-level metrics can be perfect while the deployed model is 100% broken.
+fix:    weights reverted to the 5-class model; v2 gates now require a
+        real-pipeline check ("Not_acne share on a known-acne image < 50%").
+```
+
+The confounded weights are archived as `acne_model_6class_v1_confounded.keras`;
+the v2 dataset plan is in [§7](#7-in-progress--stage-2-v2--sa-rpn-replication).
+
+---
+
+## 5. Face regions and skin tone
+
+MediaPipe FaceLandmarker (468 landmarks) assigns each lesion to a face region
+via point-in-polygon (D-020); skin tone is estimated by ITA° in CIELAB over
+non-lesional forehead/cheek pixels, bucketed light/medium/deep, with
+self-report always overriding the photo (D-021).
+
+```text
+ITA° = arctan((L* − 50) / b*) · 180/π
+```
+
+![Face regions overlay](assets/issue6_face_regions_overlay.png)
+
+Green marks the exact pixels sampled for ITA (lesion boxes excluded):
+
+![ITA sampling mask](assets/issue6_tone_sampling_overlay.png)
+
+A fairness-eval design ([`docs/FAIRNESS_EVAL_DESIGN.md`](docs/FAIRNESS_EVAL_DESIGN.md))
+specifies how the pooled scalars (F1 0.722, acc 91.2%) will be disaggregated by
+Fitzpatrick group — ACNE04 ships no tone labels, so ITA is the estimator.
+
+---
+
+## 6. Recommendation layer
+
+**Rules gate first, learned ranking second (D-005).** A hand-written ~40-row
+concern → active → product table ([`docs/RULES.md`](docs/RULES.md)) is the
+auditable safety gate: retinoids pinned to PM, pregnancy strips retinoids,
+cystic severity routes to soothe-only + a see-a-dermatologist flag,
+comedogenic flags always dominate any learned score.
+
+```text
+Blackheads, Whiteheads → comedonal     → salicylic acid / adapalene / azelaic acid
+Papules, Pustules      → inflammatory  → benzoyl peroxide / azelaic / niacinamide
+Cyst                   → cystic        → soothing support + professional-care flag
+```
+
+**The ranker bake-off (D-022).** A gradient-boosting model trained on 1.1M
+Sephora reviews shipped *only if* it beat both a popularity baseline and a
+Bayesian-smoothed rating baseline. It lost:
+
+```text
+                         ROC-AUC   pairwise ordering
+learned HistGB model      0.659        0.584
+global popularity         0.672        0.597
+Bayesian-smoothed rating  0.666        0.609   ← champion
+```
+
+Seven follow-up probes (target encoding, objective switch, per-skin-type
+cells, text features, …) all failed — the loss is structural, so the model
+artifact was never written. The shipped ranker is `StatsRanker`, the Bayesian
+champion (1,591 products, global mean 4.311), and the gate is now a ratchet:
+a future learned model ships only if it beats 0.609 on both metrics.
+
+**Concern-efficacy labeling (D-023, in progress).** Instead of predicting
+star ratings, mine review *text* for per-concern outcomes
+(helped/worsened/unclear) via a one-time LLM pass (OpenRouter, ~$9 budget),
+then rank by concern-conditioned Bayesian stats. Gate P1 (mention density:
+970 products ≥ the 300 floor) **passed**; P2 (calibration) and P3 (must beat
+the pooled StatsRanker) are pending.
+
+**Ingredient KB (D-024).** A ~1k-product ingredient knowledge base
+(comedogenicity/irritancy per ingredient, CC-BY-NC-4.0) powers a tier-2
+fallback catalog — used only as a ranking tiebreaker and only when no
+review-backed candidate exists.
+
+---
+
+## 7. In progress — Stage 2 v2 + SA-RPN replication
+
+Two active workstreams (uncommitted), both motivated by D-025:
+
+**Stage 2 v2 dataset** ([`docs/STAGE2_V2_DATASET.md`](docs/STAGE2_V2_DATASET.md)).
+Auditing the Roboflow training data revealed a second data problem: augmented
+copies of the same source face leak across train/val/test (e.g. Blackheads —
+735 train files but only ~91 source images, 61 present in all three splits).
+The v2 plan: harvest crops by running the *deployed* detector on AcneSCU faces
+(276 faces, 31,777 fine-grained annotations) so train crops match deployment
+crops, human-review every label (`src/classification/curate_acne04_crops.py`
+audit/harvest/build CLI), and split by source face *before* augmenting. Seven
+gates must pass before v2 replaces the shipped 5-class model.
+
+**SA-RPN replication** ([`notebooks/train_acnescu_sa_rpn_colab.ipynb`](notebooks/train_acnescu_sa_rpn_colab.ipynb)).
+Replicating Zhang et al.'s *Learning High-quality Proposals for Acne Detection*
+(paper: AP 0.507 / AR 0.775 @ IoU 0.5) on AcneSCU with MMDetection —
+1024×1024 masked tiling preprocessor in
+`src/detection/prepare_acnescu_sa_rpn.py`, training on Colab. Caveat: the
+available mirror lacks patient IDs, so the paper's patient-disjoint split
+can't be reproduced exactly.
+
+---
+
+## 8. Wrong paths — what failed, and why
+
+Kept on the record deliberately; half the value of the project is here.
+
+| # | Dead end | Symptom | Root cause | Resolution |
+|---|---|---|---|---|
+| 1 | YOLOv8-nano detector | weak recall on small dense lesions | model too small | upgraded to YOLOv8m (D-018) |
+| 2 | 5-class softmax, no reject | clear skin → 16× "Pustules" @ conf up to 1.00 | softmax can't say "none of these" | added `Not_acne` class |
+| 3 | 6-class retrain v1 | every real crop → `Not_acne` ≈ 1.0, on acne faces too | crop-domain confound: 640px mosaic positives vs 224px pipeline-crop negatives | reverted to 5-class (D-025); v2 requires real-pipeline gate |
+| 4 | Roboflow split trust | v2 audit: same source face in train *and* test | augmentation done before splitting | v2 splits by source face first |
+| 5 | Learned product ranker | pairwise 0.584 vs baseline 0.609 | product-anonymous features can't beat per-product memorized stats; 7 probes confirmed structural | shipped `StatsRanker` champion (D-022) |
+| 6 | Per-skin-type ranking cells | 0.606/0.596 — *worse* than pooled | cells too sparse | pooled stats, cells evidence-only |
+| 7 | Softmax-threshold reject (option B) | — | miscalibrated on OOD, per design analysis | rejected at design stage |
+
+The recurring lesson: **every proxy metric passed while the real thing was
+broken** — which is why each stage now has a visual proof sheet and a
+real-pipeline acceptance gate, not just held-out accuracy.
+
+---
+
+## 9. Run it
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+
+# MediaPipe face landmarker (local, gitignored)
+mkdir -p models
+curl -fL -o models/face_landmarker.task \
+  https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task
+```
+
+One command, image → detections → types → regions → tone → ranked AM/PM
+routine (`runs/e2e/<stem>/routine.json`):
 
 ```bash
 .venv/bin/python -m src.pipeline.e2e --image path/to/image.jpg \
   [--skin-type dry] [--pregnant] [--top 5]
 ```
 
-Issue #6 visual gate on the self-collected profile:
-
-![Landmark face regions](assets/issue6_face_regions_overlay.png)
-
-Green marks the exact non-lesional forehead/visible-cheek pixels used by ITA:
-
-![ITA sampling mask](assets/issue6_tone_sampling_overlay.png)
-
-On profile photos, the smaller projected cheek is treated as occluded when its
-area is below `tone.profile_cheek_area_ratio`; this prevents nose/far-side
-pixels from dominating ITA.
+Individual stages:
 
 ```bash
-# Concern-efficacy labeling (D-023). probe is free; calibrate/label use
-# OpenRouter (needs OPENROUTER_API_KEY; preflight-limited by max_budget_usd):
+.venv/bin/python -m src.detection.check_acne04_detector          # detector proof sheet
+.venv/bin/python -m src.classification.run_acne04_pipeline \
+  --image path/to/image.jpg                                      # detect + classify
+.venv/bin/python -m src.pipeline.regions IMG --boxes PRED_JSON   # region overlay
+.venv/bin/python -m src.pipeline.tone    IMG --boxes PRED_JSON   # ITA sampling overlay
+```
+
+Tests (default tier is model-free; the second tier needs local weights):
+
+```bash
+.venv/bin/python -m pytest
+SKINSCAN_REAL_FACE_IMAGE=path/to/photo.jpg .venv/bin/python -m pytest -m real_models
+```
+
+<details>
+<summary>Optional: rebuild the recommendation data (Sephora catalog, ingredient KB, concern labels, ranker)</summary>
+
+```bash
+# Learned-ranker bake-off (ships only if it beats StatsRanker — it currently doesn't):
+.venv/bin/python -m src.recommendation.ranker
+
+# Ingredient KB + tier-2 catalog (manual download; dataset is CC-BY-NC-4.0):
+mkdir -p data/raw/beautyapi
+curl -L -o data/raw/beautyapi/beauty_data.jsonl \
+  https://huggingface.co/datasets/thebeautyapi/beautyproducts/resolve/main/beauty_data.jsonl
+.venv/bin/python -m src.recommendation.ingredient_kb
+.venv/bin/python -m src.recommendation.import_catalog \
+  --csv data/raw/sephora/product_info.csv --format sephora \
+  --kb data/processed/ingredient_kb.json
+.venv/bin/python -m src.recommendation.import_catalog \
+  --csv data/raw/beautyapi/beauty_data.jsonl --format beautyapi \
+  --kb data/processed/ingredient_kb.json --out data/processed/catalog_tier2.json
+
+# Concern-efficacy labeling (D-023; needs OPENROUTER_API_KEY, budget-capped):
 .venv/bin/python -m src.recommendation.concern_labels probe
 .venv/bin/python -m src.recommendation.concern_labels calibrate
 .venv/bin/python -m src.recommendation.concern_labels label --yes --p2-approved
 .venv/bin/python -m src.recommendation.concern_stats
 ```
 
-Ingredient KB + tier-2 catalog (D-024, spec `2026-07-10-ingredient-kb`). The raw
-dataset is a manual download, like the Sephora CSVs — the
-`thebeautyapi/beautyproducts` file is **CC-BY-NC-4.0 (non-commercial)**:
+</details>
 
-```bash
-# 1. Manual download into data/raw/beautyapi/ (gitignored; ~9 MB, ~1k products):
-mkdir -p data/raw/beautyapi
-curl -L https://huggingface.co/datasets/thebeautyapi/beautyproducts/resolve/main/beauty_data.jsonl \
-  -o data/raw/beautyapi/beauty_data.jsonl
+---
 
-# 2. Build the ingredient KB (deterministic, sorted keys):
-.venv/bin/python -m src.recommendation.ingredient_kb
-
-# 3. Enrich the tier-1 Sephora catalog with KB flags + ingredient_match:
-.venv/bin/python -m src.recommendation.import_catalog \
-  --csv data/raw/sephora/product_info.csv --format sephora \
-  --kb data/processed/ingredient_kb.json
-
-# 4. Build the tier-2 fallback catalog (Product schema + tier:2/no_outcome_data):
-.venv/bin/python -m src.recommendation.import_catalog \
-  --csv data/raw/beautyapi/beauty_data.jsonl --format beautyapi \
-  --kb data/processed/ingredient_kb.json --out data/processed/catalog_tier2.json
-```
-
-The KB/tier-2 pass is optional: without the KB file the importer output is
-byte-identical to before. Tests run entirely on
-`tests/fixtures/beautyapi_sample.jsonl` and never touch the network.
-
-Run the default model-free tests, then the explicit local-artifact tier:
-
-```bash
-.venv/bin/python -m pytest
-SKINSCAN_REAL_FACE_IMAGE=path/to/self-collected.jpg \
-  .venv/bin/python -m pytest -m real_models
-```
-
-Expected local outputs:
+## Repo map
 
 ```text
-runs/acne04_pipeline_check/predictions.json
-runs/acne04_pipeline_check/*_crop_*.jpg
-runs/acne04_pipeline_check/*_input_collage.jpg
-runs/acne04_pipeline_check/*_crops.jpg
+docs/DECISIONS.md      every decision (D-001..D-025), including the reversals
+docs/*.md              design docs: negatives, v2 dataset, rules, schemas, fairness
+notebooks/             Colab sessions: detector training, Stage 2 retrain, SA-RPN
+src/detection/         YOLO checks + AcneSCU/SA-RPN preprocessing
+src/classification/    classifier training, pipeline, v2 crop curation
+src/pipeline/          regions, tone/ITA, end-to-end CLI
+src/recommendation/    rules engine, rankers, concern labels, ingredient KB
+assets/                the proof sheets embedded above
+tests/                 model-free by default; real_models tier for local weights
 ```
 
-Raw data, model weights, and generated runs are intentionally local-only:
-
-```text
-data/raw/
-data/processed/
-data/self_collected/
-models/
-runs/
-*.tar
-*.pt
-*.keras
-```
+Raw data, model weights, and run outputs are local-only (gitignored):
+`data/raw/ · data/processed/ · data/self_collected/ · models/ · runs/`.
