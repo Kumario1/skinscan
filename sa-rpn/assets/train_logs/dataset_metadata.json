@@ -1,0 +1,32 @@
+{
+  "paper": "Zhang et al., Learning High-quality Proposals for Acne Detection",
+  "paper_url": "https://arxiv.org/abs/2207.03674",
+  "classes": [
+    "closed_comedo",
+    "open_comedo",
+    "papule",
+    "pustule",
+    "nodule",
+    "atrophic_scar",
+    "hypertrophic_scar",
+    "melasma",
+    "nevus",
+    "other"
+  ],
+  "seed": 42,
+  "test_count": 28,
+  "tile_size": 1024,
+  "reports": {
+    "train": {
+      "source_images": 247,
+      "tiles": 4680,
+      "annotations": 36211
+    },
+    "valid": {
+      "source_images": 28,
+      "tiles": 529,
+      "annotations": 4542
+    }
+  },
+  "limitation": "Roboflow mirror has 275 source images; paper reports 276. Patient IDs are unavailable."
+}
