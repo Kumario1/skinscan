@@ -12,6 +12,7 @@ candidates and can never add/remove products or touch flags. ranker=None ->
 today's stable rules-only order exactly (D-019).
 """
 from __future__ import annotations
+import re
 from dataclasses import dataclass
 from .schema import ConcernReport, Product, UserProfile, CATEGORIES
 
@@ -47,7 +48,29 @@ PREFERRED_SLOT = {
 # RULES.md §2 — cap at one primary chemical exfoliant per routine.
 CHEMICAL_EXFOLIANTS = {"glycolic_acid", "lactic_acid", "mandelic_acid", "salicylic_acid"}
 
+# RULES.md §4 — the soothe (cystic/severe) and maintenance paths must not
+# recommend aggressive actives, even bundled inside an otherwise-matching
+# product (an SA serum that also lists hyaluronic_acid stays out). Includes
+# the PHA/botanical exfoliant sources the importer recognizes: they never
+# qualify as first-line treatment, but they disqualify a product from soothe.
+STRONG_ACTIVES = (CHEMICAL_EXFOLIANTS | RETINOIDS
+                  | {"benzoyl_peroxide", "azelaic_acid", "vitamin_c",
+                     "gluconolactone", "willow_bark"})
+
 SLOTS = ("AM", "PM")
+
+# ponytail: name-substring veto for exfoliants the INCI vocabulary can't see
+# (citrus-juice "AHA" products etc.); extend the vocabulary if this grows.
+_EXFOLIANT_NAME_HINTS = re.compile(
+    r"\b(aha|bha|pha)\b|exfoliat|peel|resurfac|microdermabrasion|retinol|retinal")
+
+
+def _gentle_only(catalog: list[Product]) -> list[Product]:
+    """RULES.md §4 soothe/maintenance filter: no strong actives, and no
+    products marketed as exfoliants even when their INCI parses clean."""
+    return [p for p in catalog
+            if not set(p.actives) & STRONG_ACTIVES
+            and not _EXFOLIANT_NAME_HINTS.search(p.name.lower())]
 
 
 @dataclass
@@ -83,15 +106,18 @@ def recommend(report: ConcernReport, catalog: list[Product],
     # clear skin -> maintenance only (RULES.md §4, severity 0)
     if report.clear_skin or not report.concerns:
         target = ["ceramides", "hyaluronic_acid"]
-        return _finish(target, catalog, True, profile, ranker,
+        return _finish(target, _gentle_only(catalog), True, profile, ranker,
                        flags + ["maintenance routine"], concerns=concerns)
 
     # cystic / severe -> soothe + escalate, do NOT pile on actives (RULES.md §4)
     if report.has_cystic or report.overall_severity >= 4:
         flags.append("see a dermatologist")
+        # RULES.md §5 — loud uncertainty survives the escalation short-circuit
+        flags += [f"{c.concern}@{c.region}: possible — verify"
+                  for c in report.concerns if c.confidence < conf_cutoff]
         target = ["centella", "ceramides", "hyaluronic_acid"]
-        return _finish(target, catalog, True, profile, ranker, flags,
-                       concerns=concerns)
+        return _finish(target, _gentle_only(catalog), True, profile, ranker,
+                       flags, concerns=concerns)
 
     # collect actives from all sufficiently-confident concerns
     target: list[str] = []
@@ -221,8 +247,13 @@ def _build_routines(target_actives: list[str], catalog: list[Product],
         matched = set(p.actives) & tset
         if not matched:
             continue
+        # RULES.md §2a — the product must satisfy EVERY matched active's slot
+        # pins (a PM-pinned retinoid keeps its product out of AM even when a
+        # second matched active is AM-eligible). Empty intersection -> the
+        # product can't be placed without violating a split; skip it.
+        allowed = set.intersection(*(slots[a] for a in matched))
         for slot in SLOTS:
-            if any(slot in slots[a] for a in matched):
+            if slot in allowed:
                 routines[slot][p.category].append(p)
 
     def match_tiebreak(p: Product) -> float:

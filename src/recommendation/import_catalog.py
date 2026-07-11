@@ -34,6 +34,10 @@ from .schema import CATEGORIES, Product
 CANONICAL_ACTIVES: dict[str, str] = {
     # acne / exfoliation
     "salicylic acid": "salicylic_acid",
+    "betaine salicylate": "salicylic_acid",  # ester BHA (K-beauty), same class
+    "gluconolactone": "gluconolactone",      # PHA exfoliant
+    "willow": "willow_bark",                 # Salix (Willow) Bark Extract — botanical BHA source
+    "willow bark extract": "willow_bark",
     "benzoyl peroxide": "benzoyl_peroxide",
     "adapalene": "adapalene",
     "azelaic acid": "azelaic_acid",

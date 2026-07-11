@@ -56,6 +56,11 @@ split across AM/PM slots so both survive. Deterministic algorithm
 its preference, so **vitamin_c→AM and benzoyl_peroxide→PM**. They coexist across
 slots; neither is held back.
 
+At the product level, a product must satisfy EVERY matched target active's
+slot pins (set intersection, not union): a product bundling a PM-pinned
+retinoid with an AM-eligible active appears only in PM, and a product whose
+matched actives have disjoint slots is excluded entirely.
+
 ### 2b. Pregnancy / nursing (D-021)
 
 If the `UserProfile.pregnant_or_nursing` flag is set, retinoids (retinol,
@@ -95,6 +100,17 @@ Rules:
 | 1–2              | First-line actives, standard routine                        |
 | 3                | First-line actives + "consider a professional" note         |
 | 4 or any cystic  | Minimal soothing routine + strong "see a dermatologist" flag; do NOT recommend aggressive actives |
+
+"Do NOT recommend aggressive actives" is enforced at the PRODUCT level on the
+soothe and maintenance (severity 0) paths: a product is excluded when it
+carries ANY strong active (`engine.STRONG_ACTIVES` — exfoliating acids,
+BP, retinoids, azelaic, vitamin C, plus the PHA/botanical exfoliant sources
+gluconolactone and willow bark), even when it also contains a matching gentle
+active — an "SA + hyaluronic acid serum" stays out. Products whose NAME
+markets exfoliation (AHA/BHA/PHA, "exfoliating", "peel", "resurfacing") are
+excluded there too, since citrus-juice acids and enzymes don't parse out of
+INCI. Sub-threshold concerns keep their "possible — verify" flags on the
+escalation path (§5 applies everywhere).
 
 ## 5. Confidence handling
 
