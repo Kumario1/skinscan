@@ -277,3 +277,27 @@ backed concern-stats (D-023) dominate, tier-2 fills a slot only when no tier-1
 (review-backed) candidate exists, and the `no_outcome_data` flag carries
 through. Without the KB file the importer is byte-identical to before
 (regression-tested).
+
+## D-025 — Revert to the 5-class classifier; 6-class retrain has a crop-domain confound (2026-07-10)
+
+**LOCKED (until issue #5 retrain v2).** The Colab-retrained six-class model
+(`acne_model_6class_v1_confounded.keras`, archived) predicts Not_acne ≈1.0 for
+EVERY real detector crop — including ACNE04 lesions — while scoring perfectly
+on AcneDataset test crops. Root cause: the five acne-class positives are
+640×640 Roboflow mosaic images, but the Not_acne negatives were harvested
+through the inference-time `crop_with_context` transform (224px padded,
+upscaled detector crops). The model learned crop style, not acne; every
+pipeline crop lands in the negative's domain. The D-022/issue-#5 acceptance
+gates (5-class macro-F1 on dataset crops, FFHQ holdout reject, phantom-image
+flip) all pass while the deployed pipeline is 100% broken — they cannot see
+the confound.
+
+Decision: `models/classification/acne_model.keras` is the ORIGINAL 5-class
+model again (classes Blackheads/Cyst/Papules/Pustules/Whiteheads, sidecar
+`.labels.json` records this). The engine still tolerates a missing Not_acne
+class (bridge top-1 rejection is inert, issue #4 forward-compat unchanged).
+Retrain v2 must (a) pass positives through the SAME `crop_with_context`
+transform (ACNE04 ground-truth boxes) so both classes share the crop domain,
+and (b) add an acceptance gate on REAL pipeline crops: on a known-acne image,
+the share of detector crops classified Not_acne must stay below a threshold
+(e.g. < 50%), which v1 fails at 100%.
