@@ -325,3 +325,59 @@ transform (ACNE04 ground-truth boxes) so both classes share the crop domain,
 and (b) add an acceptance gate on REAL pipeline crops: on a known-acne image,
 the share of detector crops classified Not_acne must stay below a threshold
 (e.g. < 50%), which v1 fails at 100%.
+
+## D-026 — Identification v2: SA-RPN reads native-resolution tiles; the zoom funnel is rejected (2026-07-11)
+
+**LOCKED (replacing the shipped two-stage pipeline is gated on a consumer-photo
+check).** With the SA-RPN detector trained and served (README §7, `sa-rpn/`),
+there were two candidate ways to put a full face photo in front of a model
+trained on 1024px clinical tiles:
+
+- **zoom** — keep the shipped YOLOv8m as a stage-1 gatekeeper, cluster its
+  lesion boxes, upscale each context crop to the model's 1024px input, and let
+  SA-RPN re-detect inside those crops;
+- **tile** — chunk the photo into native-resolution 1024px tiles (minimal
+  count, evenly spaced, guaranteed minimum overlap so a seam lesion is always
+  fully inside some tile), run every tile, dedupe across seams.
+
+The A/B harness (`src/pipeline/compare_sarpn.py`) ran both funnels against the
+same served epoch-15 checkpoint on 5 held-out AcneSCU validation images
+(seed-42 split, 756 annotated lesions), scored by greedy IoU ≥ 0.3 matching:
+
+```text
+            recall           precision        exact-label acc   concern acc
+zoom        0.04 (32/756)    0.52              0.44              0.62
+tile        0.70 (530/756)   0.68              0.92              0.95
+```
+
+The zoom funnel fails **twice**: YOLO at imgsz 1024 downscales hi-res photos
+~4×, so it forwards only 8–18 areas per face — recall is capped by the
+gatekeeper before SA-RPN ever runs; and even on forwarded areas, upscaled
+blurry crops halve SA-RPN's label accuracy (0.44 vs 0.92 on native pixels).
+Rules out: any funnel where the old detector decides what the new model may
+see, and any upscaled-crop input to SA-RPN.
+
+**The v2 identification pipeline is therefore:** image → native-res 1024px
+tiles → SA-RPN → cross-tile class-agnostic dedupe → D-020 regions →
+ConcernReport via the fixed label map (closed/open comedones →
+`acne_comedonal`; papules/pustules → `acne_inflammatory`; nodules →
+`acne_cystic`; atrophic/hypertrophic scars + melasma → `hyperpigmentation`;
+nevus/other dropped, same posture as Not_acne rejection) → the unchanged D-008
+contract into the recommender. Severity keeps the bridge's existing lesion-count
+thresholds. This is the first CV path that produces a non-acne concern —
+AcneSCU's scar/melasma classes partially resolve D-012's hyperpigmentation
+data blocker.
+
+Caveats recorded honestly:
+- The eval is on clinical images — the tile funnel's home domain (SA-RPN
+  trained on exactly such tiles) and YOLO's out-of-domain territory. Before the
+  YOLOv8m+EfficientNetB0 pipeline is retired from the e2e CLI, tiling must pass
+  a self-collected consumer-photo check (D-014 photos): visual proof sheet +
+  concern-report sanity, same real-pipeline discipline D-025 taught us.
+- Cost: ~24 API calls per hi-res image (vs one YOLO pass); serving needs the
+  legacy mmdet env (Lightning studio). The shipped local pipeline remains the
+  fallback wherever the API is unreachable.
+- The recommendation arm of the A/B was not exercised (catalog artifacts were
+  absent on the eval machine); ConcernReports were produced and differ as the
+  detection numbers imply — tile reports full-face severity (e.g. sev-4
+  hyperpigmentation cells) where zoom reports sev-1 fragments.

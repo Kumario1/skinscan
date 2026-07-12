@@ -100,6 +100,17 @@ heads differ from the paper's setup.
 
 `closed_comedo, open_comedo, papule, pustule, nodule, atrophic_scar, hypertrophic_scar, melasma, nevus, other`
 
+### How SkinScan feeds it (serving A/B)
+
+Two funnels from a full face photo into the model's 1024px input were
+A/B-tested on 5 held-out validation images against the clinical annotations
+(harness: [`src/pipeline/compare_sarpn.py`](../src/pipeline/compare_sarpn.py)):
+**native-resolution tiling** (recall 0.70, exact-label acc 0.92) beat
+**YOLO-area zoom crops** (recall 0.04, label acc 0.44) decisively — upscaled
+crops blur away the detail the model needs, and the stage-1 gatekeeper caps
+coverage. Tiling is locked as the integration path:
+[D-026](../docs/DECISIONS.md) · [README §7a](../README.md#7a-pipeline-ab--how-should-sa-rpn-see-a-full-photo).
+
 ### Known limits
 
 - Val split is 28 source patients' images — metrics have real variance; don't over-read ±0.01.

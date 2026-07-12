@@ -23,6 +23,7 @@ flowchart LR
 |---|---|---|
 | Stage 1 detector (YOLOv8m) | ACNE04 | **F1 = 0.722** @ conf 0.07 / IoU 0.2 |
 | SA-RPN detector (Mask R-CNN R50, 10-class) — [`sa-rpn/`](sa-rpn/) | AcneSCU | **mAP@0.50 = 0.499 bbox / 0.498 segm**, recall@0.50 = 0.743 |
+| SA-RPN serving A/B: **tile** vs zoom ([§7a](#7a-pipeline-ab--how-should-sa-rpn-see-a-full-photo)) | AcneSCU held-out, 756 lesions | tile **recall 0.70 / label acc 0.92** vs zoom 0.04 / 0.44 → tiles locked ([D-026](docs/DECISIONS.md)) |
 | Stage 2 classifier (EfficientNetB0, 5-class) | Kaggle acne types | **91.2% acc, macro F1 0.92** |
 | 6-class `Not_acne` retrain | + harvested negatives | 91.7% acc — **reverted** (crop-domain confound, [D-025](docs/DECISIONS.md)) |
 | Learned product ranker (HistGB) | 1.1M Sephora reviews | pairwise 0.584 — **lost** to Bayesian stats baseline (0.609), never shipped |
@@ -327,6 +328,38 @@ lever is anchor/mask-head tuning, not more training; and the available mirror
 lacks patient IDs, so the paper's patient-disjoint split can't be reproduced
 exactly (split is image-level).
 
+## 7a. Pipeline A/B — how should SA-RPN see a full photo?
+
+The model is trained on 1024px tiles of clinical photos; a full face photo has
+to be funneled into that input somehow. Two candidates, A/B-tested by
+[`src/pipeline/compare_sarpn.py`](src/pipeline/compare_sarpn.py) against the
+same served checkpoint on 5 held-out validation images (seed-42 split, 756
+annotated lesions), scored against the clinical annotations at IoU ≥ 0.3:
+
+- **zoom** — the shipped YOLOv8m finds acne areas, each cluster is cropped and
+  *upscaled* to 1024px ("really enlarge the area"), SA-RPN re-detects inside;
+- **tile** — the photo is chunked into *native-resolution* 1024px tiles with a
+  guaranteed minimum overlap; every tile runs; seams are deduped client-side.
+
+| funnel | recall | precision | exact-label acc | concern acc | API calls (5 imgs) |
+|---|---|---|---|---|---|
+| zoom | 4% (32/756) | 52% | 44% | 62% | 44 |
+| **tile** | **70% (530/756)** | **68%** | **92%** | **95%** | 116 |
+
+![tile vs zoom proof sheet](assets/sarpn_ab_tile_vs_zoom.jpg)
+
+Ground truth 282 lesions; zoom surfaced 8, tile surfaced 254 with 91% correct
+types. Zoom fails twice: YOLO (imgsz 1024) downscales a 3448×4600 photo ~4×
+so the gatekeeper forwards almost nothing, and the upscaled blurry crops halve
+SA-RPN's label accuracy versus native pixels. **Decision: native-res tiling,
+locked as [D-026](docs/DECISIONS.md)** — the v2 identification pipeline is
+tiles → SA-RPN → cross-tile dedupe → regions → ConcernReport (comedones →
+comedonal, papules/pustules → inflammatory, nodules → cystic, scars/melasma →
+hyperpigmentation — the first CV path to emit a non-acne concern) → the
+unchanged recommender contract. Honest caveat: clinical images are tiling's
+home domain; a consumer-photo check (D-014) gates retiring the shipped
+two-stage pipeline.
+
 ## 7b. In progress — Stage 2 v2 dataset
 
 **Stage 2 v2 dataset** ([`docs/STAGE2_V2_DATASET.md`](docs/STAGE2_V2_DATASET.md)),
@@ -355,6 +388,7 @@ Kept on the record deliberately; half the value of the project is here.
 | 5 | Learned product ranker | pairwise 0.584 vs baseline 0.609 | product-anonymous features can't beat per-product memorized stats; 7 probes confirmed structural | shipped `StatsRanker` champion (D-022) |
 | 6 | Per-skin-type ranking cells | 0.606/0.596 — *worse* than pooled | cells too sparse | pooled stats, cells evidence-only |
 | 7 | Softmax-threshold reject (option B) | — | miscalibrated on OOD, per design analysis | rejected at design stage |
+| 8 | Zoom funnel into SA-RPN (YOLO areas → upscaled 1024px crops) | recall 4% vs tiling's 70%; label acc 44% vs 92% | YOLO downscales hi-res photos ~4× and gatekeeps coverage; upscaled crops blur away detail | native-res tiling locked (D-026, §7a) |
 
 The recurring lesson: **every proxy metric passed while the real thing was
 broken** — which is why each stage now has a visual proof sheet and a
@@ -390,6 +424,8 @@ Individual stages:
   --image path/to/image.jpg                                      # detect + classify
 .venv/bin/python -m src.pipeline.regions IMG --boxes PRED_JSON   # region overlay
 .venv/bin/python -m src.pipeline.tone    IMG --boxes PRED_JSON   # ITA sampling overlay
+.venv/bin/python -m src.pipeline.compare_sarpn --image IMG \
+  --api http://localhost:8000/predict                            # SA-RPN tile/zoom A/B (§7a)
 ```
 
 Tests (default tier is model-free; the second tier needs local weights):
@@ -438,7 +474,7 @@ docs/*.md              design docs: negatives, v2 dataset, rules, schemas, fairn
 notebooks/             Colab sessions: detector training, Stage 2 retrain, SA-RPN
 src/detection/         YOLO checks + AcneSCU/SA-RPN preprocessing
 src/classification/    classifier training, pipeline, v2 crop curation
-src/pipeline/          regions, tone/ITA, end-to-end CLI
+src/pipeline/          regions, tone/ITA, end-to-end CLI, SA-RPN tile/zoom A/B
 src/recommendation/    rules engine, rankers, concern labels, ingredient KB
 assets/                the proof sheets embedded above
 tests/                 model-free by default; real_models tier for local weights
