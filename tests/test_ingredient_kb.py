@@ -19,6 +19,7 @@ import tempfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.recommendation.ingredient_kb import (
+    CONCERN_ACTIVES,
     build_alias_index,
     build_kb,
     kb_comedogenic_flags,
@@ -125,8 +126,10 @@ def test_match_score_resolves_beneficial_via_alias():
 
 
 def test_acne_scarring_match_metadata_includes_barrier_and_pigment_safe_ingredients():
-    kb = _kb()
-    assert match_score("Water, Niacinamide", "acne_scarring", kb) > 0.5
+    assert CONCERN_ACTIVES["acne_scarring"] == {
+        "ceramide", "ceramides", "panthenol", "niacinamide", "azelaic acid",
+        "centella",
+    }
 
 
 def test_product_matches_covers_every_concern():

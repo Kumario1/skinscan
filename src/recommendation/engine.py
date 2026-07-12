@@ -102,21 +102,6 @@ def _concern_location(concern) -> str:
     return ",".join(concern.regions or [concern.region])
 
 
-def _has_selectable_active(active: str, target: list[str], catalog: list[Product]) -> bool:
-    """Whether an active has a product that survives the catalog tier policy."""
-    target_set = set(target)
-    candidates = [p for p in catalog
-                  if p.category != "spf" and set(p.actives) & target_set]
-    for product in candidates:
-        if active not in product.actives:
-            continue
-        if product.tier == 1:
-            return True
-        if not any(p.tier == 1 and p.category == product.category for p in candidates):
-            return True
-    return False
-
-
 def recommend(report: ConcernReport, catalog: list[Product],
               profile: UserProfile | None = None, ranker=None,
               conf_cutoff: float = 0.5) -> Recommendation:
@@ -148,6 +133,7 @@ def recommend(report: ConcernReport, catalog: list[Product],
     target: list[str] = []
     needs_spf = False
     reported_concerns = {c.concern for c in report.concerns}
+    broad_inflammation = False
     for _, c in ordered_concerns:
         if c.concern in {"hyperpigmentation", "acne_scarring"}:
             needs_spf = True  # supportive SPF remains valid even under uncertainty
@@ -155,13 +141,8 @@ def recommend(report: ConcernReport, catalog: list[Product],
             flags.append(f"{c.concern}@{_concern_location(c)}: possible — verify")
             continue
         actives = list(CONCERN_ACTIVES.get(c.concern, []))
-        azelaic_selectable = _has_selectable_active("azelaic_acid", actives, catalog)
-        if (c.concern == "acne_inflammatory"
-                and c.evidence.affected_region_count >= 3
-                and azelaic_selectable
-                and "azelaic_acid" in actives):
-            actives.remove("benzoyl_peroxide")
-            flags.append("broad inflammation: reduced strong-active stacking")
+        if c.concern == "acne_inflammatory" and c.evidence.affected_region_count >= 3:
+            broad_inflammation = True
         for a in actives:
             if a not in target:
                 target.append(a)
@@ -186,6 +167,19 @@ def recommend(report: ConcernReport, catalog: list[Product],
             flags.append("retinoids omitted (pregnancy/nursing) — cosmetic "
                          "guidance only, confirm with your doctor")
         target = [a for a in target if a not in RETINOIDS]
+
+    # Decide broad-inflammation de-stacking against the fully assembled targets
+    # through the same slot, product, and tier selection used for the final routine.
+    if broad_inflammation and "benzoyl_peroxide" in target and "azelaic_acid" in target:
+        probe_flags: list[str] = []
+        probe_kept, probe_slots = _assign_slots(target, probe_flags)
+        probe_routines = _build_routines(probe_kept, catalog, needs_spf, probe_slots,
+                                         profile, ranker, concerns)
+        if any("azelaic_acid" in product.actives
+               for slot in SLOTS for category in CATEGORIES
+               for product in probe_routines[slot][category]):
+            target.remove("benzoyl_peroxide")
+            flags.append("broad inflammation: reduced strong-active stacking")
 
     kept, slots = _assign_slots(target, flags)
     return _finish(kept, catalog, needs_spf, profile, ranker, flags, slots,
