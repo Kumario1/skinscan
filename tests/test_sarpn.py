@@ -16,8 +16,14 @@ import requests
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.config import load_config
+from src.recommendation.schema import Concern, ConcernEvidence, UserProfile
 from src.pipeline.sarpn import (
     LesionObservation,
+    SARPN_LABEL_TO_CONCERN,
+    SARPN_NON_ACTIONABLE_LABELS,
+    build_sarpn_concern_report,
+    concern_to_dict,
+    normalize_sarpn_label,
     SarpnResponseError,
     SarpnSettings,
     SarpnTransportError,
@@ -84,6 +90,102 @@ def fake_http_server():
     server.shutdown()
     server.server_close()
     thread.join()
+
+
+def _observation(label, score=0.9):
+    return LesionObservation(label, label, score, (0, 0, 1, 1), 0, (0, 0, 4, 4))
+
+
+def test_legacy_concern_constructor_populates_regions():
+    concern = Concern("acne_inflammatory", "left_cheek", 2, 0.8, 4)
+    assert concern.regions == ["left_cheek"]
+    assert concern.evidence == ConcernEvidence()
+
+
+def test_user_profile_accepts_unknown_tone():
+    assert UserProfile("combination", "unknown", "photo").tone_bucket == "unknown"
+
+
+@pytest.mark.parametrize(("server_label", "normalized"), [
+    ("Closed comedo", "closed_comedo"), ("open comedo", "open_comedo"),
+    ("Papule", "papule"), ("Pustule", "pustule"), ("Nodule", "nodule"),
+    ("Atrophic scar", "atrophic_scar"), ("Hypertrophic scar", "hypertrophic_scar"),
+    ("Melasma", "melasma"), ("Nevus", "nevus"), ("other", "other"),
+    ("  New--Label_name ", "new_label_name"),
+])
+def test_normalize_exact_server_labels(server_label, normalized):
+    assert normalize_sarpn_label(server_label) == normalized
+
+
+def test_label_tables_are_exact():
+    assert SARPN_LABEL_TO_CONCERN["papule"] == "acne_inflammatory"
+    assert SARPN_LABEL_TO_CONCERN["atrophic_scar"] == "acne_scarring"
+    assert SARPN_NON_ACTIONABLE_LABELS == {"nevus", "other"}
+
+
+def test_bridge_aggregates_evidence_regions_and_confidence():
+    observations = [_observation("Papule", 0.72), _observation("Pustule", 0.96)]
+    report, updated, safety = build_sarpn_concern_report(
+        "img", observations, ["right_cheek", "left_cheek"], load_config()["sa_rpn"]["severity"])
+    concern = report.concerns[0]
+    assert concern.concern == "acne_inflammatory"
+    assert concern.region == "left_cheek"
+    assert concern.regions == ["left_cheek", "right_cheek"]
+    assert concern.confidence == pytest.approx(0.84)
+    assert concern.evidence == ConcernEvidence({"papule": 1, "pustule": 1}, 0.96, 2)
+    assert concern_to_dict(concern) == {
+        "concern": "acne_inflammatory", "regions": ["left_cheek", "right_cheek"],
+        "severity": 2, "confidence": 0.84, "lesion_count": 2,
+        "evidence": {"labels": {"papule": 1, "pustule": 1}, "max_confidence": 0.96,
+                     "affected_region_count": 2},
+    }
+    assert [item.normalized_label for item in updated] == ["papule", "pustule"]
+    assert safety == []
+
+
+@pytest.mark.parametrize(("concern", "counts", "expected"), [
+    ("acne_comedonal", (0, 1, 7, 8, 19, 20, 39, 40), (0, 1, 1, 2, 2, 3, 3, 4)),
+    ("acne_inflammatory", (0, 1, 5, 6, 14, 15, 29, 30), (0, 1, 1, 2, 2, 3, 3, 4)),
+])
+def test_count_threshold_boundaries(concern, counts, expected):
+    reverse = {"acne_comedonal": "closed_comedo", "acne_inflammatory": "papule"}
+    config = load_config()["sa_rpn"]["severity"]
+    for count, severity in zip(counts, expected):
+        report, _, _ = build_sarpn_concern_report("img", [_observation(reverse[concern])] * count,
+                                                   ["forehead"] * count, config)
+        assert (report.concerns[0].severity if count else 0) == severity
+
+
+def test_severity_special_cases_region_escalation_and_low_confidence_cap():
+    config = load_config()["sa_rpn"]["severity"]
+    cases = [
+        ([_observation("papule")] * 2, ["forehead", "nose"], 2),
+        ([_observation("papule")] * 3, ["forehead", "nose", "chin_jaw"], 3),
+        ([_observation("nodule", 0.31)], ["forehead"], 4),
+        ([_observation("hypertrophic scar")], ["forehead"], 3),
+        ([_observation("papule", 0.4)] * 30, ["forehead"] * 30, 1),
+    ]
+    for observations, regions, expected in cases:
+        report, _, _ = build_sarpn_concern_report("img", observations, regions, config)
+        assert report.concerns[0].severity == expected
+
+
+def test_safety_observations_are_non_actionable_and_policy_driven():
+    config = load_config()["sa_rpn"]["severity"]
+    observations = [_observation("Nevus", 0.81), _observation("other", 0.5), _observation("Alien label", 0.9)]
+    report, updated, safety = build_sarpn_concern_report(
+        "img", observations, ["nose", "nose", "chin_jaw"], config)
+    assert report.clear_skin and report.concerns == []
+    assert [item.observation_status for item in updated] == ["non_actionable", "non_actionable", "unsupported"]
+    assert [item.code for item in safety] == ["nevus_observation", "other_observation", "unsupported_label"]
+    assert safety[0].professional_review is True
+    assert safety[1].professional_review is False
+    assert safety[2].professional_review is False
+
+
+def test_bridge_rejects_parallel_length_mismatch():
+    with pytest.raises(ValueError, match="same length"):
+        build_sarpn_concern_report("img", [_observation("papule")], [], load_config()["sa_rpn"]["severity"])
 
 
 def test_sarpn_settings_load_production_config():
