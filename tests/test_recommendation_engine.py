@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.recommendation.engine import recommend
 from src.recommendation.schema import (
-    Concern, ConcernReport, Product, UserProfile, CATEGORIES,
+    Concern, ConcernEvidence, ConcernReport, Product, UserProfile, CATEGORIES,
 )
 
 
@@ -143,26 +143,17 @@ def test_comedonal_gets_first_line_actives_no_spf():
     assert rec.routine["spf"] == []
 
 
-def test_hyperpigmentation_forces_spf_and_conflict_resolution():
+def test_hyperpigmentation_forces_spf_without_vitamin_c():
     report = ConcernReport("img", concerns=[
         Concern("acne_inflammatory", "left_cheek", 2, 0.9),
         Concern("hyperpigmentation", "left_cheek", 2, 0.9),
     ])
     rec = recommend(report, make_catalog())
-    # hyperpigmentation forces SPF into the routine
     assert "p5" in _product_ids(rec.routine["spf"])
-    # BP + vitamin_c are INCOMPATIBLE but now COEXIST across slots (Engine v2):
-    # both prefer AM -> the later-listed active (vitamin_c) takes AM, BP takes PM.
     assert "benzoyl_peroxide" in rec.target_actives
-    assert "vitamin_c" in rec.target_actives
-    assert rec.slot_assignment["vitamin_c"] == {"AM"}, rec.slot_assignment
-    assert rec.slot_assignment["benzoyl_peroxide"] == {"PM"}, rec.slot_assignment
-    assert not any("vitamin_c: held back" in f for f in rec.flags), rec.flags
-    # vitamin_c serum -> AM only; BP treatment -> PM only
-    assert "p7" in _product_ids(rec.routines["AM"]["serum"])
-    assert "p7" not in _product_ids(rec.routines["PM"]["serum"])
-    assert "p2" in _product_ids(rec.routines["PM"]["treatment"])
-    assert "p2" not in _product_ids(rec.routines["AM"]["treatment"])
+    assert "azelaic_acid" in rec.target_actives
+    assert "niacinamide" in rec.target_actives
+    assert "vitamin_c" not in rec.target_actives
 
 
 def test_bp_retinoid_time_split():
@@ -223,12 +214,105 @@ def test_ranker_none_preserves_order():
     assert moist == ["p4", "p10", "p6"], moist
 
 
-def test_low_confidence_flags_verify():
-    report = ConcernReport("img", concerns=[Concern("acne_comedonal", "nose", 1, 0.3)])
+def test_low_confidence_concern_is_visible_but_adds_no_strong_active():
+    report = ConcernReport(
+        "img",
+        concerns=[Concern("acne_comedonal", "nose", 1, 0.3)],
+    )
+
     rec = recommend(report, make_catalog())
-    assert any("possible — verify" in f for f in rec.flags), rec.flags
-    # low confidence still contributes actives to the target
-    assert "salicylic_acid" in rec.target_actives
+
+    assert any("possible — verify" in flag for flag in rec.flags)
+    assert "salicylic_acid" not in rec.target_actives
+    assert "adapalene" not in rec.target_actives
+    assert "azelaic_acid" not in rec.target_actives
+
+
+def test_scarring_adds_barrier_spf_and_professional_guidance():
+    report = ConcernReport("img", concerns=[Concern(
+        "acne_scarring", "left_cheek", 2, 0.9,
+        evidence=ConcernEvidence(
+            labels={"hypertrophic_scar": 1}, max_confidence=0.9,
+            affected_region_count=1,
+        ),
+    )])
+    rec = recommend(report, make_catalog())
+    assert "ceramides" in rec.target_actives
+    assert "p5" in _product_ids(rec.routines["AM"]["spf"])
+    assert "consider professional review for acne scarring" in rec.flags
+
+
+def test_hyperpigmentation_uses_pigment_safe_actives_and_spf():
+    report = ConcernReport("img", concerns=[Concern("hyperpigmentation", "left_cheek", 2, 0.9)])
+    rec = recommend(report, make_catalog())
+    assert rec.target_actives == ["azelaic_acid", "niacinamide", "ceramides"]
+    assert "vitamin_c" not in rec.target_actives
+    assert "p5" in _product_ids(rec.routines["AM"]["spf"])
+
+
+def test_broad_inflammation_reduces_strong_active_stacking():
+    report = ConcernReport("img", concerns=[Concern(
+        "acne_inflammatory", "forehead", 2, 0.9,
+        regions=["forehead", "left_cheek", "right_cheek"],
+        evidence=ConcernEvidence(
+            labels={"papule": 3}, max_confidence=0.9,
+            affected_region_count=3,
+        ),
+    )])
+    rec = recommend(report, make_catalog())
+    assert "benzoyl_peroxide" not in rec.target_actives
+    assert "azelaic_acid" in rec.target_actives
+    assert "niacinamide" in rec.target_actives
+    assert "broad inflammation: reduced strong-active stacking" in rec.flags
+
+
+def test_cystic_overrides_other_concerns_regardless_of_order():
+    report = ConcernReport("img", concerns=[
+        Concern("acne_comedonal", "nose", 2, 0.9),
+        Concern("acne_inflammatory", "forehead", 2, 0.9),
+        Concern("acne_cystic", "chin_jaw", 1, 0.3),
+    ])
+    rec = recommend(report, make_catalog())
+    assert rec.target_actives == ["centella", "ceramides", "hyaluronic_acid"]
+
+
+def test_active_inflammatory_acne_precedes_scarring_support():
+    report = ConcernReport("img", concerns=[
+        Concern("acne_scarring", "left_cheek", 2, 0.9),
+        Concern("acne_inflammatory", "right_cheek", 2, 0.9),
+    ])
+    rec = recommend(report, make_catalog())
+    assert rec.target_actives.index("benzoyl_peroxide") < rec.target_actives.index("ceramides")
+
+
+def test_deep_tone_adds_pih_prevention_guidance_without_changing_targets():
+    report = ConcernReport("img", concerns=[Concern("hyperpigmentation", "left_cheek", 2, 0.9)])
+    base = recommend(report, make_catalog())
+    deep = recommend(report, make_catalog(), profile=UserProfile("normal", "deep"))
+    assert deep.target_actives == base.target_actives
+    assert "deeper tone: emphasize sunscreen and irritation avoidance to reduce post-inflammatory hyperpigmentation risk" in deep.flags
+
+
+def test_unknown_tone_adds_no_tone_specific_flag():
+    report = ConcernReport("img", concerns=[Concern("hyperpigmentation", "left_cheek", 2, 0.9)])
+    rec = recommend(report, make_catalog(), profile=UserProfile("normal", "unknown"))
+    assert not any("tone:" in flag for flag in rec.flags)
+
+
+def test_strong_active_adds_ceramides_for_barrier_support():
+    report = ConcernReport("img", concerns=[Concern("acne_comedonal", "nose", 2, 0.9)])
+    rec = recommend(report, make_catalog())
+    assert rec.target_actives.count("ceramides") == 1
+
+
+def test_ranker_none_preserves_catalog_order_when_match_scores_tie():
+    catalog = [
+        Product("first", "First", "b", "moisturizer", actives=["ceramides"], ingredient_match={"dryness": 0.5}),
+        Product("second", "Second", "b", "moisturizer", actives=["ceramides"], ingredient_match={"dryness": 0.5}),
+    ]
+    report = ConcernReport("img", concerns=[Concern("dryness", "left_cheek", 1, 0.9)])
+    rec = recommend(report, catalog, ranker=None)
+    assert _product_ids(rec.routines["AM"]["moisturizer"]) == ["first", "second"]
 
 
 def test_severity_3_professional_note():
@@ -258,22 +342,7 @@ def test_ordered_steps_follows_category_order():
 
 
 if __name__ == "__main__":
-    test_soothe_routine_excludes_strong_active_products()
-    test_maintenance_routine_excludes_strong_active_products()
-    test_multi_active_product_respects_all_slot_pins()
-    test_cystic_path_keeps_low_confidence_verify_flags()
-    test_clear_skin_maintenance()
-    test_cystic_escalates()
-    test_severity_4_escalates()
-    test_comedonal_gets_first_line_actives_no_spf()
-    test_hyperpigmentation_forces_spf_and_conflict_resolution()
-    test_bp_retinoid_time_split()
-    test_spf_never_in_pm()
-    test_pregnancy_omits_retinoids()
-    test_ranker_reorders_but_comedogenic_dominates()
-    test_ranker_none_preserves_order()
-    test_low_confidence_flags_verify()
-    test_severity_3_professional_note()
-    test_comedogenic_downranked_last()
-    test_ordered_steps_follows_category_order()
+    for _name, _fn in sorted(globals().items()):
+        if _name.startswith("test_"):
+            _fn()
     print("ok")
