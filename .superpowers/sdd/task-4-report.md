@@ -218,4 +218,4 @@ Result: clean.
 
 ### Commit
 
-Recorded after this report update; final hash is reported in the completion response.
+- Remaining review-finding fix: `db23950`
