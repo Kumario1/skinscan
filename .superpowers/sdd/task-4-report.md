@@ -164,3 +164,58 @@ Result: clean.
 
 - Initial Task 4 implementation: `a913786`
 - Review-finding fix: `f95e24d`
+
+## Remaining review-finding fixes
+
+A second review required the broad-inflammation decision to use the exact final selection path and requested persistent safety/metadata regressions.
+
+### Exact results
+
+```bash
+python -m pytest tests/test_recommendation_engine.py -q
+```
+
+Result: **33 passed in 0.02s**.
+
+```bash
+python -m pytest tests/test_recommendation_engine.py tests/test_ingredient_kb.py -q
+```
+
+Result: **53 passed in 0.03s**.
+
+```bash
+python -m pytest tests/test_recommendation_engine.py tests/test_ingredient_kb.py tests/test_ranker.py tests/test_concern_stats.py -q
+```
+
+Result: **71 passed in 3.00s**.
+
+```bash
+python tests/test_recommendation_engine.py
+```
+
+Result: **ok**.
+
+```bash
+python -m pytest tests -q
+```
+
+Result: **224 passed, 2 failed, 1 deselected**. The only failures remain the unrelated TensorFlow-missing classifier batch tests.
+
+```bash
+git diff --check
+```
+
+Result: clean.
+
+### Changes
+
+- Removed the duplicate approximate azelaic-selectability helper.
+- Broad-inflammation de-stacking is now decided after the final target set, pregnancy filtering, and barrier support are assembled.
+- The decision probes `_assign_slots` and `_build_routines`, the same slot/product/tier path used by final selection, and removes BP only if an azelaic product survives that path.
+- Added a tier-shadowed regression: tier-2 azelaic in a serum category containing tier-1 niacinamide does not justify removing BP or adding the de-stacking flag.
+- Added persistent low-confidence pigmentation and scarring tests proving verify flags, no concern active, and AM-only supportive SPF.
+- Strengthened scarring ingredient metadata coverage to assert every required barrier/pigment-safe ingredient.
+
+### Commit
+
+Recorded after this report update; final hash is reported in the completion response.

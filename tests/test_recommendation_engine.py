@@ -228,6 +228,28 @@ def test_low_confidence_concern_is_visible_but_adds_no_strong_active():
     assert "azelaic_acid" not in rec.target_actives
 
 
+def test_low_confidence_pigmentation_keeps_am_only_spf_without_concern_actives():
+    report = ConcernReport(
+        "img", concerns=[Concern("hyperpigmentation", "left_cheek", 1, 0.3)],
+    )
+    rec = recommend(report, make_catalog())
+    assert any("possible — verify" in flag for flag in rec.flags)
+    assert not {"azelaic_acid", "niacinamide"} & set(rec.target_actives)
+    assert "p5" in _product_ids(rec.routines["AM"]["spf"])
+    assert rec.routines["PM"]["spf"] == []
+
+
+def test_low_confidence_scarring_keeps_am_only_spf_without_concern_active():
+    report = ConcernReport(
+        "img", concerns=[Concern("acne_scarring", "left_cheek", 2, 0.3)],
+    )
+    rec = recommend(report, make_catalog())
+    assert any("possible — verify" in flag for flag in rec.flags)
+    assert "ceramides" not in rec.target_actives
+    assert "p5" in _product_ids(rec.routines["AM"]["spf"])
+    assert rec.routines["PM"]["spf"] == []
+
+
 def test_scarring_adds_barrier_spf_and_professional_guidance():
     report = ConcernReport("img", concerns=[Concern(
         "acne_scarring", "left_cheek", 2, 0.9,
@@ -284,6 +306,21 @@ def test_broad_inflammation_reduces_strong_active_stacking():
     assert "azelaic_acid" in rec.target_actives
     assert "niacinamide" in rec.target_actives
     assert "broad inflammation: reduced strong-active stacking" in rec.flags
+
+
+def test_broad_inflammation_keeps_bp_when_tier2_azelaic_is_shadowed():
+    catalog = [
+        Product("bp", "BP Gel", "b", "treatment", actives=["benzoyl_peroxide"]),
+        Product("ni-t1", "Tier 1 Niacinamide", "b", "serum", actives=["niacinamide"]),
+        Product("aza-t2", "Tier 2 Azelaic", "b", "serum", actives=["azelaic_acid"],
+                tier=2, no_outcome_data=True),
+        Product("ce", "Ceramide Cream", "b", "moisturizer", actives=["ceramides"]),
+    ]
+    rec = recommend(_broad_inflammation_report(), catalog)
+    assert "benzoyl_peroxide" in rec.target_actives
+    assert "broad inflammation: reduced strong-active stacking" not in rec.flags
+    assert "bp" in _product_ids(rec.routine["treatment"])
+    assert "aza-t2" not in _product_ids(rec.routine["serum"])
 
 
 def test_broad_inflammation_keeps_bp_without_selectable_azelaic_product():
