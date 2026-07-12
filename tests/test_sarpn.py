@@ -1,19 +1,86 @@
+import base64
 from copy import deepcopy
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from io import BytesIO
+import json
 from pathlib import Path
 import sys
+from threading import Thread
+import time
 
+import numpy as np
+from PIL import Image
 import pytest
+import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.config import load_config
-from src.pipeline.sarpn import SarpnSettings
+from src.pipeline.sarpn import (
+    LesionObservation,
+    SarpnResponseError,
+    SarpnSettings,
+    SarpnTransportError,
+    Tile,
+    dedupe_observations,
+    infer_native_tiles,
+    make_tiles,
+)
 
 
 def _config_with(**overrides):
     config = deepcopy(load_config())
     config["sa_rpn"].update(overrides)
     return config
+
+
+def _settings(endpoint_url, **overrides):
+    return SarpnSettings.from_config(
+        _config_with(endpoint_url=endpoint_url, tile_size=4, tile_overlap=1, **overrides)
+    )
+
+
+@pytest.fixture
+def fake_http_server():
+    state = {"requests": [], "responses": [], "delays": {}}
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_POST(self):
+            index = len(state["requests"])
+            body = self.rfile.read(int(self.headers["Content-Length"]))
+            payload = json.loads(body)
+            assert set(payload) == {"image"}
+            decoded = base64.b64decode(payload["image"], validate=True)
+            image = Image.open(BytesIO(decoded))
+            image.load()
+            assert image.format == "JPEG"
+            state["requests"].append({"path": self.path, "payload": payload})
+            time.sleep(state["delays"].get(index, 0))
+            response_item = state.get("response_factory", lambda _image, i: state["responses"][i])(image, index)
+            status, response = response_item
+            if isinstance(response, dict) and "detections" in response and "count" not in response:
+                response = {"count": len(response["detections"]) if isinstance(response["detections"], list) else 0, **response}
+            encoded = json.dumps(response).encode()
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(encoded)))
+            self.end_headers()
+            try:
+                self.wfile.write(encoded)
+            except BrokenPipeError:
+                pass
+
+        def log_message(self, format, *args):
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    state["url"] = f"http://127.0.0.1:{server.server_port}/predict"
+    yield state
+    server.shutdown()
+    server.server_close()
+    thread.join()
 
 
 def test_sarpn_settings_load_production_config():
@@ -69,3 +136,159 @@ def test_sarpn_settings_severity_is_recursively_immutable():
 def test_sarpn_settings_reject_invalid_values(overrides, message):
     with pytest.raises(ValueError, match=message):
         SarpnSettings.from_config(_config_with(**overrides))
+
+
+def test_make_tiles_covers_right_and_bottom_edges():
+    tiles = make_tiles((1200, 2000, 3), tile_size=1024, overlap=128)
+
+    assert len(tiles) == 6
+    assert tiles[0] == Tile(index=0, x=0, y=0, width=1024, height=1024)
+    assert tiles[-1].x + tiles[-1].width == 2000
+    assert tiles[-1].y + tiles[-1].height == 1200
+
+
+def test_client_posts_base64_jpeg_and_validates_response(fake_http_server):
+    fake_http_server["responses"] = [(200, {"detections": [
+        {"label": "papule", "score": 0.9, "bbox": [0, 0, 2, 2]}
+    ]})]
+
+    result = infer_native_tiles(np.zeros((4, 4, 3), dtype=np.uint8), _settings(fake_http_server["url"]))
+
+    assert result == [LesionObservation("papule", "Papule", 0.9, (0, 0, 2, 2), 0, (0, 0, 4, 4))]
+    assert fake_http_server["requests"][0]["path"] == "/predict"
+
+
+def test_exact_timeout_tuple_is_passed():
+    class RecordingSession(requests.Session):
+        def __init__(self):
+            super().__init__()
+            self.timeout = None
+
+        def post(self, url, **kwargs):
+            self.timeout = kwargs["timeout"]
+            response = requests.Response()
+            response.status_code = 200
+            response._content = b'{"count": 0, "detections": []}'
+            return response
+
+    session = RecordingSession()
+    infer_native_tiles(np.zeros((4, 4, 3), dtype=np.uint8), _settings("http://localhost/predict"), session=session)
+    assert session.timeout == (5, 120)
+
+
+def test_all_tiles_are_requested_and_results_restore_in_tile_order(fake_http_server):
+    fake_http_server["responses"] = [(200, {"detections": [
+        {"label": "papule", "score": 0.9, "bbox": [0, 0, 1, 1]}
+    ]}) for _ in range(4)]
+    fake_http_server["delays"] = {0: 0.08, 1: 0.04}
+
+    result = infer_native_tiles(
+        np.zeros((6, 6, 3), dtype=np.uint8),
+        _settings(fake_http_server["url"], request_batch_size=4),
+    )
+
+    assert len(fake_http_server["requests"]) == 4
+    assert [item.tile_index for item in result] == [0, 1, 2, 3]
+    assert [item.box for item in result] == [(0, 0, 1, 1), (2, 0, 3, 1), (0, 2, 1, 3), (2, 2, 3, 3)]
+
+
+def test_restored_boxes_are_clipped_to_full_image_bounds(fake_http_server):
+    fake_http_server["responses"] = [(200, {"detections": []}) for _ in range(3)] + [(200, {"detections": [
+        {"label": "papule", "score": 0.9, "bbox": [1, 1, 9, 9]}
+    ]})]
+
+    result = infer_native_tiles(
+        np.zeros((6, 6, 3), dtype=np.uint8),
+        _settings(fake_http_server["url"], request_batch_size=1),
+    )
+
+    assert result[0].box == (3, 3, 6, 6)
+
+
+@pytest.mark.parametrize("status", [500])
+def test_one_http_500_fails_the_entire_analysis(fake_http_server, status):
+    fake_http_server["responses"] = [(200, {"detections": []}), (status, {}), (200, {"detections": []}), (200, {"detections": []})]
+    with pytest.raises(SarpnTransportError, match=r"tile 1.*127\.0\.0\.1"):
+        infer_native_tiles(np.zeros((6, 6, 3), dtype=np.uint8), _settings(fake_http_server["url"], request_batch_size=1))
+
+
+def test_one_timeout_fails_the_entire_analysis(fake_http_server):
+    fake_http_server["responses"] = [(200, {"detections": []}) for _ in range(4)]
+    fake_http_server["delays"] = {1: 0.1}
+    with pytest.raises(SarpnTransportError, match=r"tile 1.*127\.0\.0\.1"):
+        infer_native_tiles(np.zeros((6, 6, 3), dtype=np.uint8), _settings(fake_http_server["url"], request_batch_size=1, read_timeout_seconds=0.01))
+
+
+@pytest.mark.parametrize(
+    ("response", "field"),
+    [
+        ({}, "detections"),
+        ({"detections": {}}, "detections"),
+        ({"detections": [{"label": " ", "label_name": "Papule", "score": 0.9, "bbox": [0, 0, 1, 1]}]}, "label"),
+        ({"detections": [{"label": "papule", "score": True, "bbox": [0, 0, 1, 1]}]}, "score"),
+        ({"detections": [{"label": "papule", "score": 1.1, "bbox": [0, 0, 1, 1]}]}, "score"),
+        ({"detections": [{"label": "papule", "score": 0.9, "bbox": [2, 0, 1, 1]}]}, "bbox"),
+        ({"detections": [{"label": "papule", "score": 0.9, "bbox": [0, 0, 0, 1]}]}, "bbox"),
+        ({"detections": [{"label": "papule", "score": 0.9, "bbox": [5, 5, 6, 6]}]}, "bbox"),
+    ],
+)
+def test_invalid_response_fields_are_rejected(fake_http_server, response, field):
+    fake_http_server["responses"] = [(200, response)]
+    with pytest.raises(SarpnResponseError, match=rf"tile 0.*{field}"):
+        infer_native_tiles(np.zeros((4, 4, 3), dtype=np.uint8), _settings(fake_http_server["url"]))
+
+
+@pytest.mark.parametrize("coordinate", [float("nan"), float("inf")])
+def test_nan_or_infinite_box_coordinate_is_rejected(coordinate):
+    class NonStandardJsonSession(requests.Session):
+        def post(self, url, **kwargs):
+            response = requests.Response()
+            response.status_code = 200
+            response.json = lambda: {"count": 1, "detections": [
+                {"label": "papule", "score": 0.9, "bbox": [0, 0, coordinate, 1]}
+            ]}
+            return response
+
+    with pytest.raises(SarpnResponseError, match=r"tile 0.*bbox"):
+        infer_native_tiles(
+            np.zeros((4, 4, 3), dtype=np.uint8),
+            _settings("http://localhost/predict"),
+            session=NonStandardJsonSession(),
+        )
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"count": True, "detections": []},
+        {"count": -1, "detections": []},
+        {"count": 1, "detections": []},
+    ],
+)
+def test_invalid_count_is_rejected(fake_http_server, response):
+    fake_http_server["responses"] = [(200, response)]
+    with pytest.raises(SarpnResponseError, match=r"tile 0.*count"):
+        infer_native_tiles(np.zeros((4, 4, 3), dtype=np.uint8), _settings(fake_http_server["url"]))
+
+
+def test_min_score_is_applied_client_side(fake_http_server):
+    fake_http_server["responses"] = [(200, {"detections": [
+        {"label": "papule", "score": 0.2, "bbox": [0, 0, 1, 1]}
+    ]})]
+    assert infer_native_tiles(np.zeros((4, 4, 3), dtype=np.uint8), _settings(fake_http_server["url"])) == []
+
+
+def test_dedupe_is_class_agnostic_and_keeps_higher_confidence():
+    observations = [
+        LesionObservation("papule", "Papule", 0.91, (10, 10, 40, 40), 0, (0, 0, 1024, 1024)),
+        LesionObservation("pustule", "Pustule", 0.80, (12, 12, 39, 39), 1, (0, 0, 1024, 1024)),
+    ]
+    assert dedupe_observations(observations, threshold=0.5) == [observations[0]]
+
+
+def test_dedupe_preserves_overlap_equal_to_threshold():
+    observations = [
+        LesionObservation("papule", "Papule", 0.9, (0, 0, 10, 10), 0, (0, 0, 10, 10)),
+        LesionObservation("pustule", "Pustule", 0.8, (5, 0, 15, 10), 1, (5, 0, 15, 10)),
+    ]
+    assert dedupe_observations(observations, threshold=0.5) == observations
