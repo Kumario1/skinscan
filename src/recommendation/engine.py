@@ -102,6 +102,21 @@ def _concern_location(concern) -> str:
     return ",".join(concern.regions or [concern.region])
 
 
+def _has_selectable_active(active: str, target: list[str], catalog: list[Product]) -> bool:
+    """Whether an active has a product that survives the catalog tier policy."""
+    target_set = set(target)
+    candidates = [p for p in catalog
+                  if p.category != "spf" and set(p.actives) & target_set]
+    for product in candidates:
+        if active not in product.actives:
+            continue
+        if product.tier == 1:
+            return True
+        if not any(p.tier == 1 and p.category == product.category for p in candidates):
+            return True
+    return False
+
+
 def recommend(report: ConcernReport, catalog: list[Product],
               profile: UserProfile | None = None, ranker=None,
               conf_cutoff: float = 0.5) -> Recommendation:
@@ -132,17 +147,18 @@ def recommend(report: ConcernReport, catalog: list[Product],
 
     target: list[str] = []
     needs_spf = False
-    retained_concerns: set[str] = set()
+    reported_concerns = {c.concern for c in report.concerns}
     for _, c in ordered_concerns:
         if c.concern in {"hyperpigmentation", "acne_scarring"}:
             needs_spf = True  # supportive SPF remains valid even under uncertainty
         if c.confidence < conf_cutoff:
             flags.append(f"{c.concern}@{_concern_location(c)}: possible — verify")
             continue
-        retained_concerns.add(c.concern)
         actives = list(CONCERN_ACTIVES.get(c.concern, []))
+        azelaic_selectable = _has_selectable_active("azelaic_acid", actives, catalog)
         if (c.concern == "acne_inflammatory"
                 and c.evidence.affected_region_count >= 3
+                and azelaic_selectable
                 and "azelaic_acid" in actives):
             actives.remove("benzoyl_peroxide")
             flags.append("broad inflammation: reduced strong-active stacking")
@@ -157,7 +173,7 @@ def recommend(report: ConcernReport, catalog: list[Product],
         target.append("ceramides")
 
     if (profile and profile.tone_bucket == "deep"
-            and retained_concerns & {"acne_inflammatory", "acne_scarring", "hyperpigmentation"}):
+            and reported_concerns & {"acne_inflammatory", "acne_scarring", "hyperpigmentation"}):
         flags.append("deeper tone: emphasize sunscreen and irritation avoidance to reduce "
                      "post-inflammatory hyperpigmentation risk")
 
