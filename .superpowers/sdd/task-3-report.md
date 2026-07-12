@@ -89,6 +89,54 @@ Executed the bridge with Papule, Pustule, Nevus, and an unsupported label throug
 
 None known. Runtime surface is currently the public Python module; the full e2e pipeline cutover is a later task.
 
+## Review fixes
+
+Addressed both Task 3 review findings with test-first fixes.
+
+### Fix red
+
+```bash
+python -m pytest tests/test_sarpn.py -q
+```
+
+```text
+2 failed, 60 passed in 9.85s
+```
+
+Expected failures proved that rebuilt observations replaced `label_name` with the normalized source field and that `concern_to_dict()` aliased `Concern.regions`.
+
+### Fix green and compatibility
+
+```bash
+python -m pytest tests/test_sarpn.py tests/test_bridge.py tests/test_recommendation_engine.py -q
+```
+
+```text
+90 passed in 9.80s
+```
+
+```bash
+python -m pytest tests/test_sarpn.py tests/test_bridge.py tests/test_ranker.py tests/test_concern_stats.py -q
+```
+
+```text
+90 passed in 12.12s
+```
+
+```bash
+git diff --check
+```
+
+Result: clean.
+
+### Review resolution
+
+- The bridge normalizes `LesionObservation.label`, which is the Task 2 parser's response-label field, exactly once.
+- Rebuilt observations preserve `LesionObservation.label_name` as the display/original label.
+- `concern_to_dict()` now copies both `regions` and `evidence.labels`; payload mutation cannot alter the source concern.
+- `acne_cystic` intentionally has no count-threshold entry. An explicit regression test confirms a nodule takes the severity-4 override before threshold lookup, preventing `KeyError`.
+
 ## Commit
 
-`HEAD` — `feat: bridge SA-RPN evidence into ConcernReport V2` (exact immutable hash reported in the task completion response)
+Initial Task 3 commit: `1d86ca13aa40822281a9654db0f3020f964081c1`.
+Review-fix commit exact hash is reported in the task completion response.

@@ -333,7 +333,7 @@ def build_sarpn_concern_report(image_id: str, observations: Sequence[LesionObser
         else:
             status = "unsupported"
             safety_groups["unsupported"].append((label, observation.score))
-        updated.append(LesionObservation(label, observation.label, observation.score,
+        updated.append(LesionObservation(label, observation.label_name, observation.score,
                                           observation.box, observation.tile_index, observation.tile_box,
                                           region, concern, status))
     concerns = []
@@ -362,9 +362,9 @@ def build_sarpn_concern_report(image_id: str, observations: Sequence[LesionObser
 
 
 def concern_to_dict(concern: Concern) -> dict[str, object]:
-    return {"concern": concern.concern, "regions": concern.regions, "severity": concern.severity,
+    return {"concern": concern.concern, "regions": list(concern.regions), "severity": concern.severity,
             "confidence": concern.confidence, "lesion_count": concern.lesion_count,
-            "evidence": {"labels": concern.evidence.labels,
+            "evidence": {"labels": dict(concern.evidence.labels),
                          "max_confidence": concern.evidence.max_confidence,
                          "affected_region_count": concern.evidence.affected_region_count}}
 

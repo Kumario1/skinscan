@@ -123,6 +123,22 @@ def test_label_tables_are_exact():
     assert SARPN_NON_ACTIONABLE_LABELS == {"nevus", "other"}
 
 
+def test_bridge_normalizes_server_label_and_preserves_display_label():
+    observation = LesionObservation(
+        "  PAPULE ", "Papule (server display)", 0.9,
+        (0, 0, 1, 1), 0, (0, 0, 4, 4),
+    )
+
+    _, updated, _ = build_sarpn_concern_report(
+        "img", [observation], ["left_cheek"], load_config()["sa_rpn"]["severity"]
+    )
+
+    assert updated[0].normalized_label == "papule"
+    assert updated[0].label_name == "Papule (server display)"
+    assert updated[0].original_label == "Papule (server display)"
+    assert updated[0].mapped_concern == "acne_inflammatory"
+
+
 def test_bridge_aggregates_evidence_regions_and_confidence():
     observations = [_observation("Papule", 0.72), _observation("Pustule", 0.96)]
     report, updated, safety = build_sarpn_concern_report(
@@ -141,6 +157,33 @@ def test_bridge_aggregates_evidence_regions_and_confidence():
     }
     assert [item.normalized_label for item in updated] == ["papule", "pustule"]
     assert safety == []
+
+
+def test_concern_to_dict_returns_defensive_copies():
+    concern = Concern(
+        "acne_inflammatory", "left_cheek", 2, 0.8, 4,
+        ["left_cheek", "right_cheek"],
+        ConcernEvidence({"papule": 4}, 0.9, 2),
+    )
+
+    payload = concern_to_dict(concern)
+    payload["regions"].append("nose")
+    payload["evidence"]["labels"]["papule"] = 99
+
+    assert concern.regions == ["left_cheek", "right_cheek"]
+    assert concern.evidence.labels == {"papule": 4}
+
+
+def test_nodule_override_does_not_require_cystic_count_thresholds():
+    config = deepcopy(load_config()["sa_rpn"]["severity"])
+    assert "acne_cystic" not in config["count_thresholds"]
+
+    report, _, _ = build_sarpn_concern_report(
+        "img", [_observation("Nodule", 0.31)], ["forehead"], config
+    )
+
+    assert report.concerns[0].concern == "acne_cystic"
+    assert report.concerns[0].severity == 4
 
 
 @pytest.mark.parametrize(("concern", "counts", "expected"), [
