@@ -99,6 +99,68 @@ Result: **218 passed, 2 failed, 1 deselected**. Both failures are pre-existing e
 - The repository-wide pytest command collects `sa-rpn/test_client.py`, which behaves like a script at import time; use `python -m pytest tests ...` for the test suite until collection is isolated.
 - The local environment lacks TensorFlow, leaving two unrelated classifier batch tests failing in the full `tests/` run.
 
-## Commit
+## Review-finding fixes
 
-Commit recorded after this report was prepared; final hash is reported in the completion response.
+A follow-up review identified two behavioral gaps and three test-strength gaps. They were fixed test-first.
+
+### Review RED
+
+```bash
+python -m pytest tests/test_recommendation_engine.py -q
+```
+
+Result: **2 failed, 28 passed**.
+
+- Broad inflammation removed benzoyl peroxide even when the catalog had no selectable azelaic-acid product.
+- Deep-tone PIH guidance was absent when the relevant reported concern was below the active-confidence cutoff.
+
+### Review GREEN
+
+```bash
+python -m pytest tests/test_recommendation_engine.py -q
+```
+
+Result: **30 passed in 0.03s**.
+
+```bash
+python -m pytest tests/test_recommendation_engine.py tests/test_ingredient_kb.py -q
+```
+
+Result: **50 passed in 0.03s**.
+
+```bash
+python -m pytest tests/test_recommendation_engine.py tests/test_ingredient_kb.py tests/test_ranker.py tests/test_concern_stats.py -q
+```
+
+Result: **68 passed in 2.22s**.
+
+```bash
+python tests/test_recommendation_engine.py
+```
+
+Result: **ok**.
+
+```bash
+python -m pytest tests -q
+```
+
+Result: **221 passed, 2 failed, 1 deselected**. The same two unrelated TensorFlow-missing classifier failures remain.
+
+```bash
+git diff --check
+```
+
+Result: clean.
+
+### Review changes
+
+- Broad-inflammation de-stacking now removes benzoyl peroxide only when an azelaic-acid product survives the catalog's tier-selection policy; a BP-only catalog retains BP and emits no de-stacking flag.
+- Deep-tone PIH guidance now depends on reported inflammatory/scarring/pigmentation concerns, independent of confidence; low-confidence concerns still contribute no strong active.
+- Acne-before-scar coverage now proves exact target ordering, scarring professional guidance, and SPF contribution.
+- `ranker=None` coverage now proves descending ingredient-match ordering and stable catalog order for equal scores.
+- Scarring coverage now proves the professional-review boundary between severity 2 and severity 3.
+
+## Commits
+
+- Initial Task 4 implementation: `a913786`
+- Review-finding fix: recorded after this report update; final hash is reported in the completion response.

@@ -242,6 +242,20 @@ def test_scarring_adds_barrier_spf_and_professional_guidance():
     assert "consider professional review for acne scarring" in rec.flags
 
 
+def test_scarring_professional_review_starts_at_severity_3():
+    severity_2 = recommend(
+        ConcernReport("img", concerns=[Concern("acne_scarring", "left_cheek", 2, 0.9)]),
+        make_catalog(),
+    )
+    severity_3 = recommend(
+        ConcernReport("img", concerns=[Concern("acne_scarring", "left_cheek", 3, 0.9)]),
+        make_catalog(),
+    )
+    flag = "consider professional review for acne scarring"
+    assert flag not in severity_2.flags
+    assert flag in severity_3.flags
+
+
 def test_hyperpigmentation_uses_pigment_safe_actives_and_spf():
     report = ConcernReport("img", concerns=[Concern("hyperpigmentation", "left_cheek", 2, 0.9)])
     rec = recommend(report, make_catalog())
@@ -250,8 +264,8 @@ def test_hyperpigmentation_uses_pigment_safe_actives_and_spf():
     assert "p5" in _product_ids(rec.routines["AM"]["spf"])
 
 
-def test_broad_inflammation_reduces_strong_active_stacking():
-    report = ConcernReport("img", concerns=[Concern(
+def _broad_inflammation_report():
+    return ConcernReport("img", concerns=[Concern(
         "acne_inflammatory", "forehead", 2, 0.9,
         regions=["forehead", "left_cheek", "right_cheek"],
         evidence=ConcernEvidence(
@@ -259,11 +273,29 @@ def test_broad_inflammation_reduces_strong_active_stacking():
             affected_region_count=3,
         ),
     )])
-    rec = recommend(report, make_catalog())
+
+
+def test_broad_inflammation_reduces_strong_active_stacking():
+    catalog = make_catalog() + [
+        Product("aza", "Azelaic Serum", "b", "serum", actives=["azelaic_acid"]),
+    ]
+    rec = recommend(_broad_inflammation_report(), catalog)
     assert "benzoyl_peroxide" not in rec.target_actives
     assert "azelaic_acid" in rec.target_actives
     assert "niacinamide" in rec.target_actives
     assert "broad inflammation: reduced strong-active stacking" in rec.flags
+
+
+def test_broad_inflammation_keeps_bp_without_selectable_azelaic_product():
+    catalog = [
+        Product("bp", "BP Gel", "b", "treatment", actives=["benzoyl_peroxide"]),
+        Product("ni", "Niacinamide", "b", "serum", actives=["niacinamide"]),
+        Product("ce", "Ceramide Cream", "b", "moisturizer", actives=["ceramides"]),
+    ]
+    rec = recommend(_broad_inflammation_report(), catalog)
+    assert "benzoyl_peroxide" in rec.target_actives
+    assert "broad inflammation: reduced strong-active stacking" not in rec.flags
+    assert "bp" in _product_ids(rec.routine["treatment"])
 
 
 def test_cystic_overrides_other_concerns_regardless_of_order():
@@ -278,11 +310,15 @@ def test_cystic_overrides_other_concerns_regardless_of_order():
 
 def test_active_inflammatory_acne_precedes_scarring_support():
     report = ConcernReport("img", concerns=[
-        Concern("acne_scarring", "left_cheek", 2, 0.9),
+        Concern("acne_scarring", "left_cheek", 3, 0.9),
         Concern("acne_inflammatory", "right_cheek", 2, 0.9),
     ])
     rec = recommend(report, make_catalog())
-    assert rec.target_actives.index("benzoyl_peroxide") < rec.target_actives.index("ceramides")
+    assert rec.target_actives == [
+        "benzoyl_peroxide", "azelaic_acid", "niacinamide", "ceramides",
+    ]
+    assert "consider professional review for acne scarring" in rec.flags
+    assert "p5" in _product_ids(rec.routines["AM"]["spf"])
 
 
 def test_deep_tone_adds_pih_prevention_guidance_without_changing_targets():
@@ -291,6 +327,17 @@ def test_deep_tone_adds_pih_prevention_guidance_without_changing_targets():
     deep = recommend(report, make_catalog(), profile=UserProfile("normal", "deep"))
     assert deep.target_actives == base.target_actives
     assert "deeper tone: emphasize sunscreen and irritation avoidance to reduce post-inflammatory hyperpigmentation risk" in deep.flags
+
+
+def test_deep_tone_guidance_uses_reported_concern_even_when_low_confidence():
+    report = ConcernReport("img", concerns=[
+        Concern("acne_inflammatory", "left_cheek", 1, 0.3),
+    ])
+    rec = recommend(report, make_catalog(), profile=UserProfile("normal", "deep"))
+    assert "benzoyl_peroxide" not in rec.target_actives
+    assert "azelaic_acid" not in rec.target_actives
+    assert any("possible — verify" in flag for flag in rec.flags)
+    assert "deeper tone: emphasize sunscreen and irritation avoidance to reduce post-inflammatory hyperpigmentation risk" in rec.flags
 
 
 def test_unknown_tone_adds_no_tone_specific_flag():
@@ -305,14 +352,20 @@ def test_strong_active_adds_ceramides_for_barrier_support():
     assert rec.target_actives.count("ceramides") == 1
 
 
-def test_ranker_none_preserves_catalog_order_when_match_scores_tie():
+def test_ranker_none_uses_ingredient_score_then_stable_catalog_ties():
     catalog = [
-        Product("first", "First", "b", "moisturizer", actives=["ceramides"], ingredient_match={"dryness": 0.5}),
-        Product("second", "Second", "b", "moisturizer", actives=["ceramides"], ingredient_match={"dryness": 0.5}),
+        Product("tie-first", "Tie First", "b", "moisturizer", actives=["ceramides"],
+                ingredient_match={"dryness": 0.5}),
+        Product("high", "High", "b", "moisturizer", actives=["ceramides"],
+                ingredient_match={"dryness": 0.9}),
+        Product("tie-second", "Tie Second", "b", "moisturizer", actives=["ceramides"],
+                ingredient_match={"dryness": 0.5}),
     ]
     report = ConcernReport("img", concerns=[Concern("dryness", "left_cheek", 1, 0.9)])
     rec = recommend(report, catalog, ranker=None)
-    assert _product_ids(rec.routines["AM"]["moisturizer"]) == ["first", "second"]
+    assert _product_ids(rec.routines["AM"]["moisturizer"]) == [
+        "high", "tie-first", "tie-second",
+    ]
 
 
 def test_severity_3_professional_note():
