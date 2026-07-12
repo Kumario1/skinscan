@@ -89,4 +89,48 @@ A broader model-free attempt that omitted only the real face-landmarker test pro
 
 ## Commit
 
-Commit hash is recorded in git history for the commit titled `feat: add native-tile SA-RPN HTTP inference`.
+Initial implementation commit: `31a11018b6becf9fdf8424f80b4feedba207be4c` (`feat: add native-tile SA-RPN HTTP inference`).
+
+## Review-finding fixes
+
+- Replaced the executor-wide mutable `requests.Session` with a `session_factory`; every tile request obtains and closes its own session, so no mutable session is shared across worker threads.
+- Preserved exact timeout verification through an injected recording session factory.
+- Made the real HTTP fixture allocate response indexes under a lock using a monotonic counter, independent of request completion order.
+- Removed fixture-side `count` injection. Every successful fixture response now states `count` explicitly.
+- Added a real-HTTP missing-`count` rejection test and retained invalid/mismatched count validation.
+- Added EXIF orientation coverage proving `load_rgb` transposes before inference input is produced.
+- Added direct coverage that concurrent tiles receive distinct sessions and that each session is closed.
+
+Review-fix focused command:
+
+```bash
+python -m pytest tests/test_sarpn.py -q
+```
+
+Exact result:
+
+```text
+39 passed in 9.74s
+```
+
+Review-fix model-free regression command:
+
+```bash
+python -m pytest tests -q --ignore=tests/test_face_landmarker_real.py --ignore=tests/test_predict_batch.py
+```
+
+Exact result:
+
+```text
+183 passed in 12.88s
+```
+
+Review-fix diff validation:
+
+```bash
+git diff --check
+```
+
+Exact result: success with no output.
+
+Review-fix commit: recorded in git history immediately after the initial implementation commit.
