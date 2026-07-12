@@ -29,6 +29,28 @@ def test_sarpn_settings_load_production_config():
     assert settings.dedupe_threshold == 0.5
 
 
+def test_sarpn_settings_do_not_alias_source_severity_config():
+    config = load_config()
+    settings = SarpnSettings.from_config(config)
+
+    config["sa_rpn"]["severity"]["confidence_cutoff"] = 0.1
+    config["sa_rpn"]["severity"]["count_thresholds"]["acne_comedonal"].append(100)
+
+    assert settings.severity["confidence_cutoff"] == 0.5
+    assert settings.severity["count_thresholds"]["acne_comedonal"] == (1, 8, 20, 40)
+
+
+def test_sarpn_settings_severity_is_recursively_immutable():
+    settings = SarpnSettings.from_config(load_config())
+
+    with pytest.raises(TypeError):
+        settings.severity["confidence_cutoff"] = 0.1
+    with pytest.raises(TypeError):
+        settings.severity["count_thresholds"]["acne_comedonal"] = (1,)
+    with pytest.raises(TypeError):
+        settings.severity["professional_review"]["nevus"]["min_count"] = 1
+
+
 @pytest.mark.parametrize(
     ("overrides", "message"),
     [
