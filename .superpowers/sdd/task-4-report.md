@@ -219,3 +219,62 @@ Result: clean.
 ### Commit
 
 - Remaining review-finding fix: `db23950`
+
+## Final soothe-path review fix
+
+The final review found that the cystic/severity-4 early return skipped required deep-tone PIH guidance.
+
+### RED
+
+```bash
+python -m pytest tests/test_recommendation_engine.py::test_deep_tone_guidance_survives_cystic_soothe_only_short_circuit -q
+```
+
+Result: **1 failed**. The routine retained soothe-only targets and dermatologist escalation but omitted the deep-tone guidance flag.
+
+### GREEN and compatibility evidence
+
+```bash
+python -m pytest tests/test_recommendation_engine.py -q
+```
+
+Result: **34 passed in 0.02s**.
+
+```bash
+python -m pytest tests/test_recommendation_engine.py tests/test_ingredient_kb.py -q
+```
+
+Result: **54 passed in 0.03s**.
+
+```bash
+python -m pytest tests/test_recommendation_engine.py tests/test_ingredient_kb.py tests/test_ranker.py tests/test_concern_stats.py -q
+```
+
+Result: **72 passed in 2.48s**.
+
+```bash
+python tests/test_recommendation_engine.py
+```
+
+Result: **ok**.
+
+```bash
+python -m pytest tests -q
+```
+
+Result: **225 passed, 2 failed, 1 deselected**. The same unrelated TensorFlow-missing classifier failures remain.
+
+```bash
+git diff --check
+```
+
+Result: clean.
+
+### Change
+
+- Centralized deep-tone PIH guidance in one helper and applied it before the cystic/severity-4 soothe-only return as well as the ordinary deterministic path.
+- Regression proves deep tone plus cystic and relevant inflammatory/scarring evidence preserves exact soothe-only targets, dermatologist escalation, and deep-tone guidance.
+
+### Commit
+
+Recorded after this report update; final hash is reported in the completion response.

@@ -345,6 +345,18 @@ def test_cystic_overrides_other_concerns_regardless_of_order():
     assert rec.target_actives == ["centella", "ceramides", "hyaluronic_acid"]
 
 
+def test_deep_tone_guidance_survives_cystic_soothe_only_short_circuit():
+    report = ConcernReport("img", concerns=[
+        Concern("acne_cystic", "chin_jaw", 2, 0.9),
+        Concern("acne_inflammatory", "left_cheek", 2, 0.9),
+        Concern("acne_scarring", "right_cheek", 2, 0.9),
+    ])
+    rec = recommend(report, make_catalog(), profile=UserProfile("normal", "deep"))
+    assert rec.target_actives == ["centella", "ceramides", "hyaluronic_acid"]
+    assert "see a dermatologist" in rec.flags
+    assert "deeper tone: emphasize sunscreen and irritation avoidance to reduce post-inflammatory hyperpigmentation risk" in rec.flags
+
+
 def test_active_inflammatory_acne_precedes_scarring_support():
     report = ConcernReport("img", concerns=[
         Concern("acne_scarring", "left_cheek", 3, 0.9),

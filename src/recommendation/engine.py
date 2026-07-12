@@ -102,11 +102,20 @@ def _concern_location(concern) -> str:
     return ",".join(concern.regions or [concern.region])
 
 
+def _add_deep_tone_guidance(flags: list[str], profile,
+                            concerns: set[str]) -> None:
+    if (profile and profile.tone_bucket == "deep"
+            and concerns & {"acne_inflammatory", "acne_scarring", "hyperpigmentation"}):
+        flags.append("deeper tone: emphasize sunscreen and irritation avoidance to reduce "
+                     "post-inflammatory hyperpigmentation risk")
+
+
 def recommend(report: ConcernReport, catalog: list[Product],
               profile: UserProfile | None = None, ranker=None,
               conf_cutoff: float = 0.5) -> Recommendation:
     flags: list[str] = []
     concerns = [c.concern for c in report.concerns]
+    reported_concerns = set(concerns)
 
     # clear skin -> maintenance only (RULES.md §4, severity 0)
     if report.clear_skin or not report.concerns:
@@ -120,6 +129,7 @@ def recommend(report: ConcernReport, catalog: list[Product],
         # RULES.md §5 — loud uncertainty survives the escalation short-circuit
         flags += [f"{c.concern}@{_concern_location(c)}: possible — verify"
                   for c in report.concerns if c.confidence < conf_cutoff]
+        _add_deep_tone_guidance(flags, profile, reported_concerns)
         target = ["centella", "ceramides", "hyaluronic_acid"]
         return _finish(target, _gentle_only(catalog), True, profile, ranker,
                        flags, concerns=concerns)
@@ -132,7 +142,6 @@ def recommend(report: ConcernReport, catalog: list[Product],
 
     target: list[str] = []
     needs_spf = False
-    reported_concerns = {c.concern for c in report.concerns}
     broad_inflammation = False
     for _, c in ordered_concerns:
         if c.concern in {"hyperpigmentation", "acne_scarring"}:
@@ -153,10 +162,7 @@ def recommend(report: ConcernReport, catalog: list[Product],
     if any(a in STRONG_ACTIVES for a in target) and "ceramides" not in target:
         target.append("ceramides")
 
-    if (profile and profile.tone_bucket == "deep"
-            and reported_concerns & {"acne_inflammatory", "acne_scarring", "hyperpigmentation"}):
-        flags.append("deeper tone: emphasize sunscreen and irritation avoidance to reduce "
-                     "post-inflammatory hyperpigmentation risk")
+    _add_deep_tone_guidance(flags, profile, reported_concerns)
 
     if report.overall_severity == 3:
         flags.append("consider a professional")
