@@ -1,7 +1,9 @@
 """Validated native-tile HTTP client for the production SA-RPN service."""
 
 import base64
+from collections import Counter, defaultdict
 from collections.abc import Mapping, Sequence
+from bisect import bisect_right
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from io import BytesIO
@@ -13,6 +15,17 @@ from typing import Any, Callable
 import numpy as np
 from PIL import Image, ImageOps
 import requests
+
+from src.recommendation.schema import Concern, ConcernEvidence, ConcernReport
+
+
+SARPN_LABEL_TO_CONCERN = {
+    "closed_comedo": "acne_comedonal", "open_comedo": "acne_comedonal",
+    "papule": "acne_inflammatory", "pustule": "acne_inflammatory",
+    "nodule": "acne_cystic", "atrophic_scar": "acne_scarring",
+    "hypertrophic_scar": "acne_scarring", "melasma": "hyperpigmentation",
+}
+SARPN_NON_ACTIONABLE_LABELS = {"nevus", "other"}
 
 
 def _freeze(value: Any) -> Any:
@@ -86,6 +99,31 @@ class LesionObservation:
     box: tuple[float, float, float, float]
     tile_index: int
     tile_box: tuple[int, int, int, int]
+    region: str | None = None
+    mapped_concern: str | None = None
+    observation_status: str = "actionable"
+
+    @property
+    def normalized_label(self) -> str:
+        return self.label
+
+    @property
+    def original_label(self) -> str:
+        return self.label_name
+
+    @property
+    def confidence(self) -> float:
+        return self.score
+
+
+@dataclass(frozen=True)
+class SafetyObservation:
+    code: str
+    message: str
+    labels: dict[str, int]
+    count: int
+    max_confidence: float
+    professional_review: bool
 
 
 class SarpnTransportError(RuntimeError):
@@ -254,6 +292,81 @@ def infer_native_tiles(
     return dedupe_observations(
         ordered, threshold=settings.dedupe_threshold, preserve_tile_order=True
     )
+
+
+def normalize_sarpn_label(label: str) -> str:
+    return "_".join(label.casefold().strip().replace("-", " ").replace("_", " ").split())
+
+
+def _severity(labels: Counter, scores: list[float], region_count: int, config: Mapping[str, Any], concern: str) -> int:
+    if labels["nodule"]:
+        return config["nodule_severity"]
+    severity = bisect_right(tuple(config["count_thresholds"][concern]), sum(labels.values()))
+    if region_count == 2:
+        severity = max(severity, 2)
+    elif region_count >= config["broad_region_count"]:
+        severity = max(severity, 3)
+    if labels["hypertrophic_scar"]:
+        severity = max(severity, config["hypertrophic_scar_min_severity"])
+    if scores and max(scores) < config["confidence_cutoff"]:
+        severity = min(severity, 1)
+    return severity
+
+
+def build_sarpn_concern_report(image_id: str, observations: Sequence[LesionObservation],
+                               regions: Sequence[str], severity_config: Mapping[str, Any], *,
+                               low_light_flag: bool = False):
+    if len(observations) != len(regions):
+        raise ValueError("observations and regions must have the same length")
+    grouped = defaultdict(list)
+    safety_groups = defaultdict(list)
+    updated = []
+    for observation, region in zip(observations, regions):
+        label = normalize_sarpn_label(observation.label)
+        concern = SARPN_LABEL_TO_CONCERN.get(label)
+        if concern:
+            status = "actionable"
+            grouped[concern].append((label, observation.score, region))
+        elif label in SARPN_NON_ACTIONABLE_LABELS:
+            status = "non_actionable"
+            safety_groups[label].append(observation.score)
+        else:
+            status = "unsupported"
+            safety_groups["unsupported"].append((label, observation.score))
+        updated.append(LesionObservation(label, observation.label, observation.score,
+                                          observation.box, observation.tile_index, observation.tile_box,
+                                          region, concern, status))
+    concerns = []
+    for concern_name, members in sorted(grouped.items()):
+        labels = Counter(label for label, _, _ in members)
+        scores = [score for _, score, _ in members]
+        concern_regions = sorted({region for _, _, region in members})
+        evidence = ConcernEvidence(dict(labels), max(scores), len(concern_regions))
+        concerns.append(Concern(concern_name, concern_regions[0],
+                                _severity(labels, scores, len(concern_regions), severity_config, concern_name),
+                                sum(scores) / len(scores), len(members), concern_regions, evidence))
+    safety = []
+    for label in ("nevus", "other"):
+        scores = safety_groups.get(label, [])
+        if scores:
+            policy = severity_config["professional_review"][label]
+            review = len(scores) >= policy["min_count"] or max(scores) >= policy["min_confidence"]
+            safety.append(SafetyObservation(f"{label}_observation", f"Non-actionable {label} observation",
+                                             {label: len(scores)}, len(scores), max(scores), review))
+    unsupported = safety_groups.get("unsupported", [])
+    if unsupported:
+        counts = Counter(label for label, _ in unsupported)
+        safety.append(SafetyObservation("unsupported_label", "Unsupported SA-RPN label",
+                                         dict(counts), len(unsupported), max(score for _, score in unsupported), False))
+    return ConcernReport(image_id, concerns, not concerns, low_light_flag), updated, safety
+
+
+def concern_to_dict(concern: Concern) -> dict[str, object]:
+    return {"concern": concern.concern, "regions": concern.regions, "severity": concern.severity,
+            "confidence": concern.confidence, "lesion_count": concern.lesion_count,
+            "evidence": {"labels": concern.evidence.labels,
+                         "max_confidence": concern.evidence.max_confidence,
+                         "affected_region_count": concern.evidence.affected_region_count}}
 
 
 def dedupe_observations(
