@@ -163,4 +163,4 @@ Result: clean.
 ## Commits
 
 - Initial Task 4 implementation: `a913786`
-- Review-finding fix: recorded after this report update; final hash is reported in the completion response.
+- Review-finding fix: `f95e24d`
