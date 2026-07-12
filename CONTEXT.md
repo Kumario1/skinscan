@@ -28,6 +28,12 @@ count, and confidence, plus clear-skin and low-light meta flags (D-008,
 **bridge** — The step that turns raw per-lesion model output into a ConcernReport;
 the join from the CV side to the rules side.
 
+**tile pipeline** — The v2 identification funnel (D-026): the photo is chunked
+into native-resolution 1024px tiles with guaranteed overlap, every tile goes
+through the SA-RPN detector, and seam duplicates are removed before the bridge.
+Its rejected alternative, the **zoom pipeline** (YOLO areas upscaled to 1024px),
+stays defined only as the dead end it is (README §8).
+
 **profile** — The inference-time facts about the user that personalize a report:
 skin_type (required; combination/dry/normal/oily), tone bucket (optional), and a
 pregnancy/nursing flag (D-021). Intake asks only what something downstream uses.
