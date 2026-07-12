@@ -277,4 +277,4 @@ Result: clean.
 
 ### Commit
 
-Recorded after this report update; final hash is reported in the completion response.
+- Final soothe-path review fix: `f745e99`
