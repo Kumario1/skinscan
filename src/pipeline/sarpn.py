@@ -1,7 +1,17 @@
 """Validated runtime settings for the production SA-RPN service."""
 
+from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any
+
+
+def _freeze(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return MappingProxyType({key: _freeze(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return tuple(_freeze(item) for item in value)
+    return value
 
 
 @dataclass(frozen=True)
@@ -14,7 +24,7 @@ class SarpnSettings:
     request_batch_size: int
     min_score: float
     dedupe_threshold: float
-    severity: dict[str, Any]
+    severity: Mapping[str, Any]
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> "SarpnSettings":
@@ -28,7 +38,7 @@ class SarpnSettings:
             request_batch_size=values["request_batch_size"],
             min_score=values["min_score"],
             dedupe_threshold=values["dedupe_threshold"],
-            severity=values["severity"],
+            severity=_freeze(values["severity"]),
         )
         settings._validate()
         return settings
