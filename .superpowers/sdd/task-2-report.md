@@ -133,4 +133,4 @@ git diff --check
 
 Exact result: success with no output.
 
-Review-fix commit: recorded in git history immediately after the initial implementation commit.
+Review-fix commit: `d5cae031bf65bdf204d5fd1e5d84fd6d8f843db4` (`fix: address SA-RPN HTTP review findings`).
