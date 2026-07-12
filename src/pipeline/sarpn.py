@@ -8,7 +8,7 @@ from io import BytesIO
 import math
 from pathlib import Path
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 from PIL import Image, ImageOps
@@ -201,24 +201,28 @@ def _infer_tile(
     rgb: np.ndarray,
     tile: Tile,
     settings: SarpnSettings,
-    session: requests.Session,
+    session_factory: Callable[[], requests.Session],
 ) -> list[LesionObservation]:
     encoded = _jpeg_base64(rgb[tile.y:tile.y + tile.height, tile.x:tile.x + tile.width])
+    session = session_factory()
     try:
-        response = session.post(
-            settings.endpoint_url,
-            json={"image": encoded},
-            timeout=(settings.connect_timeout_seconds, settings.read_timeout_seconds),
-        )
-        response.raise_for_status()
-    except requests.RequestException as exc:
-        raise SarpnTransportError(
-            f"tile {tile.index} request to {settings.endpoint_url} failed: {exc}"
-        ) from exc
-    try:
-        payload = response.json()
-    except (requests.JSONDecodeError, ValueError) as exc:
-        raise _response_error(tile, settings.endpoint_url, "response", "must be valid JSON") from exc
+        try:
+            response = session.post(
+                settings.endpoint_url,
+                json={"image": encoded},
+                timeout=(settings.connect_timeout_seconds, settings.read_timeout_seconds),
+            )
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            raise SarpnTransportError(
+                f"tile {tile.index} request to {settings.endpoint_url} failed: {exc}"
+            ) from exc
+        try:
+            payload = response.json()
+        except (requests.JSONDecodeError, ValueError) as exc:
+            raise _response_error(tile, settings.endpoint_url, "response", "must be valid JSON") from exc
+    finally:
+        session.close()
     return _validated_detections(
         payload, tile, settings.endpoint_url, settings.min_score, (rgb.shape[1], rgb.shape[0])
     )
@@ -228,27 +232,24 @@ def infer_native_tiles(
     rgb: np.ndarray,
     settings: SarpnSettings,
     *,
-    session: requests.Session | None = None,
+    session_factory: Callable[[], requests.Session] = requests.Session,
 ) -> list[LesionObservation]:
     """Infer every native-resolution tile; any tile failure aborts the analysis."""
     tiles = make_tiles(rgb.shape, tile_size=settings.tile_size, overlap=settings.tile_overlap)
-    client = session or requests.Session()
-    owns_session = session is None
     results: dict[int, list[LesionObservation]] = {}
-    try:
-        with ThreadPoolExecutor(max_workers=settings.request_batch_size) as executor:
-            futures = {executor.submit(_infer_tile, rgb, tile, settings, client): tile for tile in tiles}
-            try:
-                for future in as_completed(futures):
-                    tile = futures[future]
-                    results[tile.index] = future.result()
-            except Exception:
-                for future in futures:
-                    future.cancel()
-                raise
-    finally:
-        if owns_session:
-            client.close()
+    with ThreadPoolExecutor(max_workers=settings.request_batch_size) as executor:
+        futures = {
+            executor.submit(_infer_tile, rgb, tile, settings, session_factory): tile
+            for tile in tiles
+        }
+        try:
+            for future in as_completed(futures):
+                tile = futures[future]
+                results[tile.index] = future.result()
+        except Exception:
+            for future in futures:
+                future.cancel()
+            raise
     ordered = [observation for index in sorted(results) for observation in results[index]]
     return dedupe_observations(
         ordered, threshold=settings.dedupe_threshold, preserve_tile_order=True
