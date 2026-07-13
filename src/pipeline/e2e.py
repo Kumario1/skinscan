@@ -187,6 +187,11 @@ def _publish_staging(staging: Path, output_dir: Path) -> None:
     try:
         if output_dir.exists():
             output_dir.rename(backup)
+            # rename preserves the inode mtime — an hour-old output_dir would
+            # make a seconds-old backup read as long-stranded to a concurrent
+            # run's adoption guard above. Stamp the backup so its mtime
+            # records its CREATION moment, which is what the guard measures.
+            os.utime(backup)
             moved_existing = True
         staging.rename(output_dir)
     except Exception as exc:
