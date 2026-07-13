@@ -1,8 +1,14 @@
 """Geometry + mapping tests for the SA-RPN A/B harness (compare_sarpn.py).
 
-No API, no model weights: detect functions are stubs, everything else is
-coordinate math. Standalone via __main__ but named test_* for pytest.
+No API, no model weights: zoom's detect function is a stub, tile delegates
+to (stubbed) production code, everything else is coordinate math. Uses the
+monkeypatch fixture, so pytest is required (no standalone __main__ runner).
+
+Tile-path geometry (tile_origins/make_tiles), HTTP validation, coordinate
+restoration, label mapping, and dedupe now live in src/pipeline/sarpn.py and
+are tested in tests/test_sarpn.py — not duplicated here.
 """
+from copy import deepcopy
 from pathlib import Path
 import sys
 
@@ -10,38 +16,16 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.pipeline.compare_sarpn import (
-    compare, dedupe, report_from_detections, tile_origins, tile_pipeline,
-    zoom_crops, zoom_pipeline,
-)
-
-THRESHOLDS = [1, 5, 10, 20]
+from src.config import load_config
+from src.pipeline import compare_sarpn
+from src.pipeline.compare_sarpn import compare, zoom_crops, zoom_pipeline
+from src.pipeline.sarpn import SarpnSettings
 
 
-def test_tile_origins_cover_and_clamp():
-    starts = tile_origins(2500, 1024, 896)
-    assert starts[0] == 0 and starts[-1] == 2500 - 1024  # flush to the edge
-    assert all(b - a <= 896 for a, b in zip(starts, starts[1:]))
-    assert tile_origins(800, 1024, 896) == [0]  # image smaller than a tile
-
-
-def test_tile_pipeline_offsets_and_cross_tile_dedupe():
-    rgb = np.zeros((1200, 2000, 3), np.uint8)
-    calls = []
-
-    def detect(tile):
-        calls.append(tile.shape)
-        # one fake lesion at (10, 10)-(40, 40) in every tile's own coords
-        return [{"label": "papule", "score": 0.9, "bbox": [10, 10, 40, 40]}]
-
-    dets, rects = tile_pipeline(rgb, detect, tile=1024, overlap=128)
-    assert len(rects) == len(calls) == 6  # 2 rows x 3 cols
-    assert (10, 10, 40, 40) in {tuple(d["bbox"]) for d in dets}
-    assert (986, 186, 1016, 216) in {tuple(d["bbox"]) for d in dets}  # last tile
-    # a duplicate from an overlap region collapses to one detection
-    dup = dets + [{"label": "papule", "score": 0.8, "bbox": [12, 12, 40, 40]}]
-    kept = dedupe(sorted(dup, key=lambda d: d["score"], reverse=True))
-    assert len(kept) == len(dets)
+def _settings(**overrides):
+    config = deepcopy(load_config())
+    config["sa_rpn"].update(overrides)
+    return SarpnSettings.from_config(config)
 
 
 def test_zoom_crops_cluster_and_clamp():
@@ -72,19 +56,6 @@ def test_zoom_pipeline_maps_back_to_original_coords():
     assert abs((x0 + x1) / 2 - 420) < 1e-6 and abs((y0 + y1) / 2 - 420) < 1e-6
 
 
-def test_report_maps_labels_and_drops_non_concerns():
-    dets = ([{"label": "papule", "score": 0.9, "bbox": [0, 0, 1, 1]}] * 5
-            + [{"label": "open_comedo", "score": 0.6, "bbox": [0, 0, 1, 1]}]
-            + [{"label": "nevus", "score": 0.9, "bbox": [0, 0, 1, 1]}])
-    report = report_from_detections("img", dets, ["forehead"] * 7, THRESHOLDS)
-    by_concern = {c.concern: c for c in report.concerns}
-    assert by_concern["acne_inflammatory"].lesion_count == 5
-    assert by_concern["acne_inflammatory"].severity == 2  # 5 lesions -> sev 2
-    assert by_concern["acne_comedonal"].lesion_count == 1
-    assert "dropped 1" in report.notes
-    assert report_from_detections("img", [], [], THRESHOLDS).clear_skin
-
-
 def test_compare_matches_by_iou():
     a = [{"label": "papule", "score": 0.9, "bbox": [0, 0, 100, 100]},
          {"label": "nodule", "score": 0.8, "bbox": [500, 500, 600, 600]}]
@@ -99,8 +70,23 @@ def test_compare_matches_by_iou():
     assert labels["zoom"]["label"] == "nodule" and labels["tile"]["label"] == "pustule"
 
 
-if __name__ == "__main__":
-    for name, fn in sorted(globals().items()):
-        if name.startswith("test_"):
-            fn()
-            print(f"{name} ok")
+def test_tile_comparison_uses_production_inference(monkeypatch):
+    rgb = np.zeros((50, 60, 3), np.uint8)
+    called = {}
+
+    def fake_infer(image, settings, **kwargs):
+        called["image_shape"] = image.shape
+        called["settings"] = settings
+        return []
+
+    monkeypatch.setattr(compare_sarpn, "infer_native_tiles", fake_infer)
+
+    settings = _settings(tile_size=1024, tile_overlap=128)
+    observations, rects = compare_sarpn.run_tile_comparison(rgb, settings)
+
+    assert called["image_shape"] == rgb.shape
+    assert called["settings"] is settings
+    assert observations == []
+    # tile rectangles come from production make_tiles, independent of the
+    # (stubbed) HTTP call — the whole image fits in one 1024px tile.
+    assert rects == [(0, 0, 60, 50)]
