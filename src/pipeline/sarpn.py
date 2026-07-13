@@ -137,11 +137,15 @@ class SafetyObservation:
     professional_review: bool
 
 
-class SarpnTransportError(RuntimeError):
+class SarpnAnalysisError(RuntimeError):
+    """Base failure for the SA-RPN identification stage."""
+
+
+class SarpnTransportError(SarpnAnalysisError):
     """The SA-RPN endpoint could not successfully serve a tile."""
 
 
-class SarpnResponseError(RuntimeError):
+class SarpnResponseError(SarpnAnalysisError):
     """The SA-RPN endpoint returned a response outside its strict contract."""
 
 
