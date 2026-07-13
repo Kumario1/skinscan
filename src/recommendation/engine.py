@@ -181,8 +181,12 @@ def recommend(report: ConcernReport, catalog: list[Product],
         probe_kept, probe_slots = _assign_slots(target, probe_flags)
         probe_routines = _build_routines(probe_kept, catalog, needs_spf, probe_slots,
                                          profile, ranker, concerns)
+        # SPF products are added to every routine unconditionally (RULES.md §3)
+        # without matching against target actives, so a sunscreen that merely
+        # lists azelaic_acid must not count as a surviving azelaic TREATMENT —
+        # only actives-matched (non-SPF) slots prove azelaic_acid survived.
         if any("azelaic_acid" in product.actives
-               for slot in SLOTS for category in CATEGORIES
+               for slot in SLOTS for category in CATEGORIES if category != "spf"
                for product in probe_routines[slot][category]):
             target.remove("benzoyl_peroxide")
             flags.append("broad inflammation: reduced strong-active stacking")
