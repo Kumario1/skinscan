@@ -54,6 +54,17 @@ def _write_catalog(path: Path) -> None:
     ]))
 
 
+def _write_verified_catalog(path: Path) -> None:
+    from test_regimen_composer import product
+    path.write_text(json.dumps([
+        product("cleanser", "cleanser").to_dict(),
+        product("aza", "treatment", "azelaic_acid").to_dict(),
+        product("aza-alt", "treatment", "azelaic_acid").to_dict(),
+        product("moist", "moisturizer").to_dict(),
+        product("spf", "sunscreen").to_dict(),
+    ]))
+
+
 @contextmanager
 def _serve_sarpn(*, malformed_request: int | None = None):
     state = SimpleNamespace(request_count=0, paths=[])
@@ -162,6 +173,13 @@ def _args(image_path: Path, output_dir: Path, api: str, catalog_path: Path) -> l
         "--tile-size", "1024",
         "--overlap", "128",
         "--request-batch-size", "1",
+        "--profile", str(ROOT / "tests/fixtures/profile_complete.json"),
+        "--therapy-policy", str(ROOT / "tests/fixtures/therapy_policy_synthetic.json"),
+        "--dataset-name", "fixture",
+        "--sample-id", image_path.stem,
+        "--dataset-split", "smoke",
+        "--split-proof", "synthetic-test-fixture",
+        "--detector-sha256", "synthetic-detector-hash",
     ]
 
 
@@ -188,12 +206,67 @@ raise SystemExit(bool(loaded))
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_fixture_e2e_writes_complete_v2_artifact_set(tmp_path, fake_sarpn_server):
+def test_parser_default_profile_is_all_explicit_unknowns():
+    from src.config import load_config
+    from src.pipeline.e2e import _parser, load_input_profile
+    args = _parser(load_config()).parse_args(["--image", "face.jpg"])
+    profile = load_input_profile(
+        args.profile, skin_type=args.skin_type,
+        pregnancy_status=args.pregnancy_status, pregnant=args.pregnant,
+    )
+    payload = profile.to_dict()
+    assert payload["skin_type"] == "unknown"
+    assert payload["pregnancy_status"] == "unknown"
+    assert payload["age_years"] is None
+
+
+def test_invalid_profile_fails_before_detector_request(tmp_path, fake_sarpn_server):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    bad_profile = tmp_path / "bad-profile.json"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+    bad_profile.write_text('{"age_years":-1,"current_actives":["made_up"]}')
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
+    index = args.index("--profile") + 1
+    args[index] = str(bad_profile)
+    assert main(args) == 1
+    assert fake_sarpn_server.request_count == 0
+    assert not output_dir.exists()
+
+
+def test_profile_cli_conflict_fails_before_detector_request(tmp_path, fake_sarpn_server):
     image_path = tmp_path / "face.jpg"
     catalog_path = tmp_path / "catalog.json"
     output_dir = tmp_path / "output"
     _write_image(image_path)
     _write_catalog(catalog_path)
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
+    args += ["--pregnancy-status", "pregnant"]
+    assert main(args) == 1
+    assert fake_sarpn_server.request_count == 0
+
+
+def test_analysis_keeps_decision_when_catalog_is_unavailable(tmp_path, fake_sarpn_server):
+    image_path = tmp_path / "face.jpg"
+    output_dir = tmp_path / "output"
+    _write_image(image_path, width=800)
+    missing_catalog = tmp_path / "missing.json"
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, missing_catalog)) == 0
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    assert analysis["recommendation_status"] == "unavailable"
+    assert analysis["decision"]["triage_level"] == "routine"
+    assert "decision_evidence" in analysis["decision"]
+    assert not (output_dir / "routine.json").exists()
+
+
+def test_fixture_e2e_writes_complete_v3_artifact_set(tmp_path, fake_sarpn_server):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_verified_catalog(catalog_path)
 
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
 
@@ -209,7 +282,7 @@ def test_fixture_e2e_writes_complete_v2_artifact_set(tmp_path, fake_sarpn_server
 
     analysis_text = (output_dir / "analysis.json").read_text()
     analysis = json.loads(analysis_text)
-    assert analysis["schema_version"] == "2.0"
+    assert analysis["schema_version"] == "3"
     assert analysis["pipeline"] == {
         "identifier": "sa-rpn-native-tiles",
         "endpoint": "http://" + fake_sarpn_server.url.split("@", 1)[1].split("?", 1)[0],
@@ -221,6 +294,21 @@ def test_fixture_e2e_writes_complete_v2_artifact_set(tmp_path, fake_sarpn_server
     assert analysis["region_mapping"]["method"] == "grid_fallback"
     assert "missing" in analysis["region_mapping"]["reason"].lower()
     assert analysis["recommendation_status"] == "complete"
+    routine = json.loads((output_dir / "routine.json").read_text())
+    assert routine["schema_version"] == "3"
+    assert set(routine["selected_products"]) == {
+        "cleanser", "treatment", "moisturizer", "sunscreen",
+    }
+    assert all(not isinstance(value, list) for value in routine["selected_products"].values())
+    assert "routines" not in routine
+    assert routine["replay_key"] == analysis["replay_key"]
+    assert routine["input_profile"] == analysis["input_profile"]
+    semantic = analysis["semantic_inputs"]
+    assert semantic["effective_config"].keys() >= {
+        "severity", "class_min_scores", "regions", "tone", "face_landmarker",
+    }
+    assert semantic["catalog"].keys() >= {"primary", "tier2", "sha256"}
+    assert semantic["evidence_source"] == "prediction"
     assert len(analysis["detections"]) == 2
     assert analysis["detections"][0].keys() >= {
         "normalized_label", "original_label", "confidence", "box", "region",
@@ -243,38 +331,53 @@ def test_fixture_e2e_writes_complete_v2_artifact_set(tmp_path, fake_sarpn_server
     assert all("legacy" not in path for path in fake_sarpn_server.paths)
 
 
-def test_pipeline_consumes_loaded_ranker(tmp_path, fake_sarpn_server, monkeypatch):
-    """e2e finding (2026-07-13): the pipeline hardcoded ranker=None, so routine
-    order collapsed to catalog (alphabetical-by-brand) order even when ranker
-    artifacts exist. recommend() must receive whatever load_ranker() resolves
-    (Ranker / StatsRanker / None per D-022)."""
-    import src.recommendation.ranker as ranker_module
+def test_oracle_xml_is_annotation_derived_and_replay_distinct(tmp_path, fake_sarpn_server):
+    image = tmp_path / "face.jpg"
+    catalog = tmp_path / "catalog.json"
+    prediction_out = tmp_path / "prediction"
+    oracle_out = tmp_path / "oracle"
+    annotation = tmp_path / "face.xml"
+    _write_image(image, width=800)
+    _write_verified_catalog(catalog)
+    annotation.write_text(
+        "<annotation><size><width>800</width><height>700</height></size>"
+        "<object><name>nodule</name><bndbox><xmin>100</xmin><ymin>100</ymin>"
+        "<xmax>180</xmax><ymax>180</ymax></bndbox></object></annotation>"
+    )
+    assert main(_args(image, prediction_out, fake_sarpn_server.url, catalog)) == 0
+    after_prediction = fake_sarpn_server.request_count
+    oracle_args = _args(image, oracle_out, fake_sarpn_server.url, catalog)
+    oracle_args.extend(["--oracle-annotations", str(annotation)])
+    assert main(oracle_args) == 0
+    oracle = json.loads((oracle_out / "analysis.json").read_text())
+    prediction = json.loads((prediction_out / "analysis.json").read_text())
+    assert fake_sarpn_server.request_count == after_prediction
+    assert oracle["semantic_inputs"]["evidence_source"] == "oracle"
+    assert oracle["semantic_inputs"]["oracle_annotations"]["sha256"]
+    assert oracle["concerns"][0]["evidence"]["source"] == "annotation_oracle"
+    assert oracle["replay_key"] != prediction["replay_key"]
+    assert oracle["source_image_sha256"] == prediction["source_image_sha256"]
 
-    class FavorsZzz:
-        def score(self, product, profile):
-            return 1.0 if product.product_id == "zzz-serum" else 0.0
 
-    monkeypatch.setattr(ranker_module, "load_ranker", lambda config=None: FavorsZzz())
-
+def test_pipeline_emits_selected_regimen_not_category_menu(tmp_path, fake_sarpn_server):
     image_path = tmp_path / "face.jpg"
     catalog_path = tmp_path / "catalog.json"
     output_dir = tmp_path / "output"
     _write_image(image_path)
-    catalog_path.write_text(json.dumps([
-        {"product_id": "aaa-serum", "name": "Niacinamide Serum", "brand": "AAA",
-         "category": "serum", "actives": ["niacinamide"]},
-        {"product_id": "zzz-serum", "name": "Niacinamide Booster", "brand": "ZZZ",
-         "category": "serum", "actives": ["niacinamide"]},
-    ]))
+    _write_verified_catalog(catalog_path)
 
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
 
     routine = json.loads((output_dir / "routine.json").read_text())
-    serums = [p["product_id"] for p in routine["routines"]["AM"]["serum"]]
-    assert serums == ["zzz-serum", "aaa-serum"], serums
+    assert "routines" not in routine
+    assert set(routine["selected_regimen"]) == {"am", "pm"}
+    selected = {item["product_id"] for item in routine["selected_products"].values()}
+    alternatives = {item["product_id"] for items in routine["alternatives"].values()
+                    for item in items}
+    assert selected.isdisjoint(alternatives)
 
 
-def test_routine_payload_carries_routine_mode(tmp_path, fake_sarpn_server):
+def test_routine_payload_carries_independent_decision_axes(tmp_path, fake_sarpn_server):
     """e2elogic finding (2026-07-13): a consumer must be able to tell the
     engine's deliberate safety fallback apart from a matching bug."""
     image_path = tmp_path / "face.jpg"
@@ -285,7 +388,8 @@ def test_routine_payload_carries_routine_mode(tmp_path, fake_sarpn_server):
 
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
     routine = json.loads((output_dir / "routine.json").read_text())
-    assert routine["routine_mode"] == "treatment"
+    assert routine["decision"]["triage_level"] == "routine"
+    assert routine["decision"]["therapy_disposition"] == "defer"
 
 
 def _payload_for(report, recommendation, safety=()):
@@ -329,6 +433,46 @@ def test_notes_explain_gaps_gating_and_mode(tmp_path):
     assert payload["target_coverage"]["adapalene"] == 0
 
 
+def test_legacy_truncation_never_promotes_a_second_product_past_limit(tmp_path):
+    """e2e finding (2026-07-13, updates_results runs): azelaic carriers ranked
+    40+/60, so top-N truncation hid them while the destack note promised
+    azelaic — a contradiction. When a target active has zero coverage in the
+    shown routine but a carrier exists deeper, the best-ranked carrier is
+    promoted into the shown list; the catalog-gap note fires only for
+    genuinely absent actives."""
+    from src.recommendation.engine import recommend
+    from src.recommendation.schema import (
+        Concern, ConcernEvidence, ConcernReport, Product,
+    )
+    report = ConcernReport("img", concerns=[
+        Concern("acne_inflammatory", "forehead", 2, 0.9,
+                evidence=ConcernEvidence(labels={"papule": 3},
+                                         max_confidence=0.9,
+                                         affected_region_count=1)),
+    ])
+    catalog = [
+        Product("n1", "Niacinamide Serum One", "b", "serum", actives=["niacinamide"]),
+        Product("n2", "Niacinamide Serum Two", "b", "serum", actives=["niacinamide"]),
+        Product("n3", "Niacinamide Serum Three", "b", "serum", actives=["niacinamide"]),
+        Product("a1", "Azelaic Serum", "b", "serum", actives=["azelaic_acid"]),
+    ]
+
+    class FavorsNiacinamide:
+        def score(self, product, profile):
+            return 1.0 if "niacinamide" in product.actives else 0.0
+
+    rec = recommend(report, catalog, ranker=FavorsNiacinamide())
+    payload = _payload_for(report, rec)  # _payload_for uses top=5; use top=2
+    from src.pipeline.e2e import routine_payload
+    from src.pipeline.tone import ToneEstimate
+    payload = routine_payload(report, ToneEstimate("light", 45.0, 60.0, False, 500),
+                              {"method": "unit"}, rec, top=2)
+    shown_serums = [p["product_id"] for p in payload["routines"]["AM"]["serum"]]
+    assert shown_serums == ["n1", "n2"]
+    assert "a1" not in shown_serums
+    assert payload["target_coverage"]["azelaic_acid"] == 0
+
+
 def test_notes_warn_when_nevi_accompany_pigment_treatment(tmp_path):
     """e2e finding (2026-07-13, run 262): 12 nevi were flagged for review on a
     face whose routine targets hyperpigmentation with acids — the routine must
@@ -364,11 +508,12 @@ def test_routine_payload_reports_target_coverage(tmp_path, fake_sarpn_server):
     ]))
 
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    analysis = json.loads((output_dir / "analysis.json").read_text())
     routine = json.loads((output_dir / "routine.json").read_text())
-    coverage = routine["target_coverage"]
-    assert set(coverage) == set(routine["target_actives"])
-    assert coverage["niacinamide"] == 1
-    assert coverage["benzoyl_peroxide"] == 0
+    assert analysis["recommendation_status"] == "partial"
+    assert routine["decision"]["therapy_disposition"] == "defer"
+    assert routine["selected_products"] == {}
+    assert routine["eligibility_rejections"]["role:treatment"] == ["no_eligible_product"]
 
 
 def test_broken_ranker_artifact_degrades_to_rules_only(
@@ -391,7 +536,7 @@ def test_broken_ranker_artifact_degrades_to_rules_only(
 
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
     analysis = json.loads((output_dir / "analysis.json").read_text())
-    assert analysis["recommendation_status"] == "complete"
+    assert analysis["recommendation_status"] == "partial"
 
 
 @pytest.mark.parametrize("catalog_case", ["missing", "invalid", "unreadable"])
@@ -442,6 +587,31 @@ def test_recommendation_exception_does_not_erase_analysis(
     assert all((output_dir / name).exists() for name in (
         "analysis.json", "detections.jpg", "region_overlay.jpg", "lesion_sheet.jpg",
     ))
+
+
+def test_invalid_recommendation_keeps_analysis_and_refuses_routine(
+    tmp_path, fake_sarpn_server, monkeypatch,
+):
+    import src.pipeline.e2e as e2e_module
+
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path, width=800)
+    _write_verified_catalog(catalog_path)
+    real_recommend = e2e_module.recommend
+
+    def invalid(*args, **kwargs):
+        result = real_recommend(*args, **kwargs)
+        result.validation_errors.append("injected_whole_regimen_failure")
+        return result
+
+    monkeypatch.setattr(e2e_module, "recommend", invalid)
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    assert analysis["recommendation_status"] == "invalid"
+    assert analysis["recommendation_errors"] == ["injected_whole_regimen_failure"]
+    assert not (output_dir / "routine.json").exists()
 
 
 def test_failed_identification_preserves_previous_output(tmp_path, capsys):
@@ -579,8 +749,8 @@ def test_main_replaces_prior_pipeline_output_dir(tmp_path, fake_sarpn_server):
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
     assert not (output_dir / "stale.jpg").exists()
     analysis = json.loads((output_dir / "analysis.json").read_text())
-    assert analysis["schema_version"] == "2.0"
-    assert analysis["recommendation_status"] == "complete"
+    assert analysis["schema_version"] == "3"
+    assert analysis["recommendation_status"] == "partial"
 
 
 # --- Finding 11: regular file at --out is refused early (chosen behavior) --

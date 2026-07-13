@@ -11,6 +11,12 @@ readable version lives in `src/recommendation/rules.py` / a YAML config.
 **Not medical advice (D-002).** These are appearance-based, cosmetic-tier
 mappings. Cystic → always route to "see a professional," never treat.
 
+> **V3 precedence (D-029, 2026-07-13).** Sections that describe the historical
+> v2 active-union/menu engine remain as migration context only. Production v3
+> follows §8 below; in particular, severity 4 by count/coverage alone no longer
+> forces supportive-only care, and raw nodule confidence is never treated as a
+> calibrated probability.
+
 ## 1. Concern → recommended actives
 
 | Concern             | First-line actives            | Also helpful               | Avoid                     |
@@ -231,3 +237,38 @@ the production `src.pipeline.e2e` SA-RPN path.
 **Open (Q-B related):** exact severity thresholds and confidence cutoff are
 config values, not locked here — tune empirically once Stage 1 produces real
 distributions.
+
+## 8. V3 correctness rules (supersedes v2 recommendation behavior)
+
+1. `CareDecision` separates triage/referral from therapy disposition. High
+   counts, scarring, and persistent pigment concern may produce
+   `routine_plus_review` while preserving `active_treatment`. Only a reviewed
+   calibrated nodule gate can produce `derm_first` from a numeric probability.
+   Uncalibrated nodule evidence produces `abstain` + `supportive_only`.
+2. A therapy plan comes only from a schema-validated reviewed policy. No
+   production policy is bundled. Missing policy/intake returns `primary: null`
+   and named deferral reasons; directions are copied only from a named policy
+   or label source.
+3. Hard product eligibility is evaluated before every scorer/ranker: face
+   area, explicit routine role, allowed format/exposure, direct therapy and
+   verified strength, authoritative source/timestamp, profile constraints,
+   sunscreen broad-spectrum SPF 30+, and every carried active. A trace active,
+   category, product name, or support ingredient cannot admit a product.
+4. Pregnancy, trying, or policy-required unknown pregnancy excludes/defer
+   retinoid paths; retinoids always exclude pregnant, trying, and nursing
+   profiles even if a policy omits a state. Current actives/medications,
+   sensitivities, allergies, age, duration, pain, history, and prior scarring
+   remain explicit policy inputs.
+5. Ranking compares eligible therapeutic equivalents only. Concern-specific
+   evidence outranks tolerability, evidence completeness, usable budget, then
+   pooled review/popularity as a truthful general-evidence tie-break.
+6. Composition selects at most one SKU per role. Alternatives are disjoint.
+   The whole-regimen validator rejects missing required roles without reasons,
+   cross-role carried-active conflicts, unsupported instructions/explanations,
+   invalid daily formats, repeated roles/SKUs, and incorrect SPF scheduling.
+7. Invalid regimens never produce `routine.json`; `analysis.json` retains the
+   decision plus stable failure reasons. Fixture policies/overlays demonstrate
+   code behavior only and do not satisfy clinical or catalog release gates.
+8. `derm_first` and `abstain` never instruct a user to start or stop medicine.
+   They retain a minimal support regimen and explicit professional-review
+   guidance while treatment remains deferred.

@@ -15,12 +15,15 @@ import tempfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.recommendation.import_catalog import (
-    import_csv, load_catalog, parse_ingredients,
+    import_csv, load_catalog, parse_ingredients, product_from_row,
+    sephora_row_to_simple,
 )
 from src.recommendation.engine import Recommendation, recommend
 from src.recommendation.schema import ConcernReport, Product
 
 FIXTURE = Path(__file__).resolve().parent / "fixtures" / "catalog_sample.csv"
+SEPHORA_FIXTURE = Path(__file__).resolve().parent / "fixtures" / "sephora_sample.csv"
+VERIFICATION = Path(__file__).resolve().parent / "fixtures" / "catalog_verification_sample.json"
 
 
 def _import(tmpdir) -> tuple[dict, list[Product]]:
@@ -156,6 +159,119 @@ def test_exfoliant_source_vocabulary():
     assert "salicylic_acid" in actives, actives
     assert "gluconolactone" in actives, actives
     assert "willow_bark" in actives, actives
+
+
+def test_verification_overlay_enriches_treatment_and_writes_quarantine(tmp_path):
+    out = tmp_path / "catalog.json"
+    quarantine = tmp_path / "quarantine.json"
+    import_csv(SEPHORA_FIXTURE, out, fmt="sephora", verification=VERIFICATION,
+               quarantine_out=quarantine)
+    products = load_catalog(out)
+    azelaic = next(product for product in products if product.product_id == "P480274")
+    assert azelaic.routine_roles == ["treatment"]
+    assert azelaic.intended_areas == ["face"]
+    assert azelaic.format == "solution" and azelaic.exposure == "leave_on"
+    assert azelaic.drug_actives[0].strength == "10%"
+    assert azelaic.drug_actives[0].source == "synthetic://aza-label"
+    report = __import__("json").loads(quarantine.read_text())
+    assert report["products"]["P480274"]["quarantined_roles"] == {}
+
+
+def test_product_without_overlay_stays_stored_but_quarantined(tmp_path):
+    out = tmp_path / "catalog.json"
+    quarantine = tmp_path / "quarantine.json"
+    import_csv(SEPHORA_FIXTURE, out, fmt="sephora", quarantine_out=quarantine)
+    products = load_catalog(out)
+    product = next(product for product in products if product.product_id == "P480274")
+    assert product.drug_actives == []
+    report = __import__("json").loads(quarantine.read_text())
+    reasons = report["products"]["P480274"]["quarantined_roles"]["treatment"]
+    assert "drug_active_not_verified" in reasons
+    assert "label_source_missing" in reasons
+
+
+def test_raw_source_taxonomy_never_grants_a_verified_routine_role(tmp_path):
+    out = tmp_path / "catalog.json"
+    import_csv(SEPHORA_FIXTURE, out, fmt="sephora")
+    products = load_catalog(out)
+    assert all(product.routine_roles == [] for product in products)
+
+
+def test_neck_source_taxonomy_never_becomes_face_moisturizer():
+    simple = sephora_row_to_simple({
+        "product_id": "neck", "product_name": "Neck Serum", "brand_name": "B",
+        "primary_category": "Skincare", "secondary_category": "Moisturizers",
+        "tertiary_category": "Decollete & Neck Creams", "ingredients": "Glycerin",
+    })
+    product = product_from_row(simple, 0)
+    assert product.intended_areas == ["neck"]
+    assert "moisturizer" not in product.routine_roles
+
+
+def test_mask_and_scrub_source_formats_remain_quarantined(tmp_path):
+    out = tmp_path / "catalog.json"
+    quarantine = tmp_path / "quarantine.json"
+    import_csv(SEPHORA_FIXTURE, out, fmt="sephora", quarantine_out=quarantine)
+    report = __import__("json").loads(quarantine.read_text())
+    mask = next(product for product in load_catalog(out) if product.product_id == "P442859")
+    assert mask.exposure == "mask"
+    assert "non_daily_format" in report["products"]["P442859"]["quarantined_roles"]["treatment"]
+
+
+def test_spf_requires_broad_spectrum_and_verified_spf30(tmp_path):
+    out = tmp_path / "catalog.json"
+    quarantine = tmp_path / "quarantine.json"
+    import_csv(SEPHORA_FIXTURE, out, fmt="sephora", verification=VERIFICATION,
+               quarantine_out=quarantine)
+    report = __import__("json").loads(quarantine.read_text())
+    assert "broad_spectrum_not_verified" in report["products"]["P311143"][
+        "quarantined_roles"
+    ]["sunscreen"]
+    assert report["products"]["P504987"]["quarantined_roles"] == {}
+
+
+def test_unknown_verification_values_do_not_turn_into_false(tmp_path):
+    out = tmp_path / "catalog.json"
+    import_csv(SEPHORA_FIXTURE, out, fmt="sephora")
+    product = next(product for product in load_catalog(out) if product.product_id == "P505209")
+    assert product.comedogenic_claim == "unknown"
+    assert product.contraindications == []
+    assert product.broad_spectrum is None
+
+
+def test_malformed_overlay_names_product_and_field(tmp_path):
+    bad = tmp_path / "bad.json"
+    bad.write_text('{"products":[{"product_id":"P480274","drug_actives":"no"}]}')
+    try:
+        import_csv(SEPHORA_FIXTURE, tmp_path / "out.json", fmt="sephora", verification=bad)
+    except ValueError as exc:
+        assert "P480274" in str(exc)
+        assert "drug_actives" in str(exc)
+    else:
+        raise AssertionError("malformed overlay should fail")
+
+
+def test_wrong_typed_spf_overlay_names_product_and_field(tmp_path):
+    bad = tmp_path / "bad-spf.json"
+    bad.write_text('{"products":[{"product_id":"P504987","spf":"50"}]}')
+    try:
+        import_csv(SEPHORA_FIXTURE, tmp_path / "out.json", fmt="sephora", verification=bad)
+    except ValueError as exc:
+        assert "P504987" in str(exc)
+        assert "spf" in str(exc)
+    else:
+        raise AssertionError("wrong-typed SPF should fail")
+
+
+def test_verified_import_and_quarantine_are_byte_identical(tmp_path):
+    first_catalog, second_catalog = tmp_path / "a.json", tmp_path / "b.json"
+    first_q, second_q = tmp_path / "aq.json", tmp_path / "bq.json"
+    import_csv(SEPHORA_FIXTURE, first_catalog, fmt="sephora", verification=VERIFICATION,
+               quarantine_out=first_q)
+    import_csv(SEPHORA_FIXTURE, second_catalog, fmt="sephora", verification=VERIFICATION,
+               quarantine_out=second_q)
+    assert first_catalog.read_bytes() == second_catalog.read_bytes()
+    assert first_q.read_bytes() == second_q.read_bytes()
 
 
 if __name__ == "__main__":

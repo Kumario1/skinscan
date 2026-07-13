@@ -6,9 +6,11 @@ native-resolution 1024px crops and sends every tile to a **required external
 SA-RPN HTTP service** (§7); if that service is unreachable or returns an
 invalid response, identification fails outright — there is **no local-model
 fallback**. MediaPipe face regions and ITA-based tone estimation are
-unchanged; a rules-based recommender then turns the resulting concerns into
-an **optional** AM/PM routine (it degrades to "unavailable" rather than
-failing the whole run — §6/§9). The original YOLOv8m detector +
+unchanged. The v3 correctness pipeline then separates triage/referral from
+therapy disposition, plans therapeutic intent, applies hard product
+eligibility, and validates a one-product-per-role regimen. A routine is
+optional: missing reviewed policy or verified catalog data is represented as
+deferred/unavailable, never guessed (§6/§9). The original YOLOv8m detector +
 EfficientNetB0 classifier two-stage pipeline (§1-§4) is retained in the repo
 as a **historical, evaluation-only** reference: it is not called by the
 default CLI, and its metrics below describe that superseded pipeline, not
@@ -27,7 +29,10 @@ flowchart LR
     T --> P["SA-RPN HTTP service<br/>(required, no fallback)"]
     P --> D["cross-tile dedupe"]
     D --> R["regions + tone (ITA)"]
-    R --> S["rules engine (ranker=None)<br/>→ optional AM/PM routine"]
+    R --> C["care decision<br/>triage + therapy disposition"]
+    C --> P2["reviewed therapy policy<br/>→ role-aware plan"]
+    P2 --> E["hard product eligibility"]
+    E --> S["eligible-only ranking<br/>→ validated regimen"]
 ```
 
 ## Results at a glance
@@ -40,7 +45,7 @@ flowchart LR
 | Stage 2 classifier (EfficientNetB0, 5-class) — *historical pipeline, evaluation-only* | Kaggle acne types | **91.2% acc, macro F1 0.92** |
 | 6-class `Not_acne` retrain — *historical pipeline attempt* | + harvested negatives | 91.7% acc — **reverted** (crop-domain confound, [D-025](docs/DECISIONS.md)) |
 | Learned product ranker (HistGB) | 1.1M Sephora reviews | pairwise 0.584 — **lost** to Bayesian stats baseline (0.609), never shipped |
-| Shipped ranker (`StatsRanker`) | same | pairwise **0.609** (the bake-off winner); production e2e calls `recommend(..., ranker=None)` — rules-only order (D-027) |
+| Pooled ranker (`StatsRanker`) | same | pairwise **0.609** (the bake-off winner); v3 permits it only as the final tie-break among already eligible equivalents |
 
 All decisions are logged with IDs in [`docs/DECISIONS.md`](docs/DECISIONS.md); the
 dead ends are summarized in [§8](#8-wrong-paths--what-failed-and-why).
@@ -55,7 +60,7 @@ catalog schema. The CV stages were then built to *fill* those contracts, so the
 recommender never had to chase moving model outputs.
 
 ```text
-concerns: acne_comedonal | acne_inflammatory | acne_cystic | hyperpigmentation | dryness
+concerns: acne_comedonal | acne_inflammatory | acne_cystic | acne_scarring | hyperpigmentation | dryness
 regions:  forehead | nose | left_cheek | right_cheek | chin_jaw | perioral
 datasets: ACNE04 (detection) · Kaggle types (classification) · FFHQ (negatives)
           · Sephora ~8k products / 1.1M reviews (ranking) · self photos (TEST-ONLY)
@@ -239,87 +244,64 @@ Fitzpatrick group — ACNE04 ships no tone labels, so ITA is the estimator.
 
 ## 6. Recommendation layer
 
-**Rules gate first, learned ranking second (D-005).** A hand-written ~40-row
-concern → active → product table ([`docs/RULES.md`](docs/RULES.md)) is the
-auditable safety gate: retinoids pinned to PM, pregnancy strips retinoids,
-cystic severity routes to soothe-only + a see-a-dermatologist flag,
-comedogenic flags always dominate any learned score.
+**V3: decision → therapy plan → eligibility → ranking → composition →
+validation (D-029).** Triage/referral and therapy disposition are independent:
+high counts, scarring, or pigment concern may add review language without
+suppressing active treatment. Raw detector confidence is never called a
+probability. An uncalibrated nodule signal causes an explicit abstention and
+supportive-only disposition; a numeric gate is usable only when an approved
+policy names its calibrator.
 
 ```text
-Blackheads, Whiteheads → comedonal     → salicylic acid / adapalene / azelaic acid
-Papules, Pustules      → inflammatory  → benzoyl peroxide / azelaic / niacinamide
-Cyst                   → cystic        → soothing support + professional-care flag
+ConcernReport
+  → CareDecision(triage_level, referral_reasons, therapy_disposition)
+  → TherapyPlan(primary/alternatives/support roles from reviewed policy)
+  → hard eligibility(area, role, format, exposure, strength, label, profile,
+                      sunscreen, every carried active)
+  → eligible-only ranking
+  → one selected product per role + disjoint alternatives
+  → whole-regimen validation
 ```
 
-**The ranker bake-off (D-022).** A gradient-boosting model trained on 1.1M
-Sephora reviews shipped *only if* it beat both a popularity baseline and a
-Bayesian-smoothed rating baseline. It lost:
+Unknown intake values stay unknown. Production ships no clinician-reviewed
+therapy policy, so active therapy is deferred by default. Likewise, legacy or
+unenriched catalog rows remain loadable but fail hard eligibility; they cannot
+be repaired by a ranker. Product instructions require a named label/policy
+source. Fixture policies and verification overlays test the mechanism but are
+not clinical approval or real-SKU verification.
+
+**Ranking is subordinate to eligibility.** Concern-specific outcome evidence,
+tolerability, evidence completeness, and usable budget precede pooled review
+statistics. The historical bake-off remains useful only as a final tie-break:
 
 ```text
                          ROC-AUC   pairwise ordering
 learned HistGB model      0.659        0.584
 global popularity         0.672        0.597
-Bayesian-smoothed rating  0.666        0.609   ← champion
+Bayesian-smoothed rating  0.666        0.609   ← pooled tie-break champion
 ```
 
-Seven follow-up probes (target encoding, objective switch, per-skin-type
-cells, text features, …) all failed — the loss is structural, so the model
-artifact was never written. The shipped ranker is `StatsRanker`, the Bayesian
-champion (1,591 products, global mean 4.311), and the gate is now a ratchet:
-a future learned model ships only if it beats 0.609 on both metrics.
-
-**Concern-efficacy labeling (D-023, in progress).** Instead of predicting
-star ratings, mine review *text* for per-concern outcomes
-(helped/worsened/unclear) via a one-time LLM pass (OpenRouter, ~$9 budget),
-then rank by concern-conditioned Bayesian stats. Gate P1 (mention density:
-970 products ≥ the 300 floor) **passed**; P2 (calibration) and P3 (must beat
-the pooled StatsRanker) are pending.
-
-**Ingredient KB (D-024).** A ~1k-product ingredient knowledge base
-(comedogenicity/irritancy per ingredient, CC-BY-NC-4.0) powers a tier-2
-fallback catalog — used only as a ranking tiebreaker and only when no
-review-backed candidate exists.
-
-**End-to-end output.** The production `src.pipeline.e2e` SA-RPN CLI (§7/§9)
-always writes `analysis.json`; it writes `runs/e2e/<stem>/routine.json` only
-when a catalog is available and the recommendation step succeeds
-(`analysis["recommendation_status"] == "complete"` — §9). V2 concerns are
-aggregated **one entry per concern** (not per concern-region pair), each
-carrying a `regions` list and an `evidence` block
-([`docs/CONCERN_SCHEMA.md`](docs/CONCERN_SCHEMA.md)). Illustrative excerpt of
-the V2 schema (`schema_version: "2.0"`):
+**End-to-end output.** Production writes `analysis.json` schema `"3"` even
+when catalog/recommendation work is unavailable, preserving the care decision.
+It writes `routine.json` only for a valid regimen. Both artifacts contain the
+exact normalized profile, semantic-input identities, git state, and the same
+replay key. A legacy reader labels v2 artifacts `legacy`; v2 and v3 are never
+treated as semantically comparable.
 
 ```jsonc
 {
-  "schema_version": "2.0",
-  "concerns": [
-    {"concern": "acne_inflammatory", "regions": ["chin_jaw", "left_cheek"],
-     "severity": 2, "confidence": 0.71, "lesion_count": 9,
-     "evidence": {"labels": {"papule": 5, "pustule": 4},
-                  "max_confidence": 0.91, "affected_region_count": 2}},
-    {"concern": "acne_cystic", "regions": ["chin_jaw"],
-     "severity": 4, "confidence": 0.92, "lesion_count": 1,
-     "evidence": {"labels": {"nodule": 1}, "max_confidence": 0.92,
-                  "affected_region_count": 1}}
-  ],
-  "tone": {"bucket": "light", "ita": 56.7},
-  "flags": ["see a dermatologist"],
-  "target_actives": ["centella", "ceramides", "hyaluronic_acid"],
-  "routines": {"AM": {"cleanser": ["CLINIQUE Clarifying Lotion 2", "…"],
-                      "serum": ["The INKEY List Niacinamide Oil Control Serum", "…"],
-                      "spf": ["Supergoop! Daily Dose SPF 40", "…"]},
-               "PM": {"…": "…"}}
+  "schema_version": "3",
+  "decision": {"triage_level": "routine_plus_review",
+               "therapy_disposition": "active_treatment"},
+  "therapy_plan": {"primary": null,
+                   "deferred_reasons": ["clinician_reviewed_policy_missing"]},
+  "selected_products": {},
+  "alternatives": {},
+  "validation_errors": [],
+  "release_eligibility": {"eligible": false, "reasons": ["…"]},
+  "replay_key": "sha256…"
 }
 ```
-
-The safety rules are visible in the output: a `nodule` detection escalates
-`acne_cystic` straight to severity 4
-(`sa_rpn.severity.nodule_severity`, `configs/default.yaml`), so the routine
-switches to **soothe-only actives** (no benzoyl peroxide, no retinoids) and
-raises the *see a dermatologist* flag — the same rules-gate-then-optional-
-ranker architecture (D-005) that served the historical pipeline, now
-evidence-aware for the V2 concern schema
-([`docs/RULES.md`](docs/RULES.md) §5/§7).
 
 ---
 
@@ -463,30 +445,46 @@ partially overwrites a prior result):
 .venv/bin/python -m src.pipeline.e2e \
   --image path/to/image.jpg \
   --api http://localhost:8000/predict \
+  --profile path/to/profile.json \
   [--catalog data/processed/catalog.json] \
-  [--skin-type dry] \
-  [--pregnant]
+  [--therapy-policy path/to/clinician-reviewed-policy.json] \
+  [--dataset-name cohort-name --sample-id sample-1 \
+   --dataset-split valid --split-proof manifest-sha256 \
+   --detector-sha256 immutable-model-sha256]
 ```
+
+For evaluation-only annotation counterfactuals, add
+`--oracle-annotations path/to/AcneSCU.xml`. That mode reads the actual VOC XML,
+does not call the detector service, binds the annotation file hash into the
+replay key, and tags the semantic evidence source as `oracle`. Compare it only
+with a prediction run of the same source image.
 
 Full CLI options: `--image, --out, --api, --catalog, --face-landmarker,
 --tile-size, --overlap, --connect-timeout, --read-timeout,
---request-batch-size, --min-score, --dedupe-threshold, --skin-type,
---pregnant, --top`. Writes into `runs/e2e/<image stem>/` (or `--out`):
+--request-batch-size, --min-score, --dedupe-threshold, --profile, --skin-type,
+--pregnancy-status, --pregnant` (legacy migration), `--therapy-policy,
+--dataset-name, --sample-id, --dataset-split, --split-proof,
+--detector-sha256, --oracle-annotations, --top`. Profile defaults are explicit
+unknowns; conflicting legacy/new pregnancy inputs fail before detector HTTP
+work. Writes into
+`runs/e2e/<image stem>/` (or `--out`):
 
 ```text
-analysis.json          always — schema_version 2.0, detections, concerns,
-                        safety_observations, recommendation_status
-routine.json           optional — only when recommendation_status == "complete"
+analysis.json          always — schema_version "3", detections, concerns,
+                        decision, provenance, recommendation_status
+routine.json           optional — only for a validated v3 regimen
 detections.jpg
 region_overlay.jpg
 lesion_sheet.jpg
 ```
 
-`recommendation_status` is `"complete"` when a catalog loads and the
-recommendation step succeeds, or `"unavailable"` (with a
-`recommendation_reason`) otherwise — a missing/invalid catalog or a
-recommendation-stage exception never erases the identification result that
-was already produced.
+`recommendation_status` is `"complete"` when the required regimen validates,
+`"partial"` when a validated support regimen is preserved but reviewed primary
+treatment is unavailable/deferred, `"invalid"` when whole-regimen validation
+rejects it, or `"unavailable"` (with a `recommendation_reason`) otherwise.
+Missing or invalid catalog/policy data never erases the identification result
+or its care decision. The repository default policy is explicitly unreviewed,
+so release eligibility remains blocked.
 
 Smoke-test the SA-RPN service directly before pointing the CLI at it:
 
@@ -504,6 +502,50 @@ python -m src.pipeline.e2e \
   --api http://localhost:8000/predict \
   --out runs/e2e/sarpn-smoke
 ```
+
+Catalog enrichment keeps raw rows storage-valid and writes deterministic role
+quarantine reasons. Only authoritative, timestamped overlay fields can make a
+row eligible:
+
+```bash
+python -m src.recommendation.import_catalog \
+  --csv data/raw/sephora/product_info.csv --format sephora \
+  --verification verified_products.json \
+  --out data/processed/catalog.json \
+  --quarantine-out data/processed/catalog_quarantine.json
+```
+
+Run a resumable manifest with atomic per-stage checkpoints:
+
+```bash
+python -m src.pipeline.batch \
+  --requests batch_requests.json \
+  --manifest runs/e2e/batch_manifest.json
+```
+
+Stages are `identified → regions_and_concerns → decision_and_recommendation →
+rendered → published`. Only transient transport/timeouts/5xx failures retry;
+resume reuses fresh identification observations and invalidates only the first
+stage affected by changed source/model/config/profile/catalog/policy inputs.
+
+Release evaluation accepts v3 run directories plus a split-proven cohort
+manifest. It rejects train/unknown, dirty, stale, duplicate, unknown-detector,
+and mixed-input aggregates. Every manifest row must bind the exact run,
+split-proof identity, source-image SHA-256, and evidence source. Prediction-
+derived and oracle-derived counterfactual reports must be evaluated separately
+before comparison:
+
+```bash
+python -m src.evaluation.e2e_release \
+  --runs runs/e2e/sample-* \
+  --manifest cohort_manifest.json \
+  --out runs/e2e/release_report.json
+```
+
+The report remains `blocked` until real clinician policy approval, an adequate
+calibration cohort, an external clinician-reviewed set, a verified real catalog
+overlay, and immutable remote detector identity all exist. Code completion and
+synthetic fixtures do not satisfy those external release gates.
 
 Individual stages, and the **historical, evaluation-only** two-stage
 pipeline (§1-§4 — not called by the default `src.pipeline.e2e` command
@@ -540,7 +582,8 @@ curl -L -o data/raw/beautyapi/beauty_data.jsonl \
 .venv/bin/python -m src.recommendation.ingredient_kb
 .venv/bin/python -m src.recommendation.import_catalog \
   --csv data/raw/sephora/product_info.csv --format sephora \
-  --kb data/processed/ingredient_kb.json
+  --kb data/processed/ingredient_kb.json \
+  --quarantine-out data/processed/catalog_quarantine.json
 .venv/bin/python -m src.recommendation.import_catalog \
   --csv data/raw/beautyapi/beauty_data.jsonl --format beautyapi \
   --kb data/processed/ingredient_kb.json --out data/processed/catalog_tier2.json
@@ -565,8 +608,9 @@ docs/*.md              design docs: negatives, v2 dataset, rules, schemas, fairn
 notebooks/             Colab sessions: detector training, Stage 2 retrain, SA-RPN
 src/detection/         YOLO checks + AcneSCU/SA-RPN preprocessing (historical/eval-only)
 src/classification/    classifier training, pipeline, v2 crop curation (historical/eval-only)
-src/pipeline/          production SA-RPN e2e CLI (default), regions, tone/ITA, SA-RPN tile/zoom A/B
-src/recommendation/    rules engine, rankers, concern labels, ingredient KB
+src/pipeline/          SA-RPN e2e, provenance/replay, resumable batch, regions/tone
+src/recommendation/    v3 decision/therapy/eligibility/composer/validator + legacy tools
+src/evaluation/        v3 release preflight, safety metrics, counterfactual comparison
 assets/                the proof sheets embedded above
 tests/                 model-free by default; real_models tier for local weights
 ```

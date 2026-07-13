@@ -1,18 +1,16 @@
-"""Executable versions of the two data contracts.
+"""Versioned recommendation data contracts.
 
-CONCERN_SCHEMA.md  -> ConcernReport (input to the recommender)
-CATALOG_SCHEMA.md  -> Product        (the catalog)
-
-Keeping these as dataclasses means the contract is enforced in code, not just
-prose. If the CV side can produce a valid ConcernReport, Stage 3 works —
-regardless of whether that report came from a real model or a hand-written test
-fixture (D-007).
+The concern contract remains compatible with the historical SA-RPN bridge.
+Catalog/recommendation v3 fields are explicit and unknown-capable: loading a
+legacy row preserves it for display but never invents eligibility metadata.
 """
 from __future__ import annotations
-from dataclasses import dataclass, field
-from typing import Optional
 
-# --- closed vocabularies (must match the docs) -----------------------------
+from dataclasses import dataclass, field
+import math
+from typing import Any, Mapping, Optional
+
+
 CONCERNS = {
     "acne_comedonal", "acne_inflammatory", "acne_cystic", "acne_scarring",
     "hyperpigmentation", "dryness",
@@ -20,41 +18,70 @@ CONCERNS = {
 REGIONS = {
     "forehead", "nose", "left_cheek", "right_cheek", "chin_jaw", "perioral",
 }
-CATEGORIES = ["cleanser", "treatment", "serum", "moisturizer", "spf"]  # ordered
+CATEGORIES = ["cleanser", "treatment", "serum", "moisturizer", "spf"]
+ROUTINE_ROLES = {"cleanser", "treatment", "moisturizer", "sunscreen"}
+PRODUCT_EXPOSURES = {
+    "unknown", "rinse_off", "short_contact", "leave_on", "mask", "scrub", "peel",
+}
+PRODUCT_AREAS = {"face", "neck", "body", "eye", "lip", "unknown"}
+TRIAGE_LEVELS = {"routine", "routine_plus_review", "derm_first", "abstain"}
+THERAPY_DISPOSITIONS = {"active_treatment", "supportive_only", "maintenance", "defer"}
+EVIDENCE_QUALITIES = {"high", "medium", "low", "unknown"}
+SLOTS = {"am", "pm"}
 
 
-# --- concern side (Stage 2 -> Stage 3) -------------------------------------
+def _closed(field_name: str, value: str, allowed: set[str]) -> None:
+    if value not in allowed:
+        raise ValueError(f"{field_name}: expected one of {sorted(allowed)}, got {value!r}")
+
+
+def _string_list(value: object, field_name: str) -> list[str]:
+    if value is None:
+        return []
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ValueError(f"{field_name}: expected a list of strings")
+    return list(value)
+
+
+# --- concern side (Stage 2 -> decision) -----------------------------------
 @dataclass(frozen=True)
 class ConcernEvidence:
     labels: dict[str, int] = field(default_factory=dict)
     max_confidence: float = 0.0
     affected_region_count: int = 0
+    source: str = "prediction"
 
 
 @dataclass
 class Concern:
     concern: str
     region: str
-    severity: int              # 0-4 ordinal
-    confidence: float          # 0-1
+    severity: int
+    confidence: float
     lesion_count: Optional[int] = None
     regions: list[str] = field(default_factory=list)
     evidence: ConcernEvidence = field(default_factory=ConcernEvidence)
 
-    def __post_init__(self):
-        assert self.concern in CONCERNS, f"unknown concern: {self.concern}"
-        assert self.region in REGIONS, f"unknown region: {self.region}"
+    def __post_init__(self) -> None:
+        _closed("concern", self.concern, CONCERNS)
+        _closed("region", self.region, REGIONS)
         if not self.regions:
             self.regions = [self.region]
         self.regions = list(dict.fromkeys(self.regions))
-        assert all(region in REGIONS for region in self.regions), "unknown region in regions"
-        assert self.region in self.regions, "canonical region must be present in regions"
-        assert 0 <= self.severity <= 4, "severity must be 0-4"
-        assert 0.0 <= self.confidence <= 1.0, "confidence must be 0-1"
-        assert 0.0 <= self.evidence.max_confidence <= 1.0, "max confidence must be 0-1"
-        if self.evidence.labels or self.evidence.max_confidence or self.evidence.affected_region_count:
-            assert self.evidence.affected_region_count == len(self.regions), \
-                "affected region count must match regions"
+        for region in self.regions:
+            _closed("regions", region, REGIONS)
+        if self.region not in self.regions:
+            raise ValueError("region: canonical region must be present in regions")
+        if not 0 <= self.severity <= 4:
+            raise ValueError("severity: expected 0..4")
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError("confidence: expected 0..1")
+        if not 0.0 <= self.evidence.max_confidence <= 1.0:
+            raise ValueError("evidence.max_confidence: expected 0..1")
+        if (self.evidence.labels or self.evidence.max_confidence
+                or self.evidence.affected_region_count):
+            if self.evidence.affected_region_count != len(self.regions):
+                raise ValueError("evidence.affected_region_count must match regions")
 
 
 @dataclass
@@ -75,9 +102,33 @@ class ConcernReport:
         return any(c.concern == "acne_cystic" for c in self.concerns)
 
 
-# --- product side ----------------------------------------------------------
+# --- catalog v2 ------------------------------------------------------------
+@dataclass(frozen=True)
+class VerifiedActive:
+    name: str
+    strength: str | None = None
+    source: str | None = None
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, object], field_path: str = "drug_actives") -> "VerifiedActive":
+        if not isinstance(value, Mapping):
+            raise ValueError(f"{field_path}: expected an object")
+        name = value.get("name")
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"{field_path}.name: expected a non-empty string")
+        for key in ("strength", "source"):
+            item = value.get(key)
+            if item is not None and not isinstance(item, str):
+                raise ValueError(f"{field_path}.{key}: expected string or null")
+        return cls(name=name, strength=value.get("strength"), source=value.get("source"))
+
+    def to_dict(self) -> dict[str, object]:
+        return {"name": self.name, "strength": self.strength, "source": self.source}
+
+
 @dataclass
 class Product:
+    # Historical fields stay first for positional source compatibility.
     product_id: str
     name: str
     brand: str
@@ -86,33 +137,446 @@ class Product:
     comedogenic_flags: list[str] = field(default_factory=list)
     price_usd: Optional[float] = None
     price_is_stale: bool = True
-    # Ingredient-KB enrichment (spec 2026-07-10-ingredient-kb). All three
-    # default to their tier-1/no-KB values so a catalog imported without the KB
-    # serializes byte-identically to before (the importer omits keys at default).
-    ingredient_match: dict[str, float] = field(default_factory=dict)  # concern -> [0,1]
-    tier: int = 1                          # 1 = review-backed Sephora; 2 = beautyapi fallback
-    no_outcome_data: bool = False          # True for tier-2 (no review outcomes exist)
+    ingredient_match: dict[str, float] = field(default_factory=dict)
+    tier: int = 1
+    no_outcome_data: bool = False
 
-    def __post_init__(self):
-        assert self.category in CATEGORIES, f"unknown category: {self.category}"
+    # Catalog contract v2. Unknown/empty values are storage-valid and are hard
+    # vetoes when the corresponding role needs them.
+    intended_areas: list[str] = field(default_factory=list)
+    routine_roles: list[str] = field(default_factory=list)
+    format: str = "unknown"
+    exposure: str = "unknown"
+    drug_actives: list[VerifiedActive] = field(default_factory=list)
+    otc_drug: bool | None = None
+    label_source: str | None = None
+    label_verified_at: str | None = None
+    broad_spectrum: bool | None = None
+    spf: int | None = None
+    comedogenic_claim: str = "unknown"
+    irritant_features: list[str] = field(default_factory=list)
+    contraindications: list[str] = field(default_factory=list)
+    evidence_roles: list[str] = field(default_factory=list)
+    evidence_grade: str = "unknown"
+    cadence: str | None = None
+    cadence_source: str | None = None
+    amount: str | None = None
+    amount_source: str | None = None
+    catalog_schema_version: str = "legacy"
+
+    def __post_init__(self) -> None:
+        if self.category not in CATEGORIES:
+            raise ValueError(f"category: unknown category {self.category!r}")
+        if not isinstance(self.format, str) or not self.format:
+            raise ValueError("format: expected a non-empty string")
+        _closed("exposure", self.exposure, PRODUCT_EXPOSURES)
+        _closed(
+            "comedogenic_claim",
+            self.comedogenic_claim,
+            {"unknown", "claimed_noncomedogenic", "not_claimed"},
+        )
+        invalid_roles = set(self.routine_roles) - ROUTINE_ROLES
+        if invalid_roles:
+            raise ValueError(f"routine_roles: unknown roles {sorted(invalid_roles)}")
+        invalid_areas = set(self.intended_areas) - PRODUCT_AREAS
+        if invalid_areas:
+            raise ValueError(f"intended_areas: unknown areas {sorted(invalid_areas)}")
+        for field_name in ("otc_drug", "broad_spectrum"):
+            value = getattr(self, field_name)
+            if value is not None and not isinstance(value, bool):
+                raise ValueError(f"{field_name}: expected boolean or null")
+        if (self.spf is not None
+                and (not isinstance(self.spf, int) or isinstance(self.spf, bool)
+                     or self.spf < 0)):
+            raise ValueError("spf: expected a non-negative integer or null")
+        for field_name in (
+            "label_source", "label_verified_at", "cadence", "cadence_source",
+            "amount", "amount_source",
+        ):
+            value = getattr(self, field_name)
+            if value is not None and not isinstance(value, str):
+                raise ValueError(f"{field_name}: expected string or null")
+        if not isinstance(self.evidence_grade, str):
+            raise ValueError("evidence_grade: expected a string")
+        converted: list[VerifiedActive] = []
+        for index, active in enumerate(self.drug_actives):
+            if isinstance(active, VerifiedActive):
+                converted.append(active)
+            elif isinstance(active, Mapping):
+                converted.append(VerifiedActive.from_dict(active, f"drug_actives[{index}]"))
+            else:
+                raise ValueError(f"drug_actives[{index}]: expected object")
+        self.drug_actives = converted
+
+    @property
+    def is_legacy(self) -> bool:
+        return str(self.catalog_schema_version).lower() in {"1", "legacy"}
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, object]) -> "Product":
+        if not isinstance(value, Mapping):
+            raise ValueError("product: expected an object")
+        required = ("product_id", "name", "brand", "category")
+        for key in required:
+            if not isinstance(value.get(key), str):
+                raise ValueError(f"product.{key}: expected a string")
+        legacy = not any(
+            key in value
+            for key in ("catalog_schema_version", "intended_areas", "routine_roles", "exposure")
+        )
+        kwargs = dict(value)
+        kwargs["actives"] = _string_list(value.get("actives"), "product.actives")
+        kwargs["comedogenic_flags"] = _string_list(
+            value.get("comedogenic_flags"), "product.comedogenic_flags"
+        )
+        for key in (
+            "intended_areas", "routine_roles", "irritant_features", "contraindications",
+            "evidence_roles",
+        ):
+            kwargs[key] = _string_list(value.get(key), f"product.{key}")
+        raw_drug_actives = value.get("drug_actives", [])
+        if not isinstance(raw_drug_actives, list):
+            raise ValueError("product.drug_actives: expected a list")
+        kwargs["drug_actives"] = [
+            VerifiedActive.from_dict(item, f"product.drug_actives[{index}]")
+            for index, item in enumerate(raw_drug_actives)
+        ]
+        kwargs.setdefault("catalog_schema_version", "legacy" if legacy else "2")
+        known = set(cls.__dataclass_fields__)
+        unknown = set(kwargs) - known
+        if unknown:
+            raise ValueError(f"product: unknown fields {sorted(unknown)}")
+        try:
+            return cls(**kwargs)
+        except TypeError as exc:
+            raise ValueError(f"product: invalid fields: {exc}") from exc
+
+    def to_dict(self) -> dict[str, object]:
+        # Explicit order is intentional; canonical JSON may sort it later, but
+        # callers that preserve insertion order still receive stable bytes.
+        return {
+            "catalog_schema_version": self.catalog_schema_version,
+            "product_id": self.product_id,
+            "name": self.name,
+            "brand": self.brand,
+            "category": self.category,
+            "actives": list(self.actives),
+            "comedogenic_flags": list(self.comedogenic_flags),
+            "price_usd": self.price_usd,
+            "price_is_stale": self.price_is_stale,
+            "ingredient_match": dict(sorted(self.ingredient_match.items())),
+            "tier": self.tier,
+            "no_outcome_data": self.no_outcome_data,
+            "intended_areas": list(self.intended_areas),
+            "routine_roles": list(self.routine_roles),
+            "format": self.format,
+            "exposure": self.exposure,
+            "drug_actives": [active.to_dict() for active in self.drug_actives],
+            "otc_drug": self.otc_drug,
+            "label_source": self.label_source,
+            "label_verified_at": self.label_verified_at,
+            "broad_spectrum": self.broad_spectrum,
+            "spf": self.spf,
+            "comedogenic_claim": self.comedogenic_claim,
+            "irritant_features": list(self.irritant_features),
+            "contraindications": list(self.contraindications),
+            "evidence_roles": list(self.evidence_roles),
+            "evidence_grade": self.evidence_grade,
+            "cadence": self.cadence,
+            "cadence_source": self.cadence_source,
+            "amount": self.amount,
+            "amount_source": self.amount_source,
+        }
 
 
-# --- user profile (D-021) --------------------------------------------------
-SKIN_TYPES = {"combination", "dry", "normal", "oily"}
+# --- explicit safety profile ----------------------------------------------
+SKIN_TYPES = {"combination", "dry", "normal", "oily", "unknown"}
 TONE_BUCKETS = {"light", "medium", "deep", "unknown"}
 TONE_SOURCES = {"self_report", "photo", "unknown"}
+PREGNANCY_STATUSES = {
+    "pregnant", "trying", "nursing", "not_pregnant", "not_applicable", "unknown",
+}
+KNOWN_ACTIVE_IDS = {
+    "salicylic_acid", "benzoyl_peroxide", "adapalene", "azelaic_acid",
+    "glycolic_acid", "lactic_acid", "mandelic_acid", "niacinamide",
+    "vitamin_c", "alpha_arbutin", "tranexamic_acid", "kojic_acid", "retinol",
+    "retinal", "ceramides", "hyaluronic_acid", "glycerin", "squalane",
+    "panthenol", "centella", "allantoin", "madecassoside", "zinc",
+    "gluconolactone", "willow_bark",
+}
 
 
 @dataclass
 class UserProfile:
-    """Optional context that steers (never overrides) the rules (D-021)."""
-    skin_type: str
-    tone_bucket: Optional[str] = None
-    tone_source: str = "unknown"           # self_report > photo > unknown
-    pregnant_or_nursing: bool = False
+    skin_type: str = "unknown"
+    tone_bucket: str = "unknown"
+    tone_source: str = "unknown"
+    # Legacy boolean remains accepted only as an explicit migration input.
+    pregnant_or_nursing: bool | None = None
+    age_years: int | None = None
+    pregnancy_status: str = "unknown"
+    allergies: list[str] = field(default_factory=list)
+    sensitivity_conditions: list[str] = field(default_factory=list)
+    current_actives: list[str] = field(default_factory=list)
+    current_medications: list[str] = field(default_factory=list)
+    treatment_history: list[str] = field(default_factory=list)
+    acne_duration_weeks: int | None = None
+    painful_or_deep_lesions: bool | None = None
+    prior_scarring: bool | None = None
+    max_price_usd: float | None = None
 
-    def __post_init__(self):
-        assert self.skin_type in SKIN_TYPES, f"unknown skin_type: {self.skin_type}"
-        assert self.tone_bucket is None or self.tone_bucket in TONE_BUCKETS, \
-            f"unknown tone_bucket: {self.tone_bucket}"
-        assert self.tone_source in TONE_SOURCES, f"unknown tone_source: {self.tone_source}"
+    def __post_init__(self) -> None:
+        _closed("skin_type", self.skin_type, SKIN_TYPES)
+        if self.tone_bucket is None:  # narrow old-payload migration
+            self.tone_bucket = "unknown"
+        _closed("tone_bucket", self.tone_bucket, TONE_BUCKETS)
+        _closed("tone_source", self.tone_source, TONE_SOURCES)
+        _closed("pregnancy_status", self.pregnancy_status, PREGNANCY_STATUSES)
+        if (self.pregnant_or_nursing is not None
+                and not isinstance(self.pregnant_or_nursing, bool)):
+            raise ValueError("pregnant_or_nursing: expected boolean or null")
+        if self.pregnant_or_nursing is not None:
+            migrated = "pregnant" if self.pregnant_or_nursing else "not_pregnant"
+            if self.pregnancy_status != "unknown" and self.pregnancy_status != migrated:
+                raise ValueError("pregnancy_status conflicts with pregnant_or_nursing")
+            self.pregnancy_status = migrated
+        if (self.age_years is not None
+                and (not isinstance(self.age_years, int) or isinstance(self.age_years, bool)
+                     or not 0 <= self.age_years <= 130)):
+            raise ValueError("age_years: expected an integer 0..130 or null")
+        if (self.acne_duration_weeks is not None
+                and (not isinstance(self.acne_duration_weeks, int)
+                     or isinstance(self.acne_duration_weeks, bool)
+                     or self.acne_duration_weeks < 0)):
+            raise ValueError("acne_duration_weeks: expected a non-negative integer or null")
+        if (self.max_price_usd is not None
+                and (not isinstance(self.max_price_usd, (int, float))
+                     or isinstance(self.max_price_usd, bool)
+                     or not math.isfinite(self.max_price_usd)
+                     or self.max_price_usd < 0)):
+            raise ValueError("max_price_usd: expected a finite non-negative number or null")
+        for field_name in ("painful_or_deep_lesions", "prior_scarring"):
+            value = getattr(self, field_name)
+            if value is not None and not isinstance(value, bool):
+                raise ValueError(f"{field_name}: expected boolean or null")
+        for key in (
+            "allergies", "sensitivity_conditions", "current_actives",
+            "current_medications", "treatment_history",
+        ):
+            value = getattr(self, key)
+            if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+                raise ValueError(f"{key}: expected a list of strings")
+        invalid_actives = set(self.current_actives) - KNOWN_ACTIVE_IDS
+        if invalid_actives:
+            raise ValueError(f"current_actives: unknown active IDs {sorted(invalid_actives)}")
+
+    @classmethod
+    def from_dict(cls, value: Mapping[str, object]) -> "UserProfile":
+        if not isinstance(value, Mapping):
+            raise ValueError("profile: expected an object")
+        known = set(cls.__dataclass_fields__)
+        unknown = set(value) - known
+        if unknown:
+            raise ValueError(f"profile: unknown fields {sorted(unknown)}")
+        try:
+            return cls(**dict(value))
+        except TypeError as exc:
+            raise ValueError(f"profile: invalid fields: {exc}") from exc
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "skin_type": self.skin_type,
+            "tone_bucket": self.tone_bucket,
+            "tone_source": self.tone_source,
+            "age_years": self.age_years,
+            "pregnancy_status": self.pregnancy_status,
+            "allergies": list(self.allergies),
+            "sensitivity_conditions": list(self.sensitivity_conditions),
+            "current_actives": list(self.current_actives),
+            "current_medications": list(self.current_medications),
+            "treatment_history": list(self.treatment_history),
+            "acne_duration_weeks": self.acne_duration_weeks,
+            "painful_or_deep_lesions": self.painful_or_deep_lesions,
+            "prior_scarring": self.prior_scarring,
+            "max_price_usd": self.max_price_usd,
+        }
+
+
+# --- care, therapeutic intent, and regimen --------------------------------
+@dataclass(frozen=True)
+class DecisionEvidence:
+    concern: str
+    probability: float | None
+    quality: str
+    source: str
+    calibrated: bool
+    reasons: list[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
+        _closed("quality", self.quality, EVIDENCE_QUALITIES)
+        if self.probability is not None and not 0.0 <= self.probability <= 1.0:
+            raise ValueError("probability: expected 0..1 or null")
+        if self.probability is not None and not self.calibrated:
+            raise ValueError("probability may be populated only for calibrated evidence")
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "concern": self.concern,
+            "probability": self.probability,
+            "quality": self.quality,
+            "source": self.source,
+            "calibrated": self.calibrated,
+            "reasons": list(self.reasons),
+        }
+
+
+@dataclass(frozen=True)
+class CareDecision:
+    triage_level: str
+    referral_reasons: list[str]
+    therapy_disposition: str
+    evidence: list[DecisionEvidence]
+    policy_version: str | None
+    policy_reviewed: bool
+
+    def __post_init__(self) -> None:
+        _closed("triage_level", self.triage_level, TRIAGE_LEVELS)
+        _closed("therapy_disposition", self.therapy_disposition, THERAPY_DISPOSITIONS)
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "triage_level": self.triage_level,
+            "referral_reasons": list(self.referral_reasons),
+            "therapy_disposition": self.therapy_disposition,
+            "decision_evidence": [item.to_dict() for item in self.evidence],
+            "policy_version": self.policy_version,
+            "policy_reviewed": self.policy_reviewed,
+        }
+
+
+@dataclass(frozen=True)
+class TherapyOption:
+    therapy: str
+    strength_band: str
+    exposure: str
+    cadence: str
+    role: str
+    reason: str | None = None
+    cadence_source: str | None = None
+    amount: str | None = None
+    amount_source: str | None = None
+
+    def __post_init__(self) -> None:
+        _closed("exposure", self.exposure, PRODUCT_EXPOSURES)
+        _closed("role", self.role, ROUTINE_ROLES)
+        if not self.therapy or not self.strength_band or not self.cadence:
+            raise ValueError("therapy, strength_band, and cadence must be non-empty")
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "therapy": self.therapy,
+            "strength_band": self.strength_band,
+            "exposure": self.exposure,
+            "cadence": self.cadence,
+            "role": self.role,
+            "reason": self.reason,
+            "cadence_source": self.cadence_source,
+            "amount": self.amount,
+            "amount_source": self.amount_source,
+        }
+
+
+@dataclass(frozen=True)
+class TherapyPlan:
+    course_weeks: int | None
+    review_at_weeks: int | None
+    primary: TherapyOption | None
+    alternatives: list[TherapyOption]
+    support_roles: list[str]
+    deferred_reasons: list[str]
+    policy_version: str | None
+
+    def __post_init__(self) -> None:
+        invalid = set(self.support_roles) - ROUTINE_ROLES
+        if invalid:
+            raise ValueError(f"support_roles: unknown roles {sorted(invalid)}")
+        for field_name, value in (
+            ("course_weeks", self.course_weeks), ("review_at_weeks", self.review_at_weeks)
+        ):
+            if value is not None and value <= 0:
+                raise ValueError(f"{field_name}: expected a positive integer or null")
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "course_weeks": self.course_weeks,
+            "review_at_weeks": self.review_at_weeks,
+            "primary": self.primary.to_dict() if self.primary else None,
+            "alternatives": [item.to_dict() for item in self.alternatives],
+            "support_roles": list(self.support_roles),
+            "deferred_reasons": list(self.deferred_reasons),
+            "policy_version": self.policy_version,
+        }
+
+
+@dataclass(frozen=True)
+class RoutineInstruction:
+    role: str
+    slot: str
+    cadence: str
+    amount: str | None
+    source: str | None
+
+    def __post_init__(self) -> None:
+        _closed("role", self.role, ROUTINE_ROLES)
+        _closed("slot", self.slot, SLOTS)
+        if not self.cadence:
+            raise ValueError("cadence: expected a non-empty string")
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "role": self.role,
+            "slot": self.slot,
+            "cadence": self.cadence,
+            "amount": self.amount,
+            "source": self.source,
+        }
+
+
+@dataclass
+class Recommendation:
+    decision: CareDecision
+    therapy_plan: TherapyPlan
+    selected_products: dict[str, Product]
+    selected_regimen: dict[str, list[RoutineInstruction]]
+    alternatives: dict[str, list[Product]]
+    eligibility_rejections: dict[str, list[str]]
+    explanation: list[dict[str, object]]
+    flags: list[str]
+    validation_errors: list[str]
+
+    @property
+    def valid(self) -> bool:
+        return not self.validation_errors
+
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "decision": self.decision.to_dict(),
+            "therapy_plan": self.therapy_plan.to_dict(),
+            "selected_products": {
+                role: product.to_dict() for role, product in sorted(self.selected_products.items())
+            },
+            "selected_regimen": {
+                slot: [item.to_dict() for item in self.selected_regimen.get(slot, [])]
+                for slot in ("am", "pm")
+            },
+            "alternatives": {
+                role: [product.to_dict() for product in products]
+                for role, products in sorted(self.alternatives.items())
+            },
+            "eligibility_rejections": {
+                key: list(value) for key, value in sorted(self.eligibility_rejections.items())
+            },
+            "explanation": [dict(item) for item in self.explanation],
+            "flags": list(self.flags),
+            "validation_errors": list(self.validation_errors),
+        }
