@@ -133,9 +133,11 @@ escalation path (§5 applies everywhere).
 
 ## 5. Confidence handling
 
-- concern confidence ≥ threshold (`recommendation.concern_confidence_cutoff`,
-  `configs/default.yaml`, currently 0.5) → normal recommendation: first-line
-  actives for that concern are added to `target_actives`.
+- concern confidence ≥ threshold (`recommend()`'s `conf_cutoff` parameter,
+  `src/recommendation/engine.py`, default 0.5 — the `configs/default.yaml`
+  key `recommendation.concern_confidence_cutoff` is not currently wired to
+  it) → normal recommendation: first-line actives for that concern are added
+  to `target_actives`.
 - **V2 change:** below threshold → the concern contributes **no actives at
   all** (strong or gentle) to `target_actives`; only the flag
   `"{concern}@{regions}: possible — verify"` is emitted (D-002: loud

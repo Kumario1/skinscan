@@ -124,11 +124,13 @@ still the max severity across `acne_*` concerns, used to trigger the cystic
 - `lesion_count` is the count of retained detections that produced the
   concern; still nullable for concerns without a discrete count (dryness).
 - `confidence` is the **mean of the retained detection scores** that produced
-  the concern (`sum(scores) / len(scores)`), in `[0, 1]`. Below a configurable
-  threshold (`recommendation.concern_confidence_cutoff`, `configs/`), the
-  recommender flags the concern `"possible — verify"` and adds **no actives**
-  for it — see `docs/RULES.md` §5 for the V2 confidence-gating change (it
-  previously still listed the ingredient under the flag; it no longer does).
+  the concern (`sum(scores) / len(scores)`), in `[0, 1]`. Below `recommend()`'s
+  `conf_cutoff` default of 0.5 (`src/recommendation/engine.py`; the
+  `configs/default.yaml` key `recommendation.concern_confidence_cutoff` is
+  not currently wired to it), the recommender flags the concern
+  `"possible — verify"` and adds **no actives** for it — see `docs/RULES.md`
+  §5 for the V2 confidence-gating change (it previously still listed the
+  ingredient under the flag; it no longer does).
 - `evidence` (V2 only) carries the raw signal behind the aggregation:
   `labels` (per-source-label detection counts, e.g.
   `{"papule": 5, "pustule": 4}`), `max_confidence` (highest single retained
