@@ -34,6 +34,7 @@ from dataclasses import asdict, replace
 import functools
 import io
 import json
+import math
 import time
 import urllib.request
 from pathlib import Path
@@ -138,16 +139,65 @@ def zoom_pipeline(rgb, boxes, detect, *, out_size=1024, pad=4.0, min_side=192):
     return dets, crops
 
 
-def _observations_from_zoom_dicts(dets, rgb_shape):
+def _observations_from_zoom_dicts(dets, rgb_shape, settings):
     """Zoom crops call the API directly and return plain dicts (no tile
     bookkeeping). Wrap them in the same LesionObservation shape the tile path
-    uses so dedupe/region/concern-bridge downstream is identical either way."""
+    uses so dedupe/region/concern-bridge downstream is identical either way.
+
+    The tile path gets score/bbox validation and min_score filtering for
+    free from src.pipeline.sarpn (_validated_detections); this path calls
+    the raw API directly (see api_detect's docstring) so it must apply the
+    same client-side checks itself for the A/B comparison to be symmetric.
+    This is the debug harness, so invalid entries are dropped rather than
+    aborting the whole comparison."""
     height, width = rgb_shape[:2]
     whole_image = (0, 0, width, height)
-    return [
-        LesionObservation(d["label"], d["label"], d["score"], tuple(d["bbox"]), 0, whole_image)
-        for d in dets
-    ]
+    observations = []
+    for d in dets:
+        score = d.get("score")
+        if (isinstance(score, bool) or not isinstance(score, (int, float))
+                or not math.isfinite(score) or not 0 <= score <= 1):
+            continue
+        if score < settings.min_score:
+            continue
+        bbox = d.get("bbox")
+        if not isinstance(bbox, (list, tuple)) or len(bbox) != 4:
+            continue
+        if any(isinstance(value, bool) or not isinstance(value, (int, float))
+               or not math.isfinite(value) for value in bbox):
+            continue
+        x1, y1, x2, y2 = (float(value) for value in bbox)
+        if x2 <= x1 or y2 <= y1:
+            continue
+        observations.append(
+            LesionObservation(d["label"], d["label"], float(score),
+                              (x1, y1, x2, y2), 0, whole_image)
+        )
+    return observations
+
+
+def _load_optional_catalog(path):
+    """Mirrors src.pipeline.e2e.load_optional_catalog's tier-2 merge and
+    degrade-on-error behavior (Finding 1) without importing e2e — this
+    harness must not depend on the user-facing e2e module by design.
+    Returns the merged catalog, or None (with a printed note) when the
+    catalog is absent/corrupt, matching this module's docstring promise:
+    "same degradation as e2e"."""
+    if not path.exists():
+        print(f"no catalog at {path} — stopping at concern reports")
+        return None
+    try:
+        products = load_catalog(path)
+        tier2_path = path.with_name("catalog_tier2.json")
+        if tier2_path.exists():
+            products = products + load_catalog(tier2_path)
+        return products
+    except json.JSONDecodeError as exc:
+        print(f"catalog at {path} contains invalid JSON ({exc}) — stopping at concern reports")
+        return None
+    except (OSError, TypeError, ValueError, AssertionError) as exc:
+        print(f"catalog at {path} is unreadable or invalid ({exc}) — stopping at concern reports")
+        return None
 
 
 def yolo_boxes(image_path, weights, cfg):
@@ -165,8 +215,15 @@ def yolo_boxes(image_path, weights, cfg):
 def run_tile_comparison(rgb, settings):
     """Native-tile detection for the tile pipeline. Tiling, HTTP calls,
     response validation, coordinate restoration, and dedupe are all
-    production code (src.pipeline.sarpn) — nothing here duplicates it."""
-    observations = infer_native_tiles(rgb, settings)
+    production code (src.pipeline.sarpn) — nothing here duplicates it.
+
+    dedupe=False: infer_native_tiles normally dedupes internally (the
+    production contract), which would make raw_detections silently equal
+    detections_after_dedupe for this pipeline. Requesting raw observations
+    here lets run_downstream's single dedupe_observations() pass produce a
+    genuine raw -> deduped delta, same as the zoom pipeline already gets.
+    """
+    observations = infer_native_tiles(rgb, settings, dedupe=False)
     tiles = make_tiles(rgb.shape, tile_size=settings.tile_size, overlap=settings.tile_overlap)
     rects = [(t.x, t.y, t.x + t.width, t.y + t.height) for t in tiles]
     return observations, rects
@@ -332,9 +389,7 @@ def main(argv=None):
     settings._validate()
 
     catalog_path = Path(cfg["paths"]["catalog_processed"])
-    catalog = load_catalog(catalog_path) if catalog_path.exists() else None
-    if catalog is None:
-        print(f"no catalog at {catalog_path} — stopping at concern reports")
+    catalog = _load_optional_catalog(catalog_path)
     # Historical ConcernStatsRanker comparison is not wired up here; it would
     # need an explicit future opt-in rather than loading automatically.
     ranker = None
@@ -349,7 +404,7 @@ def main(argv=None):
             boxes = yolo_boxes(args.image, args.detector, cfg)
             dets, rects = zoom_pipeline(rgb, boxes, detect, pad=args.zoom_pad,
                                         min_side=args.zoom_min)
-            observations = _observations_from_zoom_dicts(dets, rgb.shape)
+            observations = _observations_from_zoom_dicts(dets, rgb.shape, settings)
             results["zoom"] = run_downstream(
                 "zoom", rgb, observations, rects, args.image.name, settings, out,
                 catalog=catalog, ranker=ranker, skin_type=args.skin_type,
