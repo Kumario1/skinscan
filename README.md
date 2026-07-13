@@ -1,33 +1,46 @@
 # SkinScan
 
-**A two-stage acne analysis pipeline, built as a research/learning project.**
-A YOLOv8m detector finds candidate lesions on a face image; an EfficientNetB0
-classifier types each crop; a rules-based recommender turns the counts into a
-conservative skincare routine. Every stage was validated with visual proof
-sheets before metrics, and every failed experiment is kept on the record below.
+**Production default: SA-RPN native-tile lesion identification, built as a
+research/learning project.** `src.pipeline.e2e` (§9) tiles a face photo into
+native-resolution 1024px crops and sends every tile to a **required external
+SA-RPN HTTP service** (§7); if that service is unreachable or returns an
+invalid response, identification fails outright — there is **no local-model
+fallback**. MediaPipe face regions and ITA-based tone estimation are
+unchanged; a rules-based recommender then turns the resulting concerns into
+an **optional** AM/PM routine (it degrades to "unavailable" rather than
+failing the whole run — §6/§9). The original YOLOv8m detector +
+EfficientNetB0 classifier two-stage pipeline (§1-§4) is retained in the repo
+as a **historical, evaluation-only** reference: it is not called by the
+default CLI, and its metrics below describe that superseded pipeline, not
+the SA-RPN production path — the detector metrics, the concern-mapping A/B
+(§7a), and the recommendation rules (`docs/RULES.md`) are reported
+separately; no single measured end-to-end accuracy number exists for the
+SA-RPN production pipeline (D-027). Every stage was validated with visual
+proof sheets before metrics, and every failed experiment is kept on the
+record below.
 
 > Not medical software. Cosmetic-concern language only, no diagnosis.
 
 ```mermaid
 flowchart LR
-    I["face image"] --> D["YOLOv8m detector<br/>(where are the spots?)"]
-    D --> C["context crops (224×224)"]
-    C --> E["EfficientNetB0 classifier<br/>(what type is each crop?)"]
-    E --> R["regions + tone (ITA)"]
-    R --> S["rules engine + StatsRanker<br/>→ AM/PM routine"]
+    I["face image"] --> T["native 1024px tiles"]
+    T --> P["SA-RPN HTTP service<br/>(required, no fallback)"]
+    P --> D["cross-tile dedupe"]
+    D --> R["regions + tone (ITA)"]
+    R --> S["rules engine (ranker=None)<br/>→ optional AM/PM routine"]
 ```
 
 ## Results at a glance
 
 | Component | Dataset | Result |
 |---|---|---|
-| Stage 1 detector (YOLOv8m) | ACNE04 | **F1 = 0.722** @ conf 0.07 / IoU 0.2 |
-| SA-RPN detector (Mask R-CNN R50, 10-class) — [`sa-rpn/`](sa-rpn/) | AcneSCU | **mAP@0.50 = 0.499 bbox / 0.498 segm**, recall@0.50 = 0.743 |
-| SA-RPN serving A/B: **tile** vs zoom ([§7a](#7a-pipeline-ab--how-should-sa-rpn-see-a-full-photo)) | AcneSCU held-out, 756 lesions | tile **recall 0.70 / label acc 0.92** vs zoom 0.04 / 0.44 → tiles locked ([D-026](docs/DECISIONS.md)) |
-| Stage 2 classifier (EfficientNetB0, 5-class) | Kaggle acne types | **91.2% acc, macro F1 0.92** |
-| 6-class `Not_acne` retrain | + harvested negatives | 91.7% acc — **reverted** (crop-domain confound, [D-025](docs/DECISIONS.md)) |
+| **Production identifier — SA-RPN** (Mask R-CNN R50, 10-class) — [`sa-rpn/`](sa-rpn/) | AcneSCU | **mAP@0.50 = 0.499 bbox / 0.498 segm**, recall@0.50 = 0.743 (detector-only; no separate end-to-end pipeline number — D-027) |
+| SA-RPN serving A/B: **tile** vs zoom ([§7a](#7a-pipeline-ab--how-should-sa-rpn-see-a-full-photo)) | AcneSCU held-out, 756 lesions | tile **recall 0.70 / label acc 0.92** vs zoom 0.04 / 0.44 → tiles locked ([D-026](docs/DECISIONS.md)), cutover to sole default confirmed ([D-027](docs/DECISIONS.md)) |
+| Stage 1 detector (YOLOv8m) — *historical pipeline, evaluation-only* | ACNE04 | **F1 = 0.722** @ conf 0.07 / IoU 0.2 |
+| Stage 2 classifier (EfficientNetB0, 5-class) — *historical pipeline, evaluation-only* | Kaggle acne types | **91.2% acc, macro F1 0.92** |
+| 6-class `Not_acne` retrain — *historical pipeline attempt* | + harvested negatives | 91.7% acc — **reverted** (crop-domain confound, [D-025](docs/DECISIONS.md)) |
 | Learned product ranker (HistGB) | 1.1M Sephora reviews | pairwise 0.584 — **lost** to Bayesian stats baseline (0.609), never shipped |
-| Shipped ranker (`StatsRanker`) | same | pairwise **0.609** (the bake-off winner) |
+| Shipped ranker (`StatsRanker`) | same | pairwise **0.609** (the bake-off winner); production e2e calls `recommend(..., ranker=None)` — rules-only order (D-027) |
 
 All decisions are logged with IDs in [`docs/DECISIONS.md`](docs/DECISIONS.md); the
 dead ends are summarized in [§8](#8-wrong-paths--what-failed-and-why).
@@ -267,20 +280,30 @@ the pooled StatsRanker) are pending.
 fallback catalog — used only as a ranking tiebreaker and only when no
 review-backed candidate exists.
 
-**End-to-end output.** Running `src.pipeline.e2e` on a real acne photo
-produces `runs/e2e/<stem>/routine.json` — per-region concerns, tone, safety
-flags, and a ranked AM/PM routine. Excerpt from an actual run
-(`runs/e2e_final/acne/routine.json`):
+**End-to-end output.** The production `src.pipeline.e2e` SA-RPN CLI (§7/§9)
+always writes `analysis.json`; it writes `runs/e2e/<stem>/routine.json` only
+when a catalog is available and the recommendation step succeeds
+(`analysis["recommendation_status"] == "complete"` — §9). V2 concerns are
+aggregated **one entry per concern** (not per concern-region pair), each
+carrying a `regions` list and an `evidence` block
+([`docs/CONCERN_SCHEMA.md`](docs/CONCERN_SCHEMA.md)). Illustrative excerpt of
+the V2 schema (`schema_version: "2.0"`):
 
 ```jsonc
 {
+  "schema_version": "2.0",
   "concerns": [
-    {"concern": "acne_comedonal",    "region": "left_cheek", "severity": 2, "lesion_count": 6},
-    {"concern": "acne_cystic",       "region": "chin_jaw",   "severity": 1, "confidence": 0.919},
-    {"concern": "acne_inflammatory", "region": "chin_jaw",   "severity": 1, "confidence": 0.322}
+    {"concern": "acne_inflammatory", "regions": ["chin_jaw", "left_cheek"],
+     "severity": 2, "confidence": 0.71, "lesion_count": 9,
+     "evidence": {"labels": {"papule": 5, "pustule": 4},
+                  "max_confidence": 0.91, "affected_region_count": 2}},
+    {"concern": "acne_cystic", "regions": ["chin_jaw"],
+     "severity": 4, "confidence": 0.92, "lesion_count": 1,
+     "evidence": {"labels": {"nodule": 1}, "max_confidence": 0.92,
+                  "affected_region_count": 1}}
   ],
   "tone": {"bucket": "light", "ita": 56.7},
-  "flags": ["see a dermatologist", "acne_inflammatory@chin_jaw: possible — verify"],
+  "flags": ["see a dermatologist"],
   "target_actives": ["centella", "ceramides", "hyaluronic_acid"],
   "routines": {"AM": {"cleanser": ["CLINIQUE Clarifying Lotion 2", "…"],
                       "serum": ["The INKEY List Niacinamide Oil Control Serum", "…"],
@@ -289,11 +312,14 @@ flags, and a ranked AM/PM routine. Excerpt from an actual run
 }
 ```
 
-The safety rules are visible in the output: a cystic concern was detected, so
-the routine switched to **soothe-only actives** (no benzoyl peroxide, no
-retinoids) and raised the *see a dermatologist* flag; a low-confidence
-inflammatory concern (0.322) is reported as "possible — verify" instead of
-being silently trusted.
+The safety rules are visible in the output: a `nodule` detection escalates
+`acne_cystic` straight to severity 4
+(`sa_rpn.severity.nodule_severity`, `configs/default.yaml`), so the routine
+switches to **soothe-only actives** (no benzoyl peroxide, no retinoids) and
+raises the *see a dermatologist* flag — the same rules-gate-then-optional-
+ranker architecture (D-005) that served the historical pipeline, now
+evidence-aware for the V2 concern schema
+([`docs/RULES.md`](docs/RULES.md) §5/§7).
 
 ---
 
@@ -336,8 +362,9 @@ to be funneled into that input somehow. Two candidates, A/B-tested by
 same served checkpoint on 5 held-out validation images (seed-42 split, 756
 annotated lesions), scored against the clinical annotations at IoU ≥ 0.3:
 
-- **zoom** — the shipped YOLOv8m finds acne areas, each cluster is cropped and
-  *upscaled* to 1024px ("really enlarge the area"), SA-RPN re-detects inside;
+- **zoom** — the (historical) YOLOv8m detector finds acne areas, each cluster
+  is cropped and *upscaled* to 1024px ("really enlarge the area"), SA-RPN
+  re-detects inside;
 - **tile** — the photo is chunked into *native-resolution* 1024px tiles with a
   guaranteed minimum overlap; every tile runs; seams are deduped client-side.
 
@@ -352,13 +379,29 @@ Ground truth 282 lesions; zoom surfaced 8, tile surfaced 254 with 91% correct
 types. Zoom fails twice: YOLO (imgsz 1024) downscales a 3448×4600 photo ~4×
 so the gatekeeper forwards almost nothing, and the upscaled blurry crops halve
 SA-RPN's label accuracy versus native pixels. **Decision: native-res tiling,
-locked as [D-026](docs/DECISIONS.md)** — the v2 identification pipeline is
-tiles → SA-RPN → cross-tile dedupe → regions → ConcernReport (comedones →
-comedonal, papules/pustules → inflammatory, nodules → cystic, scars/melasma →
-hyperpigmentation — the first CV path to emit a non-acne concern) → the
-unchanged recommender contract. Honest caveat: clinical images are tiling's
-home domain; a consumer-photo check (D-014) gates retiring the shipped
-two-stage pipeline.
+locked as [D-026](docs/DECISIONS.md).** The identification pipeline is: native
+1024px tiles → the required SA-RPN HTTP service (no local fallback — a
+transport failure or an invalid response aborts the run) → cross-tile
+class-agnostic dedupe → D-020 regions → `ConcernReport`: comedones →
+`acne_comedonal`, papules/pustules → `acne_inflammatory`, nodules →
+`acne_cystic`, atrophic/hypertrophic scars → `acne_scarring`, melasma →
+`hyperpigmentation` (the first CV path to emit a non-acne concern) — see
+`SARPN_LABEL_TO_CONCERN`,
+[`src/pipeline/sarpn.py`](src/pipeline/sarpn.py). `nevus`/`other` are never
+concerns; they surface as visible safety observations
+(`analysis["safety_observations"]`), gated by per-label count/confidence
+thresholds in `configs/default.yaml`, not silently dropped. This feeds the
+V2, evidence-aware recommender contract
+([`docs/CONCERN_SCHEMA.md`](docs/CONCERN_SCHEMA.md),
+[`docs/RULES.md`](docs/RULES.md)). Honest caveat: clinical images are
+tiling's home domain; the consumer-photo check (D-014) gating retirement of
+the shipped two-stage pipeline is now the automated
+`tests/test_e2e.py::test_fixture_e2e_writes_complete_v2_artifact_set`
+fixture-artifact gate, and the production cutover is locked as
+[D-027](docs/DECISIONS.md) — §1-§4's YOLOv8m + EfficientNetB0 pipeline is
+retained only as a **historical, evaluation-only** reference; the default
+`src.pipeline.e2e` no longer calls it, and there is no local-model fallback
+if the SA-RPN service is unreachable.
 
 ## 7b. In progress — Stage 2 v2 dataset
 
@@ -408,22 +451,70 @@ curl -fL -o models/face_landmarker.task \
   https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task
 ```
 
-One command, image → detections → types → regions → tone → ranked AM/PM
-routine (`runs/e2e/<stem>/routine.json`):
+**Default production path** needs a required, already-running SA-RPN HTTP
+service (`sa-rpn/serve.py`, §7). There is **no local-model fallback** — if
+the endpoint is unreachable or returns a malformed response,
+`src.pipeline.e2e` exits non-zero and leaves any previously published output
+directory untouched (identification runs before anything is staged, and a
+successful run publishes through an atomic staged swap, so a failure never
+partially overwrites a prior result):
 
 ```bash
-.venv/bin/python -m src.pipeline.e2e --image path/to/image.jpg \
-  [--skin-type dry] [--pregnant] [--top 5]
+.venv/bin/python -m src.pipeline.e2e \
+  --image path/to/image.jpg \
+  --api http://localhost:8000/predict \
+  [--catalog data/processed/catalog.json] \
+  [--skin-type dry] \
+  [--pregnant]
 ```
 
-Individual stages:
+Full CLI options: `--image, --out, --api, --catalog, --face-landmarker,
+--tile-size, --overlap, --connect-timeout, --read-timeout,
+--request-batch-size, --min-score, --dedupe-threshold, --skin-type,
+--pregnant, --top`. Writes into `runs/e2e/<image stem>/` (or `--out`):
+
+```text
+analysis.json          always — schema_version 2.0, detections, concerns,
+                        safety_observations, recommendation_status
+routine.json           optional — only when recommendation_status == "complete"
+detections.jpg
+region_overlay.jpg
+lesion_sheet.jpg
+```
+
+`recommendation_status` is `"complete"` when a catalog loads and the
+recommendation step succeeds, or `"unavailable"` (with a
+`recommendation_reason`) otherwise — a missing/invalid catalog or a
+recommendation-stage exception never erases the identification result that
+was already produced.
+
+Smoke-test the SA-RPN service directly before pointing the CLI at it:
 
 ```bash
-.venv/bin/python -m src.detection.check_acne04_detector          # detector proof sheet
+curl -fsS http://localhost:8000/predict \
+  -H 'Content-Type: application/json' \
+  --data "{\"image\":\"$(python -c 'import base64,sys; print(base64.b64encode(open(sys.argv[1],\"rb\").read()).decode())' path/to/image.jpg)\"}"
+```
+
+Then run the full pipeline against it:
+
+```bash
+python -m src.pipeline.e2e \
+  --image path/to/image.jpg \
+  --api http://localhost:8000/predict \
+  --out runs/e2e/sarpn-smoke
+```
+
+Individual stages, and the **historical, evaluation-only** two-stage
+pipeline (§1-§4 — not called by the default `src.pipeline.e2e` command
+above):
+
+```bash
+.venv/bin/python -m src.detection.check_acne04_detector          # historical: detector proof sheet
 .venv/bin/python -m src.classification.run_acne04_pipeline \
-  --image path/to/image.jpg                                      # detect + classify
-.venv/bin/python -m src.pipeline.regions IMG --boxes PRED_JSON   # region overlay
-.venv/bin/python -m src.pipeline.tone    IMG --boxes PRED_JSON   # ITA sampling overlay
+  --image path/to/image.jpg                                      # historical: detect + classify
+.venv/bin/python -m src.pipeline.regions IMG --boxes PRED_JSON   # region overlay (still used)
+.venv/bin/python -m src.pipeline.tone    IMG --boxes PRED_JSON   # ITA sampling overlay (still used)
 .venv/bin/python -m src.pipeline.compare_sarpn --image IMG \
   --api http://localhost:8000/predict                            # SA-RPN tile/zoom A/B (§7a)
 ```
@@ -469,12 +560,12 @@ curl -L -o data/raw/beautyapi/beauty_data.jsonl \
 
 ```text
 sa-rpn/                SA-RPN Mask R-CNN detector (§7): training, serving API, results
-docs/DECISIONS.md      every decision (D-001..D-025), including the reversals
+docs/DECISIONS.md      every decision (D-001..D-027), including the reversals
 docs/*.md              design docs: negatives, v2 dataset, rules, schemas, fairness
 notebooks/             Colab sessions: detector training, Stage 2 retrain, SA-RPN
-src/detection/         YOLO checks + AcneSCU/SA-RPN preprocessing
-src/classification/    classifier training, pipeline, v2 crop curation
-src/pipeline/          regions, tone/ITA, end-to-end CLI, SA-RPN tile/zoom A/B
+src/detection/         YOLO checks + AcneSCU/SA-RPN preprocessing (historical/eval-only)
+src/classification/    classifier training, pipeline, v2 crop curation (historical/eval-only)
+src/pipeline/          production SA-RPN e2e CLI (default), regions, tone/ITA, SA-RPN tile/zoom A/B
 src/recommendation/    rules engine, rankers, concern labels, ingredient KB
 assets/                the proof sheets embedded above
 tests/                 model-free by default; real_models tier for local weights
