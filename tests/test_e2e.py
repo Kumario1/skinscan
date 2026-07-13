@@ -253,7 +253,7 @@ def test_recommendation_exception_does_not_erase_analysis(
     ))
 
 
-def test_failed_identification_preserves_previous_output(tmp_path):
+def test_failed_identification_preserves_previous_output(tmp_path, capsys):
     image_path = tmp_path / "face.jpg"
     catalog_path = tmp_path / "catalog.json"
     output_dir = tmp_path / "output"
@@ -271,3 +271,8 @@ def test_failed_identification_preserves_previous_output(tmp_path):
     assert {path.name for path in output_dir.iterdir()} == {"last-success.txt"}
     assert marker.read_text() == "keep me"
     assert not list(tmp_path.glob(".output.*"))
+
+    stderr = capsys.readouterr().err
+    assert "fixture" not in stderr
+    assert "secret" not in stderr
+    assert "hidden" not in stderr

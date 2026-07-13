@@ -180,7 +180,9 @@ def make_tiles(
 
 
 def _response_error(tile: Tile, endpoint: str, field: str, detail: str) -> SarpnResponseError:
-    return SarpnResponseError(f"tile {tile.index} response field {field} from {endpoint}: {detail}")
+    return SarpnResponseError(
+        f"tile {tile.index} response field {field} from {sanitize_endpoint(endpoint)}: {detail}"
+    )
 
 
 def _jpeg_base64(rgb: np.ndarray) -> str:
@@ -263,8 +265,13 @@ def _infer_tile(
             )
             response.raise_for_status()
         except requests.RequestException as exc:
+            # requests embeds the literal request URL (including any basic-auth
+            # userinfo) in some exception messages, e.g. HTTPError from
+            # raise_for_status(); scrub it before it reaches logs or analysis.json.
+            safe_endpoint = sanitize_endpoint(settings.endpoint_url)
+            detail = str(exc).replace(settings.endpoint_url, safe_endpoint)
             raise SarpnTransportError(
-                f"tile {tile.index} request to {settings.endpoint_url} failed: {exc}"
+                f"tile {tile.index} request to {safe_endpoint} failed: {detail}"
             ) from exc
         try:
             payload = response.json()
