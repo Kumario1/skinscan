@@ -5,10 +5,13 @@ from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
 import json
+import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import threading
+import time
 from types import SimpleNamespace
 
 import numpy as np
@@ -531,6 +534,18 @@ def test_publish_conflict_error_message_mentions_backup_path(
 
 # --- Finding 8: a stale backup from any pid is recoverable ------------------
 
+
+def _backdate_past_grace(path: Path) -> None:
+    """Push path's mtime back past the backup-adoption grace period, so it
+    reads as a genuinely stranded crash artifact rather than a live
+    concurrent publish's in-flight backup (imported inline so this module
+    still collects while the constant doesn't exist yet, RED phase)."""
+    from src.pipeline.e2e import _BACKUP_ADOPTION_GRACE_SECONDS
+
+    old = time.time() - _BACKUP_ADOPTION_GRACE_SECONDS - 60
+    os.utime(path, (old, old))
+
+
 def test_stale_any_pid_backup_is_restored_then_replaced_on_success(tmp_path, fake_sarpn_server):
     image_path = tmp_path / "face.jpg"
     catalog_path = tmp_path / "catalog.json"
@@ -541,6 +556,7 @@ def test_stale_any_pid_backup_is_restored_then_replaced_on_success(tmp_path, fak
     stale_backup = tmp_path / ".output.backup-99999"
     stale_backup.mkdir()
     (stale_backup / "marker.txt").write_text("stranded from a crashed run")
+    _backdate_past_grace(stale_backup)
 
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
 
@@ -563,6 +579,7 @@ def test_stale_any_pid_backup_is_restored_when_publish_then_fails(
     stale_backup = tmp_path / ".output.backup-99999"
     stale_backup.mkdir()
     (stale_backup / "marker.txt").write_text("stranded from a crashed run")
+    _backdate_past_grace(stale_backup)
 
     real_rename = Path.rename
 
@@ -578,6 +595,66 @@ def test_stale_any_pid_backup_is_restored_when_publish_then_fails(
 
     assert output_dir.exists()
     assert (output_dir / "marker.txt").read_text() == "stranded from a crashed run"
+
+
+# --- Concurrent-backup-adoption-race guard: only adopt/clean backups older --
+# --- than a grace period, so a live peer's in-flight backup is left alone. --
+
+def test_fresh_any_pid_backup_is_not_adopted_and_survives(tmp_path, fake_sarpn_server):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+
+    # A seconds-old backup looks like it belongs to a still-running
+    # concurrent publish (process B mid-flight), not a stranded crash
+    # artifact — it must not be adopted as output_dir, nor swept away.
+    live_backup = tmp_path / ".output.backup-99999"
+    live_backup.mkdir()
+    (live_backup / "marker.txt").write_text("belongs to a live concurrent publish")
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+
+    assert output_dir.exists()
+    assert (output_dir / "analysis.json").exists()
+    assert live_backup.exists()
+    assert (live_backup / "marker.txt").read_text() == "belongs to a live concurrent publish"
+
+
+def test_publish_conflict_message_is_truthful_when_backup_is_also_gone(
+    tmp_path, fake_sarpn_server, monkeypatch, capsys,
+):
+    """When our own backup vanishes out from under us (e.g. reclaimed by a
+    peer's cleanup pass) the failure message must not claim contents were
+    preserved at a path that no longer exists."""
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+    output_dir.mkdir()
+    (output_dir / "analysis.json").write_text('{"schema_version": "2.0", "marker": "prior-run"}')
+
+    real_rename = Path.rename
+
+    def flaky_rename(self, target):
+        target_path = Path(target)
+        if target_path == output_dir and ".staging-" in self.name:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            (output_dir / "concurrent-marker.txt").write_text("fresh from concurrent run")
+            for backup in tmp_path.glob(".output.backup-*"):
+                shutil.rmtree(backup)
+            raise OSError("simulated concurrent publish collision")
+        return real_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", flaky_rename)
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) != 0
+
+    assert not list(tmp_path.glob(".output.backup-*"))
+    stderr = capsys.readouterr().err
+    assert "were preserved at" not in stderr
 
 
 # --- Findings 6+7: derm-escalation surfaces from the analysis, independent --
