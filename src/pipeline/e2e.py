@@ -20,7 +20,6 @@ from .sarpn import (
     SarpnSettings,
     build_sarpn_concern_report,
     concern_to_dict,
-    dedupe_observations,
     draw_detection_overlay,
     draw_lesion_sheet,
     draw_region_overlay,
@@ -195,10 +194,10 @@ def run_pipeline(
     top: int,
 ) -> PipelineResult:
     rgb = load_rgb(image_path)
+    # infer_native_tiles dedupes internally (dedupe=True default) — production
+    # dedupe has exactly one owner there; do not dedupe a second time here
+    # (Finding 13).
     observations = infer_native_tiles(rgb, settings)
-    observations = dedupe_observations(
-        observations, threshold=settings.dedupe_threshold, preserve_tile_order=True,
-    )
     boxes = [observation.box for observation in observations]
     region_result = locate_regions(rgb, boxes, model_path=face_landmarker_path)
     tone = estimate_tone(rgb, region_result.polygons, boxes)
