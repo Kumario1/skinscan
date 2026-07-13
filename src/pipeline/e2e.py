@@ -329,7 +329,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     count = len(result.analysis["detections"])
     status = result.analysis["recommendation_status"]
     print(f"wrote {result.output_dir}: {count} detections, recommendation {status}")
+    _print_safety_escalations(result.analysis)
+    if result.routine is not None:
+        for flag in result.routine["flags"]:
+            print(f"  ⚑ {flag}")
     return 0
+
+
+def _print_safety_escalations(analysis: Mapping[str, object]) -> None:
+    """Surface derm-escalation signals straight from the analysis, so they
+    show up even when no catalog/routine is available (Findings 6+7)."""
+    for concern in analysis["concerns"]:
+        if concern["severity"] >= 4 or concern["concern"] == "acne_cystic":
+            print(f"  ⚑ severe {concern['concern']} — see a dermatologist")
+    for observation in analysis["safety_observations"]:
+        if observation["professional_review"]:
+            print(f"  ⚑ {observation['code']}: professional review recommended")
 
 
 if __name__ == "__main__":
