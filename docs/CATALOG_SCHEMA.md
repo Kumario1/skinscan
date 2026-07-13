@@ -92,15 +92,17 @@ CSV** (8,494 rows, 39 skincare pairs, 2026-07-09) — not written from memory.
 
 | → category | Sephora (secondary / tertiary) pairs |
 |------------|--------------------------------------|
-| cleanser | Cleansers / Face Wash & Cleansers · Cleansers / Toners · Cleansers / Makeup Removers · Cleansers / Face Wipes · Cleansers / _(empty)_ |
-| treatment | Cleansers / Exfoliators · Treatments / Facial Peels · Treatments / Blemish & Acne Treatments · Masks / Face Masks · Masks / Sheet Masks |
+| cleanser | Cleansers / Face Wash & Cleansers · Cleansers / Makeup Removers · Cleansers / Face Wipes · Cleansers / _(empty)_ |
+| treatment | Cleansers / Toners · Cleansers / Exfoliators · Treatments / Facial Peels · Treatments / Blemish & Acne Treatments · Masks / Face Masks · Masks / Sheet Masks |
 | serum | Treatments / Face Serums |
 | moisturizer | Moisturizers / Moisturizers · Mists & Essences · Face Oils · Night Creams · Decollete & Neck Creams · _(empty)_ |
 | spf | Sunscreen / Face Sunscreen · Sunscreen / _(empty)_ |
 
-Non-obvious calls: Toners/Removers/Wipes are the cleansing phase; Exfoliators and
-Masks are the treatment step regardless of Sephora's grouping; Mists/Essences/
-Oils/Night/Neck creams are leave-on moisturizers.
+Non-obvious calls: Removers/Wipes are the cleansing phase; Toners are LEAVE-ON
+(2026-07-13: an actives-bearing BHA toner in the rinse-off cleanser step
+misstated delivery) so they join Exfoliators and Masks in the treatment step
+regardless of Sephora's grouping; Mists/Essences/Oils/Night/Neck creams are
+leave-on moisturizers.
 
 Everything else is **dropped and counted** in the import log's
 `dropped_by_category` breakdown: non-Skincare primaries (Makeup, Hair, …) and
@@ -111,7 +113,9 @@ products** (all five categories non-empty, ~89% with ≥1 canonical active).
 
 ## What this deliberately excludes
 
-- No reviews / ratings (v1 doesn't rank on popularity).
+- No reviews / ratings / loves on the catalog itself — popularity ranking
+  exists (D-028) but lives in the review-stats artifact and the ranker, never
+  on the catalog schema.
 - No concentration data (INCI lists don't provide it reliably).
 - No stock / availability.
 
@@ -134,7 +138,8 @@ them into two files:
       "__all__": {"n": 812, "mean_rating": 4.4, "pct_recommend": 0.86},
       "oily":    {"n": 210, "mean_rating": 4.2, "pct_recommend": 0.81}
     }
-  }
+  },
+  "loves": {"P480274": 118000}
 }
 ```
 
@@ -144,6 +149,11 @@ them into two files:
 
 `global_mean_rating` (top-level) is the train-rows mean rating — the smoothing
 prior `StatsRanker` shrinks each product's pooled rating toward (D-022 amendment).
+
+`loves` (top-level, D-028) — `{product_id: loves_count}` joined from
+`product_info.csv` at stats-build time, catalog products only; feeds
+`StatsRanker`'s popularity nudge (`ranker.popularity_weight`). Absent when the
+product-info file wasn't available at build time — the nudge degrades to 0.
 
 **`ranker.joblib`** — the model bundle (joblib dict), written **only when the
 D-022 gate passes**: `{"model"` (HistGradientBoostingClassifier on

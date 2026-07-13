@@ -54,7 +54,19 @@ FEATURE_COLUMNS = (
     + ["f_skin_type", "f_tone_bucket"]
 )
 
-METHODS = ["model", "popularity", "bayesian"]
+METHODS = ["model", "popularity", "bayesian", "blended"]
+
+
+def loves_nudges(loves, popularity_weight) -> dict:
+    """{product_id: w * log1p(loves)/log1p(max_loves)} (D-028); empty when
+    there's no loves data or the knob is off."""
+    if not loves:
+        return {}
+    denom = math.log1p(max(loves.values()))
+    if denom <= 0:
+        return {}
+    return {pid: popularity_weight * math.log1p(c) / denom
+            for pid, c in loves.items()}
 TONE_ROWS = ["light", "medium", "deep", "unknown"]  # 'unknown' never dropped (D-022)
 
 
@@ -201,16 +213,19 @@ def pairwise_ordering_accuracy(df) -> float:
     return hits / total
 
 
-def _score_methods(train_df, test_df, model, feature_columns, bayes_m) -> pd.DataFrame:
+def _score_methods(train_df, test_df, model, feature_columns, bayes_m,
+                   loves=None, popularity_weight=0.2) -> pd.DataFrame:
     """One scored frame: author_id, label, f_tone_bucket + a column per method."""
     global_pop = float(train_df["label"].mean())
     global_rating = float(train_df["rating"].mean())
     pop = popularity_baseline(train_df)
     bayes = bayesian_baseline(train_df, bayes_m, global_rating)
+    nudges = loves_nudges(loves, popularity_weight)
 
     X_test = assemble_frame(test_df, feature_columns)
     model_scores = model.predict_proba(X_test)[:, 1]
     pids = test_df["product_id"]
+    bayes_scores = pids.map(bayes).fillna(global_rating).to_numpy()
     return pd.DataFrame(
         {
             "author_id": test_df["author_id"].to_numpy(),
@@ -218,7 +233,9 @@ def _score_methods(train_df, test_df, model, feature_columns, bayes_m) -> pd.Dat
             "f_tone_bucket": test_df["f_tone_bucket"].to_numpy(),
             "model": model_scores,
             "popularity": pids.map(pop).fillna(global_pop).to_numpy(),
-            "bayesian": pids.map(bayes).fillna(global_rating).to_numpy(),
+            "bayesian": bayes_scores,
+            # D-028: what StatsRanker actually ships — bayesian + loves nudge.
+            "blended": bayes_scores + pids.map(nudges).fillna(0.0).to_numpy(),
         }
     )
 
@@ -235,10 +252,15 @@ def _metrics(frame) -> dict:
 
 
 def evaluate(train_df, test_df, model, feature_columns, low_n_floor,
-             *, bayes_m=20, reviews_dropped_no_catalog=0) -> dict:
+             *, bayes_m=20, reviews_dropped_no_catalog=0,
+             loves=None, popularity_weight=0.2) -> dict:
     """Pooled + per-tone-bucket ROC-AUC and pairwise for model + both baselines.
-    gate_passed = model beats BOTH baselines on BOTH pooled metrics (D-022)."""
-    scored = _score_methods(train_df, test_df, model, feature_columns, bayes_m)
+    gate_passed = model beats BOTH baselines on BOTH pooled metrics (D-022);
+    blended_gate_passed = the popularity blend costs <= 0.02 pooled pairwise
+    vs bayesian (D-028 soft gate — the bias is a product choice, the harness
+    only proves it isn't collapsing the ordering)."""
+    scored = _score_methods(train_df, test_df, model, feature_columns, bayes_m,
+                            loves=loves, popularity_weight=popularity_weight)
     pooled = _metrics(scored)
 
     by_tone = {}
@@ -265,6 +287,11 @@ def evaluate(train_df, test_df, model, feature_columns, low_n_floor,
         "pooled": pooled,
         "by_tone": by_tone,
         "gate_passed": gate,
+        "popularity_weight": float(popularity_weight),
+        "blended_gate_passed": bool(
+            pooled["blended"]["pairwise"]
+            >= pooled["bayesian"]["pairwise"] - 0.02
+        ),
     }
 
 
@@ -275,6 +302,18 @@ def _cell_stats(grp) -> dict:
         "mean_rating": float(grp["rating"].mean()),
         "pct_recommend": float(grp["label"].mean()),
     }
+
+
+def build_loves_map(product_info_path, catalog_ids) -> "dict | None":
+    """{product_id: loves_count} for catalog products (D-028); None when the
+    product-info file is absent — the popularity nudge degrades to nothing."""
+    path = Path(product_info_path) if product_info_path else None
+    if path is None or not path.exists():
+        return None
+    info = pd.read_csv(path, usecols=["product_id", "loves_count"])
+    info = info[info["product_id"].isin(catalog_ids)].dropna()
+    return {str(pid): int(c) for pid, c in
+            zip(info["product_id"], info["loves_count"])}
 
 
 def build_review_stats(train_df, min_cell_size) -> dict:
@@ -369,7 +408,7 @@ class StatsRanker:
     (0.606/0.596); skin-type cells stay evidence-only. No sklearn at inference.
     Same duck-typed hook as the learned Ranker; higher score = better."""
 
-    def __init__(self, stats, m, min_cell_size):
+    def __init__(self, stats, m, min_cell_size, popularity_weight=0.2):
         self.cells = stats.get("cells", {})
         self.min_cell_size = min_cell_size
         prior = float(stats.get("global_mean_rating", 0.0))
@@ -380,10 +419,14 @@ class StatsRanker:
             for pid, cell in self.cells.items()
             if cell.get("__all__")
         }
+        # D-028: small deliberate popularity bias — w * log1p(loves) normalized
+        # against the most-loved product. No loves map -> no nudge anywhere.
+        self._nudge = loves_nudges(stats.get("loves"), popularity_weight)
 
     def score(self, product, profile) -> float:
         # profile intentionally unused (pooled beats per-profile; see class doc).
-        return self._scores.get(product.product_id, self._prior)
+        base = self._scores.get(product.product_id, self._prior)
+        return base + self._nudge.get(product.product_id, 0.0)
 
     def evidence(self, product_id, skin_type):
         return evidence_cell(self.cells, self.min_cell_size, product_id, skin_type)
@@ -413,7 +456,8 @@ def load_ranker(config=None) -> "Ranker | StatsRanker | None":
         return Ranker(bundle, stats or {}, rcfg.get("min_cell_size", 5))
     if stats is not None:
         return StatsRanker(stats, rcfg.get("bayesian_prior_count", 20),
-                           rcfg.get("min_cell_size", 5))
+                           rcfg.get("min_cell_size", 5),
+                           popularity_weight=rcfg.get("popularity_weight", 0.2))
     return None
 
 
@@ -462,7 +506,7 @@ def _print_eval_table(result) -> None:
 
 
 def train_pipeline(reviews_dir, catalog_path, out_model, out_stats, out_eval,
-                   config, verbose=True) -> dict:
+                   config, verbose=True, product_info_path=None) -> dict:
     """Full run: load reviews + catalog -> brand vocab -> reviewer-disjoint split
     -> features -> train -> baselines -> evaluate. ALWAYS writes review_stats +
     eval; writes the MODEL bundle ONLY when the D-022 gate passes."""
@@ -493,11 +537,15 @@ def train_pipeline(reviews_dir, catalog_path, out_model, out_stats, out_eval,
     y_train = train_df["label"].to_numpy()
     model = train_model(X_train, y_train)
 
+    loves = build_loves_map(product_info_path, set(catalog_by_id))
     result = evaluate(
         train_df, test_df, model, FEATURE_COLUMNS, rcfg["eval_low_n_floor"],
         bayes_m=rcfg["bayesian_prior_count"], reviews_dropped_no_catalog=reviews_dropped,
+        loves=loves, popularity_weight=rcfg.get("popularity_weight", 0.2),
     )
     stats = build_review_stats(train_df, rcfg["min_cell_size"])
+    if loves is not None:
+        stats["loves"] = loves
 
     _write_json(out_stats, stats)
     _write_json(out_eval, _nan_to_none(result))
@@ -531,10 +579,14 @@ def main(argv=None):
     parser.add_argument("--out-model", default=rcfg["model_path"])
     parser.add_argument("--out-stats", default=rcfg["review_stats_path"])
     parser.add_argument("--out-eval", default=rcfg["eval_path"])
+    parser.add_argument("--product-info", default=rcfg.get("product_info_path"),
+                        help="product_info.csv with loves_count (D-028; "
+                             "default: ranker.product_info_path)")
     args = parser.parse_args(argv)
 
     train_pipeline(args.reviews_dir, args.catalog, args.out_model,
-                   args.out_stats, args.out_eval, config)
+                   args.out_stats, args.out_eval, config,
+                   product_info_path=args.product_info)
 
 
 if __name__ == "__main__":

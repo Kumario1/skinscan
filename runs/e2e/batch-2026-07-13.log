@@ -1,0 +1,97 @@
+skip 166 (exists)
+=== 274_jpg.rf.ce534b6a2b9456e9788123c68cd1607f.jpg -> runs/e2e/sarpn-v2-random-274 (13:47:26)
+analysis failed: tile 4 request to http://localhost:8000/predict failed: 504 Server Error: Gateway Timeout for url: http://localhost:8000/predict
+FAILED: 274_jpg.rf.ce534b6a2b9456e9788123c68cd1607f.jpg
+=== 197_jpg.rf.390ad40bb240573a876bcf61edf4099d.jpg -> runs/e2e/sarpn-v2-random-197 (13:48:58)
+I0000 00:00:1783968785.791554 7749420 init-domain.cc:128] Fiber init: default domain = pthread, concurrency = 12, prefix = pthread-default
+W0000 00:00:1783968785.794841 7749420 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+I0000 00:00:1783968785.901748 7749420 gl_context.cc:407] GL version: 2.1 (2.1 Metal - 90.5), renderer: Apple M3 Pro
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+W0000 00:00:1783968785.906745 7749424 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1783968785.915095 7749427 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+wrote /Users/princekumar/Documents/skinscan/runs/e2e/sarpn-v2-random-197: 179 detections, recommendation complete
+  ⚑ severe acne_comedonal — see a dermatologist
+  ⚑ severe acne_cystic — see a dermatologist
+  ⚑ severe acne_inflammatory — see a dermatologist
+  ⚑ severe acne_scarring — see a dermatologist
+  ⚑ nevus_observation: professional review recommended
+  ⚑ see a dermatologist
+  ⚑ deeper tone: emphasize sunscreen and irritation avoidance to reduce post-inflammatory hyperpigmentation risk
+=== 146_jpg.rf.d8862ee6bec0113d687cfed21a5e7f6c.jpg -> runs/e2e/sarpn-v2-random-146 (13:53:10)
+I0000 00:00:1783969082.647580 7761581 init-domain.cc:128] Fiber init: default domain = pthread, concurrency = 12, prefix = pthread-default
+W0000 00:00:1783969082.651276 7761581 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+I0000 00:00:1783969082.751770 7761581 gl_context.cc:407] GL version: 2.1 (2.1 Metal - 90.5), renderer: Apple M3 Pro
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+W0000 00:00:1783969082.756778 7761606 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1783969082.771886 7761615 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+wrote /Users/princekumar/Documents/skinscan/runs/e2e/sarpn-v2-random-146: 136 detections, recommendation complete
+  ⚑ severe acne_comedonal — see a dermatologist
+  ⚑ severe acne_inflammatory — see a dermatologist
+  ⚑ severe acne_scarring — see a dermatologist
+  ⚑ nevus_observation: professional review recommended
+  ⚑ see a dermatologist
+=== 95_jpg.rf.7785149320d4bb598783862fa8762a0c.jpg -> runs/e2e/sarpn-v2-random-95 (13:58:08)
+analysis failed: tile 4 request to http://localhost:8000/predict failed: 504 Server Error: Gateway Timeout for url: http://localhost:8000/predict
+FAILED: 95_jpg.rf.7785149320d4bb598783862fa8762a0c.jpg
+=== 45_jpg.rf.65ed1f53d4a978945091ae11ab734c83.jpg -> runs/e2e/sarpn-v2-random-45 (13:59:48)
+I0000 00:00:1783969460.258947 7779905 init-domain.cc:128] Fiber init: default domain = pthread, concurrency = 12, prefix = pthread-default
+W0000 00:00:1783969460.262456 7779905 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+I0000 00:00:1783969460.353842 7779905 gl_context.cc:407] GL version: 2.1 (2.1 Metal - 90.5), renderer: Apple M3 Pro
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+W0000 00:00:1783969460.359693 7779907 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1783969460.372019 7779911 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+wrote /Users/princekumar/Documents/skinscan/runs/e2e/sarpn-v2-random-45: 74 detections, recommendation complete
+  ⚑ severe acne_scarring — see a dermatologist
+  ⚑ nevus_observation: professional review recommended
+  ⚑ see a dermatologist
+=== 252_jpg.rf.7673977515c0c0070c6896af1bf71a10.jpg -> runs/e2e/sarpn-v2-random-252 (14:04:25)
+I0000 00:00:1783969749.243199 7790061 init-domain.cc:128] Fiber init: default domain = pthread, concurrency = 12, prefix = pthread-default
+W0000 00:00:1783969749.245786 7790061 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+I0000 00:00:1783969749.313033 7790061 gl_context.cc:407] GL version: 2.1 (2.1 Metal - 90.5), renderer: Apple M3 Pro
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+W0000 00:00:1783969749.317388 7790065 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1783969749.327372 7790065 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+wrote /Users/princekumar/Documents/skinscan/runs/e2e/sarpn-v2-random-252: 97 detections, recommendation complete
+  ⚑ severe acne_inflammatory — see a dermatologist
+  ⚑ nevus_observation: professional review recommended
+  ⚑ see a dermatologist
+=== 256_jpg.rf.2421f0cbbe6509327e5cb63ee09ac0d8.jpg -> runs/e2e/sarpn-v2-random-256 (14:09:14)
+analysis failed: tile 8 request to http://localhost:8000/predict failed: 504 Server Error: Gateway Timeout for url: http://localhost:8000/predict
+FAILED: 256_jpg.rf.2421f0cbbe6509327e5cb63ee09ac0d8.jpg
+=== 73_jpg.rf.558e7bdd056014d04de7ec3b990054d4.jpg -> runs/e2e/sarpn-v2-random-73 (14:11:42)
+I0000 00:00:1783970162.350298 7805260 init-domain.cc:128] Fiber init: default domain = pthread, concurrency = 12, prefix = pthread-default
+W0000 00:00:1783970162.353807 7805260 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+I0000 00:00:1783970162.429588 7805260 gl_context.cc:407] GL version: 2.1 (2.1 Metal - 90.5), renderer: Apple M3 Pro
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+W0000 00:00:1783970162.434332 7805263 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1783970162.443701 7805265 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+wrote /Users/princekumar/Documents/skinscan/runs/e2e/sarpn-v2-random-73: 313 detections, recommendation complete
+  ⚑ severe acne_comedonal — see a dermatologist
+  ⚑ severe acne_inflammatory — see a dermatologist
+  ⚑ severe acne_scarring — see a dermatologist
+  ⚑ severe hyperpigmentation — see a dermatologist
+  ⚑ nevus_observation: professional review recommended
+  ⚑ see a dermatologist
+=== 230_jpg.rf.3a87f29246b7457ab2aee6171fcd3636.jpg -> runs/e2e/sarpn-v2-random-230 (14:16:07)
+FAILED: 230_jpg.rf.3a87f29246b7457ab2aee6171fcd3636.jpg
+=== 76_jpg.rf.55bc18136ed249bb0648bba0164fa9b7.jpg -> runs/e2e/sarpn-v2-random-76 (14:18:01)
+I0000 00:00:1783970596.094522 7820962 init-domain.cc:128] Fiber init: default domain = pthread, concurrency = 12, prefix = pthread-default
+W0000 00:00:1783970596.097212 7820962 face_landmarker_graph.cc:180] Sets FaceBlendshapesGraph acceleration to xnnpack by default.
+I0000 00:00:1783970596.161931 7820962 gl_context.cc:407] GL version: 2.1 (2.1 Metal - 90.5), renderer: Apple M3 Pro
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+W0000 00:00:1783970596.165738 7820965 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1783970596.175348 7820972 inference_feedback_manager.cc:121] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+wrote /Users/princekumar/Documents/skinscan/runs/e2e/sarpn-v2-random-76: 137 detections, recommendation complete
+  ⚑ severe acne_cystic — see a dermatologist
+  ⚑ severe acne_scarring — see a dermatologist
+  ⚑ severe hyperpigmentation — see a dermatologist
+  ⚑ nevus_observation: professional review recommended
+  ⚑ see a dermatologist
+  ⚑ deeper tone: emphasize sunscreen and irritation avoidance to reduce post-inflammatory hyperpigmentation risk
+=== 15_jpg.rf.d647872eac631774d36fad8e9984b26e.jpg -> runs/e2e/sarpn-v2-random-15 (14:23:21)
+analysis failed: tile 8 request to http://localhost:8000/predict failed: 504 Server Error: Gateway Timeout for url: http://localhost:8000/predict
+FAILED: 15_jpg.rf.d647872eac631774d36fad8e9984b26e.jpg
+=== 237_jpg.rf.33ac4056a4fec5635968184bde9f2a64.jpg -> runs/e2e/sarpn-v2-random-237 (14:25:52)
+analysis failed: tile 4 request to http://localhost:8000/predict failed: 504 Server Error: Gateway Timeout for url: http://localhost:8000/predict
+FAILED: 237_jpg.rf.33ac4056a4fec5635968184bde9f2a64.jpg
+=== 2_jpg.rf.5d03f25d989d491eee26b22a76fdc772.jpg -> runs/e2e/sarpn-v2-random-2 (14:27:36)
