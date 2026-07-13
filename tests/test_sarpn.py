@@ -1,4 +1,5 @@
 import base64
+from collections import Counter
 from copy import deepcopy
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
@@ -29,6 +30,8 @@ from src.pipeline.sarpn import (
     SarpnSettings,
     SarpnTransportError,
     Tile,
+    _scrub_error_text,
+    _severity,
     dedupe_observations,
     infer_native_tiles,
     load_rgb,
@@ -214,6 +217,31 @@ def test_severity_special_cases_region_escalation_and_low_confidence_cap():
         assert report.concerns[0].severity == expected
 
 
+@pytest.mark.parametrize("broad_region_count", [2, 3, 4])
+def test_severity_region_floor_is_monotonic_in_region_count(broad_region_count):
+    """Finding 9: the region-count severity floor must never decrease as
+    region_count grows, for any configured broad_region_count."""
+    config = deepcopy(load_config()["sa_rpn"]["severity"])
+    config["broad_region_count"] = broad_region_count
+    labels = Counter({"papule": 1})
+    scores = [0.9]
+
+    severities = [
+        _severity(labels, scores, region_count, config, "acne_inflammatory")
+        for region_count in range(0, 6)
+    ]
+
+    assert severities == sorted(severities), severities
+
+
+def test_severity_region_floor_matches_default_config_boundaries():
+    config = load_config()["sa_rpn"]["severity"]
+    labels = Counter({"papule": 1})
+    scores = [0.9]
+    assert _severity(labels, scores, 2, config, "acne_inflammatory") == 2
+    assert _severity(labels, scores, 3, config, "acne_inflammatory") == 3
+
+
 def test_safety_observations_are_non_actionable_and_policy_driven():
     config = load_config()["sa_rpn"]["severity"]
     observations = [_observation("Nevus", 0.81), _observation("other", 0.5), _observation("Alien label", 0.9)]
@@ -321,8 +349,30 @@ def test_client_posts_base64_jpeg_and_validates_response(fake_http_server):
 
     result = infer_native_tiles(np.zeros((4, 4, 3), dtype=np.uint8), _settings(fake_http_server["url"]))
 
-    assert result == [LesionObservation("papule", "Papule", 0.9, (0, 0, 2, 2), 0, (0, 0, 4, 4))]
+    assert result == [LesionObservation("papule", "papule", 0.9, (0, 0, 2, 2), 0, (0, 0, 4, 4))]
     assert fake_http_server["requests"][0]["path"] == "/predict"
+
+
+@pytest.mark.parametrize(("server_label", "expected_original_label"), [
+    ("closed_comedo", "closed_comedo"), ("Papule", "Papule"), ("  Nodule  ", "Nodule"),
+])
+def test_original_label_preserves_exact_raw_server_string(
+    fake_http_server, server_label, expected_original_label,
+):
+    """Finding 10: original_label must retain the raw (stripped-only) server
+    string end-to-end, never a title-cased/normalized derivative."""
+    fake_http_server["responses"] = [(200, {"count": 1, "detections": [
+        {"label": server_label, "score": 0.9, "bbox": [0, 0, 2, 2]}
+    ]})]
+
+    result = infer_native_tiles(np.zeros((4, 4, 3), dtype=np.uint8), _settings(fake_http_server["url"]))
+
+    assert result[0].original_label == expected_original_label
+
+    _, updated, _ = build_sarpn_concern_report(
+        "img", result, ["forehead"], load_config()["sa_rpn"]["severity"],
+    )
+    assert updated[0].original_label == expected_original_label
 
 
 def test_exact_timeout_tuple_is_passed():
@@ -512,10 +562,81 @@ def test_transport_error_omits_credentials_from_credentialed_endpoint(fake_http_
     assert "hidden" not in message
 
 
+def test_scrub_error_text_masks_exact_configured_url():
+    """Already-passing form: the exception text embeds the literal configured
+    endpoint_url verbatim (credentials, query, and fragment included)."""
+    settings = _settings(_credentialed("http://127.0.0.1:8000/predict"))
+    text = f"HTTPError: 500 Server Error for url: {settings.endpoint_url}"
+
+    scrubbed = _scrub_error_text(text, settings)
+
+    assert "fixture" not in scrubbed
+    assert "secret" not in scrubbed
+    assert "hidden" not in scrubbed
+
+
+def test_scrub_error_text_masks_relative_url_with_query():
+    """Finding 4a: requests/urllib3 ConnectionError messages sometimes embed
+    only the relative request-line URL, e.g. "Max retries exceeded with url:
+    /predict?token=SECRET" — no scheme/host, so a literal full-URL replace
+    never matches."""
+    settings = _settings("http://127.0.0.1:8000/predict?token=SECRET")
+    text = ("HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries "
+            "exceeded with url: /predict?token=SECRET (Caused by "
+            "NewConnectionError('...'))")
+
+    scrubbed = _scrub_error_text(text, settings)
+
+    assert "SECRET" not in scrubbed
+
+
+def test_scrub_error_text_masks_normalized_host_userinfo():
+    """Finding 4b: urllib3 normalizes hostnames (e.g. lowercases them) in
+    HTTPError messages, so a literal replace against the configured
+    (differently-cased) endpoint_url misses the embedded userinfo."""
+    settings = _settings("http://Fixture:Secret@Example.COM/predict")
+    text = ("500 Server Error: Internal Server Error for url: "
+            "http://fixture:secret@example.com/predict")
+
+    scrubbed = _scrub_error_text(text, settings)
+
+    assert "fixture" not in scrubbed.lower()
+    assert "secret" not in scrubbed.lower()
+
+
 def test_sarpn_exceptions_share_a_common_analysis_error_base():
     assert issubclass(SarpnAnalysisError, RuntimeError)
     assert issubclass(SarpnTransportError, SarpnAnalysisError)
     assert issubclass(SarpnResponseError, SarpnAnalysisError)
+
+
+def test_dedupe_false_preserves_cross_tile_duplicates_that_dedupe_true_suppresses(
+    fake_http_server,
+):
+    """Finding 13: infer_native_tiles(dedupe=False) must return genuine raw,
+    un-deduped observations (so a caller's own single dedupe pass produces a
+    real raw->deduped delta); dedupe=True (the default) keeps deduping as
+    production requires."""
+    fake_http_server["responses"] = [
+        (200, {"count": 1, "detections": [
+            {"label": "papule", "score": 0.9, "bbox": [3, 0, 4, 1]},
+        ]}),
+        (200, {"count": 1, "detections": [
+            {"label": "papule", "score": 0.5, "bbox": [0, 0, 2, 1]},
+        ]}),
+        (200, {"count": 0, "detections": []}),
+        (200, {"count": 0, "detections": []}),
+    ]
+    settings = _settings(fake_http_server["url"], request_batch_size=1)
+    rgb = np.zeros((6, 6, 3), dtype=np.uint8)
+
+    raw = infer_native_tiles(rgb, settings, dedupe=False)
+    fake_http_server["next_index"] = 0
+    deduped = infer_native_tiles(rgb, settings, dedupe=True)
+
+    assert [item.box for item in raw] == [(3, 0, 4, 1), (2, 0, 4, 1)]
+    assert len(deduped) == 1
+    assert deduped[0].score == 0.9
 
 
 def test_min_score_is_applied_client_side(fake_http_server):

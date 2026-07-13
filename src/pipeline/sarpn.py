@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from io import BytesIO
 import math
 from pathlib import Path
+import re
 from types import MappingProxyType
 from typing import Any, Callable
 from urllib.parse import urlsplit, urlunsplit
@@ -217,7 +218,10 @@ def _validated_detections(
         label = detection.get("label")
         if not isinstance(label, str) or not label.strip():
             raise _response_error(tile, endpoint, "label", "must be a non-blank string")
-        label_name = label.strip().replace("_", " ").title()
+        # Normalize once (D-... plan): retain the exact raw server string as
+        # the observation's original_label end-to-end. Title-casing is a
+        # display concern only — do it in drawing/rendering code, not here.
+        label_name = label.strip()
         score = detection.get("score")
         if isinstance(score, bool) or not isinstance(score, (int, float)) or not math.isfinite(score) or not 0 <= score <= 1:
             raise _response_error(tile, endpoint, "score", "must be a finite number between 0 and 1")
@@ -252,6 +256,32 @@ def _validated_detections(
     return observations
 
 
+def _scrub_error_text(text: str, settings: "SarpnSettings") -> str:
+    """Best-effort redaction of credentials/queries embedded in exception
+    text. requests/urllib3 surface the request URL in several shapes that a
+    single literal replace against the configured endpoint_url can miss:
+
+      - relative-form URLs in ConnectionError messages, e.g. "Max retries
+        exceeded with url: /predict?token=SECRET" (no scheme/host at all);
+      - urllib3-normalized URLs (e.g. lowercased host) in HTTPError messages,
+        which no longer match the configured endpoint_url verbatim.
+
+    So this applies every mitigation unconditionally rather than relying on
+    one exact match.
+    """
+    safe_endpoint = sanitize_endpoint(settings.endpoint_url)
+    text = text.replace(settings.endpoint_url, safe_endpoint)
+    # Strip basic-auth userinfo after any scheme, regardless of host casing.
+    text = re.sub(r"(?<=://)[^/@\s]+@", "", text)
+    parsed = urlsplit(settings.endpoint_url)
+    if parsed.query:
+        path = parsed.path or "/"
+        if path:
+            text = re.sub(re.escape(path) + r"\?[^\s)\"']*", path, text)
+        text = text.replace(f"?{parsed.query}", "")
+    return text
+
+
 def _infer_tile(
     rgb: np.ndarray,
     tile: Tile,
@@ -273,7 +303,7 @@ def _infer_tile(
             # userinfo) in some exception messages, e.g. HTTPError from
             # raise_for_status(); scrub it before it reaches logs or analysis.json.
             safe_endpoint = sanitize_endpoint(settings.endpoint_url)
-            detail = str(exc).replace(settings.endpoint_url, safe_endpoint)
+            detail = _scrub_error_text(str(exc), settings)
             raise SarpnTransportError(
                 f"tile {tile.index} request to {safe_endpoint} failed: {detail}"
             ) from exc
@@ -293,8 +323,16 @@ def infer_native_tiles(
     settings: SarpnSettings,
     *,
     session_factory: Callable[[], requests.Session] = requests.Session,
+    dedupe: bool = True,
 ) -> list[LesionObservation]:
-    """Infer every native-resolution tile; any tile failure aborts the analysis."""
+    """Infer every native-resolution tile; any tile failure aborts the analysis.
+
+    dedupe=True (default) preserves the production contract: cross-tile
+    duplicate suppression happens exactly once, here. Callers that need the
+    genuine raw (pre-dedupe) detections — e.g. the compare_sarpn A/B harness,
+    which reports raw_detections vs. detections_after_dedupe — pass
+    dedupe=False and own the single dedupe_observations() call downstream.
+    """
     tiles = make_tiles(rgb.shape, tile_size=settings.tile_size, overlap=settings.tile_overlap)
     results: dict[int, list[LesionObservation]] = {}
     with ThreadPoolExecutor(max_workers=settings.request_batch_size) as executor:
@@ -311,6 +349,8 @@ def infer_native_tiles(
                 future.cancel()
             raise
     ordered = [observation for index in sorted(results) for observation in results[index]]
+    if not dedupe:
+        return ordered
     return dedupe_observations(
         ordered, threshold=settings.dedupe_threshold, preserve_tile_order=True
     )
@@ -324,10 +364,14 @@ def _severity(labels: Counter, scores: list[float], region_count: int, config: M
     if labels["nodule"]:
         return config["nodule_severity"]
     severity = bisect_right(tuple(config["count_thresholds"][concern]), sum(labels.values()))
-    if region_count == 2:
-        severity = max(severity, 2)
-    elif region_count >= config["broad_region_count"]:
+    # Check the broad floor first so the floor is monotonic in region_count
+    # regardless of how broad_region_count is configured (Finding 9): a
+    # region_count that already qualifies as "broad" must never fall through
+    # to a lower floor than a smaller region_count would get.
+    if region_count >= config["broad_region_count"]:
         severity = max(severity, 3)
+    elif region_count >= 2:
+        severity = max(severity, 2)
     if labels["hypertrophic_scar"]:
         severity = max(severity, config["hypertrophic_scar_min_severity"])
     if scores and max(scores) < config["confidence_cutoff"]:
