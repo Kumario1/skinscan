@@ -15,7 +15,9 @@ import numpy as np
 from PIL import Image
 import pytest
 
-from src.pipeline.e2e import main
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from src.pipeline.e2e import load_optional_catalog, main
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -260,6 +262,10 @@ def test_failed_identification_preserves_previous_output(tmp_path, capsys):
     _write_image(image_path)
     _write_catalog(catalog_path)
     output_dir.mkdir()
+    # Marking output_dir as a prior pipeline output (analysis.json present)
+    # satisfies the Finding 2 guard so the run gets far enough to hit the
+    # SA-RPN endpoint and fail there, before ever reaching the publish step.
+    (output_dir / "analysis.json").write_text('{"schema_version": "2.0"}')
     marker = output_dir / "last-success.txt"
     marker.write_text("keep me")
 
@@ -268,7 +274,7 @@ def test_failed_identification_preserves_previous_output(tmp_path, capsys):
         assert server.request_count == 2
         assert all("legacy" not in path for path in server.paths)
 
-    assert {path.name for path in output_dir.iterdir()} == {"last-success.txt"}
+    assert {path.name for path in output_dir.iterdir()} == {"analysis.json", "last-success.txt"}
     assert marker.read_text() == "keep me"
     assert not list(tmp_path.glob(".output.*"))
 
@@ -276,3 +282,264 @@ def test_failed_identification_preserves_previous_output(tmp_path, capsys):
     assert "fixture" not in stderr
     assert "secret" not in stderr
     assert "hidden" not in stderr
+
+
+def test_load_optional_catalog_merges_tier2_products(tmp_path):
+    catalog_path = tmp_path / "catalog.json"
+    tier2_path = tmp_path / "catalog_tier2.json"
+    _write_catalog(catalog_path)
+    tier2_path.write_text(json.dumps([
+        {
+            "product_id": "tier2-serum",
+            "name": "Tier 2 Serum",
+            "brand": "Fixture",
+            "category": "serum",
+            "actives": [],
+            "tier": 2,
+            "no_outcome_data": True,
+        },
+    ]))
+
+    products, reason = load_optional_catalog(catalog_path)
+
+    assert reason is None
+    assert {product.product_id for product in products} == {
+        "gentle-cleanser", "daily-spf", "tier2-serum",
+    }
+
+
+def test_load_optional_catalog_ignores_absent_tier2(tmp_path):
+    catalog_path = tmp_path / "catalog.json"
+    _write_catalog(catalog_path)
+
+    products, reason = load_optional_catalog(catalog_path)
+
+    assert reason is None
+    assert {product.product_id for product in products} == {"gentle-cleanser", "daily-spf"}
+
+
+def test_load_optional_catalog_degrades_on_broken_tier2(tmp_path):
+    catalog_path = tmp_path / "catalog.json"
+    tier2_path = tmp_path / "catalog_tier2.json"
+    _write_catalog(catalog_path)
+    tier2_path.write_text("not-json")
+
+    products, reason = load_optional_catalog(catalog_path)
+
+    assert products is None
+    assert reason is not None
+    assert "invalid" in reason.lower()
+
+
+def test_empty_catalog_is_treated_as_unavailable(tmp_path, fake_sarpn_server):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path, width=800)
+    catalog_path.write_text("[]")
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    assert analysis["recommendation_status"] == "unavailable"
+    assert analysis["recommendation_reason"] == "catalog is empty"
+    assert not (output_dir / "routine.json").exists()
+
+
+# --- Finding 2: refuse to replace an unrelated pre-existing --out dir ------
+
+def test_main_refuses_to_replace_unrelated_output_dir(tmp_path, fake_sarpn_server):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+    output_dir.mkdir()
+    unrelated = output_dir / "unrelated.txt"
+    unrelated.write_text("do not touch me")
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) != 0
+
+    assert unrelated.read_text() == "do not touch me"
+    assert {path.name for path in output_dir.iterdir()} == {"unrelated.txt"}
+    assert fake_sarpn_server.request_count == 0
+
+
+def test_main_replaces_empty_output_dir(tmp_path, fake_sarpn_server):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+    output_dir.mkdir()
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    assert (output_dir / "analysis.json").exists()
+
+
+def test_main_replaces_prior_pipeline_output_dir(tmp_path, fake_sarpn_server):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+    output_dir.mkdir()
+    (output_dir / "analysis.json").write_text('{"schema_version": "2.0"}')
+    (output_dir / "stale.jpg").write_text("old diagnostic")
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    assert not (output_dir / "stale.jpg").exists()
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    assert analysis["schema_version"] == "2.0"
+    assert analysis["recommendation_status"] == "complete"
+
+
+# --- Finding 11: regular file at --out is refused early (chosen behavior) --
+
+def test_regular_file_at_output_path_is_refused_early(tmp_path, fake_sarpn_server):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+    output_dir.write_text("not a directory")
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) != 0
+
+    assert output_dir.is_file()
+    assert output_dir.read_text() == "not a directory"
+    assert fake_sarpn_server.request_count == 0
+
+
+def test_remove_path_helper_handles_files_dirs_and_missing(tmp_path):
+    from src.pipeline.e2e import _remove_path
+
+    file_path = tmp_path / "file.txt"
+    file_path.write_text("x")
+    _remove_path(file_path)
+    assert not file_path.exists()
+
+    dir_path = tmp_path / "dir"
+    dir_path.mkdir()
+    (dir_path / "inner.txt").write_text("y")
+    _remove_path(dir_path)
+    assert not dir_path.exists()
+
+    _remove_path(tmp_path / "does-not-exist")  # must not raise
+
+
+# --- Finding 5: a concurrent-run race must not destroy the other run's ------
+# --- fresh output; the failed run leaves its backup on disk instead. -------
+
+def test_publish_conflict_preserves_concurrent_output(tmp_path, fake_sarpn_server, monkeypatch):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+    output_dir.mkdir()
+    (output_dir / "analysis.json").write_text('{"schema_version": "2.0", "marker": "prior-run"}')
+
+    real_rename = Path.rename
+
+    def flaky_rename(self, target):
+        target_path = Path(target)
+        if target_path == output_dir and ".staging-" in self.name:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            (output_dir / "concurrent-marker.txt").write_text("fresh from concurrent run")
+            raise OSError("simulated concurrent publish collision")
+        return real_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", flaky_rename)
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) != 0
+
+    assert {path.name for path in output_dir.iterdir()} == {"concurrent-marker.txt"}
+    assert (output_dir / "concurrent-marker.txt").read_text() == "fresh from concurrent run"
+
+    backups = list(tmp_path.glob(".output.backup-*"))
+    assert len(backups) == 1
+    backup_analysis = json.loads((backups[0] / "analysis.json").read_text())
+    assert backup_analysis["marker"] == "prior-run"
+
+
+def test_publish_conflict_error_message_mentions_backup_path(
+    tmp_path, fake_sarpn_server, monkeypatch, capsys,
+):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+    output_dir.mkdir()
+    (output_dir / "analysis.json").write_text('{"schema_version": "2.0", "marker": "prior-run"}')
+
+    real_rename = Path.rename
+
+    def flaky_rename(self, target):
+        target_path = Path(target)
+        if target_path == output_dir and ".staging-" in self.name:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            (output_dir / "concurrent-marker.txt").write_text("fresh from concurrent run")
+            raise OSError("simulated concurrent publish collision")
+        return real_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", flaky_rename)
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) != 0
+
+    backups = list(tmp_path.glob(".output.backup-*"))
+    assert len(backups) == 1
+    stderr = capsys.readouterr().err
+    assert str(backups[0]) in stderr
+
+
+# --- Finding 8: a stale backup from any pid is recoverable ------------------
+
+def test_stale_any_pid_backup_is_restored_then_replaced_on_success(tmp_path, fake_sarpn_server):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+
+    stale_backup = tmp_path / ".output.backup-99999"
+    stale_backup.mkdir()
+    (stale_backup / "marker.txt").write_text("stranded from a crashed run")
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+
+    assert output_dir.exists()
+    assert not (output_dir / "marker.txt").exists()
+    assert (output_dir / "analysis.json").exists()
+    assert not stale_backup.exists()
+    assert not list(tmp_path.glob(".output.backup-*"))
+
+
+def test_stale_any_pid_backup_is_restored_when_publish_then_fails(
+    tmp_path, fake_sarpn_server, monkeypatch,
+):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+
+    stale_backup = tmp_path / ".output.backup-99999"
+    stale_backup.mkdir()
+    (stale_backup / "marker.txt").write_text("stranded from a crashed run")
+
+    real_rename = Path.rename
+
+    def flaky_rename(self, target):
+        target_path = Path(target)
+        if target_path == output_dir and ".staging-" in self.name:
+            raise OSError("simulated publish failure")
+        return real_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", flaky_rename)
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) != 0
+
+    assert output_dir.exists()
+    assert (output_dir / "marker.txt").read_text() == "stranded from a crashed run"
