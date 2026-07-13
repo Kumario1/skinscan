@@ -15,11 +15,25 @@ mappings. Cystic → always route to "see a professional," never treat.
 
 | Concern             | First-line actives            | Also helpful               | Avoid                     |
 |---------------------|-------------------------------|----------------------------|---------------------------|
-| acne_comedonal      | salicylic_acid, adapalene     | azelaic_acid, mandelic     | heavy comedogenic oils    |
-| acne_inflammatory   | benzoyl_peroxide, azelaic_acid| adapalene, niacinamide     | over-exfoliation          |
+| acne_comedonal      | salicylic_acid, adapalene, azelaic_acid | mandelic          | heavy comedogenic oils    |
+| acne_inflammatory   | benzoyl_peroxide, azelaic_acid, niacinamide | adapalene       | over-exfoliation          |
 | acne_cystic         | (route to professional)       | soothing only: centella    | DIY strong actives        |
-| hyperpigmentation   | niacinamide, vitamin_c        | azelaic_acid, alpha_arbutin, tranexamic_acid, retinol | unprotected sun (mandate SPF) |
-| dryness             | ceramides, hyaluronic_acid    | glycerin, squalane, panthenol | foaming/stripping cleansers, high-% actives |
+| acne_scarring       | ceramides (barrier support) + SPF (mandate) | —             | aggressive actives without professional review |
+| hyperpigmentation   | azelaic_acid, niacinamide     | alpha_arbutin, tranexamic_acid, retinol | unprotected sun (mandate SPF) |
+| dryness             | ceramides, hyaluronic_acid, glycerin | squalane, panthenol | foaming/stripping cleansers, high-% actives |
+
+**V2 changes** (`src/recommendation/engine.py: CONCERN_ACTIVES`, D-026/D-027):
+
+- `acne_scarring` is now its own concern — V2 SA-RPN scars
+  (`atrophic_scar`/`hypertrophic_scar`) no longer fold into
+  `hyperpigmentation` (only `melasma` does). First-line is barrier-support
+  `ceramides`; SPF is mandatory whenever `acne_scarring` is present (§3); a
+  severity ≥ 3 or any `hypertrophic_scar` evidence additionally flags
+  `"consider professional review for acne scarring"`.
+- `hyperpigmentation` first-line dropped `vitamin_c` — it is now
+  `azelaic_acid, niacinamide` only (`STRONG_ACTIVES` still contains
+  `vitamin_c` for interaction-constraint/soothe-path purposes; it's just no
+  longer proposed as a first-line hyperpigmentation active).
 
 ## 2. Interaction constraints (don't co-recommend in same routine step)
 
@@ -86,11 +100,16 @@ Fixed order, matches catalog categories:
 cleanser → treatment → serum → moisturizer → spf (AM only)
 ```
 Rules:
-- SPF is ALWAYS included when hyperpigmentation is present (non-negotiable — it's
-  the highest-leverage step for pigmentation).
+- SPF is ALWAYS included when `hyperpigmentation` OR `acne_scarring` is
+  present (V2: extended to scarring — non-negotiable, it's the
+  highest-leverage step for pigmentation and for protecting healing scar
+  tissue). `engine.py`'s `needs_spf` flag is set from the concern's presence
+  alone, independent of its confidence — see §7.
 - If AM/PM split is triggered by an interaction constraint, output two routines.
-- Moisturizer with ceramides always included when dryness present OR when a
-  strong active (BP, retinoid) is recommended (barrier support).
+- Moisturizer with ceramides always included when dryness present OR when ANY
+  `engine.STRONG_ACTIVES` member (chemical exfoliants, retinol/adapalene,
+  benzoyl_peroxide, azelaic_acid, vitamin_c, gluconolactone, willow_bark) is
+  in `target_actives` (barrier support) — not only BP/retinoid.
 
 ## 4. Severity modifiers
 
@@ -114,14 +133,63 @@ escalation path (§5 applies everywhere).
 
 ## 5. Confidence handling
 
-- concern confidence ≥ threshold (configs/) → normal recommendation.
-- below threshold → still surface the ingredient, tagged "possible — verify at a
-  counter or with a professional." (D-002: loud uncertainty.)
+- concern confidence ≥ threshold (`recommendation.concern_confidence_cutoff`,
+  `configs/default.yaml`, currently 0.5) → normal recommendation: first-line
+  actives for that concern are added to `target_actives`.
+- **V2 change:** below threshold → the concern contributes **no actives at
+  all** (strong or gentle) to `target_actives`; only the flag
+  `"{concern}@{regions}: possible — verify"` is emitted (D-002: loud
+  uncertainty). This replaces the earlier behavior of still listing the
+  ingredient under a "verify" tag. `needs_spf` (hyperpigmentation/
+  acne_scarring, §3) and the deep-tone flag (§7) are exceptions — both are
+  decided from the concern's presence in the report, not its confidence, so
+  they still apply even when the concern itself contributed no actives.
+- The cystic/severe soothe-only escalation (§4, `overall_severity >= 4` or
+  any `acne_cystic`) bypasses per-concern confidence gating entirely: every
+  low-confidence concern in the report still gets its "possible — verify"
+  flag, but the target list is fixed to `centella, ceramides,
+  hyaluronic_acid` regardless of confidence.
 
 ## 6. Comedogenic down-ranking
 
 When any acne concern is present, products carrying `comedogenic_flags`
 (CATALOG_SCHEMA) are down-ranked, not excluded — surfaced last with a note.
+
+## 7. V2 evidence-aware adjustments (SA-RPN bridge)
+
+These apply to reports whose concerns carry V2 `evidence` (`labels`,
+`max_confidence`, `affected_region_count` — `docs/CONCERN_SCHEMA.md`), i.e.
+the production `src.pipeline.e2e` SA-RPN path.
+
+- **Broad-inflammatory de-stacking.** When an `acne_inflammatory` concern's
+  `evidence.affected_region_count >= 3` (`broad_inflammation`) and both
+  `benzoyl_peroxide` and `azelaic_acid` are in `target_actives`, the engine
+  builds a probe routine first; only if `azelaic_acid` actually surfaces a
+  catalog product in that probe does it drop `benzoyl_peroxide` from
+  `target_actives` and flag `"broad inflammation: reduced strong-active
+  stacking"`. If no azelaic-containing product exists in the catalog,
+  benzoyl_peroxide is kept — an empty treatment slot is worse than a
+  slightly heavier one.
+- **Deep-tone emphasis wording.** `profile.tone_bucket == "deep"` AND the
+  report contains `acne_inflammatory`, `acne_scarring`, or
+  `hyperpigmentation` → flag `"deeper tone: emphasize sunscreen and
+  irritation avoidance to reduce post-inflammatory hyperpigmentation risk"`.
+  Decided from the full reported-concern set, independent of per-concern
+  confidence (a low-confidence hyperpigmentation concern still triggers it).
+- **Unknown-tone neutrality.** `TONE_BUCKETS` (`src/recommendation/schema.py`)
+  includes `"unknown"` alongside `light`/`medium`/`deep` — matching the
+  photo-tone estimator, which reports `"unknown"` rather than guessing when
+  too few skin pixels are sampled (`src/pipeline/tone.py`). Unknown (or
+  absent) tone never triggers the deep-tone guidance above and is otherwise
+  treated exactly like `light`/`medium`: the recommender stays neutral by
+  default rather than assuming risk when tone can't be estimated, while still
+  reporting the bucket honestly (D-016 discipline: never silently dropped).
+- **Ranker default.** Production `src.pipeline.e2e` always calls
+  `recommend(report, catalog, profile=profile, ranker=None)` — every run
+  ships the deterministic rules-only order (§2c, D-019). The duck-typed
+  ranker hook and `StatsRanker` (D-022) remain available to
+  `src.recommendation.ranker` / standalone bake-off evaluation only; nothing
+  in the production e2e CLI activates them.
 
 ---
 
