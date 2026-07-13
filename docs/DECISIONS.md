@@ -488,3 +488,42 @@ Rules out: any code path that imports or calls the YOLOv8m/EfficientNetB0
 pipeline from the default `src.pipeline.e2e`; any silent local-model fallback
 on SA-RPN failure; and describing D-026's own historical A/B numbers as if
 they were re-measured under this cutover.
+
+## D-028 — Popularity nudge in StatsRanker (2026-07-13)
+
+**Decision.** `StatsRanker` blends an engagement-volume signal into its
+ordering: `score = smoothed_rating + w * log1p(loves) / log1p(max_loves)`,
+where `loves` is Sephora `loves_count` (the closest available proxy for
+"bought/wanted" — no purchase counts exist in the data) and
+`w = ranker.popularity_weight` (config knob, default 0.2 rating-points).
+Products without loves data (e.g. beautyapi imports, unmatched ids) get 0
+nudge. Loves are stamped into `review_stats.json` as a top-level
+`loves: {product_id: count}` map at stats-build time, joined from
+`data/raw/sephora/product_info.csv` — coverage is independent of whether a
+product has review cells. This deliberately amends CATALOG_SCHEMA.md's "v1
+doesn't rank on popularity": the catalog schema itself stays popularity-free;
+the bias lives entirely in the review-stats artifact and the ranker.
+
+**Scope.** `StatsRanker` only. The learned `Ranker` path would take
+`loves_count` as a training feature and re-run the D-022 ratchet — out of
+scope until a learned model returns. The engine sort key is untouched: the
+nudge lives inside `StatsRanker.score`, comedogenic partition and tier-1/tier-2
+partition still dominate, so popularity can never promote a tier-2 or
+comedogenic-flagged product past its partition.
+
+**Why.** Sephora ratings cluster 4.0–4.6, so smoothed-rating ordering is
+tie-heavy; volume is the discriminator. Product choice: surface products
+people actually buy, at small deliberate cost to pure measured ordering.
+
+**Gate (soft).** The blended scorer joins the D-022 bake-off harness as a
+fourth method. Ship w=0.2 unless pooled pairwise drops more than 0.02 below
+StatsRanker's 0.609 — the bias is a product decision, the harness only proves
+it isn't quietly collapsing the ordering. Measured 2026-07-13 (full run,
+n_test=173,815): blended pairwise **0.610** vs bayesian 0.609, ROC-AUC 0.664
+vs 0.666 — the nudge is free at w=0.2 (gate passed with a hair to spare, not
+within-tolerance-but-worse). Loves coverage: 1,634/1,634 catalog products.
+`runs/ranker/eval.json` carries `blended_gate_passed` on every future run.
+
+Rules out: popularity fields on the catalog schema; loves affecting selection,
+gating, flags, or safety (ranker reorders only, D-005); tuning w to win the
+bake-off (that would delete the bias this decision exists to add).

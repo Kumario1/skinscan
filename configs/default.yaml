@@ -86,6 +86,8 @@ ranker:                             # re-ranker artifacts (D-022 as amended 2026
   min_cell_size: 5                    # min reviews per product x skin-type cell before "all reviewers" fallback
   brand_top_n: 50                     # keep the top-N brands by review count as features; rest -> "other"
   bayesian_prior_count: 20            # m in the Bayesian-smoothed mean-rating baseline (global prior)
+  popularity_weight: 0.2              # D-028: w in score = smoothed_rating + w*log1p(loves)/log1p(max_loves); 0 disables the popularity nudge
+  product_info_path: data/raw/sephora/product_info.csv  # loves_count source joined into review_stats.json at build time (D-028)
   split_test_fraction: 0.25           # reviewer-disjoint deterministic hash split -> test fraction
   eval_low_n_floor: 30                # per-tone-bucket test N below this -> low_n flag on that row
 

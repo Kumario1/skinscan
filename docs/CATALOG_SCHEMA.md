@@ -113,7 +113,9 @@ products** (all five categories non-empty, ~89% with ≥1 canonical active).
 
 ## What this deliberately excludes
 
-- No reviews / ratings (v1 doesn't rank on popularity).
+- No reviews / ratings / loves on the catalog itself — popularity ranking
+  exists (D-028) but lives in the review-stats artifact and the ranker, never
+  on the catalog schema.
 - No concentration data (INCI lists don't provide it reliably).
 - No stock / availability.
 
@@ -136,7 +138,8 @@ them into two files:
       "__all__": {"n": 812, "mean_rating": 4.4, "pct_recommend": 0.86},
       "oily":    {"n": 210, "mean_rating": 4.2, "pct_recommend": 0.81}
     }
-  }
+  },
+  "loves": {"P480274": 118000}
 }
 ```
 
@@ -146,6 +149,11 @@ them into two files:
 
 `global_mean_rating` (top-level) is the train-rows mean rating — the smoothing
 prior `StatsRanker` shrinks each product's pooled rating toward (D-022 amendment).
+
+`loves` (top-level, D-028) — `{product_id: loves_count}` joined from
+`product_info.csv` at stats-build time, catalog products only; feeds
+`StatsRanker`'s popularity nudge (`ranker.popularity_weight`). Absent when the
+product-info file wasn't available at build time — the nudge degrades to 0.
 
 **`ranker.joblib`** — the model bundle (joblib dict), written **only when the
 D-022 gate passes**: `{"model"` (HistGradientBoostingClassifier on
