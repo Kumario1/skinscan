@@ -479,6 +479,38 @@ def test_invalid_count_is_rejected(fake_http_server, response):
         infer_native_tiles(np.zeros((4, 4, 3), dtype=np.uint8), _settings(fake_http_server["url"]))
 
 
+def _credentialed(url):
+    return url.replace("http://", "http://fixture:secret@", 1) + "?token=hidden#fragment"
+
+
+def test_response_error_omits_credentials_from_credentialed_endpoint(fake_http_server):
+    fake_http_server["responses"] = [(200, {"detections": []})]
+    with pytest.raises(SarpnResponseError, match=r"tile 0.*count") as exc_info:
+        infer_native_tiles(
+            np.zeros((4, 4, 3), dtype=np.uint8),
+            _settings(_credentialed(fake_http_server["url"])),
+        )
+
+    message = str(exc_info.value)
+    assert "fixture" not in message
+    assert "secret" not in message
+    assert "hidden" not in message
+
+
+def test_transport_error_omits_credentials_from_credentialed_endpoint(fake_http_server):
+    fake_http_server["responses"] = [(500, {})]
+    with pytest.raises(SarpnTransportError, match=r"tile 0") as exc_info:
+        infer_native_tiles(
+            np.zeros((4, 4, 3), dtype=np.uint8),
+            _settings(_credentialed(fake_http_server["url"])),
+        )
+
+    message = str(exc_info.value)
+    assert "fixture" not in message
+    assert "secret" not in message
+    assert "hidden" not in message
+
+
 def test_min_score_is_applied_client_side(fake_http_server):
     fake_http_server["responses"] = [(200, {"count": 1, "detections": [
         {"label": "papule", "score": 0.2, "bbox": [0, 0, 1, 1]}
