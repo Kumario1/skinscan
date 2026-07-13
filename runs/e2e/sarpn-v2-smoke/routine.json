@@ -1,0 +1,634 @@
+{
+  "schema_version": "2.0",
+  "image_id": "242_jpg.rf.826d088018f0e458cacef5f3cd58edb7.jpg",
+  "concerns": [
+    {
+      "concern": "acne_comedonal",
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "nose",
+        "perioral",
+        "right_cheek"
+      ],
+      "severity": 4,
+      "confidence": 0.6775288461538462,
+      "lesion_count": 52,
+      "evidence": {
+        "labels": {
+          "open_comedo": 11,
+          "closed_comedo": 41
+        },
+        "max_confidence": 0.9754,
+        "affected_region_count": 6
+      }
+    },
+    {
+      "concern": "acne_inflammatory",
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "nose",
+        "perioral",
+        "right_cheek"
+      ],
+      "severity": 4,
+      "confidence": 0.7297888888888889,
+      "lesion_count": 36,
+      "evidence": {
+        "labels": {
+          "papule": 27,
+          "pustule": 9
+        },
+        "max_confidence": 0.9806,
+        "affected_region_count": 6
+      }
+    },
+    {
+      "concern": "acne_scarring",
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "right_cheek"
+      ],
+      "severity": 3,
+      "confidence": 0.5518714285714286,
+      "lesion_count": 7,
+      "evidence": {
+        "labels": {
+          "atrophic_scar": 7
+        },
+        "max_confidence": 0.902,
+        "affected_region_count": 4
+      }
+    },
+    {
+      "concern": "hyperpigmentation",
+      "regions": [
+        "nose",
+        "right_cheek"
+      ],
+      "severity": 2,
+      "confidence": 0.6106,
+      "lesion_count": 2,
+      "evidence": {
+        "labels": {
+          "melasma": 2
+        },
+        "max_confidence": 0.64,
+        "affected_region_count": 2
+      }
+    }
+  ],
+  "clear_skin": false,
+  "notes": "",
+  "tone": {
+    "bucket": "light",
+    "ita": 44.07279367207669,
+    "median_l": 67.47676667405725,
+    "low_light": false,
+    "sample_count": 6285594,
+    "source": "photo_estimate"
+  },
+  "region_mapping": {
+    "method": "grid_fallback",
+    "fallback": true,
+    "reason": "missing FaceLandmarker model artifact: models/face_landmarker.task",
+    "face_detected": false,
+    "face_box": null,
+    "forced_assignments": []
+  },
+  "region_method": "grid_fallback",
+  "flags": [
+    "see a dermatologist"
+  ],
+  "target_actives": [
+    "centella",
+    "ceramides",
+    "hyaluronic_acid"
+  ],
+  "slot_assignment": {
+    "centella": [
+      "AM",
+      "PM"
+    ],
+    "ceramides": [
+      "AM",
+      "PM"
+    ],
+    "hyaluronic_acid": [
+      "AM",
+      "PM"
+    ]
+  },
+  "routines": {
+    "AM": {
+      "cleanser": [
+        {
+          "product_id": "P449175",
+          "brand": "belif",
+          "name": "Aqua Bomb Hydrating Toner",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol"
+          ],
+          "price_usd": 30.0
+        },
+        {
+          "product_id": "P500753",
+          "brand": "Charlotte Tilbury",
+          "name": "Daily Glow Toner with Niacinamide",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 55.0
+        },
+        {
+          "product_id": "P139000",
+          "brand": "CLINIQUE",
+          "name": "All About Clean Liquid Facial Soap",
+          "actives": [
+            "hyaluronic_acid"
+          ],
+          "price_usd": 23.5
+        },
+        {
+          "product_id": "P122882",
+          "brand": "CLINIQUE",
+          "name": "Clarifying Lotion 2",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 20.0
+        },
+        {
+          "product_id": "P122762",
+          "brand": "CLINIQUE",
+          "name": "Rinse-Off Foaming Cleanser",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 23.5
+        }
+      ],
+      "treatment": [
+        {
+          "product_id": "P503926",
+          "brand": "Augustinus Bader",
+          "name": "The Face Cream Mask",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 215.0
+        },
+        {
+          "product_id": "P505054",
+          "brand": "Benefit Cosmetics",
+          "name": "The POREfessional Speedy Smooth Mask",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 39.0
+        },
+        {
+          "product_id": "P410657",
+          "brand": "Clarins",
+          "name": "Extra-Firming & Smoothing Face Mask",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 79.0
+        },
+        {
+          "product_id": "P377577",
+          "brand": "CLINIQUE",
+          "name": "Moisture Surge Overnight Face Mask",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol"
+          ],
+          "price_usd": 40.0
+        },
+        {
+          "product_id": "P393501",
+          "brand": "CLINIQUE",
+          "name": "Acne Solutions Cleansing Gel",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 23.5
+        }
+      ],
+      "serum": [
+        {
+          "product_id": "P442539",
+          "brand": "Alpha-H",
+          "name": "Vitamin B Serum with 5% Niacinamide and Peptides",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 65.0
+        },
+        {
+          "product_id": "P475907",
+          "brand": "Augustinus Bader",
+          "name": "The Serum with  TFC8",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 390.0
+        },
+        {
+          "product_id": "P467110",
+          "brand": "Biossance",
+          "name": "Squalane + 10% Vitamin C Dark Spot Serum",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 65.0
+        },
+        {
+          "product_id": "P479304",
+          "brand": "Biossance",
+          "name": "Squalane + Copper Peptide Rapid Plumping Serum",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 68.0
+        },
+        {
+          "product_id": "P480284",
+          "brand": "Caudalie",
+          "name": "Premier Cru Anti-Aging Serum with Niacinamide and Hyaluronic Acid",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 139.0
+        }
+      ],
+      "moisturizer": [
+        {
+          "product_id": "P379907",
+          "brand": "Algenist",
+          "name": "Advanced Anti-Aging Repairing Oil",
+          "actives": [
+            "ceramides"
+          ],
+          "price_usd": 82.0
+        },
+        {
+          "product_id": "P420638",
+          "brand": "Algenist",
+          "name": "ELEVATE Advanced Lift Contouring Cream",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 96.0
+        },
+        {
+          "product_id": "P470509",
+          "brand": "Augustinus Bader",
+          "name": "The Rich Cream with TFC8 Face Moisturizer",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 290.0
+        },
+        {
+          "product_id": "P500420",
+          "brand": "Augustinus Bader",
+          "name": "The Light Cream",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 180.0
+        },
+        {
+          "product_id": "P394639",
+          "brand": "belif",
+          "name": "The True Cream Aqua Bomb",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 38.0
+        }
+      ],
+      "spf": [
+        {
+          "product_id": "P311143",
+          "brand": "Algenist",
+          "name": "SUBLIME DEFENSE Ultra Lightweight UV Defense Fluid SPF 50",
+          "actives": [
+            "glycerin"
+          ],
+          "price_usd": 28.0
+        },
+        {
+          "product_id": "P500019",
+          "brand": "belif",
+          "name": "The True Cream - Aqua Bomb Sunscreen Broad Spectrum SPF 50",
+          "actives": [
+            "glycerin",
+            "panthenol"
+          ],
+          "price_usd": 38.0
+        },
+        {
+          "product_id": "P456410",
+          "brand": "Biossance",
+          "name": "Squalane + Zinc Sheer Mineral Sunscreen SPF 30 PA +++",
+          "actives": [
+            "glycerin",
+            "squalane"
+          ],
+          "price_usd": 34.0
+        },
+        {
+          "product_id": "P481366",
+          "brand": "CAY SKIN",
+          "name": "Isle Glow Face Moisturizer SPF 45 with Sea Moss and Niacinamide",
+          "actives": [
+            "glycerin",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 34.0
+        },
+        {
+          "product_id": "P196542",
+          "brand": "CLINIQUE",
+          "name": "City Block Sheer Oil-Free Daily Face Protector Broad Spectrum SPF 25 Primer",
+          "actives": [
+            "hyaluronic_acid"
+          ],
+          "price_usd": 30.0
+        }
+      ]
+    },
+    "PM": {
+      "cleanser": [
+        {
+          "product_id": "P449175",
+          "brand": "belif",
+          "name": "Aqua Bomb Hydrating Toner",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol"
+          ],
+          "price_usd": 30.0
+        },
+        {
+          "product_id": "P500753",
+          "brand": "Charlotte Tilbury",
+          "name": "Daily Glow Toner with Niacinamide",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 55.0
+        },
+        {
+          "product_id": "P139000",
+          "brand": "CLINIQUE",
+          "name": "All About Clean Liquid Facial Soap",
+          "actives": [
+            "hyaluronic_acid"
+          ],
+          "price_usd": 23.5
+        },
+        {
+          "product_id": "P122882",
+          "brand": "CLINIQUE",
+          "name": "Clarifying Lotion 2",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 20.0
+        },
+        {
+          "product_id": "P122762",
+          "brand": "CLINIQUE",
+          "name": "Rinse-Off Foaming Cleanser",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 23.5
+        }
+      ],
+      "treatment": [
+        {
+          "product_id": "P503926",
+          "brand": "Augustinus Bader",
+          "name": "The Face Cream Mask",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 215.0
+        },
+        {
+          "product_id": "P505054",
+          "brand": "Benefit Cosmetics",
+          "name": "The POREfessional Speedy Smooth Mask",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 39.0
+        },
+        {
+          "product_id": "P410657",
+          "brand": "Clarins",
+          "name": "Extra-Firming & Smoothing Face Mask",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 79.0
+        },
+        {
+          "product_id": "P377577",
+          "brand": "CLINIQUE",
+          "name": "Moisture Surge Overnight Face Mask",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol"
+          ],
+          "price_usd": 40.0
+        },
+        {
+          "product_id": "P393501",
+          "brand": "CLINIQUE",
+          "name": "Acne Solutions Cleansing Gel",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 23.5
+        }
+      ],
+      "serum": [
+        {
+          "product_id": "P442539",
+          "brand": "Alpha-H",
+          "name": "Vitamin B Serum with 5% Niacinamide and Peptides",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 65.0
+        },
+        {
+          "product_id": "P475907",
+          "brand": "Augustinus Bader",
+          "name": "The Serum with  TFC8",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 390.0
+        },
+        {
+          "product_id": "P467110",
+          "brand": "Biossance",
+          "name": "Squalane + 10% Vitamin C Dark Spot Serum",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 65.0
+        },
+        {
+          "product_id": "P479304",
+          "brand": "Biossance",
+          "name": "Squalane + Copper Peptide Rapid Plumping Serum",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 68.0
+        },
+        {
+          "product_id": "P480284",
+          "brand": "Caudalie",
+          "name": "Premier Cru Anti-Aging Serum with Niacinamide and Hyaluronic Acid",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 139.0
+        }
+      ],
+      "moisturizer": [
+        {
+          "product_id": "P379907",
+          "brand": "Algenist",
+          "name": "Advanced Anti-Aging Repairing Oil",
+          "actives": [
+            "ceramides"
+          ],
+          "price_usd": 82.0
+        },
+        {
+          "product_id": "P420638",
+          "brand": "Algenist",
+          "name": "ELEVATE Advanced Lift Contouring Cream",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 96.0
+        },
+        {
+          "product_id": "P470509",
+          "brand": "Augustinus Bader",
+          "name": "The Rich Cream with TFC8 Face Moisturizer",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 290.0
+        },
+        {
+          "product_id": "P500420",
+          "brand": "Augustinus Bader",
+          "name": "The Light Cream",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 180.0
+        },
+        {
+          "product_id": "P394639",
+          "brand": "belif",
+          "name": "The True Cream Aqua Bomb",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 38.0
+        }
+      ]
+    }
+  }
+}
