@@ -178,6 +178,116 @@ def test_stats_ranker_orders_by_smoothed_rating():
     assert ranker.score(pa, None) > ranker.score(pb, None)
 
 
+def test_stats_ranker_popularity_nudge_orders_equal_ratings():
+    # D-028: identical review cells, different loves -> more-loved wins, and the
+    # boost is exactly w * log1p(loves)/log1p(max_loves) on top of the rating.
+    import math
+    cell = {"__all__": {"n": 100, "mean_rating": 4.5, "pct_recommend": 0.9}}
+    stats = {"global_mean_rating": 4.0,
+             "cells": {"PA": cell, "PB": cell},
+             "loves": {"PA": 1000, "PB": 800000}}
+    ranker = R.StatsRanker(stats, 20, 5, popularity_weight=0.2)
+    pa = Product("PA", "A", "B", "treatment")
+    pb = Product("PB", "B", "B", "treatment")
+    assert ranker.score(pb, None) > ranker.score(pa, None)
+    smoothed = (100 * 4.5 + 20 * 4.0) / 120
+    expected_pb = smoothed + 0.2 * math.log1p(800000) / math.log1p(800000)
+    assert abs(ranker.score(pb, None) - expected_pb) < 1e-9
+
+
+def test_stats_ranker_popularity_weight_zero_and_missing_loves():
+    # w=0 (or a product absent from the loves map) -> exactly the old ordering:
+    # pure smoothed rating, no nudge.
+    cell_hi = {"__all__": {"n": 100, "mean_rating": 4.5, "pct_recommend": 0.9}}
+    cell_lo = {"__all__": {"n": 100, "mean_rating": 4.4, "pct_recommend": 0.9}}
+    stats = {"global_mean_rating": 4.0,
+             "cells": {"PA": cell_hi, "PB": cell_lo},
+             "loves": {"PB": 900000}}
+    pa = Product("PA", "A", "B", "treatment")
+    pb = Product("PB", "B", "B", "treatment")
+    # PA missing from loves -> its score is exactly the smoothed rating.
+    ranker = R.StatsRanker(stats, 20, 5, popularity_weight=0.2)
+    assert ranker.score(pa, None) == (100 * 4.5 + 20 * 4.0) / 120
+    # knob off -> loves ignored entirely, better-rated PA wins again.
+    off = R.StatsRanker(stats, 20, 5, popularity_weight=0.0)
+    assert off.score(pa, None) > off.score(pb, None)
+    assert off.score(pb, None) == (100 * 4.4 + 20 * 4.0) / 120
+
+
+def test_load_ranker_passes_popularity_weight_from_config():
+    with tempfile.TemporaryDirectory() as d:
+        stats = {"global_mean_rating": 4.0, "cells": {},
+                 "loves": {"PB": 900000}}
+        stats_path = Path(d) / "review_stats.json"
+        stats_path.write_text(json.dumps(stats))
+        cfg = _config_at(Path(d) / "no.joblib", stats_path)
+        cfg["ranker"]["popularity_weight"] = 0.5
+        ranker = R.load_ranker(config=cfg)
+        pb = Product("PB", "B", "B", "treatment")
+        assert ranker.score(pb, None) == 4.0 + 0.5  # prior + full nudge
+        del cfg["ranker"]["popularity_weight"]  # absent key -> default 0.2
+        assert R.load_ranker(config=cfg).score(pb, None) == 4.0 + 0.2
+
+
+def test_train_pipeline_stamps_loves_for_catalog_products_only():
+    # D-028: review_stats.json carries a top-level loves map joined from
+    # product_info.csv, restricted to catalog products; no file -> no map.
+    with tempfile.TemporaryDirectory() as d:
+        tmp = Path(d)
+        product_info = tmp / "product_info.csv"
+        pd.DataFrame({
+            "product_id": ["PA", "PB", "PX"],
+            "loves_count": [1200, 850000, 999999],
+        }).to_csv(product_info, index=False)
+        catalog_path = tmp / "catalog.json"
+        catalog_path.write_text(json.dumps([asdict(p) for p in TRAIN_CATALOG]))
+        R.train_pipeline(
+            str(FIXTURE), str(catalog_path), str(tmp / "ranker.joblib"),
+            str(tmp / "review_stats.json"), str(tmp / "eval.json"),
+            load_config(), verbose=False, product_info_path=str(product_info),
+        )
+        stats = json.loads((tmp / "review_stats.json").read_text())
+        assert stats["loves"] == {"PA": 1200, "PB": 850000}  # PX not in catalog
+        # missing product_info -> pipeline still runs, loves map just absent
+        R.train_pipeline(
+            str(FIXTURE), str(catalog_path), str(tmp / "ranker2.joblib"),
+            str(tmp / "review_stats2.json"), str(tmp / "eval2.json"),
+            load_config(), verbose=False, product_info_path=str(tmp / "nope.csv"),
+        )
+        assert "loves" not in json.loads((tmp / "review_stats2.json").read_text())
+
+
+def test_bakeoff_measures_blended_method_with_soft_gate():
+    # D-028: 'blended' (bayesian + popularity nudge) joins the harness; the
+    # soft gate passes iff its pooled pairwise is within 0.02 of bayesian's.
+    with tempfile.TemporaryDirectory() as d:
+        tmp = Path(d)
+        product_info = tmp / "product_info.csv"
+        pd.DataFrame({
+            "product_id": ["PA", "PB"],
+            "loves_count": [1200, 850000],
+        }).to_csv(product_info, index=False)
+        catalog_path = tmp / "catalog.json"
+        catalog_path.write_text(json.dumps([asdict(p) for p in TRAIN_CATALOG]))
+        result = R.train_pipeline(
+            str(FIXTURE), str(catalog_path), str(tmp / "ranker.joblib"),
+            str(tmp / "review_stats.json"), str(tmp / "eval.json"),
+            load_config(), verbose=False, product_info_path=str(product_info),
+        )
+        blended = result["pooled"]["blended"]
+        bayes = result["pooled"]["bayesian"]
+        assert set(blended) == {"roc_auc", "pairwise"}
+        assert result["blended_gate_passed"] == (
+            blended["pairwise"] >= bayes["pairwise"] - 0.02)
+        # no loves data -> blended degrades to exactly the bayesian baseline
+        no_loves = R.train_pipeline(
+            str(FIXTURE), str(catalog_path), str(tmp / "r2.joblib"),
+            str(tmp / "s2.json"), str(tmp / "e2.json"),
+            load_config(), verbose=False,
+        )
+        assert no_loves["pooled"]["blended"] == no_loves["pooled"]["bayesian"]
+
+
 def test_stats_ranker_unknown_product_gets_prior():
     ranker = R.StatsRanker({"global_mean_rating": 4.0, "cells": {}}, 20, 5)
     assert ranker.score(Product("NOPE", "N", "B", "treatment"), None) == 4.0
@@ -249,6 +359,11 @@ if __name__ == "__main__":
     test_evidence_fallback_below_min_cell_size()
     test_degrades_to_rules_only_when_model_absent()
     test_stats_ranker_orders_by_smoothed_rating()
+    test_stats_ranker_popularity_nudge_orders_equal_ratings()
+    test_stats_ranker_popularity_weight_zero_and_missing_loves()
+    test_load_ranker_passes_popularity_weight_from_config()
+    test_train_pipeline_stamps_loves_for_catalog_products_only()
+    test_bakeoff_measures_blended_method_with_soft_gate()
     test_stats_ranker_unknown_product_gets_prior()
     test_stats_ranker_through_engine()
     test_load_ranker_three_way()
