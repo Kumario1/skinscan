@@ -57,6 +57,7 @@ class SarpnSettings:
     read_timeout_seconds: float
     request_batch_size: int
     min_score: float
+    class_min_scores: Mapping[str, float]
     dedupe_threshold: float
     severity: Mapping[str, Any]
 
@@ -71,6 +72,10 @@ class SarpnSettings:
             read_timeout_seconds=values["read_timeout_seconds"],
             request_batch_size=values["request_batch_size"],
             min_score=values["min_score"],
+            class_min_scores=_freeze({
+                normalize_sarpn_label(label): score
+                for label, score in (values.get("class_min_scores") or {}).items()
+            }),
             dedupe_threshold=values["dedupe_threshold"],
             severity=_freeze(values["severity"]),
         )
@@ -90,6 +95,8 @@ class SarpnSettings:
             raise ValueError("request_batch_size must be positive")
         if not 0 <= self.min_score <= 1:
             raise ValueError("min_score must be between 0 and 1")
+        if any(not 0 <= score <= 1 for score in self.class_min_scores.values()):
+            raise ValueError("class_min_scores values must be between 0 and 1")
         if not 0 <= self.dedupe_threshold <= 1:
             raise ValueError("dedupe_threshold must be between 0 and 1")
 
@@ -197,7 +204,8 @@ def _jpeg_base64(rgb: np.ndarray) -> str:
 
 
 def _validated_detections(
-    payload: Any, tile: Tile, endpoint: str, min_score: float, image_size: tuple[int, int]
+    payload: Any, tile: Tile, endpoint: str, min_score: float, image_size: tuple[int, int],
+    class_min_scores: Mapping[str, float] = MappingProxyType({}),
 ) -> list[LesionObservation]:
     if not isinstance(payload, Mapping) or "detections" not in payload:
         raise _response_error(tile, endpoint, "detections", "is missing")
@@ -237,7 +245,8 @@ def _validated_detections(
         x2, y2 = min(float(tile.width), x2), min(float(tile.height), y2)
         if x2 <= x1 or y2 <= y1:
             raise _response_error(tile, endpoint, "bbox", "is empty after clipping to tile")
-        if score < min_score:
+        if score < max(min_score,
+                       class_min_scores.get(normalize_sarpn_label(label_name), 0.0)):
             continue
         full_box = (
             max(0.0, min(float(image_width), x1 + tile.x)),
@@ -314,7 +323,8 @@ def _infer_tile(
     finally:
         session.close()
     return _validated_detections(
-        payload, tile, settings.endpoint_url, settings.min_score, (rgb.shape[1], rgb.shape[0])
+        payload, tile, settings.endpoint_url, settings.min_score, (rgb.shape[1], rgb.shape[0]),
+        settings.class_min_scores,
     )
 
 

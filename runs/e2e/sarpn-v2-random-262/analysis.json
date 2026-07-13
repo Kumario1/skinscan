@@ -1,0 +1,2326 @@
+{
+  "schema_version": "2.0",
+  "image_id": "262_jpg.rf.25a802e7e63e8d9794119e519da11c97.jpg",
+  "pipeline": {
+    "identifier": "sa-rpn-native-tiles",
+    "endpoint": "http://localhost:8000/predict",
+    "tile_size": 1024,
+    "overlap": 128,
+    "minimum_score": 0.3,
+    "dedupe_threshold": 0.5
+  },
+  "detections": [
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.5934,
+      "box": [
+        484.7,
+        501.8,
+        524.1,
+        540.1
+      ],
+      "region": "forehead",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 0,
+        "box": [
+          0,
+          0,
+          1024,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.5854,
+      "box": [
+        653.7,
+        675.5,
+        717.8,
+        771.8
+      ],
+      "region": "forehead",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 0,
+        "box": [
+          0,
+          0,
+          1024,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "open_comedo",
+      "original_label": "open_comedo",
+      "confidence": 0.4323,
+      "box": [
+        717.1,
+        268.5,
+        738.8,
+        293.2
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 0,
+        "box": [
+          0,
+          0,
+          1024,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.8928,
+      "box": [
+        1684.0,
+        937.0,
+        1719.8,
+        973.0
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 1,
+        "box": [
+          701,
+          0,
+          1725,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.8469,
+      "box": [
+        1335.5,
+        452.9,
+        1397.2,
+        515.5
+      ],
+      "region": "forehead",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 1,
+        "box": [
+          701,
+          0,
+          1725,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.6552,
+      "box": [
+        1671.0,
+        544.0,
+        1696.6,
+        571.2
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 1,
+        "box": [
+          701,
+          0,
+          1725,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.9707,
+      "box": [
+        1733.7,
+        575.2,
+        1764.0,
+        603.7
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 2,
+        "box": [
+          1403,
+          0,
+          2427,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.956,
+      "box": [
+        2151.4,
+        781.5,
+        2180.3,
+        809.5
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 2,
+        "box": [
+          1403,
+          0,
+          2427,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.9084,
+      "box": [
+        1837.9,
+        333.8,
+        1860.8,
+        357.1
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 2,
+        "box": [
+          1403,
+          0,
+          2427,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.8609,
+      "box": [
+        2153.0,
+        368.4,
+        2177.9,
+        393.9
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 2,
+        "box": [
+          1403,
+          0,
+          2427,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.8296,
+      "box": [
+        1625.2,
+        568.7,
+        1657.9,
+        599.4
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 2,
+        "box": [
+          1403,
+          0,
+          2427,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.6316,
+      "box": [
+        1757.1,
+        623.8,
+        1784.2,
+        650.4
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 2,
+        "box": [
+          1403,
+          0,
+          2427,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.5268,
+      "box": [
+        1926.9,
+        391.5,
+        1944.4,
+        410.3
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 2,
+        "box": [
+          1403,
+          0,
+          2427,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "papule",
+      "original_label": "papule",
+      "confidence": 0.5821,
+      "box": [
+        2641.6,
+        668.0,
+        2666.9,
+        702.3
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 3,
+        "box": [
+          2104,
+          0,
+          3128,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "papule",
+      "original_label": "papule",
+      "confidence": 0.4729,
+      "box": [
+        2343.5,
+        295.6,
+        2365.6,
+        319.1
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 3,
+        "box": [
+          2104,
+          0,
+          3128,
+          1024
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.7306,
+      "box": [
+        92.9,
+        1590.3,
+        110.0,
+        1621.4
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 4,
+        "box": [
+          0,
+          787,
+          1024,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.6509,
+      "box": [
+        122.4,
+        1614.0,
+        141.5,
+        1643.9
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 4,
+        "box": [
+          0,
+          787,
+          1024,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.6421,
+      "box": [
+        35.2,
+        1507.5,
+        63.5,
+        1544.8
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 4,
+        "box": [
+          0,
+          787,
+          1024,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.4041,
+      "box": [
+        38.8,
+        1555.6,
+        60.5,
+        1580.3
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 4,
+        "box": [
+          0,
+          787,
+          1024,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.7522,
+      "box": [
+        1686.7,
+        1358.7,
+        1720.2,
+        1388.0
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 5,
+        "box": [
+          701,
+          787,
+          1725,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.8088,
+      "box": [
+        1757.0,
+        1110.4,
+        1788.8,
+        1141.5
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 6,
+        "box": [
+          1403,
+          787,
+          2427,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.6454,
+      "box": [
+        1824.3,
+        893.7,
+        1867.4,
+        937.3
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 6,
+        "box": [
+          1403,
+          787,
+          2427,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.9277,
+      "box": [
+        2971.2,
+        1531.0,
+        3000.1,
+        1587.5
+      ],
+      "region": "left_cheek",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 7,
+        "box": [
+          2104,
+          787,
+          3128,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.8654,
+      "box": [
+        2962.3,
+        1685.9,
+        2988.0,
+        1725.6
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 7,
+        "box": [
+          2104,
+          787,
+          3128,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "papule",
+      "original_label": "papule",
+      "confidence": 0.8181,
+      "box": [
+        3016.6,
+        1469.5,
+        3042.7,
+        1514.5
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 7,
+        "box": [
+          2104,
+          787,
+          3128,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.8052,
+      "box": [
+        2136.3,
+        1408.8,
+        2167.5,
+        1440.4
+      ],
+      "region": "forehead",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 7,
+        "box": [
+          2104,
+          787,
+          3128,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.726,
+      "box": [
+        2314.5,
+        1123.2,
+        2373.2,
+        1166.3
+      ],
+      "region": "forehead",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 7,
+        "box": [
+          2104,
+          787,
+          3128,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.6231,
+      "box": [
+        3005.5,
+        1225.8,
+        3023.5,
+        1265.2
+      ],
+      "region": "forehead",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 7,
+        "box": [
+          2104,
+          787,
+          3128,
+          1811
+        ]
+      }
+    },
+    {
+      "normalized_label": "atrophic_scar",
+      "original_label": "atrophic_scar",
+      "confidence": 0.9939,
+      "box": [
+        571.8,
+        2548.8,
+        611.5,
+        2582.6
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "acne_scarring",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.9121,
+      "box": [
+        423.5,
+        2009.0,
+        482.8,
+        2062.5
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "papule",
+      "original_label": "papule",
+      "confidence": 0.9115,
+      "box": [
+        28.7,
+        2324.0,
+        74.3,
+        2398.8
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.857,
+      "box": [
+        909.9,
+        2130.7,
+        992.0,
+        2182.3
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.8365,
+      "box": [
+        777.0,
+        1968.5,
+        850.0,
+        2015.5
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.8189,
+      "box": [
+        171.5,
+        2003.0,
+        209.0,
+        2061.1
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.8108,
+      "box": [
+        77.8,
+        1797.4,
+        114.5,
+        1846.4
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.794,
+      "box": [
+        95.1,
+        1961.2,
+        128.7,
+        2015.4
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.7799,
+      "box": [
+        90.5,
+        1871.9,
+        126.3,
+        1918.7
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.6808,
+      "box": [
+        334.1,
+        2007.2,
+        388.9,
+        2064.3
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.6465,
+      "box": [
+        243.8,
+        1972.1,
+        276.8,
+        2004.9
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.6128,
+      "box": [
+        370.0,
+        1891.9,
+        399.3,
+        1927.1
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.4088,
+      "box": [
+        149.3,
+        2245.7,
+        188.5,
+        2289.5
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.3252,
+      "box": [
+        259.8,
+        2011.8,
+        299.0,
+        2047.0
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.3246,
+      "box": [
+        293.4,
+        2098.0,
+        329.3,
+        2143.0
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 8,
+        "box": [
+          0,
+          1574,
+          1024,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.9739,
+      "box": [
+        1337.1,
+        2235.5,
+        1381.1,
+        2288.1
+      ],
+      "region": "right_cheek",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 9,
+        "box": [
+          701,
+          1574,
+          1725,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.7947,
+      "box": [
+        824.2,
+        2301.7,
+        879.3,
+        2365.7
+      ],
+      "region": "right_cheek",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 9,
+        "box": [
+          701,
+          1574,
+          1725,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.3022,
+      "box": [
+        1386.8,
+        1978.0,
+        1409.1,
+        2006.4
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 9,
+        "box": [
+          701,
+          1574,
+          1725,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.7257,
+      "box": [
+        1649.8,
+        1622.6,
+        1692.3,
+        1661.5
+      ],
+      "region": "nose",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 10,
+        "box": [
+          1403,
+          1574,
+          2427,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.5373,
+      "box": [
+        1728.8,
+        1949.8,
+        1768.7,
+        1984.1
+      ],
+      "region": "nose",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 10,
+        "box": [
+          1403,
+          1574,
+          2427,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "atrophic_scar",
+      "original_label": "atrophic_scar",
+      "confidence": 0.4747,
+      "box": [
+        1878.4,
+        1810.6,
+        1916.5,
+        1886.0
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "acne_scarring",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 10,
+        "box": [
+          1403,
+          1574,
+          2427,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.4645,
+      "box": [
+        1578.4,
+        1937.1,
+        1616.3,
+        1971.1
+      ],
+      "region": "nose",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 10,
+        "box": [
+          1403,
+          1574,
+          2427,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.4169,
+      "box": [
+        2039.0,
+        2120.6,
+        2067.6,
+        2147.1
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 10,
+        "box": [
+          1403,
+          1574,
+          2427,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.979,
+      "box": [
+        2912.2,
+        1822.9,
+        2948.2,
+        1874.7
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "papule",
+      "original_label": "papule",
+      "confidence": 0.9725,
+      "box": [
+        2888.1,
+        2526.0,
+        2925.3,
+        2580.6
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.9619,
+      "box": [
+        2309.4,
+        2403.3,
+        2342.6,
+        2438.8
+      ],
+      "region": "left_cheek",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.907,
+      "box": [
+        3036.5,
+        1775.1,
+        3053.6,
+        1808.3
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.905,
+      "box": [
+        2584.7,
+        2161.8,
+        2653.8,
+        2221.6
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.903,
+      "box": [
+        2445.2,
+        2543.9,
+        2474.2,
+        2576.3
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.8741,
+      "box": [
+        2843.1,
+        1909.0,
+        2904.7,
+        1999.8
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "papule",
+      "original_label": "papule",
+      "confidence": 0.8631,
+      "box": [
+        2597.0,
+        2361.3,
+        2652.9,
+        2416.9
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.8597,
+      "box": [
+        2702.4,
+        2083.7,
+        2745.0,
+        2121.7
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.7971,
+      "box": [
+        2819.7,
+        2022.0,
+        2883.0,
+        2070.8
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.7836,
+      "box": [
+        2747.7,
+        2067.7,
+        2813.4,
+        2136.8
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.7078,
+      "box": [
+        2891.2,
+        2047.0,
+        2920.0,
+        2079.2
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.6886,
+      "box": [
+        3033.7,
+        1945.8,
+        3056.7,
+        1976.2
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.5908,
+      "box": [
+        3044.9,
+        1705.5,
+        3065.3,
+        1734.3
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.5692,
+      "box": [
+        2905.9,
+        1896.3,
+        2936.8,
+        1929.2
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.5244,
+      "box": [
+        2956.7,
+        1816.2,
+        2990.5,
+        1863.5
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.4994,
+      "box": [
+        2967.4,
+        1926.0,
+        2998.4,
+        1957.6
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.4722,
+      "box": [
+        3035.8,
+        2237.9,
+        3059.0,
+        2284.4
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.4698,
+      "box": [
+        3020.7,
+        1985.8,
+        3054.8,
+        2059.6
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.4146,
+      "box": [
+        2849.4,
+        2129.3,
+        2888.7,
+        2166.3
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.3901,
+      "box": [
+        2487.3,
+        2197.4,
+        2538.1,
+        2239.4
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.3667,
+      "box": [
+        2988.9,
+        2329.6,
+        3011.4,
+        2377.1
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 11,
+        "box": [
+          2104,
+          1574,
+          3128,
+          2598
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.9456,
+      "box": [
+        352.4,
+        3053.4,
+        388.7,
+        3098.7
+      ],
+      "region": "right_cheek",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 12,
+        "box": [
+          0,
+          2360,
+          1024,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.9044,
+      "box": [
+        898.9,
+        2984.1,
+        957.2,
+        3049.5
+      ],
+      "region": "right_cheek",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 12,
+        "box": [
+          0,
+          2360,
+          1024,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.682,
+      "box": [
+        214.8,
+        2636.8,
+        257.1,
+        2698.2
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 12,
+        "box": [
+          0,
+          2360,
+          1024,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.6227,
+      "box": [
+        519.5,
+        2720.6,
+        540.7,
+        2739.8
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 12,
+        "box": [
+          0,
+          2360,
+          1024,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.3615,
+      "box": [
+        149.6,
+        2801.8,
+        176.6,
+        2854.5
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 12,
+        "box": [
+          0,
+          2360,
+          1024,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "atrophic_scar",
+      "original_label": "atrophic_scar",
+      "confidence": 0.3314,
+      "box": [
+        563.5,
+        2657.1,
+        615.6,
+        2699.6
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "acne_scarring",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 12,
+        "box": [
+          0,
+          2360,
+          1024,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.9516,
+      "box": [
+        997.1,
+        2947.8,
+        1036.4,
+        2988.9
+      ],
+      "region": "right_cheek",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 13,
+        "box": [
+          701,
+          2360,
+          1725,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "pustule",
+      "original_label": "pustule",
+      "confidence": 0.9317,
+      "box": [
+        719.6,
+        3175.8,
+        758.4,
+        3213.2
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 13,
+        "box": [
+          701,
+          2360,
+          1725,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "papule",
+      "original_label": "papule",
+      "confidence": 0.8714,
+      "box": [
+        977.0,
+        2396.4,
+        1048.9,
+        2458.3
+      ],
+      "region": "right_cheek",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 13,
+        "box": [
+          701,
+          2360,
+          1725,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "papule",
+      "original_label": "papule",
+      "confidence": 0.6112,
+      "box": [
+        1025.2,
+        2741.0,
+        1083.7,
+        2793.3
+      ],
+      "region": "nose",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 13,
+        "box": [
+          701,
+          2360,
+          1725,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "papule",
+      "original_label": "papule",
+      "confidence": 0.8731,
+      "box": [
+        1851.6,
+        2721.7,
+        1879.6,
+        2752.4
+      ],
+      "region": "nose",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 14,
+        "box": [
+          1403,
+          2360,
+          2427,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "pustule",
+      "original_label": "pustule",
+      "confidence": 0.5287,
+      "box": [
+        2004.1,
+        2919.4,
+        2024.9,
+        2942.6
+      ],
+      "region": "nose",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 14,
+        "box": [
+          1403,
+          2360,
+          2427,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.48,
+      "box": [
+        2372.3,
+        2613.0,
+        2418.3,
+        2671.2
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 14,
+        "box": [
+          1403,
+          2360,
+          2427,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "atrophic_scar",
+      "original_label": "atrophic_scar",
+      "confidence": 0.5324,
+      "box": [
+        2718.6,
+        2401.0,
+        2744.9,
+        2443.8
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "acne_scarring",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 15,
+        "box": [
+          2104,
+          2360,
+          3128,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "melasma",
+      "original_label": "melasma",
+      "confidence": 0.4554,
+      "box": [
+        2641.7,
+        2598.3,
+        2674.4,
+        2638.2
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "hyperpigmentation",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 15,
+        "box": [
+          2104,
+          2360,
+          3128,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "atrophic_scar",
+      "original_label": "atrophic_scar",
+      "confidence": 0.4024,
+      "box": [
+        2560.5,
+        3037.2,
+        2586.3,
+        3074.5
+      ],
+      "region": "left_cheek",
+      "mapped_concern": "acne_scarring",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 15,
+        "box": [
+          2104,
+          2360,
+          3128,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "nevus",
+      "original_label": "nevus",
+      "confidence": 0.3471,
+      "box": [
+        2254.6,
+        2779.3,
+        2285.4,
+        2812.3
+      ],
+      "region": "nose",
+      "mapped_concern": null,
+      "observation_status": "non_actionable",
+      "source_tile": {
+        "index": 15,
+        "box": [
+          2104,
+          2360,
+          3128,
+          3384
+        ]
+      }
+    },
+    {
+      "normalized_label": "pustule",
+      "original_label": "pustule",
+      "confidence": 0.9457,
+      "box": [
+        1080.4,
+        3361.9,
+        1131.3,
+        3406.3
+      ],
+      "region": "perioral",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 17,
+        "box": [
+          701,
+          3147,
+          1725,
+          4171
+        ]
+      }
+    },
+    {
+      "normalized_label": "pustule",
+      "original_label": "pustule",
+      "confidence": 0.8943,
+      "box": [
+        1458.9,
+        3209.9,
+        1487.2,
+        3240.4
+      ],
+      "region": "perioral",
+      "mapped_concern": "acne_inflammatory",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 18,
+        "box": [
+          1403,
+          3147,
+          2427,
+          4171
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.339,
+      "box": [
+        2346.7,
+        3565.1,
+        2365.5,
+        3583.4
+      ],
+      "region": "perioral",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 18,
+        "box": [
+          1403,
+          3147,
+          2427,
+          4171
+        ]
+      }
+    },
+    {
+      "normalized_label": "closed_comedo",
+      "original_label": "closed_comedo",
+      "confidence": 0.9136,
+      "box": [
+        2178.7,
+        3770.0,
+        2202.5,
+        3793.3
+      ],
+      "region": "chin_jaw",
+      "mapped_concern": "acne_comedonal",
+      "observation_status": "actionable",
+      "source_tile": {
+        "index": 19,
+        "box": [
+          2104,
+          3147,
+          3128,
+          4171
+        ]
+      }
+    }
+  ],
+  "concerns": [
+    {
+      "concern": "acne_comedonal",
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "nose",
+        "perioral",
+        "right_cheek"
+      ],
+      "severity": 3,
+      "confidence": 0.7082333333333333,
+      "lesion_count": 21,
+      "evidence": {
+        "labels": {
+          "open_comedo": 1,
+          "closed_comedo": 20
+        },
+        "max_confidence": 0.9707,
+        "affected_region_count": 6
+      }
+    },
+    {
+      "concern": "acne_inflammatory",
+      "regions": [
+        "forehead",
+        "left_cheek",
+        "nose",
+        "perioral",
+        "right_cheek"
+      ],
+      "severity": 3,
+      "confidence": 0.7904846153846153,
+      "lesion_count": 13,
+      "evidence": {
+        "labels": {
+          "papule": 9,
+          "pustule": 4
+        },
+        "max_confidence": 0.9725,
+        "affected_region_count": 5
+      }
+    },
+    {
+      "concern": "acne_scarring",
+      "regions": [
+        "left_cheek",
+        "right_cheek"
+      ],
+      "severity": 2,
+      "confidence": 0.54696,
+      "lesion_count": 5,
+      "evidence": {
+        "labels": {
+          "atrophic_scar": 5
+        },
+        "max_confidence": 0.9939,
+        "affected_region_count": 2
+      }
+    },
+    {
+      "concern": "hyperpigmentation",
+      "regions": [
+        "forehead",
+        "left_cheek",
+        "right_cheek"
+      ],
+      "severity": 4,
+      "confidence": 0.6362790697674419,
+      "lesion_count": 43,
+      "evidence": {
+        "labels": {
+          "melasma": 43
+        },
+        "max_confidence": 0.979,
+        "affected_region_count": 3
+      }
+    }
+  ],
+  "clear_skin": false,
+  "skin_tone": {
+    "bucket": "light",
+    "ita": 54.05400447173061,
+    "median_l": 72.56122211127504,
+    "low_light": false,
+    "sample_count": 3685274,
+    "source": "photo_estimate"
+  },
+  "region_mapping": {
+    "method": "mediapipe_face_landmarker",
+    "fallback": false,
+    "reason": null,
+    "face_detected": true,
+    "face_box": [
+      -33.4320855140686,
+      383.7652213871479,
+      3178.1413230895996,
+      4327.848165869713
+    ],
+    "model_path": "models/face_landmarker.task",
+    "forced_assignments": [
+      0,
+      2,
+      8,
+      9,
+      14,
+      19,
+      25,
+      26,
+      28,
+      40,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      53,
+      56,
+      58,
+      68,
+      71,
+      72,
+      74,
+      78,
+      79,
+      81,
+      82,
+      84,
+      85,
+      87,
+      89
+    ]
+  },
+  "safety_observations": [
+    {
+      "code": "nevus_observation",
+      "message": "Non-actionable nevus observation",
+      "labels": {
+        "nevus": 12
+      },
+      "count": 12,
+      "max_confidence": 0.9739,
+      "professional_review": true
+    }
+  ],
+  "recommendation_status": "complete"
+}

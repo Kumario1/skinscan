@@ -49,9 +49,15 @@ SPF AM-only) rather than one being dropped (`docs/RULES.md`).
 
 **ranker** — The re-ranker that reorders rule-approved candidate products within
 a category (D-005 / D-022) — today a statistical champion (Bayesian-smoothed
-pooled product rating; `StatsRanker`), with the learned slot open to any model
-that beats it under the D-022 ratchet. It only
+pooled product rating plus a small popularity nudge; `StatsRanker`), with the
+learned slot open to any model that beats it under the D-022 ratchet. It only
 reorders — it never selects, gates, or overrides safety.
+
+**popularity** — How much a product is bought/wanted, proxied by Sephora
+`loves_count` (no purchase counts exist in the data). Distinct from
+**well-reviewed** (rating quality): a product can be popular and mediocre, or
+excellent and obscure. Feeds the ranker as a small deliberate bias (D-028),
+never selection or safety.
 
 **review-stats** — Per-product × skin-type summary statistics from the Sephora
 reviews (count, average rating, % recommended) that feed both the report's

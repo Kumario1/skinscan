@@ -56,6 +56,15 @@ CANONICAL_ACTIVES: dict[str, str] = {
     # barrier / hydration
     "ceramides": "ceramides",
     "ceramide": "ceramides",
+    # suffixed INCI codes (e2e finding 2026-07-13: "Ceramide NP" x250 in the
+    # Sephora dump vs plain "Ceramides" x11 — without these, most ceramide
+    # barrier products went untagged)
+    "ceramide np": "ceramides",
+    "ceramide ap": "ceramides",
+    "ceramide eop": "ceramides",
+    "ceramide ng": "ceramides",
+    "ceramide ns": "ceramides",
+    "ceramide eos": "ceramides",
     "hyaluronic acid": "hyaluronic_acid",
     "sodium hyaluronate": "hyaluronic_acid",  # doc-named synonym
     "glycerin": "glycerin",
@@ -65,6 +74,17 @@ CANONICAL_ACTIVES: dict[str, str] = {
     "panthenol": "panthenol",
     "centella": "centella",
     "centella asiatica": "centella",
+    # real Sephora INCI forms (e2e finding 2026-07-13: bare "centella" never
+    # appears in the dump — without these the soothe active matched 0 products)
+    "centella asiatica extract": "centella",
+    "centella asiatica leaf extract": "centella",
+    "centella asiatica leaf water": "centella",
+    "centella asiatica leaf cell extract": "centella",
+    "centella asiatica meristem cell culture": "centella",
+    "centella asiatica flower leaf stem extract": "centella",
+    "hydrocotyl": "centella",   # paren alias in "Centella Asiatica (Hydrocotyl) Extract"
+    "gotu kola": "centella",    # paren alias in "Centella asiatica (Gotu Kola) Extract"
+    "cica": "centella",
     # soothing
     "allantoin": "allantoin",
     "madecassoside": "madecassoside",
@@ -213,7 +233,9 @@ def product_from_row(row: dict, idx: int) -> Optional[Product]:
 # table, the non-obvious calls, and the drop policy live in CATALOG_SCHEMA.md.
 SEPHORA_CATEGORY_MAP: dict[tuple[str, str], str] = {
     ("Cleansers", "Face Wash & Cleansers"): "cleanser",
-    ("Cleansers", "Toners"): "cleanser",
+    # Toners are LEAVE-ON (e2e 2026-07-13): an actives-bearing toner in the
+    # rinse-off cleanser step misstates delivery — it is a treatment step.
+    ("Cleansers", "Toners"): "treatment",
     ("Cleansers", "Makeup Removers"): "cleanser",
     ("Cleansers", "Face Wipes"): "cleanser",
     ("Cleansers", ""): "cleanser",
@@ -275,7 +297,7 @@ def _sephora_drop_label(raw: dict) -> str:
 _NAME_CATEGORY_RULES: list[tuple[str, str]] = [
     (r"sunscreen|\bspf\b|sun protection|\buv\b", "spf"),
     (r"cleanser|cleansing|face wash|micellar|makeup remover|foaming", "cleanser"),
-    (r"\btoner\b", "cleanser"),
+    (r"\btoner\b", "treatment"),  # leave-on, same reasoning as the Sephora map
     (r"peel|exfoliat|\bmask\b|\bacne\b|blemish|clarifying|spot treatment"
      r"|\btreatment\b", "treatment"),
     (r"serum|ampoule|ampule|essence|elixir|\bdrops?\b|booster|concentrate", "serum"),

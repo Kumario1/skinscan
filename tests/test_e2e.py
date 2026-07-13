@@ -243,6 +243,157 @@ def test_fixture_e2e_writes_complete_v2_artifact_set(tmp_path, fake_sarpn_server
     assert all("legacy" not in path for path in fake_sarpn_server.paths)
 
 
+def test_pipeline_consumes_loaded_ranker(tmp_path, fake_sarpn_server, monkeypatch):
+    """e2e finding (2026-07-13): the pipeline hardcoded ranker=None, so routine
+    order collapsed to catalog (alphabetical-by-brand) order even when ranker
+    artifacts exist. recommend() must receive whatever load_ranker() resolves
+    (Ranker / StatsRanker / None per D-022)."""
+    import src.recommendation.ranker as ranker_module
+
+    class FavorsZzz:
+        def score(self, product, profile):
+            return 1.0 if product.product_id == "zzz-serum" else 0.0
+
+    monkeypatch.setattr(ranker_module, "load_ranker", lambda config=None: FavorsZzz())
+
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    catalog_path.write_text(json.dumps([
+        {"product_id": "aaa-serum", "name": "Niacinamide Serum", "brand": "AAA",
+         "category": "serum", "actives": ["niacinamide"]},
+        {"product_id": "zzz-serum", "name": "Niacinamide Booster", "brand": "ZZZ",
+         "category": "serum", "actives": ["niacinamide"]},
+    ]))
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+
+    routine = json.loads((output_dir / "routine.json").read_text())
+    serums = [p["product_id"] for p in routine["routines"]["AM"]["serum"]]
+    assert serums == ["zzz-serum", "aaa-serum"], serums
+
+
+def test_routine_payload_carries_routine_mode(tmp_path, fake_sarpn_server):
+    """e2elogic finding (2026-07-13): a consumer must be able to tell the
+    engine's deliberate safety fallback apart from a matching bug."""
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    routine = json.loads((output_dir / "routine.json").read_text())
+    assert routine["routine_mode"] == "treatment"
+
+
+def _payload_for(report, recommendation, safety=()):
+    from src.pipeline.e2e import routine_payload
+    from src.pipeline.tone import ToneEstimate
+    tone = ToneEstimate("light", 45.0, 60.0, False, 500)
+    return routine_payload(report, tone, {"method": "unit"}, recommendation,
+                           top=5, safety=safety)
+
+
+def test_notes_explain_gaps_gating_and_mode(tmp_path):
+    """e2e finding (2026-07-13, run 262): notes stayed empty while two flags
+    fired and adapalene had zero coverage. The payload composes human-readable
+    notes from what actually happened: catalog gaps (with an OTC pointer for
+    adapalene) and the broad-inflammation product gating."""
+    from src.recommendation.engine import recommend
+    from src.recommendation.schema import (
+        Concern, ConcernEvidence, ConcernReport, Product,
+    )
+    report = ConcernReport("img", concerns=[
+        Concern("acne_comedonal", "forehead", 2, 0.9,
+                evidence=ConcernEvidence(labels={"closed_comedo": 9},
+                                         max_confidence=0.9,
+                                         affected_region_count=1)),
+        Concern("acne_inflammatory", "forehead", 2, 0.9,
+                regions=["forehead", "left_cheek", "right_cheek"],
+                evidence=ConcernEvidence(labels={"papule": 3},
+                                         max_confidence=0.9,
+                                         affected_region_count=3)),
+    ])
+    catalog = [
+        Product("ni", "Niacinamide Serum", "b", "serum", actives=["niacinamide"]),
+        Product("aza", "Azelaic Serum", "b", "serum", actives=["azelaic_acid"]),
+        Product("ce", "Ceramide Cream", "b", "moisturizer", actives=["ceramides"]),
+    ]
+    payload = _payload_for(report, recommend(report, catalog))
+    notes = payload["notes"]
+    assert "adapalene" in notes and "Differin" in notes, notes
+    assert "salicylic_acid" in notes, notes          # zero-coverage gap is loud
+    assert "capped at one per routine" in notes, notes  # gating explained in prose
+    assert payload["target_coverage"]["adapalene"] == 0
+
+
+def test_notes_warn_when_nevi_accompany_pigment_treatment(tmp_path):
+    """e2e finding (2026-07-13, run 262): 12 nevi were flagged for review on a
+    face whose routine targets hyperpigmentation with acids — the routine must
+    carry the cross-signal caution."""
+    from src.pipeline.sarpn import SafetyObservation
+    from src.recommendation.engine import recommend
+    from src.recommendation.schema import Concern, ConcernReport, Product
+    report = ConcernReport("img", concerns=[
+        Concern("hyperpigmentation", "left_cheek", 3, 0.9),
+    ])
+    catalog = [Product("aza", "Azelaic Serum", "b", "serum",
+                       actives=["azelaic_acid"])]
+    nevus = SafetyObservation("nevus_observation", "Non-actionable nevus observation",
+                              {"nevus": 12}, 12, 0.97, True)
+    payload = _payload_for(report, recommend(report, catalog), safety=[nevus])
+    assert "mole" in payload["notes"].lower(), payload["notes"]
+
+    calm = _payload_for(report, recommend(report, catalog))
+    assert "mole" not in calm["notes"].lower(), calm["notes"]
+
+
+def test_routine_payload_reports_target_coverage(tmp_path, fake_sarpn_server):
+    """e2elogic finding (2026-07-13): a target active with zero matching
+    products (the old phantom-centella case) was invisible — the payload must
+    report how many recommended products actually carry each target."""
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    catalog_path.write_text(json.dumps([
+        {"product_id": "niacinamide-serum", "name": "Niacinamide Serum",
+         "brand": "Fixture", "category": "serum", "actives": ["niacinamide"]},
+    ]))
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    routine = json.loads((output_dir / "routine.json").read_text())
+    coverage = routine["target_coverage"]
+    assert set(coverage) == set(routine["target_actives"])
+    assert coverage["niacinamide"] == 1
+    assert coverage["benzoyl_peroxide"] == 0
+
+
+def test_broken_ranker_artifact_degrades_to_rules_only(
+    tmp_path, fake_sarpn_server, monkeypatch,
+):
+    """D-019: a ranker that fails to load must not kill the routine — the
+    pipeline falls back to rules-only catalog order."""
+    import src.recommendation.ranker as ranker_module
+
+    def explode(config=None):
+        raise RuntimeError("corrupt joblib bundle")
+
+    monkeypatch.setattr(ranker_module, "load_ranker", explode)
+
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    assert analysis["recommendation_status"] == "complete"
+
+
 @pytest.mark.parametrize("catalog_case", ["missing", "invalid", "unreadable"])
 def test_catalog_failure_keeps_analysis_and_diagnostics(
     tmp_path, fake_sarpn_server, catalog_case,

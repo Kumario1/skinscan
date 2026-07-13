@@ -13,6 +13,7 @@ today's stable rules-only order exactly (D-019).
 """
 from __future__ import annotations
 import re
+from collections import Counter
 from dataclasses import dataclass
 from .schema import ConcernReport, Product, UserProfile, CATEGORIES
 
@@ -63,7 +64,21 @@ SLOTS = ("AM", "PM")
 # ponytail: name-substring veto for exfoliants the INCI vocabulary can't see
 # (citrus-juice "AHA" products etc.); extend the vocabulary if this grows.
 _EXFOLIANT_NAME_HINTS = re.compile(
-    r"\b(aha|bha|pha)\b|exfoliat|peel|resurfac|microdermabrasion|retinol|retinal")
+    r"\b(aha|bha|pha)\b|exfoliat|peel|resurfac|microdermabrasion|retinol|retinal"
+    r"|clarif"   # "Clarifying Lotion" — high-alcohol exfoliating toners with clean INCI
+    r"|scrub|polish")  # physical exfoliants carry clean INCI; only the name tells
+
+# Exfoliant-source actives for the broad-inflammation leave-on cap: the
+# classic chemical exfoliants plus the PHA/botanical sources the importer tags.
+_EXFOLIANT_SOURCES = CHEMICAL_EXFOLIANTS | {"gluconolactone", "willow_bark"}
+
+# RULES.md §3 extends to products that DECLARE sun protection in their name but
+# sit in a non-spf category ("... Cream SPF 30"): photoprotection is AM-only.
+_SPF_NAME_HINTS = re.compile(r"\bspf\b|sunscreen|sun screen|broad[- ]spectrum")
+
+# Products named for nighttime use are PM-only. "sleep" as a substring also
+# catches portmanteau names ("Sleepair Intensive Mask").
+_NIGHT_NAME_HINTS = re.compile(r"overnight|\bnight\b|sleep")
 
 
 def _gentle_only(catalog: list[Product]) -> list[Product]:
@@ -81,6 +96,9 @@ class Recommendation:
     slot_assignment: dict[str, set[str]]   # active -> {"AM"} / {"PM"} / {"AM","PM"}
     target_actives: list[str]
     flags: list[str]                       # e.g. "see a professional", "verify"
+    # which RULES.md §4 path produced this routine — lets a consumer tell the
+    # deliberate soothe/maintenance fallbacks apart from a matching bug.
+    mode: str = "treatment"                # "treatment" | "soothe_escalation" | "maintenance"
 
     @property
     def routine(self) -> dict[str, list[Product]]:
@@ -121,7 +139,8 @@ def recommend(report: ConcernReport, catalog: list[Product],
     if report.clear_skin or not report.concerns:
         target = ["ceramides", "hyaluronic_acid"]
         return _finish(target, _gentle_only(catalog), True, profile, ranker,
-                       flags + ["maintenance routine"], concerns=concerns)
+                       flags + ["maintenance routine"], concerns=concerns,
+                       mode="maintenance")
 
     # cystic / severe -> soothe + escalate, do NOT pile on actives (RULES.md §4)
     if report.has_cystic or report.overall_severity >= 4:
@@ -132,7 +151,7 @@ def recommend(report: ConcernReport, catalog: list[Product],
         _add_deep_tone_guidance(flags, profile, reported_concerns)
         target = ["centella", "ceramides", "hyaluronic_acid"]
         return _finish(target, _gentle_only(catalog), True, profile, ranker,
-                       flags, concerns=concerns)
+                       flags, concerns=concerns, mode="soothe_escalation")
 
     # Active acne is handled before scar support, regardless of report order.
     concern_order = {"acne_inflammatory": 0, "acne_comedonal": 1,
@@ -176,11 +195,17 @@ def recommend(report: ConcernReport, catalog: list[Product],
 
     # Decide broad-inflammation de-stacking against the fully assembled targets
     # through the same slot, product, and tier selection used for the final routine.
+    if broad_inflammation:
+        # e2e 2026-07-13 (run 262): the de-stack promise must gate the shown
+        # PRODUCTS too — peels/scrubs/resurfacing formats are excluded and
+        # leave-on exfoliant carriers capped inside _build_routines.
+        flags.append("broad inflammation: exfoliating formats excluded")
     if broad_inflammation and "benzoyl_peroxide" in target and "azelaic_acid" in target:
         probe_flags: list[str] = []
         probe_kept, probe_slots = _assign_slots(target, probe_flags)
         probe_routines = _build_routines(probe_kept, catalog, needs_spf, probe_slots,
-                                         profile, ranker, concerns)
+                                         profile, ranker, concerns,
+                                         reduced_stacking=True)
         # SPF products are added to every routine unconditionally (RULES.md §3)
         # without matching against target actives, so a sunscreen that merely
         # lists azelaic_acid must not count as a surviving azelaic TREATMENT —
@@ -193,18 +218,20 @@ def recommend(report: ConcernReport, catalog: list[Product],
 
     kept, slots = _assign_slots(target, flags)
     return _finish(kept, catalog, needs_spf, profile, ranker, flags, slots,
-                   concerns=concerns)
+                   concerns=concerns, reduced_stacking=broad_inflammation)
 
 
 def _finish(target: list[str], catalog: list[Product], always_spf: bool,
             profile, ranker, flags: list[str],
             slots: dict[str, set[str]] | None = None,
-            concerns: list[str] = ()) -> Recommendation:
+            concerns: list[str] = (), mode: str = "treatment",
+            reduced_stacking: bool = False) -> Recommendation:
     if slots is None:  # paths that skip conflict resolution: every active both slots
         slots = {a: {"AM", "PM"} for a in target}
     routines = _build_routines(target, catalog, always_spf, slots, profile,
-                               ranker, concerns)
-    return Recommendation(routines, slots, target, flags)
+                               ranker, concerns, mode=mode,
+                               reduced_stacking=reduced_stacking)
+    return Recommendation(routines, slots, target, flags, mode)
 
 
 def _assign_slots(actives: list[str],
@@ -273,8 +300,9 @@ def _split(a: str, b: str, slots: dict[str, set[str]]) -> bool:
 
 def _build_routines(target_actives: list[str], catalog: list[Product],
                     always_spf: bool, slots: dict[str, set[str]],
-                    profile, ranker,
-                    concerns: list[str] = ()) -> dict[str, dict[str, list[Product]]]:
+                    profile, ranker, concerns: list[str] = (),
+                    mode: str = "treatment",
+                    reduced_stacking: bool = False) -> dict[str, dict[str, list[Product]]]:
     """Ingredient -> product lookup (D-006), per slot. A product lands in each
     slot where at least one of its matched target actives is assigned; SPF is
     pinned AM-only. Comedogenic products are down-ranked per slot (RULES.md §6);
@@ -296,11 +324,26 @@ def _build_routines(target_actives: list[str], catalog: list[Product],
         matched = set(p.actives) & tset
         if not matched:
             continue
+        # Broad inflammation (reduced stacking): exclude products whose NAME
+        # declares an exfoliating format (peel/scrub/resurfacing/...) — their
+        # matched active may be gentle, the delivery format is not.
+        if reduced_stacking and _EXFOLIANT_NAME_HINTS.search(p.name.lower()):
+            continue
         # RULES.md §2a — the product must satisfy EVERY matched active's slot
         # pins (a PM-pinned retinoid keeps its product out of AM even when a
         # second matched active is AM-eligible). Empty intersection -> the
         # product can't be placed without violating a split; skip it.
         allowed = set.intersection(*(slots[a] for a in matched))
+        # §2 photosensitivity is a property of what the product CARRIES, not of
+        # why it matched: any retinoid on board pins it to PM even when the
+        # match came through another active (niacinamide, ceramides).
+        if set(p.actives) & RETINOIDS:
+            allowed = allowed & {"PM"}
+        name = p.name.lower()
+        if _SPF_NAME_HINTS.search(name):        # SPF wins if a name says both
+            allowed = allowed & {"AM"}
+        elif _NIGHT_NAME_HINTS.search(name):
+            allowed = allowed & {"PM"}
         for slot in SLOTS:
             if slot in allowed:
                 routines[slot][p.category].append(p)
@@ -310,13 +353,28 @@ def _build_routines(target_actives: list[str], catalog: list[Product],
             return 0.0
         return max((p.ingredient_match.get(c, 0.0) for c in concerns), default=0.0)
 
+    # HA/glycerin sit in nearly every product, so matching on them barely
+    # filters; a product matching a RARE target (centella) is a far stronger
+    # signal it delivers what the routine targets. Specificity = the catalog
+    # count of the rarest matched target — lower is more distinctive. Gentle
+    # paths ONLY: there the ranker is concern-blind popularity, so signature
+    # actives must not be crowded out. On the treatment path the ranker's
+    # per-profile ordering is the trained signal (D-005) and rarity would
+    # arbitrarily invert first-line vs support actives — specificity stays out.
+    active_counts = Counter(a for p in catalog for a in p.actives)
+    def specificity(p: Product) -> int:
+        if mode == "treatment":
+            return 0
+        matched = set(p.actives) & tset
+        return min((active_counts[a] for a in matched), default=len(catalog) + 1)
+
     def sort_key(p: Product):
-        # comedogenic partition ALWAYS dominates; the ranker (concern-stats)
-        # breaks ties next; ingredient-match is the final tiebreaker only.
+        # comedogenic partition ALWAYS dominates; target specificity next; the
+        # ranker (concern-stats) breaks ties; ingredient-match is last.
         if ranker is not None:
-            return (len(p.comedogenic_flags), -ranker.score(p, profile),
-                    -match_tiebreak(p))
-        return (len(p.comedogenic_flags), -match_tiebreak(p))
+            return (len(p.comedogenic_flags), specificity(p),
+                    -ranker.score(p, profile), -match_tiebreak(p))
+        return (len(p.comedogenic_flags), specificity(p), -match_tiebreak(p))
 
     for slot in SLOTS:
         for c in CATEGORIES:
@@ -325,4 +383,20 @@ def _build_routines(target_actives: list[str], catalog: list[Product],
             chosen = tier1 if tier1 else candidates  # tier-2 fills empty slots only
             chosen.sort(key=sort_key)
             routines[slot][c] = chosen
+
+    # Broad inflammation: cap leave-on exfoliant carriers at ONE per slot,
+    # swept in application order — cleansers are rinse-off and exempt, SPF
+    # carries no exfoliants by vocabulary.
+    if reduced_stacking:
+        for slot in SLOTS:
+            carriers_kept = 0
+            for c in ("treatment", "serum", "moisturizer"):
+                kept = []
+                for p in routines[slot][c]:
+                    if set(p.actives) & _EXFOLIANT_SOURCES:
+                        carriers_kept += 1
+                        if carriers_kept > 1:
+                            continue
+                    kept.append(p)
+                routines[slot][c] = kept
     return routines

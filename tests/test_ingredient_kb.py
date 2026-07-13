@@ -161,7 +161,7 @@ def test_tier2_infers_categories_and_drops_unmappable():
         log, products = _import_tier2(d)
         cats = {p.product_id: p.category for p in products}
         assert cats["b101"] == "serum"        # "SA Renewing Serum"
-        assert cats["b102"] == "cleanser"     # "Gentle Salicylic Toner"
+        assert cats["b102"] == "treatment"    # "Gentle Salicylic Toner" — leave-on
         assert cats["b103"] == "moisturizer"  # "Coconut Rich Cream"
         assert cats["b104"] == "spf"          # suncare -> spf
         assert "b105" not in cats             # haircare shampoo -> dropped
