@@ -43,7 +43,11 @@ def load_optional_catalog(path: Path | None) -> tuple[list[Product] | None, str 
     if path is None:
         return None, "catalog path is missing"
     try:
-        return load_catalog(path), None
+        products = load_catalog(path)
+        tier2_path = path.with_name("catalog_tier2.json")
+        if tier2_path.exists():
+            products = products + load_catalog(tier2_path)
+        return products, None
     except FileNotFoundError:
         return None, f"catalog is missing: {path}"
     except json.JSONDecodeError as exc:
@@ -102,26 +106,81 @@ def routine_payload(
     }
 
 
+def _remove_path(path: Path) -> None:
+    """rmtree a directory or unlink a file/symlink; no-op if it doesn't exist."""
+    if not path.exists():
+        return
+    if path.is_dir():
+        shutil.rmtree(path)
+    else:
+        path.unlink()
+
+
+def _check_output_dir_replaceable(output_dir: Path) -> None:
+    """Refuse to touch a pre-existing --out path unless it is empty or looks
+    like a prior pipeline output (contains analysis.json). Callers must run
+    this before any HTTP inference so a doomed run never burns API budget.
+    """
+    if not output_dir.exists():
+        return
+    if not output_dir.is_dir():
+        raise ValueError(
+            f"--out {output_dir} exists and is not a directory; "
+            "pick a new or empty path"
+        )
+    if not any(output_dir.iterdir()):
+        return
+    if (output_dir / "analysis.json").exists():
+        return
+    raise ValueError(
+        f"--out {output_dir} already exists, is non-empty, and doesn't look like a "
+        "prior pipeline output (no analysis.json found in it); pick a new or empty "
+        "directory"
+    )
+
+
 def _publish_staging(staging: Path, output_dir: Path) -> None:
     output_dir.parent.mkdir(parents=True, exist_ok=True)
+    backup_glob = f".{output_dir.name}.backup-*"
+
+    if not output_dir.exists():
+        # A prior run may have been SIGKILLed between the two renames below,
+        # stranding its result under a backup sibling. Restore the newest one
+        # so it reappears as output_dir before we do anything else.
+        stale_backups = sorted(
+            output_dir.parent.glob(backup_glob), key=lambda path: path.stat().st_mtime,
+        )
+        if stale_backups:
+            stale_backups[-1].rename(output_dir)
+
+    # Any other leftover backups (from any pid, not just ours) are now safe
+    # to discard.
+    for stale in output_dir.parent.glob(backup_glob):
+        _remove_path(stale)
+
     backup = output_dir.with_name(f".{output_dir.name}.backup-{os.getpid()}")
-    if backup.exists():
-        shutil.rmtree(backup)
     moved_existing = False
     try:
         if output_dir.exists():
             output_dir.rename(backup)
             moved_existing = True
         staging.rename(output_dir)
-    except Exception:
-        if output_dir.exists() and moved_existing:
-            shutil.rmtree(output_dir)
-        if moved_existing and backup.exists():
-            backup.rename(output_dir)
+    except Exception as exc:
+        if moved_existing:
+            if not output_dir.exists():
+                backup.rename(output_dir)
+            else:
+                # A concurrent run may have already published its own fresh
+                # result at output_dir — never destroy it. Leave our backup
+                # on disk instead of silently losing the prior content.
+                raise RuntimeError(
+                    f"failed to publish results to {output_dir}: {exc}; a concurrent "
+                    "run may have already published there. Previous contents were "
+                    f"preserved at {backup}"
+                ) from exc
         raise
     else:
-        if backup.exists():
-            shutil.rmtree(backup)
+        _remove_path(backup)
 
 
 def run_pipeline(
@@ -173,6 +232,8 @@ def run_pipeline(
 
     routine: dict[str, object] | None = None
     catalog, catalog_reason = load_optional_catalog(catalog_path)
+    if catalog_reason is None and not catalog:
+        catalog_reason = "catalog is empty"
     if catalog_reason:
         analysis["recommendation_reason"] = catalog_reason
     else:
@@ -201,8 +262,7 @@ def run_pipeline(
             (staging / "routine.json").write_text(json.dumps(routine, indent=2) + "\n")
         _publish_staging(staging, output_dir)
     finally:
-        if staging.exists():
-            shutil.rmtree(staging)
+        _remove_path(staging)
     return PipelineResult(analysis, routine, output_dir)
 
 
@@ -238,6 +298,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser(config).parse_args(argv)
     output_dir = args.out or Path("runs/e2e") / args.image.stem
     try:
+        _check_output_dir_replaceable(output_dir)
         base = SarpnSettings.from_config(config)
         settings = replace(
             base,
