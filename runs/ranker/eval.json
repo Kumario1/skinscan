@@ -1,0 +1,87 @@
+{
+  "base_rate": 0.8466544633195547,
+  "by_tone": {
+    "deep": {
+      "bayesian": {
+        "pairwise": 0.6339113680154143,
+        "roc_auc": 0.6506256297184716
+      },
+      "low_n": false,
+      "model": {
+        "pairwise": 0.5915221579961464,
+        "roc_auc": 0.6408514904262601
+      },
+      "n": 4935,
+      "popularity": {
+        "pairwise": 0.6082209377007065,
+        "roc_auc": 0.6513301404040833
+      }
+    },
+    "light": {
+      "bayesian": {
+        "pairwise": 0.6102853486139794,
+        "roc_auc": 0.658233509968213
+      },
+      "low_n": false,
+      "model": {
+        "pairwise": 0.5775182524215364,
+        "roc_auc": 0.6479334783887412
+      },
+      "n": 95768,
+      "popularity": {
+        "pairwise": 0.5961488117746299,
+        "roc_auc": 0.6637324053749909
+      }
+    },
+    "medium": {
+      "bayesian": {
+        "pairwise": 0.6033177064551027,
+        "roc_auc": 0.6747313851079157
+      },
+      "low_n": false,
+      "model": {
+        "pairwise": 0.595323957206395,
+        "roc_auc": 0.6684850111270674
+      },
+      "n": 65144,
+      "popularity": {
+        "pairwise": 0.5928597187161918,
+        "roc_auc": 0.6810463201951641
+      }
+    },
+    "unknown": {
+      "bayesian": {
+        "pairwise": 0.6041108132260947,
+        "roc_auc": 0.7003528577356077
+      },
+      "low_n": false,
+      "model": {
+        "pairwise": 0.610366398570152,
+        "roc_auc": 0.7094208470529548
+      },
+      "n": 7968,
+      "popularity": {
+        "pairwise": 0.5915996425379804,
+        "roc_auc": 0.7152441085311325
+      }
+    }
+  },
+  "gate_passed": false,
+  "n_test": 173815,
+  "n_train": 518437,
+  "pooled": {
+    "bayesian": {
+      "pairwise": 0.6086394205897568,
+      "roc_auc": 0.666130337357042
+    },
+    "model": {
+      "pairwise": 0.5845921710639765,
+      "roc_auc": 0.6588752284588386
+    },
+    "popularity": {
+      "pairwise": 0.5959906880496637,
+      "roc_auc": 0.6722016750439468
+    }
+  },
+  "reviews_dropped_no_catalog": 234171
+}
