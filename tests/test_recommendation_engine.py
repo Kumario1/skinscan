@@ -335,6 +335,53 @@ def test_broad_inflammation_keeps_bp_without_selectable_azelaic_product():
     assert "bp" in _product_ids(rec.routine["treatment"])
 
 
+def _broad_inflammation_with_pigmentation_report():
+    return ConcernReport("img", concerns=[
+        Concern(
+            "acne_inflammatory", "forehead", 2, 0.9,
+            regions=["forehead", "left_cheek", "right_cheek"],
+            evidence=ConcernEvidence(
+                labels={"papule": 3}, max_confidence=0.9,
+                affected_region_count=3,
+            ),
+        ),
+        Concern("hyperpigmentation", "left_cheek", 2, 0.9),
+    ])
+
+
+def test_broad_inflammation_keeps_bp_when_azelaic_only_appears_on_spf():
+    """Finding 3: SPF products are added to routines unconditionally (RULES.md
+    §3, always AM-only) without matching against target actives — so a
+    sunscreen that happens to list azelaic_acid must not count as a
+    surviving azelaic TREATMENT during the de-stacking probe."""
+    catalog = [
+        Product("bp", "BP Gel", "b", "treatment", actives=["benzoyl_peroxide"]),
+        Product("spf-aza", "Sunscreen With Azelaic", "b", "spf",
+                actives=["azelaic_acid"]),
+        Product("ce", "Ceramide Cream", "b", "moisturizer", actives=["ceramides"]),
+    ]
+    rec = recommend(_broad_inflammation_with_pigmentation_report(), catalog)
+    assert "benzoyl_peroxide" in rec.target_actives
+    assert "broad inflammation: reduced strong-active stacking" not in rec.flags
+    assert "bp" in _product_ids(rec.routine["treatment"])
+    assert rec.routine["treatment"] != []
+
+
+def test_broad_inflammation_still_destacks_with_real_azelaic_treatment():
+    """Control: a genuine (non-SPF) azelaic product must still trigger
+    de-stacking even when an SPF product with azelaic_acid is also present."""
+    catalog = [
+        Product("bp", "BP Gel", "b", "treatment", actives=["benzoyl_peroxide"]),
+        Product("aza", "Azelaic Serum", "b", "serum", actives=["azelaic_acid"]),
+        Product("spf-aza", "Sunscreen With Azelaic", "b", "spf",
+                actives=["azelaic_acid"]),
+        Product("ce", "Ceramide Cream", "b", "moisturizer", actives=["ceramides"]),
+    ]
+    rec = recommend(_broad_inflammation_with_pigmentation_report(), catalog)
+    assert "benzoyl_peroxide" not in rec.target_actives
+    assert "broad inflammation: reduced strong-active stacking" in rec.flags
+
+
 def test_cystic_overrides_other_concerns_regardless_of_order():
     report = ConcernReport("img", concerns=[
         Concern("acne_comedonal", "nose", 2, 0.9),
