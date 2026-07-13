@@ -607,12 +607,20 @@ def test_fresh_any_pid_backup_is_not_adopted_and_survives(tmp_path, fake_sarpn_s
     _write_image(image_path)
     _write_catalog(catalog_path)
 
-    # A seconds-old backup looks like it belongs to a still-running
-    # concurrent publish (process B mid-flight), not a stranded crash
-    # artifact — it must not be adopted as output_dir, nor swept away.
+    # Construct the live backup exactly the way production does: a concurrent
+    # publish renames an hour-old output_dir into the backup name (rename
+    # preserves the inode mtime!) and then stamps it with os.utime so the
+    # mtime records the backup's CREATION moment. A seconds-old backup
+    # belongs to a still-running concurrent publish (process B mid-flight),
+    # not a stranded crash artifact — it must not be adopted as output_dir,
+    # nor swept away.
+    old_output = tmp_path / "old-output"
+    old_output.mkdir()
+    (old_output / "marker.txt").write_text("belongs to a live concurrent publish")
+    _backdate_past_grace(old_output)
     live_backup = tmp_path / ".output.backup-99999"
-    live_backup.mkdir()
-    (live_backup / "marker.txt").write_text("belongs to a live concurrent publish")
+    old_output.rename(live_backup)
+    os.utime(live_backup)
 
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
 
@@ -620,6 +628,50 @@ def test_fresh_any_pid_backup_is_not_adopted_and_survives(tmp_path, fake_sarpn_s
     assert (output_dir / "analysis.json").exists()
     assert live_backup.exists()
     assert (live_backup / "marker.txt").read_text() == "belongs to a live concurrent publish"
+
+
+def test_production_backup_mtime_records_creation_time_not_source_age(
+    tmp_path, fake_sarpn_server, monkeypatch,
+):
+    """`output_dir.rename(backup)` preserves the inode mtime, so a backup
+    made seconds ago from an hour-old output_dir would read as "old" to the
+    adoption grace guard and could still be stolen by a concurrent run — the
+    normal case, since prior outputs usually predate the grace period.
+    Production must stamp the backup (os.utime) right after the rename so
+    the guard measures what its comment claims: the backup's age, not the
+    source directory's."""
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+    output_dir.mkdir()
+    (output_dir / "analysis.json").write_text('{"schema_version": "2.0", "marker": "prior-run"}')
+    # The normal case: the prior output was published well before this run.
+    _backdate_past_grace(output_dir)
+
+    real_rename = Path.rename
+
+    def flaky_rename(self, target):
+        target_path = Path(target)
+        if target_path == output_dir and ".staging-" in self.name:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            (output_dir / "concurrent-marker.txt").write_text("fresh from concurrent run")
+            raise OSError("simulated concurrent publish collision")
+        return real_rename(self, target)
+
+    monkeypatch.setattr(Path, "rename", flaky_rename)
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) != 0
+
+    backups = list(tmp_path.glob(".output.backup-*"))
+    assert len(backups) == 1
+    age = time.time() - backups[0].stat().st_mtime
+    assert age < 60, (
+        f"backup mtime is {age:.0f}s old — it inherited the source dir's mtime "
+        "instead of recording the backup's creation moment, so a concurrent "
+        "run's adoption grace guard would treat this live backup as stranded"
+    )
 
 
 def test_publish_conflict_message_is_truthful_when_backup_is_also_gone(
