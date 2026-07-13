@@ -22,6 +22,8 @@ sa_rpn:
   read_timeout_seconds: 120
   request_batch_size: 4
   min_score: 0.3
+  class_min_scores:      # per-label floors above min_score (e2e 2026-07-13:
+    melasma: 0.5         # 0.30-0.40 melasma crops are near-featureless skin)
   dedupe_threshold: 0.5
   severity:
     confidence_cutoff: 0.5

@@ -72,6 +72,102 @@ def test_soothe_routine_excludes_strong_active_products():
     assert "p12" in everything, everything
 
 
+def test_routine_mode_distinguishes_safety_fallback_from_treatment():
+    """e2elogic finding (2026-07-13): the escalation path deliberately suppresses
+    treatment actives, but nothing in the output said so — a safety fallback was
+    indistinguishable from a matching bug. The mode makes the path explicit."""
+    escalated = recommend(ConcernReport("img", concerns=[
+        Concern("acne_inflammatory", "forehead", 4, 0.9)]), make_catalog())
+    assert escalated.mode == "soothe_escalation"
+    maintenance = recommend(ConcernReport("img", clear_skin=True), make_catalog())
+    assert maintenance.mode == "maintenance"
+    treatment = recommend(ConcernReport("img", concerns=[
+        Concern("acne_comedonal", "forehead", 2, 0.9)]), make_catalog())
+    assert treatment.mode == "treatment"
+
+
+def test_distinctive_target_actives_outrank_ubiquitous_ones():
+    """e2elogic finding (2026-07-13): HA/glycerin are in nearly every product, so
+    matching on them barely filters — the soothe path's signature centella was
+    crowded out of the top slots by review-heavyweight HA products. A product
+    matching a rarer target active must sort ahead of one matching only a
+    ubiquitous target, regardless of ranker score."""
+    catalog = make_catalog() + [
+        Product("p20", "Plain HA Serum", "b", "serum", actives=["hyaluronic_acid"]),
+        Product("p21", "Everything HA Serum", "b", "serum", actives=["hyaluronic_acid"]),
+        Product("p22", "Cica Repair Serum", "b", "serum",
+                actives=["centella", "hyaluronic_acid"]),
+    ]
+    report = ConcernReport("img", concerns=[Concern("acne_cystic", "chin_jaw", 2, 0.9)])
+    rec = recommend(report, catalog, ranker=StubRanker({"p20": 0.99, "p21": 0.95, "p22": 0.01}))
+    serums = _product_ids(rec.routines["AM"]["serum"])
+    assert serums[0] == "p22", serums
+    # within equal specificity the ranker still decides
+    assert serums.index("p20") < serums.index("p21"), serums
+
+
+def test_spf_named_product_is_pinned_to_am_regardless_of_category():
+    """e2elogic finding (2026-07-13): an "SPF 30" cream categorized as
+    moisturizer landed in the PM routine — photoprotection is pointless at
+    night. Name-declared SPF pins the product to AM like the spf category."""
+    catalog = make_catalog() + [
+        Product("p23", "Dark Spot Correcting Cream SPF 30", "b", "moisturizer",
+                actives=["ceramides"]),
+    ]
+    report = ConcernReport("img", concerns=[Concern("acne_comedonal", "forehead", 2, 0.9)])
+    rec = recommend(report, catalog)
+    assert "p23" in _product_ids(rec.routines["AM"]["moisturizer"])
+    assert "p23" not in _product_ids(rec.routines["PM"]["moisturizer"])
+
+
+def test_overnight_named_product_is_pinned_to_pm():
+    """e2elogic finding (2026-07-13): overnight masks appeared in the AM
+    treatment slot. A product named for nighttime use belongs in PM only."""
+    catalog = make_catalog() + [
+        Product("p24", "Recovery Overnight Mask", "b", "treatment",
+                actives=["niacinamide"]),
+        Product("p25", "Restorative Night Cream", "b", "moisturizer",
+                actives=["ceramides"]),
+    ]
+    report = ConcernReport("img", concerns=[
+        Concern("acne_inflammatory", "forehead", 2, 0.9)])
+    rec = recommend(report, catalog)
+    assert "p24" not in _product_ids(rec.routines["AM"]["treatment"])
+    assert "p24" in _product_ids(rec.routines["PM"]["treatment"])
+    assert "p25" not in _product_ids(rec.routines["AM"]["moisturizer"])
+    assert "p25" in _product_ids(rec.routines["PM"]["moisturizer"])
+
+
+def test_retinoid_carrying_product_pinned_to_pm_even_when_matched_via_other_active():
+    """e2e finding (2026-07-13, random-147 run): a "0.3% Retinol" serum landed
+    in AM because it matched via niacinamide and slot pins only considered
+    MATCHED actives. Photosensitivity is a property of what the product
+    carries, not of why it matched — any retinoid on board pins it to PM."""
+    catalog = make_catalog() + [
+        Product("p26", "Retinol + Niacinamide Renewal Serum", "b", "serum",
+                actives=["retinol", "niacinamide"]),
+    ]
+    report = ConcernReport("img", concerns=[
+        Concern("acne_inflammatory", "forehead", 2, 0.9)])
+    rec = recommend(report, catalog)
+    assert "p26" not in _product_ids(rec.routines["AM"]["serum"])
+    assert "p26" in _product_ids(rec.routines["PM"]["serum"])
+
+
+def test_soothe_routine_vetoes_clarifying_products_by_name():
+    """e2e finding (2026-07-13): Clinique "Clarifying Lotion 2" — a high-alcohol
+    exfoliating toner — passed the gentle filter because its catalog actives are
+    just glycerin/HA and the name hints missed "clarifying"."""
+    catalog = make_catalog() + [
+        Product("p17", "Clarifying Lotion 2", "b", "cleanser",
+                actives=["glycerin", "hyaluronic_acid"]),
+    ]
+    report = ConcernReport("img", concerns=[Concern("acne_cystic", "chin_jaw", 2, 0.9)])
+    rec = recommend(report, catalog)
+    everything = [pid for prods in rec.routine.values() for pid in _product_ids(prods)]
+    assert "p17" not in everything, everything
+
+
 def test_maintenance_routine_excludes_strong_active_products():
     """RULES.md §4 severity 0 — maintenance is 'gentle cleanser, moisturizer,
     SPF'; strong-active products must not match via a bundled gentle active."""
@@ -333,6 +429,90 @@ def test_broad_inflammation_keeps_bp_without_selectable_azelaic_product():
     assert "benzoyl_peroxide" in rec.target_actives
     assert "broad inflammation: reduced strong-active stacking" not in rec.flags
     assert "bp" in _product_ids(rec.routine["treatment"])
+
+
+def test_broad_inflammation_excludes_exfoliating_formats():
+    """e2e finding (2026-07-13, run 262): the de-stacking flag fired while the
+    treatment slot still offered a peel mask, a charcoal scrub, and a daily
+    peel. Broad inflammation must gate the CANDIDATES too: products whose names
+    declare an exfoliating format are excluded even when their matched active
+    is gentle (niacinamide)."""
+    catalog = make_catalog() + [
+        Product("aza", "Azelaic Serum", "b", "serum", actives=["azelaic_acid"]),
+        Product("scrub", "Charcoal Detox Scrub", "b", "treatment",
+                actives=["niacinamide"]),
+        Product("mask", "Resurfacing Peel Mask", "b", "treatment",
+                actives=["niacinamide"]),
+    ]
+    rec = recommend(_broad_inflammation_report(), catalog)
+    placed = [p.product_id for slot in ("AM", "PM")
+              for products in rec.routines[slot].values() for p in products]
+    assert "scrub" not in placed
+    assert "mask" not in placed
+    assert "p3" in placed  # clean-named niacinamide serum still flows
+    assert "broad inflammation: exfoliating formats excluded" in rec.flags
+
+
+def test_broad_inflammation_caps_leave_on_exfoliant_carriers_per_slot():
+    """Companion to the format gate: clean-NAMED products that carry a
+    chemical exfoliant still stack (SA treatment + lactic serum). Under broad
+    inflammation at most one leave-on exfoliant carrier survives per slot;
+    cleansers are rinse-off and exempt."""
+    catalog = make_catalog() + [
+        Product("aza", "Azelaic Serum", "b", "serum", actives=["azelaic_acid"]),
+        Product("x1", "Acne Treatment", "b", "treatment",
+                actives=["salicylic_acid", "niacinamide"]),
+        Product("x2", "Renewing Serum", "b", "serum",
+                actives=["lactic_acid", "niacinamide"]),
+    ]
+    rec = recommend(_broad_inflammation_report(), catalog)
+    for slot in ("AM", "PM"):
+        carriers = [p.product_id
+                    for category in ("treatment", "serum", "moisturizer")
+                    for p in rec.routines[slot][category]
+                    if {"salicylic_acid", "lactic_acid"} & set(p.actives)]
+        assert carriers == ["x1"], (slot, carriers)
+
+
+def test_broad_inflammation_cap_exempts_rinse_off_cleansers():
+    """SA face washes are rinse-off — the leave-on cap must not count or drop
+    them even when salicylic_acid is itself a target (comedonal + broad
+    inflammatory presentation, the run-262 shape)."""
+    report = ConcernReport("img", concerns=[
+        _broad_inflammation_report().concerns[0],
+        Concern("acne_comedonal", "forehead", 2, 0.9,
+                evidence=ConcernEvidence(labels={"closed_comedo": 9},
+                                         max_confidence=0.9,
+                                         affected_region_count=1)),
+    ])
+    catalog = make_catalog() + [
+        Product("aza", "Azelaic Serum", "b", "serum", actives=["azelaic_acid"]),
+        Product("x1", "Acne Treatment", "b", "treatment",
+                actives=["salicylic_acid", "niacinamide"]),
+    ]
+    rec = recommend(report, catalog)
+    # p1 "SA Cleanser" matched via salicylic_acid; x1 holds the leave-on cap
+    assert "p1" in _product_ids(rec.routines["AM"]["cleanser"])
+    assert "x1" in _product_ids(rec.routines["AM"]["treatment"])
+
+
+def test_exfoliating_formats_flow_when_inflammation_is_localized():
+    """Control for the format gate: one affected region -> no gating, the same
+    scrub is a legitimate candidate (matched via niacinamide)."""
+    report = ConcernReport("img", concerns=[Concern(
+        "acne_inflammatory", "forehead", 2, 0.9,
+        evidence=ConcernEvidence(labels={"papule": 3}, max_confidence=0.9,
+                                 affected_region_count=1),
+    )])
+    catalog = make_catalog() + [
+        Product("scrub", "Charcoal Detox Scrub", "b", "treatment",
+                actives=["niacinamide"]),
+    ]
+    rec = recommend(report, catalog)
+    placed = [p.product_id for slot in ("AM", "PM")
+              for products in rec.routines[slot].values() for p in products]
+    assert "scrub" in placed
+    assert "broad inflammation: exfoliating formats excluded" not in rec.flags
 
 
 def _broad_inflammation_with_pigmentation_report():

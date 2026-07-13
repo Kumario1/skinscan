@@ -92,15 +92,17 @@ CSV** (8,494 rows, 39 skincare pairs, 2026-07-09) — not written from memory.
 
 | → category | Sephora (secondary / tertiary) pairs |
 |------------|--------------------------------------|
-| cleanser | Cleansers / Face Wash & Cleansers · Cleansers / Toners · Cleansers / Makeup Removers · Cleansers / Face Wipes · Cleansers / _(empty)_ |
-| treatment | Cleansers / Exfoliators · Treatments / Facial Peels · Treatments / Blemish & Acne Treatments · Masks / Face Masks · Masks / Sheet Masks |
+| cleanser | Cleansers / Face Wash & Cleansers · Cleansers / Makeup Removers · Cleansers / Face Wipes · Cleansers / _(empty)_ |
+| treatment | Cleansers / Toners · Cleansers / Exfoliators · Treatments / Facial Peels · Treatments / Blemish & Acne Treatments · Masks / Face Masks · Masks / Sheet Masks |
 | serum | Treatments / Face Serums |
 | moisturizer | Moisturizers / Moisturizers · Mists & Essences · Face Oils · Night Creams · Decollete & Neck Creams · _(empty)_ |
 | spf | Sunscreen / Face Sunscreen · Sunscreen / _(empty)_ |
 
-Non-obvious calls: Toners/Removers/Wipes are the cleansing phase; Exfoliators and
-Masks are the treatment step regardless of Sephora's grouping; Mists/Essences/
-Oils/Night/Neck creams are leave-on moisturizers.
+Non-obvious calls: Removers/Wipes are the cleansing phase; Toners are LEAVE-ON
+(2026-07-13: an actives-bearing BHA toner in the rinse-off cleanser step
+misstated delivery) so they join Exfoliators and Masks in the treatment step
+regardless of Sephora's grouping; Mists/Essences/Oils/Night/Neck creams are
+leave-on moisturizers.
 
 Everything else is **dropped and counted** in the import log's
 `dropped_by_category` breakdown: non-Skincare primaries (Makeup, Hair, …) and
