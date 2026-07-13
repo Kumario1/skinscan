@@ -9,6 +9,7 @@ from pathlib import Path
 import shutil
 import sys
 import tempfile
+import time
 from collections.abc import Mapping, Sequence
 
 from ..config import load_config
@@ -138,24 +139,48 @@ def _check_output_dir_replaceable(output_dir: Path) -> None:
     )
 
 
+# A backup this fresh could still belong to a concurrent publish's in-flight
+# rename (see the two-rename dance below) rather than a genuinely stranded
+# crash artifact. Only adopt/clean backups older than this so process A never
+# steals process B's live backup out from under it.
+_BACKUP_ADOPTION_GRACE_SECONDS = 600
+
+
+def _is_adoptable_backup(path: Path, *, now: float) -> bool:
+    """True once a `.{name}.backup-*` sibling is old enough to be presumed
+    stranded rather than belonging to a still-running concurrent publish."""
+    try:
+        age = now - path.stat().st_mtime
+    except FileNotFoundError:
+        return False
+    return age >= _BACKUP_ADOPTION_GRACE_SECONDS
+
+
 def _publish_staging(staging: Path, output_dir: Path) -> None:
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     backup_glob = f".{output_dir.name}.backup-*"
+    now = time.time()
 
     if not output_dir.exists():
         # A prior run may have been SIGKILLed between the two renames below,
-        # stranding its result under a backup sibling. Restore the newest one
-        # so it reappears as output_dir before we do anything else.
+        # stranding its result under a backup sibling. Restore the newest
+        # one so it reappears as output_dir before we do anything else — but
+        # only if it's old enough to rule out a still-running concurrent
+        # publish (which also holds a `.name.backup-<pid>` mid-flight).
         stale_backups = sorted(
-            output_dir.parent.glob(backup_glob), key=lambda path: path.stat().st_mtime,
+            (path for path in output_dir.parent.glob(backup_glob)
+             if _is_adoptable_backup(path, now=now)),
+            key=lambda path: path.stat().st_mtime,
         )
         if stale_backups:
             stale_backups[-1].rename(output_dir)
 
-    # Any other leftover backups (from any pid, not just ours) are now safe
-    # to discard.
+    # Any other leftover backups old enough to be safely presumed stranded
+    # (from any pid, not just ours) are now safe to discard. Fresher ones
+    # are left alone — they may be a live peer's in-flight backup.
     for stale in output_dir.parent.glob(backup_glob):
-        _remove_path(stale)
+        if _is_adoptable_backup(stale, now=now):
+            _remove_path(stale)
 
     backup = output_dir.with_name(f".{output_dir.name}.backup-{os.getpid()}")
     moved_existing = False
@@ -168,7 +193,7 @@ def _publish_staging(staging: Path, output_dir: Path) -> None:
         if moved_existing:
             if not output_dir.exists():
                 backup.rename(output_dir)
-            else:
+            elif backup.exists():
                 # A concurrent run may have already published its own fresh
                 # result at output_dir — never destroy it. Leave our backup
                 # on disk instead of silently losing the prior content.
@@ -176,6 +201,16 @@ def _publish_staging(staging: Path, output_dir: Path) -> None:
                     f"failed to publish results to {output_dir}: {exc}; a concurrent "
                     "run may have already published there. Previous contents were "
                     f"preserved at {backup}"
+                ) from exc
+            else:
+                # Our own backup vanished too (e.g. reclaimed by a peer's
+                # cleanup pass) — don't claim contents were preserved
+                # somewhere they no longer exist.
+                raise RuntimeError(
+                    f"failed to publish results to {output_dir}: {exc}; a concurrent "
+                    "run may have already published there, and the backup at "
+                    f"{backup} is also gone, so the previous contents could not "
+                    "be preserved"
                 ) from exc
         raise
     else:
