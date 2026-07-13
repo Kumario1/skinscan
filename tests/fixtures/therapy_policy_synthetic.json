@@ -1,0 +1,50 @@
+{
+  "paths": [
+    {
+      "cadence": "per_label",
+      "cadence_source": "synthetic://azelaic-label",
+      "concerns": ["acne_comedonal", "acne_inflammatory"],
+      "course_weeks": 12,
+      "exposure": "leave_on",
+      "min_age_years": 12,
+      "requires_known": ["pregnancy_status"],
+      "review_at_weeks": 12,
+      "role": "treatment",
+      "strength_band": "10%",
+      "therapy": "azelaic_acid"
+    },
+    {
+      "cadence": "per_label",
+      "cadence_source": "synthetic://bp-label",
+      "concerns": ["acne_inflammatory"],
+      "conflicting_actives": ["benzoyl_peroxide"],
+      "course_weeks": 12,
+      "exposure": "leave_on",
+      "min_age_years": 12,
+      "requires_known": ["pregnancy_status"],
+      "review_at_weeks": 12,
+      "role": "treatment",
+      "strength_band": "2.5%",
+      "therapy": "benzoyl_peroxide"
+    },
+    {
+      "cadence": "per_label",
+      "cadence_source": "synthetic://combination-label",
+      "concerns": ["acne_comedonal", "acne_inflammatory"],
+      "course_weeks": 12,
+      "excluded_pregnancy_statuses": ["pregnant", "trying", "nursing"],
+      "exposure": "leave_on",
+      "min_age_years": 12,
+      "requires_known": ["pregnancy_status"],
+      "review_at_weeks": 12,
+      "role": "treatment",
+      "strength_band": "adapalene_0.1%_bp_2.5%",
+      "therapy": "adapalene_benzoyl_peroxide"
+    }
+  ],
+  "policy_id": "synthetic-therapy-test",
+  "reviewed": true,
+  "support_roles": ["cleanser", "moisturizer", "sunscreen"],
+  "test_only": true,
+  "version": "1"
+}

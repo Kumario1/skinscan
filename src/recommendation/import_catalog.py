@@ -20,7 +20,6 @@ import csv
 import json
 import re
 from collections import Counter
-from dataclasses import asdict
 from pathlib import Path
 from typing import Optional
 
@@ -166,10 +165,8 @@ def enrich_product(product: Product, raw_ingredients: str, kb: dict) -> None:
 
 
 def product_dict(product: Product) -> dict:
-    """asdict, but the three KB/tier fields are omitted when at their tier-1,
-    no-KB defaults — so a catalog imported without a KB serializes exactly as it
-    did before this feature (backwards-compatible; regression-tested)."""
-    d = asdict(product)
+    """Explicit versioned serializer with legacy KB omissions preserved."""
+    d = product.to_dict()
     if not d.get("ingredient_match"):
         d.pop("ingredient_match", None)
     if d.get("tier", 1) == 1:
@@ -212,6 +209,7 @@ def product_from_row(row: dict, idx: int) -> Optional[Product]:
     # Honor a source-supplied id (the Sephora adapter passes one through —
     # load-bearing for joining reviews); simple rows have none, so synthesize.
     product_id = (row.get("product_id") or "").strip() or f"p{idx:05d}"
+    contract = _source_contract(row)
     return Product(
         product_id=product_id,
         name=(row.get("name") or "").strip(),
@@ -221,7 +219,44 @@ def product_from_row(row: dict, idx: int) -> Optional[Product]:
         comedogenic_flags=comedogenic,
         price_usd=_parse_price(row.get("price")),
         price_is_stale=True,
+        catalog_schema_version="2",
+        **contract,
     )
+
+
+def _source_contract(row: dict) -> dict[str, object]:
+    """Preserve source taxonomy facts without upgrading them to label proof."""
+    secondary = row.get("source_secondary") or ""
+    tertiary = row.get("source_tertiary") or ""
+    if not secondary and not tertiary:
+        return {}
+    area = ["neck"] if tertiary == "Decollete & Neck Creams" else ["face"]
+    key = (secondary, tertiary)
+    metadata: dict[tuple[str, str], tuple[list[str], str, str]] = {
+        ("Cleansers", "Face Wash & Cleansers"): ([], "cleanser", "rinse_off"),
+        ("Cleansers", "Makeup Removers"): ([], "makeup_remover", "rinse_off"),
+        ("Cleansers", "Face Wipes"): ([], "wipe", "rinse_off"),
+        ("Cleansers", "Toners"): ([], "toner", "leave_on"),
+        ("Cleansers", "Exfoliators"): ([], "scrub", "scrub"),
+        ("Treatments", "Face Serums"): ([], "serum", "leave_on"),
+        ("Treatments", "Facial Peels"): ([], "peel", "peel"),
+        ("Treatments", "Blemish & Acne Treatments"): ([], "unknown", "unknown"),
+        ("Masks", "Face Masks"): ([], "mask", "mask"),
+        ("Masks", "Sheet Masks"): ([], "mask", "mask"),
+        ("Moisturizers", "Moisturizers"): ([], "cream", "leave_on"),
+        ("Moisturizers", "Mists & Essences"): ([], "mist", "leave_on"),
+        ("Moisturizers", "Face Oils"): ([], "oil", "leave_on"),
+        ("Moisturizers", "Night Creams"): ([], "cream", "leave_on"),
+        ("Moisturizers", "Decollete & Neck Creams"): ([], "cream", "leave_on"),
+        ("Sunscreen", "Face Sunscreen"): ([], "sunscreen", "leave_on"),
+    }
+    roles, fmt, exposure = metadata.get(key, ([], "unknown", "unknown"))
+    return {
+        "intended_areas": area,
+        "routine_roles": roles,
+        "format": fmt,
+        "exposure": exposure,
+    }
 
 
 # --- Sephora adapter (the real Kaggle product_info.csv; D-015) -------------
@@ -274,6 +309,8 @@ def sephora_row_to_simple(raw: dict) -> Optional[dict]:
         "category": category,
         "ingredients": raw.get("ingredients") or "",
         "price": raw.get("price_usd"),
+        "source_secondary": key[0],
+        "source_tertiary": key[1],
     }
 
 
@@ -339,7 +376,157 @@ def beautyapi_row_to_simple(raw: dict) -> Optional[dict]:
     }
 
 
-def import_beautyapi(jsonl_path, out_path, kb: dict | None = None) -> dict:
+_VERIFICATION_FIELDS = {
+    "intended_areas", "routine_roles", "format", "exposure", "drug_actives",
+    "otc_drug", "label_source", "label_verified_at", "broad_spectrum", "spf",
+    "comedogenic_claim", "irritant_features", "contraindications",
+    "evidence_roles", "evidence_grade", "cadence", "cadence_source", "amount",
+    "amount_source",
+}
+
+
+def load_verification_overlay(path: str | Path | None) -> dict[str, dict[str, object]]:
+    if path is None:
+        return {}
+    path = Path(path)
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"verification overlay {path}: invalid JSON: {exc}") from exc
+    rows = value.get("products") if isinstance(value, dict) else value
+    if not isinstance(rows, list):
+        raise ValueError("verification overlay: expected a list or {products: [...]} object")
+    result: dict[str, dict[str, object]] = {}
+    for index, row in enumerate(rows):
+        field_path = f"verification.products[{index}]"
+        if not isinstance(row, dict):
+            raise ValueError(f"{field_path}: expected an object")
+        product_id = row.get("product_id")
+        if not isinstance(product_id, str) or not product_id:
+            raise ValueError(f"{field_path}.product_id: expected a non-empty string")
+        if product_id in result:
+            raise ValueError(f"{field_path}.product_id: duplicate {product_id!r}")
+        unknown = set(row) - _VERIFICATION_FIELDS - {"product_id"}
+        if unknown:
+            raise ValueError(f"verification product {product_id}: unknown fields {sorted(unknown)}")
+        result[product_id] = {key: row[key] for key in _VERIFICATION_FIELDS if key in row}
+    return result
+
+
+def apply_verification_overlay(
+    products: list[Product],
+    overlay: dict[str, dict[str, object]],
+) -> tuple[list[Product], list[str]]:
+    applied: list[Product] = []
+    seen: set[str] = set()
+    for product in products:
+        patch = overlay.get(product.product_id)
+        if patch is None:
+            applied.append(product)
+            continue
+        merged = product.to_dict()
+        merged.update(patch)
+        # A verified drug active is also carried product content. Preserve the
+        # complete normalized carried-active vocabulary used by safety checks.
+        raw_drug = merged.get("drug_actives", [])
+        carried = set(merged.get("actives", []))
+        if isinstance(raw_drug, list):
+            for active in raw_drug:
+                if isinstance(active, dict) and isinstance(active.get("name"), str):
+                    carried.add(active["name"])
+        merged["actives"] = sorted(carried)
+        try:
+            applied.append(Product.from_dict(merged))
+        except ValueError as exc:
+            raise ValueError(f"verification product {product.product_id}: {exc}") from exc
+        seen.add(product.product_id)
+    return applied, sorted(set(overlay) - seen)
+
+
+def _quarantine_reasons(product: Product, role: str) -> list[str]:
+    reasons: list[str] = []
+    if "face" not in product.intended_areas:
+        reasons.append("intended_area_not_face")
+    if role not in product.routine_roles:
+        reasons.append("routine_role_not_verified")
+    if product.format == "unknown":
+        reasons.append("format_unknown")
+    if product.exposure == "unknown":
+        reasons.append("exposure_unknown")
+    if product.exposure in {"mask", "scrub", "peel"}:
+        reasons.append("non_daily_format")
+    if not product.cadence:
+        reasons.append("instruction_cadence_unknown")
+    if not product.cadence_source:
+        reasons.append("instruction_cadence_source_missing")
+    if role == "treatment":
+        if not product.drug_actives:
+            reasons.append("drug_active_not_verified")
+        if any(active.strength is None for active in product.drug_actives):
+            reasons.append("drug_active_strength_missing")
+        if any(active.source is None for active in product.drug_actives):
+            reasons.append("drug_active_source_missing")
+        if not product.label_source:
+            reasons.append("label_source_missing")
+        if not product.label_verified_at:
+            reasons.append("label_verification_timestamp_missing")
+    if role == "sunscreen":
+        if product.broad_spectrum is not True:
+            reasons.append("broad_spectrum_not_verified")
+        if product.spf is None or product.spf < 30:
+            reasons.append("spf_below_30_or_unknown")
+        if not product.label_source:
+            reasons.append("label_source_missing")
+        if not product.label_verified_at:
+            reasons.append("label_verification_timestamp_missing")
+    if role in {"moisturizer", "sunscreen"} and (
+        product.comedogenic_claim != "claimed_noncomedogenic"
+    ):
+        reasons.append("noncomedogenic_claim_not_verified")
+    return reasons
+
+
+def build_quarantine_report(
+    products: list[Product],
+    unmatched_verification_ids: list[str] | None = None,
+) -> dict[str, object]:
+    category_role = {
+        "cleanser": "cleanser", "treatment": "treatment", "serum": "treatment",
+        "moisturizer": "moisturizer", "spf": "sunscreen",
+    }
+    rows: dict[str, object] = {}
+    for product in sorted(products, key=lambda item: item.product_id):
+        roles = sorted(set(product.routine_roles) | {category_role[product.category]})
+        quarantined = {
+            role: reasons
+            for role in roles
+            if (reasons := _quarantine_reasons(product, role))
+        }
+        rows[product.product_id] = {
+            "quarantined_roles": quarantined,
+        }
+    return {
+        "schema_version": "1",
+        "products": rows,
+        "unmatched_verification_ids": sorted(unmatched_verification_ids or []),
+    }
+
+
+def _write_quarantine(path: str | Path | None, report: dict[str, object]) -> None:
+    if path is None:
+        return
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as handle:
+        json.dump(report, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+
+
+def import_beautyapi(
+    jsonl_path, out_path, kb: dict | None = None, *,
+    verification: str | Path | None = None,
+    quarantine_out: str | Path | None = None,
+) -> dict:
     """Import the beautyproducts JSONL into a tier-2 catalog.json (same Product
     schema, plus tier=2 and no_outcome_data=True). Products that don't map to
     one of the five categories are dropped. Deterministic -> idempotent."""
@@ -370,6 +557,9 @@ def import_beautyapi(jsonl_path, out_path, kb: dict | None = None) -> dict:
             enrich_product(product, row["ingredients"], kb)
         products.append(product)
 
+    products, unmatched = apply_verification_overlay(
+        products, load_verification_overlay(verification)
+    )
     kept = Counter(p.category for p in products)
     log: dict[str, object] = {
         "rows": rows,
@@ -383,11 +573,16 @@ def import_beautyapi(jsonl_path, out_path, kb: dict | None = None) -> dict:
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump([product_dict(p) for p in products], f, indent=2, sort_keys=True)
         f.write("\n")
+    _write_quarantine(quarantine_out, build_quarantine_report(products, unmatched))
     print(log)
     return log
 
 
-def import_csv(csv_path, out_path, fmt: str = "simple", kb: dict | None = None) -> dict:
+def import_csv(
+    csv_path, out_path, fmt: str = "simple", kb: dict | None = None, *,
+    verification: str | Path | None = None,
+    quarantine_out: str | Path | None = None,
+) -> dict:
     """Read a catalog CSV, normalize each row, write out_path as a JSON list of
     products, and return/print a log dict. Deterministic -> idempotent.
 
@@ -424,6 +619,9 @@ def import_csv(csv_path, out_path, fmt: str = "simple", kb: dict | None = None) 
                 enrich_product(product, row.get("ingredients") or "", kb)
             products.append(product)
 
+    products, unmatched = apply_verification_overlay(
+        products, load_verification_overlay(verification)
+    )
     with_actives = sum(1 for p in products if p.actives)
     log: dict[str, object] = {
         "rows": rows,
@@ -443,6 +641,7 @@ def import_csv(csv_path, out_path, fmt: str = "simple", kb: dict | None = None) 
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump([product_dict(p) for p in products], f, indent=2, sort_keys=True)
         f.write("\n")
+    _write_quarantine(quarantine_out, build_quarantine_report(products, unmatched))
 
     print(log)
     return log
@@ -452,7 +651,9 @@ def load_catalog(path) -> list[Product]:
     """Read a catalog.json back into Product objects — what the engine consumes."""
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
-    return [Product(**d) for d in data]
+    if not isinstance(data, list):
+        raise ValueError("catalog: expected a JSON list")
+    return [Product.from_dict(d) for d in data]
 
 
 def main(argv=None):
@@ -467,6 +668,14 @@ def main(argv=None):
         default="simple",
         help="input row format (simple; sephora = Kaggle product_info.csv; "
              "beautyapi = tier-2 beautyproducts JSONL)",
+    )
+    parser.add_argument(
+        "--verification", default=None,
+        help="optional schema-validated product verification overlay",
+    )
+    parser.add_argument(
+        "--quarantine-out", default=None,
+        help="optional deterministic per-product role quarantine report",
     )
     parser.add_argument(
         "--out",
@@ -492,9 +701,15 @@ def main(argv=None):
         kb = load_kb(args.kb)
 
     if args.format == "beautyapi":
-        import_beautyapi(args.csv, out, kb=kb)
+        import_beautyapi(
+            args.csv, out, kb=kb, verification=args.verification,
+            quarantine_out=args.quarantine_out,
+        )
     else:
-        import_csv(args.csv, out, fmt=args.format, kb=kb)
+        import_csv(
+            args.csv, out, fmt=args.format, kb=kb, verification=args.verification,
+            quarantine_out=args.quarantine_out,
+        )
 
 
 if __name__ == "__main__":

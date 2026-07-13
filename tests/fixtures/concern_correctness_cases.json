@@ -1,0 +1,103 @@
+{
+  "schema_version": "1",
+  "purpose": "Semantic audit regressions only; never release evidence",
+  "cases": [
+    {
+      "sample_id": "random-120",
+      "dataset_split": "train",
+      "held_out_release_evidence": false,
+      "evidence_source": "prediction",
+      "concerns": [
+        {
+          "concern": "acne_inflammatory",
+          "region": "forehead",
+          "severity": 4,
+          "confidence": 0.91,
+          "lesion_count": 67,
+          "labels": {"papule": 37, "pustule": 30}
+        }
+      ],
+      "expected": {"triage_level": "routine_plus_review", "therapy_disposition": "active_treatment"}
+    },
+    {
+      "sample_id": "random-230",
+      "dataset_split": "valid",
+      "held_out_release_evidence": false,
+      "evidence_source": "oracle",
+      "concerns": [
+        {
+          "concern": "acne_cystic",
+          "region": "left_cheek",
+          "severity": 4,
+          "confidence": 0.9,
+          "lesion_count": 1,
+          "labels": {"nodule": 1}
+        }
+      ],
+      "expected": {"triage_level": "derm_first", "therapy_disposition": "supportive_only"}
+    },
+    {
+      "sample_id": "random-252",
+      "dataset_split": "train",
+      "held_out_release_evidence": false,
+      "evidence_source": "prediction",
+      "concerns": [
+        {
+          "concern": "acne_inflammatory",
+          "region": "left_cheek",
+          "severity": 4,
+          "confidence": 0.86,
+          "lesion_count": 40,
+          "labels": {"papule": 40}
+        }
+      ],
+      "oracle_counterfactual": {"nodule_present": true},
+      "expected": {"triage_level": "routine_plus_review", "therapy_disposition": "active_treatment"}
+    },
+    {
+      "sample_id": "random-274",
+      "dataset_split": "train",
+      "held_out_release_evidence": false,
+      "evidence_source": "prediction",
+      "concerns": [
+        {
+          "concern": "acne_inflammatory",
+          "region": "chin_jaw",
+          "severity": 4,
+          "confidence": 0.84,
+          "lesion_count": 23,
+          "labels": {"papule": 23}
+        }
+      ],
+      "oracle_counterfactual": {"nodule_present": true},
+      "expected": {"triage_level": "routine_plus_review", "therapy_disposition": "active_treatment"}
+    },
+    {
+      "sample_id": "random-147",
+      "dataset_split": "train",
+      "held_out_release_evidence": false,
+      "evidence_source": "prediction",
+      "concerns": [
+        {
+          "concern": "hyperpigmentation",
+          "region": "forehead",
+          "severity": 4,
+          "confidence": 0.43,
+          "lesion_count": 160,
+          "labels": {"melasma": 160}
+        }
+      ],
+      "expected": {"probability": null, "quality": "low"}
+    },
+    {
+      "sample_id": "smoke-2",
+      "dataset_split": "train",
+      "held_out_release_evidence": false,
+      "evidence_source": "oracle",
+      "observations": [
+        {"label": "other", "score": 0.8, "region": "nose"}
+      ],
+      "expected": {"safety_code": "other_observation", "concern_count": 0}
+    }
+  ]
+}

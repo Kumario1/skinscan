@@ -1,0 +1,16 @@
+{
+  "acne_duration_weeks": null,
+  "age_years": null,
+  "allergies": [],
+  "current_actives": [],
+  "current_medications": [],
+  "max_price_usd": null,
+  "painful_or_deep_lesions": null,
+  "pregnancy_status": "unknown",
+  "prior_scarring": null,
+  "sensitivity_conditions": [],
+  "skin_type": "unknown",
+  "tone_bucket": "unknown",
+  "tone_source": "unknown",
+  "treatment_history": []
+}

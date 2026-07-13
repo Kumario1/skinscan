@@ -527,3 +527,94 @@ within-tolerance-but-worse). Loves coverage: 1,634/1,634 catalog products.
 Rules out: popularity fields on the catalog schema; loves affecting selection,
 gating, flags, or safety (ranker reorders only, D-005); tuning w to win the
 bake-off (that would delete the bias this decision exists to add).
+
+## D-029 — Concern-to-routine correctness v3 and release boundary (2026-07-13)
+
+**LOCKED for repository behavior; externally blocked for release.** Production
+recommendation orchestration is now:
+
+```text
+ConcernReport → CareDecision → TherapyPlan → hard role eligibility
+              → eligible-equivalent ranking → one regimen → validation
+```
+
+The public E2E artifact schema is exactly `"3"`. `analysis.json` preserves the
+care decision even without a catalog or valid routine. A `routine.json` exists
+only for a whole-regimen-valid result and contains at most one selected product
+per role; alternatives are separate. Both artifacts carry the exact normalized
+profile, immutable/explicitly unknown source/model/catalog/ranker/policy/code
+identities, dirty state, and one deterministic replay key. The legacy v2 reader
+labels old artifacts `legacy`; no production v2 writer remains, and v2/v3
+artifacts are not semantically compared.
+
+**Independent decision axes.** Triage/referral and therapy disposition are not
+one mode. Count/coverage severity 4, scarring, or persistent pigment concern
+may add review language without suppressing otherwise eligible active
+treatment. Raw detector score/confidence is never a probability. A numeric
+nodule gate is usable only with an approved policy and named calibrator;
+unreviewed/uncalibrated nodule evidence routes to `abstain` plus
+`supportive_only`.
+
+**Reviewed intent, unknown-capable intake.** The profile preserves unknown skin
+type, tone/source, age, pregnancy status, allergies, sensitivities, current
+actives/medications, treatment history, duration, pain/deep lesions, prior
+scarring, and budget. Missing critical inputs or reviewed therapy policy defers
+primary treatment. Cadence, amount, course, and review timing require named
+policy/label sources. The repository includes only a `test_only` synthetic
+policy fixture, not production approval.
+
+**Catalog and selection.** Product contract v2 stores intended area, explicit
+routine roles, format/exposure, verified drug actives/strength/source,
+verification time, SPF claims, comedogenic claim state, irritant/
+contraindication data, evidence roles/grade, and sourced instructions. Raw
+imports preserve unknowns/source taxonomy and emit deterministic quarantine
+reasons. A schema-validated verification overlay is the only way to add these
+facts. Hard eligibility checks all of them plus every carried active before a
+scorer sees the product. Ranking then uses concern outcome evidence,
+tolerability, evidence completeness, usable budget, and finally truthful pooled
+review/popularity tie-breaks.
+
+**Evaluation and operations.** Release reporting rejects training/unknown
+splits, dirty or stale artifacts, duplicates, unknown detector identity, and
+mixed semantic-input aggregates. Prediction and annotation-oracle
+counterfactuals carry distinct source/replay tags and are evaluated separately.
+An oracle run must read the actual AcneSCU VOC XML, hash that annotation file
+into semantic inputs/replay, skip detector HTTP, and use the same source image
+as its prediction counterfactual. A manifest must bind exact run membership,
+split proof, source-image hash, and evidence source; an artifact cannot be
+relabelled as oracle after the fact.
+Safety rates include sample counts and Wilson intervals. Batch processing uses
+atomic validated checkpoints across identification, concern mapping,
+recommendation, rendering, and publication; only bounded transient failures
+retry, and fresh identification resumes without a second detector request.
+
+This decision amends:
+
+- **D-005/D-022/D-028:** rankers see eligible therapeutic equivalents only;
+  `StatsRanker` is a final pooled tie-break, never production admission,
+  selection, role repair, or safety.
+- **D-006:** ingredient matching identifies carried actives but cannot prove
+  therapy, role, strength, format, area, directions, or safety; all carried
+  actives are checked.
+- **D-021:** the inference profile expands to the explicit unknown-capable
+  safety intake above. The old pregnancy boolean is migration-only.
+- **D-027:** SA-RPN native tiles remain the sole default identifier, but the v2
+  menu writer and severity-4 supportive blanket are superseded by v3 decision,
+  planning, eligibility, and validation. D-027's detector cutover evidence is
+  unchanged.
+
+**External release gates.** Code completion does not satisfy: qualified
+clinician approval for triage/calibration/therapy/instructions; an adequate
+frozen calibration cohort; a representative external clinician-reviewed set;
+authoritative timestamped verification of real catalog SKUs; or immutable
+remote detector identity. Until all five exist, release status is `blocked`.
+Audit images, training images, synthetic fixtures, or missing values may not be
+substituted to make a gate pass.
+
+Rules out: diagnosis wording; detector confidence relabeled as probability;
+severity alone suppressing treatment; implicit favorable profile defaults;
+active-union admission; masks/peels/scrubs/neck products/trace cleansers
+standing in for verified treatment; ranker repair of an ineligible product;
+multiple selected products per role; unsourced medicine directions; stale or
+mixed release metrics; unbounded whole-batch restart; and claims that this code
+change is clinical approval or a release certification.
