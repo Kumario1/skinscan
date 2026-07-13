@@ -48,6 +48,10 @@ CONCERN_ACTIVES: dict[str, set[str]] = {
         "azelaic acid", "niacinamide", "centella asiatica", "centella",
         "allantoin", "zinc",
     },
+    "acne_scarring": {
+        "ceramide", "ceramides", "panthenol", "niacinamide", "azelaic acid",
+        "centella",
+    },
     "acne_general": {
         "salicylic acid", "benzoyl peroxide", "adapalene", "retinol",
         "azelaic acid", "niacinamide", "glycolic acid", "mandelic acid", "zinc",

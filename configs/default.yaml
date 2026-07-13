@@ -14,6 +14,29 @@ classification:
   weights: models/classification/acne_model.keras
   local_data: data/raw/typeclassification/AcneDataset
 
+sa_rpn:
+  endpoint_url: http://localhost:8000/predict
+  tile_size: 1024
+  tile_overlap: 128
+  connect_timeout_seconds: 5
+  read_timeout_seconds: 120
+  request_batch_size: 4
+  min_score: 0.3
+  dedupe_threshold: 0.5
+  severity:
+    confidence_cutoff: 0.5
+    broad_region_count: 3
+    nodule_severity: 4
+    hypertrophic_scar_min_severity: 3
+    count_thresholds:
+      acne_comedonal: [1, 8, 20, 40]
+      acne_inflammatory: [1, 6, 15, 30]
+      acne_scarring: [1, 3, 8, 20]
+      hyperpigmentation: [1, 4, 10, 25]
+    professional_review:
+      nevus: {min_count: 3, min_confidence: 0.8}
+      other: {min_count: 5, min_confidence: 0.9}
+
 recommendation:
   concern_confidence_cutoff: 0.5    # below -> "possible, verify" (RULES.md §5)
   downrank_comedogenic: true

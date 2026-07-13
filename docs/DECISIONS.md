@@ -381,3 +381,110 @@ Caveats recorded honestly:
   absent on the eval machine); ConcernReports were produced and differ as the
   detection numbers imply — tile reports full-face severity (e.g. sev-4
   hyperpigmentation cells) where zoom reports sev-1 fragments.
+
+## D-027 — Production cutover: SA-RPN native tiles are the sole default identifier (2026-07-12)
+
+**LOCKED.** `src.pipeline.e2e` now defaults to the SA-RPN native-tile
+identification path described in D-026/README §7a; the YOLOv8m +
+EfficientNetB0 two-stage pipeline is retired from the default CLI. This entry
+does **not** rewrite D-026's historical experiment record — the tile-vs-zoom
+A/B numbers and the reasoning behind locking native-res tiling stand exactly
+as run and reported. It supersedes five specific forward-looking statements
+D-026 made about the pipeline that would come after it, now that the
+implementation is complete and committed:
+
+1. **Scar mapping.** D-026 wrote "atrophic/hypertrophic scars + melasma →
+   `hyperpigmentation`." **Superseded:** scars (`atrophic_scar`,
+   `hypertrophic_scar`) now map to their own concern, `acne_scarring`; only
+   `melasma` maps to `hyperpigmentation`. `acne_scarring` joins the D-008
+   closed concern vocabulary (`docs/CONCERN_SCHEMA.md`,
+   `src/recommendation/schema.py: CONCERNS`). See `SARPN_LABEL_TO_CONCERN` in
+   `src/pipeline/sarpn.py`.
+2. **Severity thresholds.** D-026 wrote "severity keeps the bridge's existing
+   lesion-count thresholds." **Superseded:** the SA-RPN bridge does NOT reuse
+   `concern_report.severity_count_thresholds` — that config key remains the
+   historical bridge's alone (`src/recommendation/bridge.py`). The SA-RPN
+   path uses its own provisional, evidence-aware table under
+   `sa_rpn.severity` (`configs/default.yaml`): per-concern lesion count via
+   `bisect_right` over `count_thresholds` (comedonal `[1,8,20,40]`,
+   inflammatory `[1,6,15,30]`, scarring `[1,3,8,20]`, hyperpigmentation
+   `[1,4,10,25]`); any `nodule` forces severity to `nodule_severity` (4); 2
+   affected regions floor severity at 2, `broad_region_count` (3+) floors it
+   at 3; any `hypertrophic_scar` floors it at
+   `hypertrophic_scar_min_severity` (3); a max retained detection score below
+   `confidence_cutoff` (0.5) caps severity at 1. See `_severity`,
+   `src/pipeline/sarpn.py`.
+3. **Nevus/other.** D-026 wrote "nevus/other dropped, same posture as
+   Not_acne rejection." **Superseded:** `nevus` and `other` are never
+   concerns, but they are not dropped — they surface as visible
+   `safety_observations` in `analysis.json`, gated by
+   `sa_rpn.severity.professional_review` per-label count/confidence
+   thresholds, plus an `unsupported_label` observation for any SA-RPN label
+   outside `SARPN_LABEL_TO_CONCERN`/`SARPN_NON_ACTIONABLE_LABELS`. Nothing
+   the service returns is silently discarded.
+4. **API-unreachable fallback.** D-026's caveats wrote "the shipped local
+   pipeline remains the fallback wherever the API is unreachable."
+   **Superseded:** there is no fallback. A transport failure, a malformed
+   response, or any tile that fails validation aborts the run
+   (`SarpnTransportError` / `SarpnResponseError`, raised during tile
+   inference and response validation — `_infer_tile` and
+   `_validated_detections` in `src/pipeline/sarpn.py`);
+   `src.pipeline.e2e` exits non-zero and prints the sanitized failure to
+   stderr. Identification runs before any output is staged, and a successful
+   run publishes through an atomic staged swap (`_publish_staging`), so a
+   failure never touches — and a success never partially overwrites — a
+   previously published output directory. The YOLOv8m + EfficientNetB0
+   pipeline (README §1-§4) is retained in the repository only as a
+   **historical, evaluation-only** reference; `src.pipeline.e2e` does not
+   import or call it (see
+   `tests/test_e2e.py::test_importing_default_e2e_loads_no_legacy_models` for
+   the full forbidden-import set: `ultralytics`, `tensorflow`,
+   `src.classification.classifier`, `src.classification.run_acne04_pipeline`,
+   `src.recommendation.bridge`, `src.recommendation.ranker`,
+   `src.recommendation.concern_stats`).
+5. **Concern contract.** D-026 wrote "the unchanged D-008 contract into the
+   recommender." **Superseded:** the contract gained a V2 shape while keeping
+   the D-008 vocabulary discipline — one `Concern` entry per concern (not per
+   concern-region pair), carrying an aggregated `regions` list and an
+   `evidence` block (`labels`, `max_confidence`, `affected_region_count`);
+   `region` (singular) survives only as an internal backward-compatibility
+   field, not part of the V2 JSON. `docs/CONCERN_SCHEMA.md` documents the V2
+   shape as the default; the historical two-stage pipeline's bridge still
+   produces the old one-entry-per-(concern, region) shape.
+
+Also recorded, not previously stated in D-026:
+
+- The recommendation engine became evidence-aware for the V2 contract
+  (`docs/RULES.md` §5/§7): low-confidence concerns now contribute no actives
+  at all (flag-only, where they previously still listed the ingredient under
+  a "verify" tag); broad `acne_inflammatory` evidence (≥3 affected regions)
+  can de-stack `benzoyl_peroxide` in favor of `azelaic_acid` when a real
+  azelaic product exists; `acne_scarring` gets ceramides barrier support,
+  mandatory SPF, and a professional-review flag above severity 3 or on
+  `hypertrophic_scar` evidence; `hyperpigmentation`'s first-line actives
+  dropped `vitamin_c` (`azelaic_acid, niacinamide` only); deep-tone guidance
+  fires from the reported concern set independent of confidence; and
+  `"unknown"` is a first-class `TONE_BUCKETS` member that stays neutral
+  (never triggers deep-tone guidance) rather than being treated as risk.
+- Production `src.pipeline.e2e` always calls `recommend(..., ranker=None)` —
+  the deterministic rules-only order ships by default. The duck-typed ranker
+  hook and `StatsRanker` (D-022) remain available to
+  `src.recommendation.ranker` / standalone bake-off evaluation but nothing in
+  the production e2e CLI activates them.
+- The automated cutover gate is
+  `tests/test_e2e.py::test_fixture_e2e_writes_complete_v2_artifact_set`: it
+  exercises the full identify → region → tone → recommend → publish path
+  against a fixture SA-RPN HTTP server and asserts the complete V2 artifact
+  set (`analysis.json` with `schema_version: "2.0"`, optional `routine.json`,
+  `detections.jpg`, `region_overlay.jpg`, `lesion_sheet.jpg`). It stands in
+  for D-026's planned self-collected consumer-photo check: no real
+  consumer-photo evaluation has been separately measured for this cutover, so
+  no end-to-end accuracy number is claimed for the SA-RPN production
+  pipeline — the detector metrics (README §7), the tile-vs-zoom A/B (§7a),
+  and the recommender's rules discipline (`docs/RULES.md`) remain reported
+  as separate, independent measurements, never fused into one score.
+
+Rules out: any code path that imports or calls the YOLOv8m/EfficientNetB0
+pipeline from the default `src.pipeline.e2e`; any silent local-model fallback
+on SA-RPN failure; and describing D-026's own historical A/B numbers as if
+they were re-measured under this cutover.

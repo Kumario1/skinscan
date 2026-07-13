@@ -19,6 +19,7 @@ import tempfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.recommendation.ingredient_kb import (
+    CONCERN_ACTIVES,
     build_alias_index,
     build_kb,
     kb_comedogenic_flags,
@@ -124,12 +125,19 @@ def test_match_score_resolves_beneficial_via_alias():
     assert match_score("Water, Acidum Salicylicum", "acne_comedonal", kb) > 0.5
 
 
+def test_acne_scarring_match_metadata_includes_barrier_and_pigment_safe_ingredients():
+    assert CONCERN_ACTIVES["acne_scarring"] == {
+        "ceramide", "ceramides", "panthenol", "niacinamide", "azelaic acid",
+        "centella",
+    }
+
+
 def test_product_matches_covers_every_concern():
     kb = _kb()
     scores = product_matches("Water, Salicylic Acid", kb)
     assert set(scores) == {
         "acne_comedonal", "acne_inflammatory", "acne_cystic",
-        "acne_general", "hyperpigmentation", "dryness",
+        "acne_general", "acne_scarring", "hyperpigmentation", "dryness",
     }
     assert all(0.0 <= v <= 1.0 for v in scores.values())
 

@@ -14,7 +14,7 @@ from typing import Optional
 
 # --- closed vocabularies (must match the docs) -----------------------------
 CONCERNS = {
-    "acne_comedonal", "acne_inflammatory", "acne_cystic",
+    "acne_comedonal", "acne_inflammatory", "acne_cystic", "acne_scarring",
     "hyperpigmentation", "dryness",
 }
 REGIONS = {
@@ -24,6 +24,13 @@ CATEGORIES = ["cleanser", "treatment", "serum", "moisturizer", "spf"]  # ordered
 
 
 # --- concern side (Stage 2 -> Stage 3) -------------------------------------
+@dataclass(frozen=True)
+class ConcernEvidence:
+    labels: dict[str, int] = field(default_factory=dict)
+    max_confidence: float = 0.0
+    affected_region_count: int = 0
+
+
 @dataclass
 class Concern:
     concern: str
@@ -31,12 +38,23 @@ class Concern:
     severity: int              # 0-4 ordinal
     confidence: float          # 0-1
     lesion_count: Optional[int] = None
+    regions: list[str] = field(default_factory=list)
+    evidence: ConcernEvidence = field(default_factory=ConcernEvidence)
 
     def __post_init__(self):
         assert self.concern in CONCERNS, f"unknown concern: {self.concern}"
         assert self.region in REGIONS, f"unknown region: {self.region}"
+        if not self.regions:
+            self.regions = [self.region]
+        self.regions = list(dict.fromkeys(self.regions))
+        assert all(region in REGIONS for region in self.regions), "unknown region in regions"
+        assert self.region in self.regions, "canonical region must be present in regions"
         assert 0 <= self.severity <= 4, "severity must be 0-4"
         assert 0.0 <= self.confidence <= 1.0, "confidence must be 0-1"
+        assert 0.0 <= self.evidence.max_confidence <= 1.0, "max confidence must be 0-1"
+        if self.evidence.labels or self.evidence.max_confidence or self.evidence.affected_region_count:
+            assert self.evidence.affected_region_count == len(self.regions), \
+                "affected region count must match regions"
 
 
 @dataclass
@@ -81,7 +99,7 @@ class Product:
 
 # --- user profile (D-021) --------------------------------------------------
 SKIN_TYPES = {"combination", "dry", "normal", "oily"}
-TONE_BUCKETS = {"light", "medium", "deep"}
+TONE_BUCKETS = {"light", "medium", "deep", "unknown"}
 TONE_SOURCES = {"self_report", "photo", "unknown"}
 
 
