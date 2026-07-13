@@ -62,6 +62,47 @@ def test_synonym_and_multi():
         }
 
 
+def test_centella_inci_variants_all_map_to_centella():
+    """e2e finding (2026-07-13): the Sephora dump never writes bare "centella" —
+    it writes the INCI forms below. Every one must map to the canonical id, or
+    the soothe path's signature active can never appear in a routine."""
+    variants = [
+        "Centella Asiatica Extract",
+        "Centella Asiatica Leaf Extract",
+        "Centella Asiatica Leaf Water",
+        "Centella Asiatica Leaf Cell Extract",
+        "Centella Asiatica Meristem Cell Culture",
+        "Centella Asiatica (Hydrocotyl) Extract",
+        "Centella asiatica (Gotu Kola) Extract*",
+        "Centella Asiatica Flower/Leaf/Stem Extract",
+    ]
+    for raw in variants:
+        actives, _ = parse_ingredients(raw)
+        assert actives == ["centella"], f"{raw!r} -> {actives}"
+
+
+def test_ceramide_inci_variants_all_map_to_ceramides():
+    """e2e finding (2026-07-13, random-147 run): Sephora INCI writes suffixed
+    ceramide codes ("Ceramide NP" x250) far more often than plain "Ceramides"
+    (x11) — without these, ceramide barrier products are mostly untagged and
+    target_coverage for ceramides collapses to 0."""
+    variants = [
+        "Ceramide NP", "Ceramide AP", "Ceramide EOP",
+        "Ceramide NG", "Ceramide NS", "Ceramide EOS",
+    ]
+    for raw in variants:
+        actives, _ = parse_ingredients(raw)
+        assert actives == ["ceramides"], f"{raw!r} -> {actives}"
+
+
+def test_toner_names_map_to_treatment_not_cleanser():
+    """e2e finding (2026-07-13, run 262): toners are leave-on, not rinse-off —
+    a BHA/azelaic toner in the cleanser slot misstates delivery. Both the
+    Sephora taxonomy and the beautyapi name rules must agree."""
+    from src.recommendation.import_catalog import infer_beautyapi_category
+    assert infer_beautyapi_category("Hydrating Rose Toner", "skincare") == "treatment"
+
+
 def test_comedogenic_flagged():
     with tempfile.TemporaryDirectory() as d:
         _, products = _import(d)

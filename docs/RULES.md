@@ -93,6 +93,14 @@ partition (§6) ALWAYS dominates the sort key `(len(comedogenic_flags),
 -score)`, so a comedogenic product never outranks a clean one regardless of
 score. `ranker=None` degrades to the deterministic rules-only order (D-019).
 
+On the soothe and maintenance paths ONLY, a target-specificity tier sits
+between the comedogenic partition and the ranker score: a product matching a
+RARER target active (centella) sorts ahead of one matching only ubiquitous
+humectants (hyaluronic acid, glycerin), which barely filter. On the treatment
+path the ranker's per-profile ordering is the trained signal and catalog
+rarity would arbitrarily invert first-line vs support actives, so the tier is
+disabled there (2026-07-13).
+
 ## 3. Routine ordering (output structure)
 
 Fixed order, matches catalog categories:
@@ -106,6 +114,14 @@ Rules:
   tissue). `engine.py`'s `needs_spf` flag is set from the concern's presence
   alone, independent of its confidence — see §7.
 - If AM/PM split is triggered by an interaction constraint, output two routines.
+- Name-declared time-of-use pins the product's slots regardless of category
+  (2026-07-13): a non-spf product whose NAME declares sun protection
+  ("... Cream SPF 30", "sunscreen", "broad spectrum") is AM-only;
+  night-marketed names ("overnight", "night", "sleep...") are PM-only. SPF
+  wins when a name says both.
+- A product CARRYING any retinoid is PM-only even when it matched through a
+  different active (2026-07-13): photosensitivity is a property of the
+  product's contents, not of why it was selected (§2).
 - Moisturizer with ceramides always included when dryness present OR when ANY
   `engine.STRONG_ACTIVES` member (chemical exfoliants, retinol/adapalene,
   benzoyl_peroxide, azelaic_acid, vitamin_c, gluconolactone, willow_bark) is
@@ -130,6 +146,11 @@ markets exfoliation (AHA/BHA/PHA, "exfoliating", "peel", "resurfacing") are
 excluded there too, since citrus-juice acids and enzymes don't parse out of
 INCI. Sub-threshold concerns keep their "possible — verify" flags on the
 escalation path (§5 applies everywhere).
+
+Which path produced the routine is EXPLICIT in the output (2026-07-13):
+`Recommendation.mode` / routine.json `routine_mode` is one of `"treatment"`,
+`"soothe_escalation"`, `"maintenance"` — so a consumer can tell the deliberate
+safety fallback (no treatment actives by design) apart from a matching bug.
 
 ## 5. Confidence handling
 
@@ -172,6 +193,18 @@ the production `src.pipeline.e2e` SA-RPN path.
   stacking"`. If no azelaic-containing product exists in the catalog,
   benzoyl_peroxide is kept — an empty treatment slot is worse than a
   slightly heavier one.
+- **Broad-inflammation format gating (2026-07-13).** The same
+  `broad_inflammation` condition also gates the shown PRODUCTS, not just the
+  target list — a de-stacking flag over an unchanged product list is an
+  unkept promise. Two effects, flagged `"broad inflammation: exfoliating
+  formats excluded"`: (1) products whose *name* declares an exfoliating
+  format (peel, scrub, resurfacing, AHA/BHA, clarifying, …) are excluded
+  from every slot even when their matched active is gentle; (2) leave-on
+  exfoliant carriers (chemical exfoliants + PHA/willow-bark sources) are
+  capped at ONE per slot, swept in application order across
+  treatment → serum → moisturizer. Rinse-off cleansers and SPF are exempt.
+  The de-stacking probe runs with the same gating so azelaic survival is
+  judged against the routine that will actually be shown.
 - **Deep-tone emphasis wording.** `profile.tone_bucket == "deep"` AND the
   report contains `acne_inflammatory`, `acne_scarring`, or
   `hyperpigmentation` → flag `"deeper tone: emphasize sunscreen and

@@ -646,6 +646,22 @@ def test_min_score_is_applied_client_side(fake_http_server):
     assert infer_native_tiles(np.zeros((4, 4, 3), dtype=np.uint8), _settings(fake_http_server["url"])) == []
 
 
+def test_class_min_scores_raise_the_floor_per_label(fake_http_server):
+    """e2e finding (2026-07-13, run 262): melasma detections in the 0.30-0.40
+    band are near-featureless skin crops. The configured per-class floor
+    (melasma: 0.5) must drop them while the global 0.3 floor still governs
+    every other label."""
+    fake_http_server["responses"] = [(200, {"count": 3, "detections": [
+        {"label": "melasma", "score": 0.4, "bbox": [0, 0, 1, 1]},
+        {"label": "Melasma", "score": 0.6, "bbox": [1, 1, 2, 2]},
+        {"label": "papule", "score": 0.4, "bbox": [2, 2, 3, 3]},
+    ]})]
+    kept = infer_native_tiles(
+        np.zeros((4, 4, 3), dtype=np.uint8), _settings(fake_http_server["url"]))
+    assert [(item.label, item.score) for item in kept] == [
+        ("Melasma", 0.6), ("papule", 0.4)]
+
+
 def test_dedupe_is_class_agnostic_and_keeps_higher_confidence():
     observations = [
         LesionObservation("papule", "Papule", 0.91, (10, 10, 40, 40), 0, (0, 0, 1024, 1024)),

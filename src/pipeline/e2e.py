@@ -56,12 +56,59 @@ def load_optional_catalog(path: Path | None) -> tuple[list[Product] | None, str 
         return None, f"catalog is unreadable or invalid: {exc}"
 
 
+# Catalog gaps the drugstore can fill: named OTC pointers for targets no
+# stocked product carries (e2e 2026-07-13: adapalene coverage is honestly 0).
+_OTC_POINTERS = {
+    "adapalene": ("adapalene 0.1% gel is available over the counter "
+                  "(e.g., Differin) — ask a pharmacist"),
+}
+
+
+def _compose_notes(
+    report: ConcernReport,
+    recommendation: Recommendation,
+    target_coverage: Mapping[str, int],
+    safety: Sequence[object],
+) -> str:
+    """Human-readable rationale assembled from what actually happened —
+    flags stay machine-terse; notes say why in sentences."""
+    notes: list[str] = [report.notes] if report.notes else []
+    if recommendation.mode == "soothe_escalation":
+        notes.append("Routine held to soothing, barrier-supporting products "
+                     "only: this presentation should be reviewed by a "
+                     "professional before strong actives are layered on.")
+    elif recommendation.mode == "maintenance":
+        notes.append("No active concerns found: light maintenance routine only.")
+    if "broad inflammation: exfoliating formats excluded" in recommendation.flags:
+        notes.append("Inflammation spans several regions, so peel, scrub and "
+                     "resurfacing formats were excluded and leave-on "
+                     "exfoliants are capped at one per routine.")
+    if "broad inflammation: reduced strong-active stacking" in recommendation.flags:
+        notes.append("Benzoyl peroxide was set aside in favor of azelaic acid "
+                     "to keep the strong-active load down.")
+    for active, count in target_coverage.items():
+        if count == 0:
+            pointer = _OTC_POINTERS.get(active)
+            notes.append(f"No product in the catalog carries {active}"
+                         + (f"; {pointer}." if pointer else "."))
+    nevus_review = any(getattr(item, "code", "") == "nevus_observation"
+                       and getattr(item, "professional_review", False)
+                       for item in safety)
+    if nevus_review and any(c.concern == "hyperpigmentation"
+                            for c in report.concerns):
+        notes.append("Pigmented-spot caution: mole-like spots were flagged "
+                     "for professional review — confirm dark spots are not "
+                     "moles before treating them with acids.")
+    return " ".join(notes)
+
+
 def routine_payload(
     report: ConcernReport,
     tone: ToneEstimate,
     region_mapping: Mapping[str, object] | str,
     recommendation: Recommendation,
     top: int,
+    safety: Sequence[object] = (),
 ) -> dict[str, object]:
     def product_payload(product: Product) -> dict[str, object]:
         return {
@@ -78,30 +125,48 @@ def routine_payload(
 
     method = (region_mapping.get("method", "unknown")
               if isinstance(region_mapping, Mapping) else region_mapping)
+    shown = {
+        slot: {
+            category: products[:top]
+            for category, products in recommendation.routines[slot].items()
+            if products
+        }
+        for slot in ("AM", "PM")
+    }
+    # coverage over what the payload actually shows (post-truncation), so a
+    # target active nothing carries — the old phantom-centella case — is loud.
+    target_coverage = {
+        active: len({product.product_id
+                     for categories in shown.values()
+                     for products in categories.values()
+                     for product in products if active in product.actives})
+        for active in recommendation.target_actives
+    }
     return {
         "schema_version": "2.0",
         "image_id": report.image_id,
         "concerns": [concern_to_dict(concern) for concern in report.concerns],
         "clear_skin": report.clear_skin,
-        "notes": report.notes,
+        "notes": _compose_notes(report, recommendation, target_coverage, safety),
         "tone": asdict(tone),
         "region_mapping": (dict(region_mapping)
                            if isinstance(region_mapping, Mapping)
                            else {"method": method}),
         "region_method": method,
+        "routine_mode": recommendation.mode,
         "flags": recommendation.flags,
         "target_actives": recommendation.target_actives,
+        "target_coverage": target_coverage,
         "slot_assignment": {
             active: sorted(slots)
             for active, slots in recommendation.slot_assignment.items()
         },
         "routines": {
             slot: {
-                category: [product_payload(product) for product in products[:top]]
-                for category, products in recommendation.routines[slot].items()
-                if products
+                category: [product_payload(product) for product in products]
+                for category, products in categories.items()
             }
-            for slot in ("AM", "PM")
+            for slot, categories in shown.items()
         },
     }
 
@@ -283,8 +348,18 @@ def run_pipeline(
                 tone_source="photo",
                 pregnant_or_nursing=pregnant_or_nursing,
             )
-            recommendation = recommend(report, catalog or [], profile=profile, ranker=None)
-            routine = routine_payload(report, tone, region_result.metadata, recommendation, top)
+            # Lazy import: e2e must not load the ranker module (pandas/sklearn)
+            # unless a recommendation is actually produced (see the forbidden-
+            # imports test). load_ranker resolves Ranker/StatsRanker/None per
+            # D-022; a load failure degrades to rules-only order (D-019).
+            try:
+                from ..recommendation.ranker import load_ranker
+                ranker = load_ranker()
+            except Exception:
+                ranker = None
+            recommendation = recommend(report, catalog or [], profile=profile, ranker=ranker)
+            routine = routine_payload(report, tone, region_result.metadata,
+                                      recommendation, top, safety=safety)
             analysis["recommendation_status"] = "complete"
         except Exception as exc:
             analysis["recommendation_reason"] = f"recommendation unavailable: {exc}"

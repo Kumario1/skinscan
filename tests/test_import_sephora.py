@@ -3,7 +3,7 @@
 Runs the importer in sephora format against a committed fixture of 12 real rows
 pulled verbatim from the Kaggle `product_info.csv`, covering every mapping
 branch: each of the five target categories, the non-obvious cross-secondary
-mappings (Toners->cleanser, Exfoliators->treatment, Masks->treatment), and both
+mappings (Toners->treatment, Exfoliators->treatment, Masks->treatment), and both
 drop kinds (non-skincare primary + unmapped skincare pair). The point of the
 adapter is that everything downstream of the per-row seam is untouched, so the
 produced catalog still feeds engine.recommend() (D-009 schema unchanged).
@@ -62,8 +62,8 @@ def test_all_five_categories_nonempty():
         got = {p.category for p in products}
         assert got == set(CATEGORIES), got
         assert log["kept_by_category"] == {
-            "cleanser": 3,
-            "treatment": 3,
+            "cleanser": 2,
+            "treatment": 4,
             "serum": 1,
             "moisturizer": 3,
             "spf": 2,
@@ -76,8 +76,11 @@ def test_sephora_ids_preserved():
         _, products = _import(d)
         assert all(p.product_id.startswith("P") for p in products), \
             [p.product_id for p in products]
+        # e2e finding (2026-07-13, run 262): toners are LEAVE-ON — an
+        # actives-bearing BHA toner sitting in the cleanser (rinse-off) step
+        # misstates how its actives are delivered. Toners -> treatment.
         toner = _by_id(products, "P480274")
-        assert toner.category == "cleanser"          # Toners -> cleanser
+        assert toner.category == "treatment"         # Toners -> treatment
         assert "salicylic_acid" in toner.actives     # reused parser, unchanged
 
 
