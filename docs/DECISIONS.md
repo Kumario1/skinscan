@@ -426,8 +426,9 @@ implementation is complete and committed:
    pipeline remains the fallback wherever the API is unreachable."
    **Superseded:** there is no fallback. A transport failure, a malformed
    response, or any tile that fails validation aborts the run
-   (`SarpnTransportError` / `SarpnResponseError`, raised from
-   `infer_native_tiles`/`_validated_detections` in `src/pipeline/sarpn.py`);
+   (`SarpnTransportError` / `SarpnResponseError`, raised during tile
+   inference and response validation — `_infer_tile` and
+   `_validated_detections` in `src/pipeline/sarpn.py`);
    `src.pipeline.e2e` exits non-zero and prints the sanitized failure to
    stderr. Identification runs before any output is staged, and a successful
    run publishes through an atomic staged swap (`_publish_staging`), so a
