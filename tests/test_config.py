@@ -18,6 +18,27 @@ def test_load_config_has_pipeline_keys():
     assert cfg["classification"]["weights"].endswith(".keras")
 
 
+def test_load_config_has_sarpn_production_keys():
+    cfg = load_config()
+    sarpn = cfg["sa_rpn"]
+
+    assert sarpn["endpoint_url"] == "http://localhost:8000/predict"
+    assert sarpn["tile_size"] == 1024
+    assert sarpn["tile_overlap"] == 128
+    assert sarpn["connect_timeout_seconds"] == 5
+    assert sarpn["read_timeout_seconds"] == 120
+    assert sarpn["request_batch_size"] == 4
+    assert sarpn["min_score"] == 0.3
+    assert sarpn["dedupe_threshold"] == 0.5
+    assert sarpn["severity"]["confidence_cutoff"] == 0.5
+    assert set(sarpn["severity"]["count_thresholds"]) == {
+        "acne_comedonal",
+        "acne_inflammatory",
+        "acne_scarring",
+        "hyperpigmentation",
+    }
+
+
 def test_load_config_has_recommender_milestone_keys():
     # Issue #2: inert config keys the verbose-recommender milestone will consume.
     cfg = load_config()

@@ -11,8 +11,12 @@ Two ways to get consumer-photo lesions in front of a model trained on
           but lesions stay small).
 
 Both funnels end in the SAME downstream: detections -> D-020 regions ->
-ConcernReport (severity from lesion counts, same thresholds as the bridge) ->
-issue #1 recommender, so the routine.json outputs are directly comparable.
+ConcernReport (production SA-RPN severity rules, shared with the e2e
+pipeline) -> issue #1 recommender, so the routine.json outputs are directly
+comparable. The tile path itself — HTTP calls, response validation,
+coordinate restoration, label mapping, and dedupe — is entirely production
+code (src.pipeline.sarpn); only the zoom path (a historical alternative,
+never shipped) keeps its own crop/upscale geometry.
 
     python -m src.pipeline.compare_sarpn --image face.jpg \
         [--api http://localhost:8000/predict] [--pipeline both|zoom|tile]
@@ -26,80 +30,54 @@ from __future__ import annotations
 
 import argparse
 import base64
+from dataclasses import asdict, replace
 import functools
 import io
 import json
+import math
 import time
 import urllib.request
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageDraw
 
 from ..config import load_config
-from ..recommendation.bridge import severity_from_count
-from ..recommendation.schema import Concern, ConcernReport, UserProfile
-from .e2e import load_catalog, routine_payload
-
-# SA-RPN's 10 AcneSCU classes -> the closed concern vocabulary. nevus/other
-# are real detections but not treatable concerns — dropped like Not_acne.
-SARPN_TO_CONCERN = {
-    "closed_comedo": "acne_comedonal",
-    "open_comedo": "acne_comedonal",
-    "papule": "acne_inflammatory",
-    "pustule": "acne_inflammatory",
-    "nodule": "acne_cystic",
-    "atrophic_scar": "hyperpigmentation",
-    "hypertrophic_scar": "hyperpigmentation",
-    "melasma": "hyperpigmentation",
-}
+from ..recommendation.import_catalog import load_catalog
+from ..recommendation.schema import UserProfile
+from .sarpn import (
+    LesionObservation,
+    SarpnSettings,
+    build_sarpn_concern_report,
+    concern_to_dict,
+    dedupe_observations,
+    infer_native_tiles,
+    load_rgb,
+    make_tiles,
+)
 
 CONCERN_COLORS = {
     "acne_comedonal": (255, 200, 0),
     "acne_inflammatory": (255, 40, 40),
     "acne_cystic": (200, 0, 255),
+    "acne_scarring": (120, 80, 40),
     "hyperpigmentation": (40, 120, 255),
     None: (160, 160, 160),
 }
 
 
-def load_rgb(path):
-    """EXIF-corrected pixels, same as run_acne04_pipeline (no TF import here)."""
-    return np.asarray(ImageOps.exif_transpose(Image.open(path)).convert("RGB"))
-
-
 def api_detect(rgb, url, timeout=300):
-    """One image -> SA-RPN detections [{label, score, bbox}] via the REST API."""
+    """One image -> SA-RPN detections [{label, score, bbox}] via the REST API.
+
+    Zoom-only: each crop is a standalone image (no tile bookkeeping), so this
+    stays a plain, unvalidated POST rather than the production tile client.
+    """
     buf = io.BytesIO()
     Image.fromarray(rgb).save(buf, format="JPEG", quality=92)
     payload = json.dumps({"image": base64.b64encode(buf.getvalue()).decode()}).encode()
     req = urllib.request.Request(url, data=payload,
                                  headers={"Content-Type": "application/json"})
     return json.load(urllib.request.urlopen(req, timeout=timeout))["detections"]
-
-
-def dedupe(dets, thr=0.5):
-    # Same suppression as sa-rpn/serve.py, reapplied here because zoom crops
-    # and tile overlaps re-introduce duplicates the server can't see across
-    # requests. Intersection over the SMALLER box; dets sorted by score desc.
-    keep = []
-    for d in dets:
-        x1, y1, x2, y2 = d["bbox"]
-        area = max(0.0, x2 - x1) * max(0.0, y2 - y1)
-        suppressed = False
-        for k in keep:
-            kx1, ky1, kx2, ky2 = k["bbox"]
-            iw = min(x2, kx2) - max(x1, kx1)
-            ih = min(y2, ky2) - max(y1, ky1)
-            if iw <= 0 or ih <= 0:
-                continue
-            smaller = min(area, (kx2 - kx1) * (ky2 - ky1)) or 1.0
-            if (iw * ih) / smaller > thr:
-                suppressed = True
-                break
-        if not suppressed:
-            keep.append(d)
-    return keep
 
 
 # --- pipeline A: zoom -------------------------------------------------------
@@ -161,68 +139,108 @@ def zoom_pipeline(rgb, boxes, detect, *, out_size=1024, pad=4.0, min_side=192):
     return dets, crops
 
 
-# --- pipeline B: tile -------------------------------------------------------
+def _observations_from_zoom_dicts(dets, rgb_shape, settings):
+    """Zoom crops call the API directly and return plain dicts (no tile
+    bookkeeping). Wrap them in the same LesionObservation shape the tile path
+    uses so dedupe/region/concern-bridge downstream is identical either way.
 
-def tile_origins(length, tile, stride):
-    """Minimal tile count reaching the far edge, evenly spaced so the overlap
-    never drops below the requested one (a seam lesion smaller than the
-    overlap is always fully inside some tile)."""
-    if length <= tile:
-        return [0]
-    count = -(-(length - tile) // stride) + 1  # ceil division
-    return [round(i * (length - tile) / (count - 1)) for i in range(count)]
+    The tile path gets score/bbox validation and min_score filtering for
+    free from src.pipeline.sarpn (_validated_detections); this path calls
+    the raw API directly (see api_detect's docstring) so it must apply the
+    same client-side checks itself for the A/B comparison to be symmetric.
+    This is the debug harness, so invalid entries are dropped rather than
+    aborting the whole comparison."""
+    height, width = rgb_shape[:2]
+    whole_image = (0, 0, width, height)
+    observations = []
+    for d in dets:
+        score = d.get("score")
+        if (isinstance(score, bool) or not isinstance(score, (int, float))
+                or not math.isfinite(score) or not 0 <= score <= 1):
+            continue
+        if score < settings.min_score:
+            continue
+        bbox = d.get("bbox")
+        if not isinstance(bbox, (list, tuple)) or len(bbox) != 4:
+            continue
+        if any(isinstance(value, bool) or not isinstance(value, (int, float))
+               or not math.isfinite(value) for value in bbox):
+            continue
+        x1, y1, x2, y2 = (float(value) for value in bbox)
+        if x2 <= x1 or y2 <= y1:
+            continue
+        observations.append(
+            LesionObservation(d["label"], d["label"], float(score),
+                              (x1, y1, x2, y2), 0, whole_image)
+        )
+    return observations
 
 
-def tile_pipeline(rgb, detect, *, tile=1024, overlap=128):
-    """Native-resolution overlapping chunks of the whole image -> detect ->
-    detections offset back to original coordinates."""
-    h, w = rgb.shape[:2]
-    stride = tile - overlap
-    tiles = [(x, y, min(tile, w - x), min(tile, h - y))
-             for y in tile_origins(h, tile, stride)
-             for x in tile_origins(w, tile, stride)]
-    dets = []
-    for x, y, tw, th in tiles:
-        for d in detect(rgb[y:y + th, x:x + tw]):
-            x0, y0, x1, y1 = d["bbox"]
-            dets.append({**d, "bbox": [x0 + x, y0 + y, x1 + x, y1 + y]})
-    return dets, [(x, y, x + tw, y + th) for x, y, tw, th in tiles]
+def _load_optional_catalog(path):
+    """Mirrors src.pipeline.e2e.load_optional_catalog's tier-2 merge and
+    degrade-on-error behavior (Finding 1) without importing e2e — this
+    harness must not depend on the user-facing e2e module by design.
+    Returns the merged catalog, or None (with a printed note) when the
+    catalog is absent/corrupt, matching this module's docstring promise:
+    "same degradation as e2e"."""
+    if not path.exists():
+        print(f"no catalog at {path} — stopping at concern reports")
+        return None
+    try:
+        products = load_catalog(path)
+        tier2_path = path.with_name("catalog_tier2.json")
+        if tier2_path.exists():
+            products = products + load_catalog(tier2_path)
+        return products
+    except json.JSONDecodeError as exc:
+        print(f"catalog at {path} contains invalid JSON ({exc}) — stopping at concern reports")
+        return None
+    except (OSError, TypeError, ValueError, AssertionError) as exc:
+        print(f"catalog at {path} is unreadable or invalid ({exc}) — stopping at concern reports")
+        return None
+
+
+def yolo_boxes(image_path, weights, cfg):
+    from ultralytics import YOLO
+
+    result = YOLO(str(weights)).predict(
+        str(image_path), conf=cfg["detection"]["conf_threshold"],
+        iou=cfg["detection"]["iou_threshold"], imgsz=cfg["detection"]["img_size"],
+        verbose=False)[0]
+    return [b.xyxy[0].tolist() for b in result.boxes]
+
+
+# --- pipeline B: tile --------------------------------------------------------
+
+def run_tile_comparison(rgb, settings):
+    """Native-tile detection for the tile pipeline. Tiling, HTTP calls,
+    response validation, coordinate restoration, and dedupe are all
+    production code (src.pipeline.sarpn) — nothing here duplicates it.
+
+    dedupe=False: infer_native_tiles normally dedupes internally (the
+    production contract), which would make raw_detections silently equal
+    detections_after_dedupe for this pipeline. Requesting raw observations
+    here lets run_downstream's single dedupe_observations() pass produce a
+    genuine raw -> deduped delta, same as the zoom pipeline already gets.
+    """
+    observations = infer_native_tiles(rgb, settings, dedupe=False)
+    tiles = make_tiles(rgb.shape, tile_size=settings.tile_size, overlap=settings.tile_overlap)
+    rects = [(t.x, t.y, t.x + t.width, t.y + t.height) for t in tiles]
+    return observations, rects
 
 
 # --- shared downstream ------------------------------------------------------
 
-def report_from_detections(image_id, dets, regions, thresholds):
-    """SA-RPN labels -> ConcernReport; mirrors bridge.build_concern_report but
-    takes hard labels+scores instead of classifier prob vectors."""
-    groups: dict[tuple[str, str], list[float]] = {}
-    dropped = 0
-    for d, region in zip(dets, regions):
-        concern = SARPN_TO_CONCERN.get(d["label"])
-        if concern is None:
-            dropped += 1
-            continue
-        groups.setdefault((concern, region), []).append(d["score"])
-    concerns = [Concern(concern=concern, region=region,
-                        severity=severity_from_count(len(scores), thresholds),
-                        confidence=sum(scores) / len(scores),
-                        lesion_count=len(scores))
-                for (concern, region), scores in sorted(groups.items())]
-    return ConcernReport(image_id=image_id, concerns=concerns,
-                         clear_skin=not concerns,
-                         notes=f"dropped {dropped} non-concern detection(s) "
-                               "(nevus/other)" if dropped else "")
-
-
-def draw_overlay(rgb, dets, regions, rects, path):
+def draw_overlay(rgb, dets, rects, path):
     img = Image.fromarray(rgb.copy())
     draw = ImageDraw.Draw(img)
     for rect in rects:
         draw.rectangle(rect, outline=(0, 255, 0), width=1)
-    for d, region in zip(dets, regions):
-        color = CONCERN_COLORS[SARPN_TO_CONCERN.get(d["label"])]
-        draw.rectangle(d["bbox"], outline=color, width=3)
-        draw.text((d["bbox"][0], max(d["bbox"][1] - 12, 0)),
-                  f"{d['label']} {d['score']:.2f} {region}", fill=color)
+    for d in dets:
+        color = CONCERN_COLORS.get(d.mapped_concern, CONCERN_COLORS[None])
+        draw.rectangle(d.box, outline=color, width=3)
+        draw.text((d.box[0], max(d.box[1] - 12, 0)),
+                  f"{d.label} {d.score:.2f} {d.region}", fill=color)
     img.save(path, quality=92)
 
 
@@ -258,61 +276,86 @@ def compare(dets_a, dets_b, iou_thr=0.3):
 def label_counts(dets):
     counts: dict[str, int] = {}
     for d in dets:
-        counts[d["label"]] = counts.get(d["label"], 0) + 1
+        counts[d.label] = counts.get(d.label, 0) + 1
     return dict(sorted(counts.items(), key=lambda kv: -kv[1]))
 
 
-def run_downstream(name, rgb, raw_dets, rects, image_name, cfg, out, *,
+def _routine_payload(report, tone, region_mapping, recommendation, top):
+    """Debug-comparison routine.json — deliberately not imported from e2e
+    (this harness must not depend on the user-facing e2e module), but close
+    enough in shape to eyeball a diff against a real e2e run."""
+    def product_payload(product):
+        return {
+            "product_id": product.product_id,
+            "brand": product.brand,
+            "name": product.name,
+            "actives": product.actives,
+            "price_usd": product.price_usd,
+        }
+
+    method = (region_mapping.get("method", "unknown")
+              if isinstance(region_mapping, dict) else region_mapping)
+    return {
+        "schema_version": "2.0",
+        "image_id": report.image_id,
+        "concerns": [concern_to_dict(c) for c in report.concerns],
+        "clear_skin": report.clear_skin,
+        "tone": asdict(tone),
+        "region_method": method,
+        "flags": recommendation.flags,
+        "target_actives": recommendation.target_actives,
+        "routines": {
+            slot: {
+                category: [product_payload(p) for p in products[:top]]
+                for category, products in recommendation.routines[slot].items()
+                if products
+            }
+            for slot in ("AM", "PM")
+        },
+    }
+
+
+def run_downstream(name, rgb, observations, rects, image_name, settings, out, *,
                    catalog, ranker, skin_type, pregnant, seconds, top):
-    """Everything after detection is identical for both pipelines."""
+    """Everything after detection is identical for both pipelines: dedupe,
+    region mapping, and the SA-RPN concern bridge are all production code."""
     from ..recommendation.engine import recommend
     from .regions import locate_regions
     from .tone import estimate_tone
 
-    dets = dedupe(sorted(raw_dets, key=lambda d: d["score"], reverse=True))
-    boxes = [tuple(d["bbox"]) for d in dets]
+    dets = dedupe_observations(observations, threshold=settings.dedupe_threshold,
+                               preserve_tile_order=True)
+    boxes = [d.box for d in dets]
     region_result = locate_regions(rgb, boxes)
-    thresholds = cfg["concern_report"]["severity_count_thresholds"]
-    report = report_from_detections(image_name, dets, region_result.regions,
-                                    thresholds)
-    draw_overlay(rgb, dets, region_result.regions, rects,
-                 out / f"{name}_overlay.jpg")
+    report, dets, safety = build_sarpn_concern_report(
+        image_name, dets, region_result.regions, settings.severity)
+    draw_overlay(rgb, dets, rects, out / f"{name}_overlay.jpg")
 
     result = {
         "pipeline": name,
         "api_calls": len(rects),
         "seconds": round(seconds, 1),
-        "raw_detections": len(raw_dets),
+        "raw_detections": len(observations),
         "detections_after_dedupe": len(dets),
         "label_counts": label_counts(dets),
-        "detections": [{**d, "region": r, "bbox": [round(v, 1) for v in d["bbox"]]}
-                       for d, r in zip(dets, region_result.regions)],
+        "detections": [{"label": d.label, "score": d.score, "region": d.region,
+                        "bbox": [round(v, 1) for v in d.box]} for d in dets],
         "region_method": region_result.metadata["method"],
         "concerns": [{"concern": c.concern, "region": c.region,
                       "severity": c.severity, "lesion_count": c.lesion_count,
                       "confidence": round(c.confidence, 3)} for c in report.concerns],
-        "notes": report.notes,
+        "safety_observations": [asdict(item) for item in safety],
     }
     if catalog is not None:
         tone = estimate_tone(rgb, region_result.polygons, boxes)
         profile = UserProfile(skin_type=skin_type, tone_bucket=tone.bucket,
                               tone_source="photo", pregnant_or_nursing=pregnant)
         rec = recommend(report, catalog, profile=profile, ranker=ranker)
-        payload = routine_payload(report, tone, region_result.metadata["method"],
-                                  rec, top)
+        payload = _routine_payload(report, tone, region_result.metadata["method"],
+                                   rec, top)
         (out / f"routine_{name}.json").write_text(json.dumps(payload, indent=2) + "\n")
         result["routine"] = payload
     return result
-
-
-def yolo_boxes(image_path, weights, cfg):
-    from ultralytics import YOLO
-
-    result = YOLO(str(weights)).predict(
-        str(image_path), conf=cfg["detection"]["conf_threshold"],
-        iou=cfg["detection"]["iou_threshold"], imgsz=cfg["detection"]["img_size"],
-        verbose=False)[0]
-    return [b.xyxy[0].tolist() for b in result.boxes]
 
 
 def main(argv=None):
@@ -341,16 +384,15 @@ def main(argv=None):
     rgb = load_rgb(args.image)
     detect = functools.partial(api_detect, url=args.api)
 
+    settings = replace(SarpnSettings.from_config(cfg), endpoint_url=args.api,
+                       tile_size=args.tile, tile_overlap=args.overlap)
+    settings._validate()
+
     catalog_path = Path(cfg["paths"]["catalog_processed"])
-    catalog = load_catalog(cfg) if catalog_path.exists() else None
-    if catalog is None:
-        print(f"no catalog at {catalog_path} — stopping at concern reports")
+    catalog = _load_optional_catalog(catalog_path)
+    # Historical ConcernStatsRanker comparison is not wired up here; it would
+    # need an explicit future opt-in rather than loading automatically.
     ranker = None
-    if catalog is not None:
-        from ..recommendation.concern_stats import ConcernStatsRanker
-        stats_path = Path(cfg["concern"]["stats_path"])
-        if stats_path.exists():
-            ranker = ConcernStatsRanker.from_file(stats_path, list(SARPN_TO_CONCERN.values()))
 
     results = {}
     if args.pipeline in ("both", "zoom"):
@@ -362,8 +404,9 @@ def main(argv=None):
             boxes = yolo_boxes(args.image, args.detector, cfg)
             dets, rects = zoom_pipeline(rgb, boxes, detect, pad=args.zoom_pad,
                                         min_side=args.zoom_min)
+            observations = _observations_from_zoom_dicts(dets, rgb.shape, settings)
             results["zoom"] = run_downstream(
-                "zoom", rgb, dets, rects, args.image.name, cfg, out,
+                "zoom", rgb, observations, rects, args.image.name, settings, out,
                 catalog=catalog, ranker=ranker, skin_type=args.skin_type,
                 pregnant=args.pregnant,
                 seconds=time.perf_counter() - start, top=args.top)
@@ -371,10 +414,9 @@ def main(argv=None):
 
     if args.pipeline in ("both", "tile"):
         start = time.perf_counter()
-        dets, rects = tile_pipeline(rgb, detect, tile=args.tile,
-                                    overlap=args.overlap)
+        observations, rects = run_tile_comparison(rgb, settings)
         results["tile"] = run_downstream(
-            "tile", rgb, dets, rects, args.image.name, cfg, out,
+            "tile", rgb, observations, rects, args.image.name, settings, out,
             catalog=catalog, ranker=ranker, skin_type=args.skin_type,
             pregnant=args.pregnant,
             seconds=time.perf_counter() - start, top=args.top)

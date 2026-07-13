@@ -21,7 +21,8 @@ CONCERN_ACTIVES: dict[str, list[str]] = {
     "acne_comedonal":    ["salicylic_acid", "adapalene", "azelaic_acid"],
     "acne_inflammatory": ["benzoyl_peroxide", "azelaic_acid", "niacinamide"],
     "acne_cystic":       ["centella"],  # soothing only; routes to professional
-    "hyperpigmentation": ["niacinamide", "vitamin_c", "azelaic_acid"],
+    "acne_scarring":     ["ceramides"],
+    "hyperpigmentation": ["azelaic_acid", "niacinamide"],
     "dryness":           ["ceramides", "hyaluronic_acid", "glycerin"],
 }
 
@@ -97,11 +98,24 @@ class Recommendation:
         return [(c, r[c]) for c in CATEGORIES if r.get(c)]
 
 
+def _concern_location(concern) -> str:
+    return ",".join(concern.regions or [concern.region])
+
+
+def _add_deep_tone_guidance(flags: list[str], profile,
+                            concerns: set[str]) -> None:
+    if (profile and profile.tone_bucket == "deep"
+            and concerns & {"acne_inflammatory", "acne_scarring", "hyperpigmentation"}):
+        flags.append("deeper tone: emphasize sunscreen and irritation avoidance to reduce "
+                     "post-inflammatory hyperpigmentation risk")
+
+
 def recommend(report: ConcernReport, catalog: list[Product],
               profile: UserProfile | None = None, ranker=None,
               conf_cutoff: float = 0.5) -> Recommendation:
     flags: list[str] = []
     concerns = [c.concern for c in report.concerns]
+    reported_concerns = set(concerns)
 
     # clear skin -> maintenance only (RULES.md §4, severity 0)
     if report.clear_skin or not report.concerns:
@@ -113,24 +127,42 @@ def recommend(report: ConcernReport, catalog: list[Product],
     if report.has_cystic or report.overall_severity >= 4:
         flags.append("see a dermatologist")
         # RULES.md §5 — loud uncertainty survives the escalation short-circuit
-        flags += [f"{c.concern}@{c.region}: possible — verify"
+        flags += [f"{c.concern}@{_concern_location(c)}: possible — verify"
                   for c in report.concerns if c.confidence < conf_cutoff]
+        _add_deep_tone_guidance(flags, profile, reported_concerns)
         target = ["centella", "ceramides", "hyaluronic_acid"]
         return _finish(target, _gentle_only(catalog), True, profile, ranker,
                        flags, concerns=concerns)
 
-    # collect actives from all sufficiently-confident concerns
+    # Active acne is handled before scar support, regardless of report order.
+    concern_order = {"acne_inflammatory": 0, "acne_comedonal": 1,
+                     "hyperpigmentation": 2, "dryness": 3, "acne_scarring": 4}
+    ordered_concerns = sorted(enumerate(report.concerns),
+                              key=lambda item: (concern_order.get(item[1].concern, 5), item[0]))
+
     target: list[str] = []
     needs_spf = False
-    for c in report.concerns:
-        if c.concern == "hyperpigmentation":
-            needs_spf = True  # RULES.md §3, non-negotiable
-        actives = CONCERN_ACTIVES.get(c.concern, [])
+    broad_inflammation = False
+    for _, c in ordered_concerns:
+        if c.concern in {"hyperpigmentation", "acne_scarring"}:
+            needs_spf = True  # supportive SPF remains valid even under uncertainty
         if c.confidence < conf_cutoff:
-            flags.append(f"{c.concern}@{c.region}: possible — verify")
+            flags.append(f"{c.concern}@{_concern_location(c)}: possible — verify")
+            continue
+        actives = list(CONCERN_ACTIVES.get(c.concern, []))
+        if c.concern == "acne_inflammatory" and c.evidence.affected_region_count >= 3:
+            broad_inflammation = True
         for a in actives:
             if a not in target:
                 target.append(a)
+        if (c.concern == "acne_scarring"
+                and (c.severity >= 3 or c.evidence.labels.get("hypertrophic_scar", 0))):
+            flags.append("consider professional review for acne scarring")
+
+    if any(a in STRONG_ACTIVES for a in target) and "ceramides" not in target:
+        target.append("ceramides")
+
+    _add_deep_tone_guidance(flags, profile, reported_concerns)
 
     if report.overall_severity == 3:
         flags.append("consider a professional")
@@ -141,6 +173,23 @@ def recommend(report: ConcernReport, catalog: list[Product],
             flags.append("retinoids omitted (pregnancy/nursing) — cosmetic "
                          "guidance only, confirm with your doctor")
         target = [a for a in target if a not in RETINOIDS]
+
+    # Decide broad-inflammation de-stacking against the fully assembled targets
+    # through the same slot, product, and tier selection used for the final routine.
+    if broad_inflammation and "benzoyl_peroxide" in target and "azelaic_acid" in target:
+        probe_flags: list[str] = []
+        probe_kept, probe_slots = _assign_slots(target, probe_flags)
+        probe_routines = _build_routines(probe_kept, catalog, needs_spf, probe_slots,
+                                         profile, ranker, concerns)
+        # SPF products are added to every routine unconditionally (RULES.md §3)
+        # without matching against target actives, so a sunscreen that merely
+        # lists azelaic_acid must not count as a surviving azelaic TREATMENT —
+        # only actives-matched (non-SPF) slots prove azelaic_acid survived.
+        if any("azelaic_acid" in product.actives
+               for slot in SLOTS for category in CATEGORIES if category != "spf"
+               for product in probe_routines[slot][category]):
+            target.remove("benzoyl_peroxide")
+            flags.append("broad inflammation: reduced strong-active stacking")
 
     kept, slots = _assign_slots(target, flags)
     return _finish(kept, catalog, needs_spf, profile, ranker, flags, slots,
