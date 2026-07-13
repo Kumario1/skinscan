@@ -114,6 +114,41 @@ def fake_sarpn_server():
         yield server
 
 
+@contextmanager
+def _serve_sarpn_fixed(detections: list[dict]):
+    """A minimal SA-RPN fixture that always returns the given detections,
+    for tests that need a specific label (e.g. a nodule) rather than the
+    red-tile-position dispatch of _serve_sarpn."""
+
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, format, *args):
+            return
+
+        def do_POST(self):
+            length = int(self.headers["Content-Length"])
+            self.rfile.read(length)
+            encoded = json.dumps(
+                {"count": len(detections), "detections": detections},
+            ).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(encoded)))
+            self.end_headers()
+            self.wfile.write(encoded)
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    host, port = server.server_address
+    url = f"http://{host}:{port}/predict"
+    try:
+        yield url
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+
+
 def _args(image_path: Path, output_dir: Path, api: str, catalog_path: Path) -> list[str]:
     return [
         "--image", str(image_path),
@@ -543,3 +578,75 @@ def test_stale_any_pid_backup_is_restored_when_publish_then_fails(
 
     assert output_dir.exists()
     assert (output_dir / "marker.txt").read_text() == "stranded from a crashed run"
+
+
+# --- Findings 6+7: derm-escalation surfaces from the analysis, independent --
+# --- of whether a catalog/routine is available. -----------------------------
+
+def test_main_surfaces_dermatologist_escalation_without_catalog(tmp_path, capsys):
+    image_path = tmp_path / "face.jpg"
+    output_dir = tmp_path / "output"
+    missing_catalog_path = tmp_path / "missing-catalog.json"
+    _write_image(image_path)
+
+    detections = [{"label": "Nodule", "score": 0.95, "bbox": [200, 100, 500, 400]}]
+    with _serve_sarpn_fixed(detections) as url:
+        exit_code = main(_args(image_path, output_dir, url, missing_catalog_path))
+
+    assert exit_code == 0
+
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    assert analysis["recommendation_status"] == "unavailable"
+    assert not (output_dir / "routine.json").exists()
+
+    combined = "".join(capsys.readouterr())
+    assert "severe acne_cystic" in combined
+    assert "dermatologist" in combined
+
+
+def test_main_surfaces_professional_review_safety_observation(tmp_path, capsys):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+
+    # A handful of high-confidence "nevus" observations trip the
+    # professional_review safety policy (see configs/default.yaml).
+    detections = [
+        {"label": "nevus", "score": 0.97, "bbox": [50 + 40 * i, 50, 90 + 40 * i, 90]}
+        for i in range(6)
+    ]
+    with _serve_sarpn_fixed(detections) as url:
+        exit_code = main(_args(image_path, output_dir, url, catalog_path))
+
+    assert exit_code == 0
+
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    reviewable = [obs for obs in analysis["safety_observations"] if obs["professional_review"]]
+    assert reviewable, "fixture must exercise a professional_review=True safety observation"
+
+    combined = "".join(capsys.readouterr())
+    for obs in reviewable:
+        assert f"{obs['code']}: professional review recommended" in combined
+
+
+def test_main_prints_routine_flags_when_recommendation_available(tmp_path, capsys):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_catalog(catalog_path)
+
+    detections = [{"label": "Nodule", "score": 0.95, "bbox": [200, 100, 500, 400]}]
+    with _serve_sarpn_fixed(detections) as url:
+        exit_code = main(_args(image_path, output_dir, url, catalog_path))
+
+    assert exit_code == 0
+
+    routine = json.loads((output_dir / "routine.json").read_text())
+    assert routine["flags"], "fixture must produce at least one routine flag"
+
+    combined = "".join(capsys.readouterr())
+    for flag in routine["flags"]:
+        assert flag in combined
