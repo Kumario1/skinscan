@@ -11,9 +11,10 @@ import math
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Callable
+from urllib.parse import urlsplit, urlunsplit
 
 import numpy as np
-from PIL import Image, ImageOps
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import requests
 
 from src.recommendation.schema import Concern, ConcernEvidence, ConcernReport
@@ -26,6 +27,16 @@ SARPN_LABEL_TO_CONCERN = {
     "hypertrophic_scar": "acne_scarring", "melasma": "hyperpigmentation",
 }
 SARPN_NON_ACTIONABLE_LABELS = {"nevus", "other"}
+LABEL_COLORS = {
+    "closed_comedo": "#2E86AB", "open_comedo": "#3C91E6",
+    "papule": "#E45756", "pustule": "#F3A712", "nodule": "#8F2D56",
+    "atrophic_scar": "#6A4C93", "hypertrophic_scar": "#A23B72",
+    "melasma": "#7A5195", "nevus": "#4D908E", "other": "#577590",
+}
+REGION_COLORS = {
+    "forehead": "#277DA1", "nose": "#F9844A", "right_cheek": "#43AA8B",
+    "left_cheek": "#90BE6D", "perioral": "#F94144", "chin_jaw": "#9B5DE5",
+}
 
 
 def _freeze(value: Any) -> Any:
@@ -367,6 +378,148 @@ def concern_to_dict(concern: Concern) -> dict[str, object]:
             "evidence": {"labels": dict(concern.evidence.labels),
                          "max_confidence": concern.evidence.max_confidence,
                          "affected_region_count": concern.evidence.affected_region_count}}
+
+
+def sanitize_endpoint(url: str) -> str:
+    """Return a publish-safe endpoint without credentials, query, or fragment."""
+    parsed = urlsplit(url)
+    host = parsed.hostname or ""
+    if ":" in host and not host.startswith("["):
+        host = f"[{host}]"
+    netloc = host
+    try:
+        if parsed.port is not None:
+            netloc = f"{netloc}:{parsed.port}"
+    except ValueError:
+        pass
+    return urlunsplit((parsed.scheme, netloc, parsed.path, "", ""))
+
+
+def observation_to_dict(observation: LesionObservation) -> dict[str, object]:
+    return {
+        "normalized_label": observation.normalized_label,
+        "original_label": observation.original_label,
+        "confidence": observation.confidence,
+        "box": list(observation.box),
+        "region": observation.region,
+        "mapped_concern": observation.mapped_concern,
+        "observation_status": observation.observation_status,
+        "source_tile": {
+            "index": observation.tile_index,
+            "box": list(observation.tile_box),
+        },
+    }
+
+
+def _label_color(label: str) -> str:
+    if label in LABEL_COLORS:
+        return LABEL_COLORS[label]
+    value = sum((index + 1) * ord(char) for index, char in enumerate(label))
+    return f"#{64 + value % 160:02x}{64 + (value // 5) % 160:02x}{64 + (value // 11) % 160:02x}"
+
+
+def _text_size(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont) -> tuple[int, int]:
+    left, top, right, bottom = draw.textbbox((0, 0), text, font=font)
+    return right - left, bottom - top
+
+
+def draw_detection_overlay(
+    image_rgb: np.ndarray, observations: Sequence[LesionObservation], output: Path,
+) -> None:
+    image = Image.fromarray(image_rgb).copy()
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default()
+    width = max(2, round(min(image.size) / 250))
+    for observation in observations:
+        color = _label_color(observation.normalized_label)
+        draw.rectangle(observation.box, outline=color, width=width)
+        label = f"{observation.normalized_label} {observation.confidence:.2f}"
+        text_width, text_height = _text_size(draw, label, font)
+        x1, y1 = observation.box[:2]
+        top = max(0, int(y1) - text_height - 5)
+        draw.rectangle((int(x1), top, int(x1) + text_width + 6, top + text_height + 5), fill=color)
+        draw.text((int(x1) + 3, top + 2), label, fill="white", font=font)
+    labels = sorted({item.normalized_label for item in observations})
+    if labels:
+        x = 8
+        y = 8
+        for label in labels:
+            text_width, text_height = _text_size(draw, label, font)
+            draw.rectangle((x, y, x + 12, y + 12), fill=_label_color(label))
+            draw.text((x + 17, y), label, fill="white", stroke_width=2,
+                      stroke_fill="black", font=font)
+            y += max(16, text_height + 4)
+    image.save(output, format="JPEG", quality=92)
+
+
+def draw_region_overlay(
+    image_rgb: np.ndarray, observations: Sequence[LesionObservation], region_result: Any,
+    output: Path,
+) -> None:
+    image = Image.fromarray(image_rgb).copy()
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.load_default()
+    line_width = max(2, round(min(image.size) / 300))
+    for region, polygon in region_result.polygons.items():
+        points = [(round(x), round(y)) for x, y in polygon]
+        if len(points) >= 2:
+            color = REGION_COLORS.get(region, "#FFFFFF")
+            draw.line(points + [points[0]], fill=color, width=line_width)
+            draw.text(points[0], region, fill=color, stroke_width=2, stroke_fill="black", font=font)
+    for observation in observations:
+        x1, y1, x2, y2 = observation.box
+        center = (round((x1 + x2) / 2), round((y1 + y2) / 2))
+        color = REGION_COLORS.get(observation.region or "", "#FFFFFF")
+        radius = max(3, line_width + 1)
+        draw.ellipse((center[0] - radius, center[1] - radius,
+                      center[0] + radius, center[1] + radius), fill=color, outline="black")
+        draw.text((center[0] + radius + 2, center[1] - radius), observation.region or "unknown",
+                  fill=color, stroke_width=2, stroke_fill="black", font=font)
+    title = f"region mapping: {region_result.metadata.get('method', 'unknown')}"
+    text_width, text_height = _text_size(draw, title, font)
+    draw.rectangle((0, 0, text_width + 12, text_height + 8), fill="black")
+    draw.text((6, 4), title, fill="white", font=font)
+    image.save(output, format="JPEG", quality=92)
+
+
+def draw_lesion_sheet(
+    image_rgb: np.ndarray, observations: Sequence[LesionObservation], output: Path,
+) -> None:
+    font = ImageFont.load_default()
+    if not observations:
+        sheet = Image.new("RGB", (640, 160), "white")
+        ImageDraw.Draw(sheet).text((24, 64), "No retained SA-RPN detections.", fill="black", font=font)
+        sheet.save(output, format="JPEG", quality=92)
+        return
+
+    tile_width, tile_height, caption_height = 240, 190, 58
+    columns = min(4, len(observations))
+    rows = math.ceil(len(observations) / columns)
+    sheet = Image.new("RGB", (columns * tile_width, rows * (tile_height + caption_height)), "white")
+    source = Image.fromarray(image_rgb)
+    for index, observation in enumerate(observations):
+        x1, y1, x2, y2 = observation.box
+        box_width, box_height = x2 - x1, y2 - y1
+        pad_x, pad_y = box_width * 0.25, box_height * 0.25
+        crop_box = (
+            max(0, math.floor(x1 - pad_x)), max(0, math.floor(y1 - pad_y)),
+            min(source.width, math.ceil(x2 + pad_x)), min(source.height, math.ceil(y2 + pad_y)),
+        )
+        crop = ImageOps.contain(source.crop(crop_box), (tile_width, tile_height))
+        cell_x = (index % columns) * tile_width
+        cell_y = (index // columns) * (tile_height + caption_height)
+        sheet.paste(crop, (cell_x + (tile_width - crop.width) // 2, cell_y))
+        status = observation.mapped_concern or (
+            "safety" if observation.observation_status == "non_actionable"
+            else observation.observation_status
+        )
+        caption = (
+            f"{observation.normalized_label} {observation.confidence:.2f}\n"
+            f"{observation.region or 'unknown'} | {status}"
+        )
+        ImageDraw.Draw(sheet).text((cell_x + 6, cell_y + tile_height + 5), caption,
+                                   fill="black", font=font)
+    sheet.save(output, format="JPEG", quality=92)
 
 
 def dedupe_observations(
