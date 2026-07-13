@@ -24,6 +24,7 @@ from src.pipeline.sarpn import (
     build_sarpn_concern_report,
     concern_to_dict,
     normalize_sarpn_label,
+    SarpnAnalysisError,
     SarpnResponseError,
     SarpnSettings,
     SarpnTransportError,
@@ -509,6 +510,12 @@ def test_transport_error_omits_credentials_from_credentialed_endpoint(fake_http_
     assert "fixture" not in message
     assert "secret" not in message
     assert "hidden" not in message
+
+
+def test_sarpn_exceptions_share_a_common_analysis_error_base():
+    assert issubclass(SarpnAnalysisError, RuntimeError)
+    assert issubclass(SarpnTransportError, SarpnAnalysisError)
+    assert issubclass(SarpnResponseError, SarpnAnalysisError)
 
 
 def test_min_score_is_applied_client_side(fake_http_server):
