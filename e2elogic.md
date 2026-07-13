@@ -1,0 +1,22 @@
+Went through all five files — the detections sheet, the region overlay, the boxed image, and both JSONs. Here's how the pipeline hangs together, and where the routine logic does and doesn't make sense.
+What the analysis found (this part is coherent)
+analysis.json has 103 raw detections from the tiled RPN pipeline (1024px tiles, 128 overlap, 0.3 min score), 97 actionable + 6 nevi marked non-actionable with a professional_review safety observation. The aggregation into routine.json concerns is exact and traceable:
+
+acne_comedonal, severity 4 — 52 lesions (11 open + 41 closed comedones) across 5 regions. The right cheek alone has 17 closed comedones, left cheek 12.
+acne_inflammatory, severity 4 — 36 lesions (27 papules + 9 pustules) across 6 regions, heavily forehead-concentrated (16 papules + 4 pustules there).
+acne_scarring, severity 3 — 7 atrophic scars, mostly left cheek.
+hyperpigmentation, severity 2 — 2 melasma detections, one per cheek.
+
+That matches what's visible in the overlay images (forehead papule cluster, cheek comedone fields), and dual severity-4 acne plus the nevus observation reasonably explains the "see a dermatologist" flag. So detection → region mapping → concern aggregation → flag is logically sound.
+Where the logic gets interesting: the routine
+The target actives don't treat the detected concerns — and that may be intentional. The concerns are moderate-severe comedonal + inflammatory acne, yet target_actives is centella, ceramides, hyaluronic_acid — purely soothing/barrier/hydration ingredients. Zero salicylic acid, benzoyl peroxide, retinoid, azelaic acid, or niacinamide-as-target. The most charitable read: once the derm flag fires at severity 4, the rules engine deliberately suppresses treatment actives and falls back to a gentle "support the barrier, don't self-treat, go see a professional" routine. If that's the rule, it's a defensible safety posture — but nothing in the output says so. notes is an empty string. I'd add an explicit field like routine_mode: "supportive_pending_derm_referral" so the frontend (and you, debugging) can tell a safety fallback apart from a matching bug.
+If it's not intentional, it's a bug worth finding, because the ingredient rules table should map comedonal → BHA/retinoid, inflammatory → BPO/azelaic/niacinamide, hyperpigmentation → azelaic/vitamin C, and none of that made it through.
+Product-matching problems (these look like real bugs)
+
+Matching on ubiquitous humectants barely filters. Glycerin and HA are in practically every Sephora product, so "contains hyaluronic_acid" selects almost anything — which is how a Gucci beauty mist ($78) ended up in the moisturizer slot. Consider excluding glycerin (and maybe HA) from match criteria, or requiring the match on the distinctive target active.
+Centella coverage is nearly zero. It's a target active in both AM and PM slots, but only one product in the entire routine (the EADEM cleansing balm) actually contains centella. Coverage should be validated per target active before recommendation_status: "complete".
+Category taxonomy is leaking. Two toners (Paula's Choice RESIST toner, Dr. Jart+ Ceramidin toner) are in the cleanser slot; overnight masks (fresh, Clinique) are in the AM treatment slot; a setting mist is a moisturizer. Product function needs to be its own field, not inferred from actives.
+AM and PM are identical lists (PM just drops SPF), and one PM "moisturizer" is an SPF 30 cream — pointless at night. Since slot_assignment puts everything in both AM and PM, the generator apparently just duplicates the candidate pool rather than differentiating (e.g., overnight masks → PM only, SPF-containing moisturizers → AM only).
+No price stratification — the serum list leads with a $245 option next to a $20 one. Sorting by match quality then offering budget/mid/premium tiers would read as much more deliberate.
+
+Net: the CV → concern half of the pipeline is in good shape and internally consistent across all five files. The concern → routine half needs (a) an explicit decision on whether the derm flag suppresses treatment actives, (b) a smarter ingredient-match rule that ignores base humectants, and (c) a product-category field so slots stop mixing toners, masks, and mists. Want me to sketch what the corrected rules-table logic would look like for these four concerns?
