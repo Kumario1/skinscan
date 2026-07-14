@@ -26,3 +26,5 @@ eval_runs.zip
 # session-local
 AcneSCU.v1-acnescu-original.voc/
 .claude/worktrees/
+recsys/data/derived/
+recsys/data/cache/

@@ -1,0 +1,1380 @@
+{
+  "global_mean": 4.2992,
+  "kind": "review_stats",
+  "min_cell": 20,
+  "products": {
+    "P12045": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.4824,
+          "n": 655,
+          "smoothed": 4.477
+        },
+        "dry": {
+          "mean": 4.4016,
+          "n": 254,
+          "smoothed": 4.3941
+        },
+        "normal": {
+          "mean": 4.4234,
+          "n": 111,
+          "smoothed": 4.4045
+        },
+        "oily": {
+          "mean": 4.4154,
+          "n": 130,
+          "smoothed": 4.3999
+        }
+      },
+      "mean": 4.4434,
+      "n": 1687,
+      "smoothed": 4.4417
+    },
+    "P173726": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.8161,
+          "n": 946,
+          "smoothed": 4.8054
+        },
+        "dry": {
+          "mean": 4.7634,
+          "n": 355,
+          "smoothed": 4.7386
+        },
+        "normal": {
+          "mean": 4.8848,
+          "n": 243,
+          "smoothed": 4.8402
+        },
+        "oily": {
+          "mean": 4.7477,
+          "n": 214,
+          "smoothed": 4.7093
+        }
+      },
+      "mean": 4.8284,
+      "n": 2827,
+      "smoothed": 4.8247
+    },
+    "P248407": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.531,
+          "n": 2708,
+          "smoothed": 4.5293
+        },
+        "dry": {
+          "mean": 4.488,
+          "n": 1826,
+          "smoothed": 4.4859
+        },
+        "normal": {
+          "mean": 4.5277,
+          "n": 578,
+          "smoothed": 4.52
+        },
+        "oily": {
+          "mean": 4.5333,
+          "n": 375,
+          "smoothed": 4.5215
+        }
+      },
+      "mean": 4.5185,
+      "n": 7547,
+      "smoothed": 4.5179
+    },
+    "P269122": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.5569,
+          "n": 3509,
+          "smoothed": 4.5554
+        },
+        "dry": {
+          "mean": 4.5568,
+          "n": 907,
+          "smoothed": 4.5512
+        },
+        "normal": {
+          "mean": 4.5202,
+          "n": 794,
+          "smoothed": 4.5147
+        },
+        "oily": {
+          "mean": 4.5362,
+          "n": 759,
+          "smoothed": 4.5301
+        }
+      },
+      "mean": 4.545,
+      "n": 7414,
+      "smoothed": 4.5444
+    },
+    "P377533": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.5657,
+          "n": 396,
+          "smoothed": 4.5528
+        },
+        "dry": {
+          "mean": 4.4947,
+          "n": 95,
+          "smoothed": 4.4607
+        },
+        "normal": {
+          "mean": 4.5169,
+          "n": 89,
+          "smoothed": 4.4769
+        },
+        "oily": {
+          "mean": 4.1475,
+          "n": 61,
+          "smoothed": 4.185
+        }
+      },
+      "mean": 4.4899,
+      "n": 1382,
+      "smoothed": 4.4871
+    },
+    "P394639": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.5106,
+          "n": 3539,
+          "smoothed": 4.5094
+        },
+        "dry": {
+          "mean": 4.4279,
+          "n": 1075,
+          "smoothed": 4.4256
+        },
+        "normal": {
+          "mean": 4.5175,
+          "n": 802,
+          "smoothed": 4.5121
+        },
+        "oily": {
+          "mean": 4.4718,
+          "n": 886,
+          "smoothed": 4.468
+        }
+      },
+      "mean": 4.4837,
+      "n": 7294,
+      "smoothed": 4.4832
+    },
+    "P400259": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.1828,
+          "n": 793,
+          "smoothed": 4.1857
+        },
+        "dry": {
+          "mean": 4.027,
+          "n": 296,
+          "smoothed": 4.0443
+        },
+        "normal": {
+          "mean": 3.9452,
+          "n": 219,
+          "smoothed": 3.9748
+        },
+        "oily": {
+          "mean": 4.3179,
+          "n": 151,
+          "smoothed": 4.3157
+        }
+      },
+      "mean": 4.1551,
+      "n": 1605,
+      "smoothed": 4.1569
+    },
+    "P4016": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.259,
+          "n": 1228,
+          "smoothed": 4.2596
+        },
+        "dry": {
+          "mean": 4.1181,
+          "n": 127,
+          "smoothed": 4.1427
+        },
+        "normal": {
+          "mean": 4.188,
+          "n": 133,
+          "smoothed": 4.2025
+        },
+        "oily": {
+          "mean": 4.2847,
+          "n": 548,
+          "smoothed": 4.2852
+        }
+      },
+      "mean": 4.2348,
+      "n": 2572,
+      "smoothed": 4.2353
+    },
+    "P405096": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.3291,
+          "n": 471,
+          "smoothed": 4.3279
+        },
+        "dry": {
+          "mean": 4.1507,
+          "n": 146,
+          "smoothed": 4.1686
+        },
+        "normal": {
+          "mean": 4.1717,
+          "n": 99,
+          "smoothed": 4.1931
+        },
+        "oily": {
+          "mean": 4.1681,
+          "n": 113,
+          "smoothed": 4.1878
+        }
+      },
+      "mean": 4.3092,
+      "n": 1158,
+      "smoothed": 4.309
+    },
+    "P409800": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.3117,
+          "n": 1649,
+          "smoothed": 4.3116
+        },
+        "dry": {
+          "mean": 4.3032,
+          "n": 498,
+          "smoothed": 4.3031
+        },
+        "normal": {
+          "mean": 4.2346,
+          "n": 439,
+          "smoothed": 4.2374
+        },
+        "oily": {
+          "mean": 4.4026,
+          "n": 380,
+          "smoothed": 4.3975
+        }
+      },
+      "mean": 4.3383,
+      "n": 3837,
+      "smoothed": 4.3381
+    },
+    "P411387": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.2353,
+          "n": 3128,
+          "smoothed": 4.2357
+        },
+        "dry": {
+          "mean": 4.1529,
+          "n": 1007,
+          "smoothed": 4.1558
+        },
+        "normal": {
+          "mean": 4.2178,
+          "n": 707,
+          "smoothed": 4.2201
+        },
+        "oily": {
+          "mean": 4.1902,
+          "n": 794,
+          "smoothed": 4.1929
+        }
+      },
+      "mean": 4.2098,
+      "n": 5864,
+      "smoothed": 4.2101
+    },
+    "P417238": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.5074,
+          "n": 3289,
+          "smoothed": 4.5062
+        },
+        "dry": {
+          "mean": 4.4455,
+          "n": 1212,
+          "smoothed": 4.4432
+        },
+        "normal": {
+          "mean": 4.4667,
+          "n": 705,
+          "smoothed": 4.462
+        },
+        "oily": {
+          "mean": 4.5285,
+          "n": 719,
+          "smoothed": 4.5223
+        }
+      },
+      "mean": 4.4951,
+      "n": 6169,
+      "smoothed": 4.4944
+    },
+    "P418218": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.0565,
+          "n": 2248,
+          "smoothed": 4.0586
+        },
+        "dry": {
+          "mean": 3.8529,
+          "n": 469,
+          "smoothed": 3.8711
+        },
+        "normal": {
+          "mean": 3.9245,
+          "n": 424,
+          "smoothed": 3.9414
+        },
+        "oily": {
+          "mean": 4.0184,
+          "n": 762,
+          "smoothed": 4.0256
+        }
+      },
+      "mean": 4.0235,
+      "n": 4170,
+      "smoothed": 4.0248
+    },
+    "P421275": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.1868,
+          "n": 2559,
+          "smoothed": 4.1877
+        },
+        "dry": {
+          "mean": 4.1629,
+          "n": 614,
+          "smoothed": 4.1672
+        },
+        "normal": {
+          "mean": 4.1041,
+          "n": 509,
+          "smoothed": 4.1115
+        },
+        "oily": {
+          "mean": 4.1686,
+          "n": 706,
+          "smoothed": 4.1722
+        }
+      },
+      "mean": 4.1774,
+      "n": 4576,
+      "smoothed": 4.178
+    },
+    "P427406": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.3091,
+          "n": 1595,
+          "smoothed": 4.309
+        },
+        "dry": {
+          "mean": 4.4643,
+          "n": 504,
+          "smoothed": 4.458
+        },
+        "normal": {
+          "mean": 4.3907,
+          "n": 302,
+          "smoothed": 4.385
+        },
+        "oily": {
+          "mean": 4.3304,
+          "n": 454,
+          "smoothed": 4.3291
+        }
+      },
+      "mean": 4.3448,
+      "n": 2897,
+      "smoothed": 4.3445
+    },
+    "P427410": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 3.419,
+          "n": 599,
+          "smoothed": 3.4475
+        },
+        "dry": {
+          "mean": 3.4563,
+          "n": 206,
+          "smoothed": 3.5309
+        },
+        "normal": {
+          "mean": 3.3462,
+          "n": 156,
+          "smoothed": 3.4545
+        },
+        "oily": {
+          "mean": 3.7153,
+          "n": 144,
+          "smoothed": 3.7865
+        }
+      },
+      "mean": 3.4456,
+      "n": 1113,
+      "smoothed": 3.4607
+    },
+    "P427411": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.1567,
+          "n": 517,
+          "smoothed": 4.162
+        },
+        "dry": {
+          "mean": 4.1173,
+          "n": 162,
+          "smoothed": 4.1373
+        },
+        "normal": {
+          "mean": 4.125,
+          "n": 104,
+          "smoothed": 4.1531
+        },
+        "oily": {
+          "mean": 4.247,
+          "n": 166,
+          "smoothed": 4.2526
+        }
+      },
+      "mean": 4.1543,
+      "n": 959,
+      "smoothed": 4.1573
+    },
+    "P427412": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 3.9928,
+          "n": 417,
+          "smoothed": 4.0068
+        },
+        "dry": {
+          "mean": 4.3394,
+          "n": 109,
+          "smoothed": 4.3332
+        },
+        "normal": {
+          "mean": 3.9494,
+          "n": 79,
+          "smoothed": 4.02
+        },
+        "oily": {
+          "mean": 4.0977,
+          "n": 133,
+          "smoothed": 4.1241
+        }
+      },
+      "mean": 4.033,
+      "n": 757,
+      "smoothed": 4.0399
+    },
+    "P427413": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.5055,
+          "n": 732,
+          "smoothed": 4.5
+        },
+        "dry": {
+          "mean": 4.5263,
+          "n": 228,
+          "smoothed": 4.508
+        },
+        "normal": {
+          "mean": 4.4577,
+          "n": 142,
+          "smoothed": 4.4382
+        },
+        "oily": {
+          "mean": 4.5028,
+          "n": 177,
+          "smoothed": 4.4822
+        }
+      },
+      "mean": 4.5012,
+      "n": 1291,
+      "smoothed": 4.4981
+    },
+    "P427414": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.1612,
+          "n": 1098,
+          "smoothed": 4.1637
+        },
+        "dry": {
+          "mean": 4.1261,
+          "n": 460,
+          "smoothed": 4.1333
+        },
+        "normal": {
+          "mean": 4.1789,
+          "n": 246,
+          "smoothed": 4.1879
+        },
+        "oily": {
+          "mean": 4.0833,
+          "n": 228,
+          "smoothed": 4.1007
+        }
+      },
+      "mean": 4.1452,
+      "n": 2059,
+      "smoothed": 4.1467
+    },
+    "P427415": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.4012,
+          "n": 815,
+          "smoothed": 4.3988
+        },
+        "dry": {
+          "mean": 4.3942,
+          "n": 378,
+          "smoothed": 4.3894
+        },
+        "normal": {
+          "mean": 4.4118,
+          "n": 187,
+          "smoothed": 4.4009
+        },
+        "oily": {
+          "mean": 4.4266,
+          "n": 218,
+          "smoothed": 4.4159
+        }
+      },
+      "mean": 4.3986,
+      "n": 1623,
+      "smoothed": 4.3974
+    },
+    "P427417": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.2417,
+          "n": 3302,
+          "smoothed": 4.242
+        },
+        "dry": {
+          "mean": 4.2453,
+          "n": 636,
+          "smoothed": 4.2469
+        },
+        "normal": {
+          "mean": 4.1829,
+          "n": 492,
+          "smoothed": 4.1875
+        },
+        "oily": {
+          "mean": 4.2764,
+          "n": 1288,
+          "smoothed": 4.2767
+        }
+      },
+      "mean": 4.2414,
+      "n": 5795,
+      "smoothed": 4.2416
+    },
+    "P427419": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.2105,
+          "n": 1924,
+          "smoothed": 4.2114
+        },
+        "dry": {
+          "mean": 4.1778,
+          "n": 973,
+          "smoothed": 4.1802
+        },
+        "normal": {
+          "mean": 4.2252,
+          "n": 444,
+          "smoothed": 4.2284
+        },
+        "oily": {
+          "mean": 4.279,
+          "n": 405,
+          "smoothed": 4.28
+        }
+      },
+      "mean": 4.2113,
+      "n": 3800,
+      "smoothed": 4.2118
+    },
+    "P427420": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.2386,
+          "n": 859,
+          "smoothed": 4.24
+        },
+        "dry": {
+          "mean": 4.0556,
+          "n": 378,
+          "smoothed": 4.0678
+        },
+        "normal": {
+          "mean": 4.1121,
+          "n": 214,
+          "smoothed": 4.1281
+        },
+        "oily": {
+          "mean": 3.9078,
+          "n": 141,
+          "smoothed": 3.9564
+        }
+      },
+      "mean": 4.144,
+      "n": 1611,
+      "smoothed": 4.1459
+    },
+    "P427421": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 3.9834,
+          "n": 3380,
+          "smoothed": 3.9853
+        },
+        "dry": {
+          "mean": 3.9475,
+          "n": 1162,
+          "smoothed": 3.9535
+        },
+        "normal": {
+          "mean": 3.8919,
+          "n": 777,
+          "smoothed": 3.9021
+        },
+        "oily": {
+          "mean": 3.988,
+          "n": 664,
+          "smoothed": 3.9971
+        }
+      },
+      "mean": 3.9604,
+      "n": 6063,
+      "smoothed": 3.9615
+    },
+    "P429242": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.674,
+          "n": 865,
+          "smoothed": 4.6655
+        },
+        "dry": {
+          "mean": 4.6389,
+          "n": 252,
+          "smoothed": 4.6139
+        },
+        "normal": {
+          "mean": 4.6816,
+          "n": 223,
+          "smoothed": 4.6501
+        },
+        "oily": {
+          "mean": 4.5604,
+          "n": 182,
+          "smoothed": 4.5346
+        }
+      },
+      "mean": 4.6569,
+      "n": 1530,
+      "smoothed": 4.6522
+    },
+    "P429953": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 3.5809,
+          "n": 241,
+          "smoothed": 3.636
+        },
+        "dry": {
+          "mean": 3.907,
+          "n": 129,
+          "smoothed": 3.9596
+        },
+        "normal": {
+          "mean": 3.622,
+          "n": 82,
+          "smoothed": 3.7547
+        },
+        "oily": {
+          "mean": 3.8462,
+          "n": 39,
+          "smoothed": 3.9997
+        }
+      },
+      "mean": 3.6594,
+      "n": 502,
+      "smoothed": 3.6839
+    },
+    "P439926": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.1868,
+          "n": 680,
+          "smoothed": 4.19
+        },
+        "dry": {
+          "mean": 4.1773,
+          "n": 220,
+          "smoothed": 4.1874
+        },
+        "normal": {
+          "mean": 4.185,
+          "n": 173,
+          "smoothed": 4.1968
+        },
+        "oily": {
+          "mean": 4.3611,
+          "n": 180,
+          "smoothed": 4.3549
+        }
+      },
+      "mean": 4.2014,
+      "n": 1266,
+      "smoothed": 4.2029
+    },
+    "P439928": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 3.6615,
+          "n": 322,
+          "smoothed": 3.6988
+        },
+        "dry": {
+          "mean": 4.0625,
+          "n": 144,
+          "smoothed": 4.0914
+        },
+        "normal": {
+          "mean": 3.6667,
+          "n": 120,
+          "smoothed": 3.757
+        },
+        "oily": {
+          "mean": 3.1017,
+          "n": 59,
+          "smoothed": 3.4049
+        }
+      },
+      "mean": 3.6995,
+      "n": 649,
+      "smoothed": 3.7175
+    },
+    "P440307": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.2928,
+          "n": 1151,
+          "smoothed": 4.2929
+        },
+        "dry": {
+          "mean": 4.3946,
+          "n": 669,
+          "smoothed": 4.3918
+        },
+        "normal": {
+          "mean": 4.2652,
+          "n": 313,
+          "smoothed": 4.2672
+        },
+        "oily": {
+          "mean": 4.3618,
+          "n": 199,
+          "smoothed": 4.3561
+        }
+      },
+      "mean": 4.324,
+      "n": 2355,
+      "smoothed": 4.3238
+    },
+    "P441101": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.0251,
+          "n": 1436,
+          "smoothed": 4.0288
+        },
+        "dry": {
+          "mean": 4.2838,
+          "n": 1071,
+          "smoothed": 4.2841
+        },
+        "normal": {
+          "mean": 4.0048,
+          "n": 415,
+          "smoothed": 4.0184
+        },
+        "oily": {
+          "mean": 4.0444,
+          "n": 180,
+          "smoothed": 4.0699
+        }
+      },
+      "mean": 4.1044,
+      "n": 3162,
+      "smoothed": 4.1056
+    },
+    "P442563": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.5679,
+          "n": 1879,
+          "smoothed": 4.565
+        },
+        "dry": {
+          "mean": 4.5395,
+          "n": 456,
+          "smoothed": 4.5294
+        },
+        "normal": {
+          "mean": 4.6006,
+          "n": 358,
+          "smoothed": 4.5846
+        },
+        "oily": {
+          "mean": 4.6095,
+          "n": 525,
+          "smoothed": 4.5981
+        }
+      },
+      "mean": 4.5721,
+      "n": 3246,
+      "smoothed": 4.5704
+    },
+    "P443833": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.3463,
+          "n": 872,
+          "smoothed": 4.3453
+        },
+        "dry": {
+          "mean": 4.4588,
+          "n": 194,
+          "smoothed": 4.4439
+        },
+        "normal": {
+          "mean": 4.4973,
+          "n": 187,
+          "smoothed": 4.4782
+        },
+        "oily": {
+          "mean": 4.3407,
+          "n": 273,
+          "smoothed": 4.3378
+        }
+      },
+      "mean": 4.3795,
+      "n": 1552,
+      "smoothed": 4.3785
+    },
+    "P443842": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.3598,
+          "n": 642,
+          "smoothed": 4.358
+        },
+        "dry": {
+          "mean": 4.4537,
+          "n": 205,
+          "smoothed": 4.4399
+        },
+        "normal": {
+          "mean": 4.4211,
+          "n": 171,
+          "smoothed": 4.4083
+        },
+        "oily": {
+          "mean": 4.4091,
+          "n": 110,
+          "smoothed": 4.3922
+        }
+      },
+      "mean": 4.381,
+      "n": 1139,
+      "smoothed": 4.3796
+    },
+    "P444718": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 3.9875,
+          "n": 481,
+          "smoothed": 4.0
+        },
+        "dry": {
+          "mean": 4.1429,
+          "n": 196,
+          "smoothed": 4.1573
+        },
+        "normal": {
+          "mean": 4.0278,
+          "n": 108,
+          "smoothed": 4.0702
+        },
+        "oily": {
+          "mean": 3.7684,
+          "n": 95,
+          "smoothed": 3.8607
+        }
+      },
+      "mean": 4.0101,
+      "n": 891,
+      "smoothed": 4.0164
+    },
+    "P448530": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.4068,
+          "n": 354,
+          "smoothed": 4.401
+        },
+        "dry": {
+          "mean": 4.3418,
+          "n": 79,
+          "smoothed": 4.3332
+        },
+        "normal": {
+          "mean": 4.4744,
+          "n": 78,
+          "smoothed": 4.4386
+        },
+        "oily": {
+          "mean": 4.2288,
+          "n": 118,
+          "smoothed": 4.239
+        }
+      },
+      "mean": 4.3683,
+      "n": 638,
+      "smoothed": 4.3662
+    },
+    "P448852": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.2235,
+          "n": 340,
+          "smoothed": 4.2277
+        },
+        "dry": {
+          "mean": 4.349,
+          "n": 149,
+          "smoothed": 4.3431
+        },
+        "normal": {
+          "mean": 4.1695,
+          "n": 59,
+          "smoothed": 4.2023
+        },
+        "oily": {
+          "mean": 4.1477,
+          "n": 88,
+          "smoothed": 4.1758
+        }
+      },
+      "mean": 4.2367,
+      "n": 659,
+      "smoothed": 4.2386
+    },
+    "P454380": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.2801,
+          "n": 1742,
+          "smoothed": 4.2804
+        },
+        "dry": {
+          "mean": 4.2713,
+          "n": 564,
+          "smoothed": 4.2722
+        },
+        "normal": {
+          "mean": 4.2054,
+          "n": 443,
+          "smoothed": 4.2095
+        },
+        "oily": {
+          "mean": 4.2046,
+          "n": 479,
+          "smoothed": 4.2084
+        }
+      },
+      "mean": 4.2601,
+      "n": 3268,
+      "smoothed": 4.2603
+    },
+    "P455364": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 3.6201,
+          "n": 1532,
+          "smoothed": 3.6289
+        },
+        "dry": {
+          "mean": 3.6641,
+          "n": 655,
+          "smoothed": 3.6829
+        },
+        "normal": {
+          "mean": 3.5351,
+          "n": 370,
+          "smoothed": 3.5743
+        },
+        "oily": {
+          "mean": 3.5627,
+          "n": 391,
+          "smoothed": 3.5985
+        }
+      },
+      "mean": 3.604,
+      "n": 3000,
+      "smoothed": 3.6086
+    },
+    "P455369": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 3.7802,
+          "n": 373,
+          "smoothed": 3.8066
+        },
+        "dry": {
+          "mean": 3.8389,
+          "n": 211,
+          "smoothed": 3.8787
+        },
+        "normal": {
+          "mean": 3.8333,
+          "n": 108,
+          "smoothed": 3.9061
+        },
+        "oily": {
+          "mean": 3.8354,
+          "n": 79,
+          "smoothed": 3.9291
+        }
+      },
+      "mean": 3.7919,
+      "n": 788,
+      "smoothed": 3.8044
+    },
+    "P456218": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.1582,
+          "n": 1005,
+          "smoothed": 4.161
+        },
+        "dry": {
+          "mean": 4.1163,
+          "n": 490,
+          "smoothed": 4.1235
+        },
+        "normal": {
+          "mean": 4.1833,
+          "n": 360,
+          "smoothed": 4.1894
+        },
+        "oily": {
+          "mean": 4.0745,
+          "n": 161,
+          "smoothed": 4.0994
+        }
+      },
+      "mean": 4.1521,
+      "n": 2065,
+      "smoothed": 4.1535
+    },
+    "P456392": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.5355,
+          "n": 760,
+          "smoothed": 4.5295
+        },
+        "dry": {
+          "mean": 4.5286,
+          "n": 297,
+          "smoothed": 4.5141
+        },
+        "normal": {
+          "mean": 4.5615,
+          "n": 187,
+          "smoothed": 4.5362
+        },
+        "oily": {
+          "mean": 4.5128,
+          "n": 195,
+          "smoothed": 4.4929
+        }
+      },
+      "mean": 4.5376,
+      "n": 1464,
+      "smoothed": 4.5344
+    },
+    "P457008": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.2816,
+          "n": 309,
+          "smoothed": 4.2826
+        },
+        "dry": {
+          "mean": 4.2872,
+          "n": 94,
+          "smoothed": 4.2893
+        },
+        "normal": {
+          "mean": 4.4242,
+          "n": 99,
+          "smoothed": 4.4032
+        },
+        "oily": {
+          "mean": 4.386,
+          "n": 57,
+          "smoothed": 4.3634
+        }
+      },
+      "mean": 4.3127,
+      "n": 566,
+      "smoothed": 4.3123
+    },
+    "P458219": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.3884,
+          "n": 1887,
+          "smoothed": 4.3875
+        },
+        "dry": {
+          "mean": 4.3507,
+          "n": 519,
+          "smoothed": 4.3488
+        },
+        "normal": {
+          "mean": 4.4924,
+          "n": 394,
+          "smoothed": 4.4831
+        },
+        "oily": {
+          "mean": 4.2645,
+          "n": 465,
+          "smoothed": 4.2659
+        }
+      },
+      "mean": 4.3692,
+      "n": 3321,
+      "smoothed": 4.3687
+    },
+    "P466123": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.4238,
+          "n": 1135,
+          "smoothed": 4.4216
+        },
+        "dry": {
+          "mean": 4.4393,
+          "n": 478,
+          "smoothed": 4.4337
+        },
+        "normal": {
+          "mean": 4.3851,
+          "n": 309,
+          "smoothed": 4.3799
+        },
+        "oily": {
+          "mean": 4.3853,
+          "n": 231,
+          "smoothed": 4.3784
+        }
+      },
+      "mean": 4.4064,
+      "n": 2200,
+      "smoothed": 4.4054
+    },
+    "P467249": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.0596,
+          "n": 403,
+          "smoothed": 4.0709
+        },
+        "dry": {
+          "mean": 4.1221,
+          "n": 131,
+          "smoothed": 4.1456
+        },
+        "normal": {
+          "mean": 3.9737,
+          "n": 114,
+          "smoothed": 4.0223
+        },
+        "oily": {
+          "mean": 3.7661,
+          "n": 124,
+          "smoothed": 3.8402
+        }
+      },
+      "mean": 4.0127,
+      "n": 786,
+      "smoothed": 4.0198
+    },
+    "P467976": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.0561,
+          "n": 196,
+          "smoothed": 4.0786
+        },
+        "dry": {
+          "mean": 4.1897,
+          "n": 58,
+          "smoothed": 4.2177
+        },
+        "normal": {
+          "mean": 3.8571,
+          "n": 49,
+          "smoothed": 3.9853
+        },
+        "oily": {
+          "mean": 4.0323,
+          "n": 62,
+          "smoothed": 4.0974
+        }
+      },
+      "mean": 4.0371,
+      "n": 377,
+      "smoothed": 4.0503
+    },
+    "P469515": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.8108,
+          "n": 37,
+          "smoothed": 4.6313
+        }
+      },
+      "mean": 4.8333,
+      "n": 66,
+      "smoothed": 4.7091
+    },
+    "P479348": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.6107,
+          "n": 244,
+          "smoothed": 4.5871
+        },
+        "dry": {
+          "mean": 4.6812,
+          "n": 69,
+          "smoothed": 4.5953
+        },
+        "normal": {
+          "mean": 4.6735,
+          "n": 49,
+          "smoothed": 4.565
+        },
+        "oily": {
+          "mean": 4.5862,
+          "n": 58,
+          "smoothed": 4.5126
+        }
+      },
+      "mean": 4.6323,
+      "n": 427,
+      "smoothed": 4.6174
+    },
+    "P502749": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 3.8444,
+          "n": 45,
+          "smoothed": 3.9844
+        }
+      },
+      "mean": 3.7722,
+      "n": 79,
+      "smoothed": 3.8786
+    },
+    "P504283": {
+      "mean": 3.0,
+      "n": 4,
+      "smoothed": 4.0827
+    },
+    "P505711": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.619,
+          "n": 42,
+          "smoothed": 4.5159
+        },
+        "dry": {
+          "mean": 4.6875,
+          "n": 32,
+          "smoothed": 4.5382
+        }
+      },
+      "mean": 4.69,
+      "n": 100,
+      "smoothed": 4.6249
+    },
+    "P7880": {
+      "by_skin_type": {
+        "combination": {
+          "mean": 4.3813,
+          "n": 3766,
+          "smoothed": 4.3809
+        },
+        "dry": {
+          "mean": 4.3667,
+          "n": 1159,
+          "smoothed": 4.3656
+        },
+        "normal": {
+          "mean": 4.3932,
+          "n": 941,
+          "smoothed": 4.3912
+        },
+        "oily": {
+          "mean": 4.2714,
+          "n": 737,
+          "smoothed": 4.2721
+        }
+      },
+      "mean": 4.3626,
+      "n": 8736,
+      "smoothed": 4.3625
+    }
+  },
+  "schema_version": "recsys-store-1",
+  "signal_age": "snapshot-2023",
+  "smoothing_m": 20,
+  "version": "v1"
+}

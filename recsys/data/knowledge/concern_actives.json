@@ -1,0 +1,20 @@
+{
+  "schema_version": "recsys-knowledge-1",
+  "actives": {
+    "acne_comedonal": ["salicylic_acid", "adapalene", "retinol", "azelaic_acid", "glycolic_acid", "gluconolactone"],
+    "acne_inflammatory": ["benzoyl_peroxide", "salicylic_acid", "azelaic_acid", "niacinamide"],
+    "acne_cystic": ["benzoyl_peroxide", "salicylic_acid"],
+    "acne_scarring": ["retinol", "vitamin_c", "glycolic_acid", "lactic_acid"],
+    "hyperpigmentation": ["azelaic_acid", "vitamin_c", "niacinamide", "tranexamic_acid", "alpha_arbutin", "glycolic_acid", "kojic_acid"],
+    "dryness": ["hyaluronic_acid", "ceramides", "glycerin", "squalane", "panthenol"]
+  },
+  "phrasing": {
+    "acne_comedonal": "clogged-pore breakouts (blackheads and whiteheads)",
+    "acne_inflammatory": "inflamed breakouts",
+    "acne_cystic": "deep breakouts",
+    "acne_scarring": "the appearance of post-acne marks",
+    "hyperpigmentation": "the appearance of dark spots",
+    "dryness": "dryness"
+  },
+  "referral_emphasis": ["acne_cystic"]
+}

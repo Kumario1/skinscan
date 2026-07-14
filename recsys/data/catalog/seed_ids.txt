@@ -1,0 +1,58 @@
+# recsys seed catalog ids — selected from the full dump for slot/active/
+# budget/gentle coverage; regenerate seed_catalog.json with:
+#   python -m recsys.tools.build_catalog --raw-dir <dump> \
+#     --only-ids recsys/data/catalog/seed_ids.txt --out recsys/data/catalog/seed_catalog.json
+P12045  # moisturizer/budget $12 Caudalie — Grape Water Moisturizing Face Mist
+P173726  # cleanser/budget-plain $13 Shiseido — Facial Cotton
+P248407  # moisturizer/plain $38 First Aid Beauty — Ultra Repair Cream Intense Hydration
+P269122  # treatment/retinoid $92 Dr. Dennis Gross Skincare — Alpha Beta Extra Strength Daily Peel Pads
+P377533  # treatment/retinoid $92 Dr. Dennis Gross Skincare — Alpha Beta Universal Daily Peel Pads
+P394639  # moisturizer/plain $38 belif — The True Cream Aqua Bomb
+P400259  # serum/vitc $78 Drunk Elephant — C-Firma Fresh Vitamin-C Day Serum
+P4016  # cleanser/salicylic $36 Murad — Acne Control Clarifying Cleanser
+P405096  # cleanser/budget-any $12 tarte — SEA Deep Dive Cleansing Gel
+P409800  # cleanser/plain $3 SEPHORA COLLECTION — Cleansing & Exfoliating Wipes
+P411387  # cleanser/plain $39 Youth To The People — Superfood Antioxidant Cleanser
+P417238  # cleanser/plain $36 Farmacy — Green Clean Makeup Removing Cleansing Balm
+P418218  # moisturizer/barrier $70 Tatcha — The Water Cream Oil-Free Pore Minimizing Moisturizer
+P421275  # treatment/salicylic $19 Peace Out — Salicylic Acid Acne Healing Dots
+P427406  # treatment/glycolic $13 The Ordinary — Glycolic Acid 7% Exfoliating Toning Solution
+P427410  # serum/vitc $8 The Ordinary — Vitamin C Suspension 23% + HA Spheres 2%
+P427411  # serum/azelaic $11 The Ordinary — Azelaic Acid 10% Suspension Brightening Cream
+P427412  # serum/pigment $11 The Ordinary — Alpha Arbutin 2% + HA Hyperpigmentation Serum
+P427413  # serum/aha $9 The Ordinary — Lactic Acid 10% + HA 2% Exfoliating Serum
+P427414  # serum/budget-gentle $6 The Ordinary — Natural Moisturizing Factors + HA
+P427415  # moisturizer/plain $11 The Ordinary — 100% Organic Cold-Pressed Rose Hip Seed Oil
+P427417  # serum/niacinamide-gentle $6 The Ordinary — Niacinamide 10% + Zinc 1% Oil Control Serum
+P427419  # serum/budget-gentle $16 The Ordinary — Hyaluronic Acid 2% + B5 Hydrating Serum
+P427420  # serum/hydration $31 The Ordinary — Multi-Peptide + HA Serum
+P427421  # moisturizer/barrier $68 Drunk Elephant — Protini Polypeptide Firming Refillable Moisturizer
+P429242  # spf/spf30 $30 Shiseido — Clear Sunscreen Stick SPF 50+
+P429953  # spf/spf30 $26 Supergoop! — Glow Stick Sunscreen SPF 50 PA++++
+P439926  # serum/retinol $74 Drunk Elephant — A-Passioni Retinol Cream
+P439928  # moisturizer/spf-moisturizer $44 Supergoop! — Superscreen Daily Moisturizer Sunscreen SPF 40 PA+++
+P440307  # treatment/gentle $52 Youth To The People — Superberry Hydrate + Glow Dream Night Mask with Vitamin C
+P441101  # moisturizer/barrier $70 Tatcha — The Dewy Skin Cream Plumping & Hydrating Moisturizer
+P442563  # treatment/salicylic $10 The Ordinary — AHA 30% + BHA 2% Exfoliating Peeling Solution
+P443833  # cleanser/salicylic $12 The INKEY List — Salicylic Acid Acne + Pore Cleanser
+P443842  # serum/retinol $13 The INKEY List — Retinol Anti-Aging Serum
+P444718  # cleanser/budget-plain $9 The Ordinary — Squalane Cleanser
+P448530  # treatment/budget $13 The Ordinary — Salicylic Acid 2% Masque
+P448852  # moisturizer/budget $12 Tower 28 Beauty — SOS Daily Rescue Facial Spray
+P454380  # spf/spf30 $48 Supergoop! — Unseen Sunscreen SPF 40 PA+++
+P455364  # cleanser/budget-plain $12 The INKEY List — Oat Cleansing Balm
+P455369  # moisturizer/budget $16 The INKEY List — Peptide Moisturizer
+P456218  # spf/spf30 $38 Supergoop! — Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Nia
+P456392  # spf/spf30 $16 innisfree — Daily UV Defense Invisible Broad Spectrum SPF 36 Sunscreen
+P457008  # treatment/budget $15 Dr. Jart+ — Cryo Rubber Masks
+P458219  # treatment/gentle $34 Glow Recipe — Watermelon Glow PHA + BHA Pore-Tight Toner
+P466123  # serum/niacinamide-gentle $35 Glow Recipe — Watermelon Glow Niacinamide Dew Drops
+P467249  # moisturizer/spf-moisturizer $39 Fenty Skin — Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Suns
+P467976  # spf/spf30 $35 Supergoop! — (Re)setting 100% Mineral Powder Sunscreen SPF 35 PA+++
+P479348  # treatment/azelaic-gentle $30 Skinfix — Acne+ 2% BHA and Azelaic Acid Acne Spot Treatment
+P504283  # spf/budget-spf30 $18 ROSE INC — Mini Solar Power Luminous SPF 30 Serum
+P504614  # treatment/azelaic-gentle $34 Farmacy — Brighten Up 3% TXA Dark Spot Toner with Azelaic Acid
+P505711  # spf/budget-spf30 $15 The INKEY List — Polyglutamic Acid Dewy Sunscreen SPF 30
+P7880  # cleanser/plain $39 fresh — Soy Hydrating Gentle Face Cleanser
+P469515  # serum/bp $22 Paulas Choice — CLEAR Daily Skin Clearing Treatment 2.5% BP
+P502749  # cleanser/bp $18 The INKEY List — SuperSolutions 5% Benzoyl Peroxide Cleanser
