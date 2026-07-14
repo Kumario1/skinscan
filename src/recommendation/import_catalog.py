@@ -508,8 +508,7 @@ def _quarantine_reasons(product: Product, role: str) -> list[str]:
     if not product.cadence_source:
         reasons.append("instruction_cadence_source_missing")
     if role == "treatment":
-        if product.otc_drug is not True:
-            reasons.append("otc_status_not_verified")
+        # D-033: OTC status no longer gates the treatment role
         if not product.drug_actives:
             reasons.append("drug_active_not_verified")
         if any(active.strength is None for active in product.drug_actives):
