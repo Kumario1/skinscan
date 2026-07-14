@@ -20,7 +20,8 @@ more instructive.
 
 ### D-002 — Cosmetic framing only; never diagnostic · LOCKED
 Everything is framed as "concerns," never "conditions." The app never claims to
-diagnose. No prescription-strength recommendations. This keeps us clear of
+diagnose. It may mention prescription-strength options, but always advises the
+user to see a doctor to obtain them. This keeps us clear of
 software-as-a-medical-device territory and is also just honest about what a
 phone photo can support. Consequence: Stage 2 outputs "inflammatory-type acne
 (appearance-based)" not "you have papulopustular acne."
