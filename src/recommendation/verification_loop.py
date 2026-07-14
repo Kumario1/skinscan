@@ -75,7 +75,6 @@ REASON_HINTS = {
     "non_daily_format": "mask/scrub/peel cannot fill a daily role - likely reject",
     "instruction_cadence_unknown": "facts.cadence plus facts.cadence_source",
     "instruction_cadence_source_missing": "facts.cadence_source (URL stating the cadence)",
-    "otc_status_not_verified": "facts.otc_drug true, per a current DailyMed SPL",
     "drug_active_not_verified": "facts.drug_actives [{name, strength, source}]",
     "drug_active_strength_missing": "every facts.drug_actives entry needs strength",
     "drug_active_source_missing": "every facts.drug_actives entry needs source",
@@ -438,7 +437,9 @@ def cmd_select(paths: Paths, args) -> int:
         if target in PATH_SPECS:
             spec = ", ".join(f"{n} {s}" for n, s in PATH_SPECS[target])
             lines.append(f"- Treatment path target: exactly [{spec}] verified via a "
-                         "current DailyMed SPL (facts.drug_actives + otc_drug + label fields).\n")
+                         "current authoritative label (DailyMed SPL) or the "
+                         "manufacturer's own page (facts.drug_actives + label fields; "
+                         "D-033: OTC status recorded but not required).\n")
         for reason in reasons:
             lines.append(f"- {reason}: {REASON_HINTS.get(reason, 'resolve from source')}\n")
     brief = batch_dir / "RESEARCH_BRIEF.md"

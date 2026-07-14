@@ -88,8 +88,8 @@ def check_eligibility(
 
     carried = _carried(product)
     if role == "treatment":
-        if product.otc_drug is not True:
-            reject("otc_status_not_verified", "otc_drug")
+        # D-033: OTC status is recorded but no longer gates eligibility;
+        # active/strength/label verification below still applies.
         if therapy is None:
             reject("therapy_missing_for_treatment_role", "therapy")
         else:
