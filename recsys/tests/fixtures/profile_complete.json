@@ -1,0 +1,16 @@
+{
+  "acne_duration_weeks": 16,
+  "age_years": 25,
+  "allergies": [],
+  "current_actives": [],
+  "current_medications": [],
+  "max_price_usd": null,
+  "painful_or_deep_lesions": false,
+  "pregnancy_status": "not_pregnant",
+  "prior_scarring": false,
+  "sensitivity_conditions": [],
+  "skin_type": "oily",
+  "tone_bucket": "medium",
+  "tone_source": "self_report",
+  "treatment_history": []
+}

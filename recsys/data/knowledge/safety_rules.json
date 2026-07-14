@@ -1,0 +1,29 @@
+{
+  "schema_version": "recsys-knowledge-1",
+  "_provenance": "retinoids/treatment_actives/active_conflicts copied from src/recommendation/eligibility.py (D-005/D-029 lineage); do not edit from memory",
+  "retinoids": ["adapalene", "retinal", "retinol", "tretinoin"],
+  "treatment_actives": [
+    "adapalene", "azelaic_acid", "benzoyl_peroxide", "glycolic_acid",
+    "lactic_acid", "mandelic_acid", "retinal", "retinol", "salicylic_acid",
+    "tretinoin"
+  ],
+  "active_conflicts": [
+    ["benzoyl_peroxide", "retinol"],
+    ["benzoyl_peroxide", "adapalene"],
+    ["benzoyl_peroxide", "vitamin_c"],
+    ["glycolic_acid", "retinol"],
+    ["glycolic_acid", "adapalene"]
+  ],
+  "pregnancy_excluded_statuses": ["pregnant", "trying", "nursing", "unknown"],
+  "session_preferences": {
+    "_comment": "pm_pinned may never appear in AM; am_pinned never in PM; preferences flip when a conflict forces it",
+    "pm_pinned_actives": ["adapalene", "retinal", "retinol", "tretinoin"],
+    "am_preferred_actives": ["vitamin_c", "benzoyl_peroxide"],
+    "pm_preferred_actives": ["glycolic_acid", "lactic_acid", "mandelic_acid"]
+  },
+  "gentle": {
+    "excluded_actives": ["adapalene", "benzoyl_peroxide", "glycolic_acid", "retinal", "retinol", "tretinoin"],
+    "allowlist_treatment_actives": ["azelaic_acid", "niacinamide", "gluconolactone", "centella", "allantoin", "madecassoside", "zinc", "panthenol"]
+  },
+  "min_spf": 30
+}

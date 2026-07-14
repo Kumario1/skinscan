@@ -1,0 +1,43 @@
+{
+  "schema_version": "recsys-registry-1",
+  "stores": [
+    {
+      "builder": "recsys.tools.build_popularity@1",
+      "coverage": {
+        "catalog_products": 54,
+        "products": 54
+      },
+      "kind": "popularity",
+      "name": "popularity",
+      "path": "signals/popularity.v1.json",
+      "sha256": "f57d82cb26fc15489ca3d671fb6d4cf697f27194f87891d13f0c5ca21158cc0c",
+      "source": {
+        "product_info_sha256": "d5ddb391be522e7bfcecbba93dd61129217c1381bf14a7580c0f6097ac8da063"
+      },
+      "status": "active",
+      "version": "v1"
+    },
+    {
+      "builder": "recsys.tools.build_review_stats@1",
+      "coverage": {
+        "catalog_products": 54,
+        "products": 53
+      },
+      "kind": "review_stats",
+      "name": "review_stats",
+      "path": "signals/review_stats.v1.json",
+      "sha256": "e658bffc19641772563be45157d65652ef49134f235151903db96eb8c5e81454",
+      "source": {
+        "reviews_csv_sha256s": [
+          "97c0e4beb282c8e85172dba7d7d08af454665a9c3cee95e446ae344639e27a82",
+          "54d9ec2339dab3661ce2d58af883f8c8c29080918ce906b0bc0c83997d12cab0",
+          "a84ce0dae70025d22d16bd8488d88223e9401a448fad42b10c8446b913c26133",
+          "7ebed9367af4325ac3ebef6d21971932d9cb1476aa681cfc91a7fbf0e7f767d5",
+          "2db1f683b8512eda6894f2ebbc3cde5b899c7a680da5bae97ff4f70c0945a6ca"
+        ]
+      },
+      "status": "active",
+      "version": "v1"
+    }
+  ]
+}
