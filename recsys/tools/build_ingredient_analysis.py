@@ -34,7 +34,7 @@ from .common import STORE_SCHEMA_VERSION, register_store, write_json
 
 PROMPT_VERSION = "p1"
 BUILDER = "recsys.tools.build_ingredient_analysis@1"
-DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
+DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
 URL = "https://openrouter.ai/api/v1/chat/completions"
 IRRITANCY_TIERS = ("low", "medium", "high")
 
@@ -115,30 +115,59 @@ def _entry(product: dict, model: str, data: dict) -> dict:
     }
 
 
-def label_product(product: dict, model: str, session=None, sleep=time.sleep, retries: int = 4) -> dict:
-    """Label one product through OpenRouter structured output."""
+def _batch_output_schema(product_ids: list[str]) -> dict:
+    return {
+        "type": "object",
+        "properties": {
+            "results": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "product_id": {"type": "string", "enum": product_ids},
+                        "analysis": OUTPUT_SCHEMA,
+                    },
+                    "required": ["product_id", "analysis"],
+                    "additionalProperties": False,
+                },
+            },
+        },
+        "required": ["results"],
+        "additionalProperties": False,
+    }
+
+
+def label_products(products: list[dict], model: str, session=None,
+                   sleep=time.sleep, retries: int = 4) -> list[dict]:
+    """Label a product batch through one OpenRouter structured-output call."""
     import requests  # lazy: tests and inference need no network client
 
+    if not products:
+        return []
+    product_ids = [product["product_id"] for product in products]
+    if len(set(product_ids)) != len(product_ids):
+        raise ValueError("ingredient-analysis batch product ids must be unique")
     key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENROUTER_KEY")
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY or OPENROUTER_KEY is required")
     body = {
         "model": model,
         "temperature": 0,
-        "max_tokens": 2000,
+        "max_tokens": max(2000, 600 * len(products)),
         "reasoning": {"enabled": False},
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": json.dumps({
+            {"role": "user", "content": json.dumps([{
                 "product_id": product["product_id"],
                 "name": product.get("name"),
                 "category": product.get("category"),
                 "inci": product.get("inci") or [],
                 "already_recognized_actives": product.get("actives") or [],
-            }, sort_keys=True)},
+            } for product in products], sort_keys=True)},
         ],
         "response_format": {"type": "json_schema", "json_schema": {
-            "name": "ingredient_analysis", "strict": True, "schema": OUTPUT_SCHEMA,
+            "name": "ingredient_analysis_batch", "strict": True,
+            "schema": _batch_output_schema(product_ids),
         }},
         "provider": {"require_parameters": True},
     }
@@ -155,19 +184,32 @@ def label_product(product: dict, model: str, session=None, sleep=time.sleep, ret
             response.raise_for_status()
             choice = response.json()["choices"][0]
             if choice.get("finish_reason") == "content_filter":
-                raise RuntimeError(f"ingredient analysis refused product {product['product_id']}")
-            return _entry(product, model, json.loads(choice["message"]["content"]))
+                raise RuntimeError("ingredient analysis batch was refused")
+            data = json.loads(choice["message"]["content"])
+            by_id = {result["product_id"]: result["analysis"]
+                     for result in data["results"]}
+            if set(by_id) != set(product_ids) or len(data["results"]) != len(products):
+                raise ValueError("ingredient analysis returned incomplete batch")
+            return [_entry(product, model, by_id[product["product_id"]])
+                    for product in products]
         except Exception as exc:
             last_error = exc
             if attempt + 1 < retries:
                 sleep(2 ** attempt)
     raise RuntimeError(
-        f"ingredient analysis failed for {product['product_id']} after {retries} attempts"
+        f"ingredient analysis failed for batch after {retries} attempts"
     ) from last_error
 
 
+def label_product(product: dict, model: str, session=None, sleep=time.sleep,
+                  retries: int = 4) -> dict:
+    """Compatibility wrapper for callers labeling one product."""
+    return label_products([product], model, session, sleep, retries)[0]
+
+
 def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
-          model: str, max_new_labels: int = 100, concurrency: int = 1) -> dict:
+          model: str, max_new_labels: int = 100, concurrency: int = 1,
+          products_per_request: int = 10) -> dict:
     products, _header = load_catalog(catalog_path)
     product_rows = [product.to_dict() for product in products]
     cache = read_cache(cache_path)
@@ -182,18 +224,21 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
         )
     pending = [product for product in product_rows
                if (product["product_id"], product["inci_sha256"], PROMPT_VERSION) not in cache]
+    batch_size = max(1, products_per_request)
+    batches = [pending[i:i + batch_size] for i in range(0, len(pending), batch_size)]
     failures = []
     with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
-        futures = {pool.submit(label_product, product, model): product for product in pending}
+        futures = {pool.submit(label_products, batch, model): batch for batch in batches}
         for future in as_completed(futures):
-            product = futures[future]
+            batch = futures[future]
             try:
-                entry = future.result()
+                batch_entries = future.result()
             except Exception as exc:
-                failures.append((product["product_id"], str(exc)))
+                failures.extend((product["product_id"], str(exc)) for product in batch)
                 continue
-            append_cache(cache_path, entry)
-            cache[(product["product_id"], product["inci_sha256"], PROMPT_VERSION)] = entry
+            for product, entry in zip(batch, batch_entries, strict=True):
+                append_cache(cache_path, entry)
+                cache[(product["product_id"], product["inci_sha256"], PROMPT_VERSION)] = entry
     if failures:
         raise RuntimeError(
             f"ingredient analysis failed for {len(failures)} products; rerun resumes cache: "
@@ -239,11 +284,12 @@ def main(argv=None) -> int:
     parser.add_argument("--max-new-labels", type=int, default=100,
                         help="paid-call guard; raise explicitly for larger runs")
     parser.add_argument("--concurrency", type=int, default=1)
+    parser.add_argument("--products-per-request", type=int, default=10)
     args = parser.parse_args(argv)
     cache_path = args.cache or args.data_root / "cache" / "ingredient_analysis_cache.jsonl"
 
     build(args.catalog, args.out, args.data_root, cache_path, args.model,
-          args.max_new_labels, args.concurrency)
+          args.max_new_labels, args.concurrency, args.products_per_request)
     return 0
 
 

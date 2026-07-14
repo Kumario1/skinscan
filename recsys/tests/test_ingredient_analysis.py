@@ -12,6 +12,7 @@ from recsys.tools.build_ingredient_analysis import (
     append_cache,
     build,
     label_product,
+    label_products,
 )
 
 
@@ -45,15 +46,22 @@ def analysis_entry():
     }
 
 
+def batch_content(*product_ids):
+    content = {k: v for k, v in analysis_entry().items()
+               if k not in {"product_id", "inci_sha256", "prompt_version", "model_id"}}
+    return json.dumps({"results": [
+        {"product_id": product_id, "analysis": content}
+        for product_id in product_ids
+    ]})
+
+
 def test_openrouter_structured_output(monkeypatch):
     class Response:
         def raise_for_status(self):
             pass
 
         def json(self):
-            content = {k: v for k, v in analysis_entry().items()
-                       if k not in {"product_id", "inci_sha256", "prompt_version", "model_id"}}
-            return {"choices": [{"message": {"content": json.dumps(content)}}]}
+            return {"choices": [{"message": {"content": batch_content("p1")}}]}
 
     class Session:
         def post(self, _url, **kwargs):
@@ -86,15 +94,43 @@ def test_free_endpoint_malformed_reply_is_retried(monkeypatch):
             self.calls += 1
             if self.calls == 1:
                 return Response('{"irritancy_tier":')
-            content = {k: v for k, v in analysis_entry().items()
-                       if k not in {"product_id", "inci_sha256", "prompt_version", "model_id"}}
-            return Response(json.dumps(content))
+            return Response(batch_content("p1"))
 
     monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
     session = Session()
     entry = label_product(PRODUCT, "test/model", session, sleep=lambda _seconds: None)
     assert entry["irritancy_tier"] == "low"
     assert session.calls == 2
+
+
+def test_openrouter_batches_multiple_products_in_one_request(monkeypatch):
+    second = {**PRODUCT, "product_id": "p2", "inci_sha256": "def456"}
+
+    class Response:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"choices": [{"message": {"content": batch_content("p1", "p2")}}]}
+
+    class Session:
+        calls = 0
+
+        def post(self, _url, **kwargs):
+            self.calls += 1
+            self.request = kwargs
+            return Response()
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    session = Session()
+    entries = label_products([PRODUCT, second], "test/model", session)
+
+    assert [entry["product_id"] for entry in entries] == ["p1", "p2"]
+    assert session.calls == 1
+    request = session.request["json"]
+    assert len(json.loads(request["messages"][1]["content"])) == 2
+    item_schema = request["response_format"]["json_schema"]["schema"]["properties"]["results"]["items"]
+    assert item_schema["properties"]["product_id"]["enum"] == ["p1", "p2"]
 
 
 def test_cached_build_registers_provider(tmp_path):
