@@ -381,12 +381,13 @@ _VERIFICATION_FIELDS = {
     "otc_drug", "label_source", "label_verified_at", "broad_spectrum", "spf",
     "comedogenic_claim", "irritant_features", "contraindications",
     "evidence_roles", "evidence_grade", "cadence", "cadence_source", "amount",
-    "amount_source",
+    "amount_source", "source_set_id", "ndc_product_code", "label_version",
+    "label_effective_date", "source_hash",
 }
 
 _EVIDENCE_FIELDS = {
     "status", "source_url", "retrieved_at", "source_sha256", "reviewer_id",
-    "approved_at", "facts",
+    "reviewer_type", "approved_at", "facts",
 }
 
 
@@ -439,10 +440,15 @@ def load_verification_overlay(path: str | Path | None) -> dict[str, dict[str, ob
             if status != "approved":
                 continue
             for key in (
-                "source_url", "retrieved_at", "source_sha256", "reviewer_id", "approved_at"
+                "source_url", "retrieved_at", "source_sha256", "reviewer_id",
+                "reviewer_type", "approved_at"
             ):
                 if not isinstance(assertion.get(key), str) or not assertion[key]:
                     raise ValueError(f"{assertion_path}.{key}: expected a non-empty string")
+            if assertion["reviewer_type"] not in {"human", "agent"}:
+                raise ValueError(
+                    f"{assertion_path}.reviewer_type: expected human or agent"
+                )
             source_hash = assertion["source_sha256"]
             if len(source_hash) != 64 or any(c not in "0123456789abcdef" for c in source_hash.lower()):
                 raise ValueError(f"{assertion_path}.source_sha256: expected a SHA-256 hex digest")

@@ -153,7 +153,9 @@ The optional overlay uses `schema_version: "2"` and product rows containing
 one or more evidence assertions. Only assertions with `status: "approved"`
 are applied. Each approved assertion carries its source URL, retrieval time,
 content SHA-256, reviewer identity, approval time, and a non-overlapping
-`facts` object. `proposed` and `stale` assertions grant no eligibility. Every
+`facts` object. The required `reviewer_type` is `human` or `agent`; AI approval
+is limited to factual catalog evidence and does not satisfy clinical release
+gates. `proposed` and `stale` assertions grant no eligibility. Every
 supplied fact is schema-validated with product/field context, then merged in
 sorted product order. Verified drug actives are also included in the complete
 carried-active set so safety checks cannot miss an unrelated active. The raw
@@ -172,8 +174,8 @@ DailyMed-derived candidate rows additionally retain SET ID, NDC product code, la
 version/effective date, and source-content hash. Import requires a current,
 non-archived, human, topical OTC SPL from an HTTPS source plus an independent
 retrieval timestamp. Import leaves `routine_roles` empty and marks the evidence
-`pending_human_approval`; an approved overlay is still required before the row
-can become eligible. Prescription labels, non-DailyMed hosts, and local fixture
+`pending_review`; an identified human or agent must still approve an overlay
+before the row can become eligible. Prescription labels, non-DailyMed hosts, and local fixture
 paths cannot create eligible catalog rows.
 
 ## What this deliberately excludes

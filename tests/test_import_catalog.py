@@ -15,8 +15,8 @@ import tempfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.recommendation.import_catalog import (
-    build_completeness_report, import_csv, load_catalog, parse_ingredients, product_from_row,
-    sephora_row_to_simple,
+    build_completeness_report, import_csv, load_catalog, load_verification_overlay,
+    parse_ingredients, product_from_row, sephora_row_to_simple,
 )
 from src.recommendation.engine import Recommendation, recommend
 from src.recommendation.schema import ConcernReport, Product
@@ -244,7 +244,7 @@ def test_malformed_overlay_names_product_and_field(tmp_path):
     bad.write_text('{"schema_version":"2","products":[{"product_id":"P480274",'
                    '"assertions":[{"status":"approved","source_url":"synthetic://x",'
                    '"retrieved_at":"now","source_sha256":"0000000000000000000000000000000000000000000000000000000000000000",'
-                   '"reviewer_id":"test","approved_at":"now","facts":{"drug_actives":"no"}}]}]}')
+                   '"reviewer_id":"test","reviewer_type":"human","approved_at":"now","facts":{"drug_actives":"no"}}]}]}')
     try:
         import_csv(SEPHORA_FIXTURE, tmp_path / "out.json", fmt="sephora", verification=bad)
     except ValueError as exc:
@@ -259,7 +259,7 @@ def test_wrong_typed_spf_overlay_names_product_and_field(tmp_path):
     bad.write_text('{"schema_version":"2","products":[{"product_id":"P504987",'
                    '"assertions":[{"status":"approved","source_url":"synthetic://x",'
                    '"retrieved_at":"now","source_sha256":"0000000000000000000000000000000000000000000000000000000000000000",'
-                   '"reviewer_id":"test","approved_at":"now","facts":{"spf":"50"}}]}]}')
+                   '"reviewer_id":"test","reviewer_type":"human","approved_at":"now","facts":{"spf":"50"}}]}]}')
     try:
         import_csv(SEPHORA_FIXTURE, tmp_path / "out.json", fmt="sephora", verification=bad)
     except ValueError as exc:
@@ -290,6 +290,24 @@ def test_proposed_assertion_cannot_grant_eligibility(tmp_path):
     product = next(item for item in load_catalog(out) if item.product_id == "P480274")
     assert product.routine_roles == []
     assert product.drug_actives == []
+
+
+def test_verification_overlay_accepts_dailymed_provenance(tmp_path):
+    value = __import__("json").loads(VERIFICATION.read_text())
+    facts = value["products"][0]["assertions"][0]["facts"]
+    facts.update({
+        "source_set_id": "set-id",
+        "ndc_product_code": "12345-678",
+        "label_version": "3",
+        "label_effective_date": "20260714",
+        "source_hash": "a" * 64,
+    })
+    overlay = tmp_path / "dailymed-provenance.json"
+    overlay.write_text(__import__("json").dumps(value))
+    patch = load_verification_overlay(overlay)["P480274"]
+    assert patch["source_set_id"] == "set-id"
+    assert patch["ndc_product_code"] == "12345-678"
+    assert patch["source_hash"] == "a" * 64
 
 
 def test_completeness_reports_support_role_shortfalls(tmp_path):

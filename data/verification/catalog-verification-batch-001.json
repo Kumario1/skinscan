@@ -1,0 +1,121 @@
+{
+  "schema_version": "2",
+  "products": [
+    {
+      "product_id": "P188306",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
+          "retrieved_at": "2026-07-14T16:50:02.070Z",
+          "source_sha256": "2e6eae0f5ae91342bbfbe09740eae0090b13aaceba8bb4bc7ca60ad19447b4ae",
+          "facts": {
+            "intended_areas": ["face"],
+            "routine_roles": ["treatment"]
+          }
+        },
+        {
+          "status": "proposed",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+          "retrieved_at": "2026-07-14T16:48:53.086415Z",
+          "source_sha256": "f81949978b0534ebcd1c56e3a53d1fa5e7b2536aea7bfd9fbcff21e4266e28da",
+          "facts": {
+            "amount": "thin_layer",
+            "amount_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+            "contraindications": ["sensitive"],
+            "drug_actives": [
+              {
+                "name": "benzoyl_peroxide",
+                "source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+                "strength": "2.5%"
+              }
+            ],
+            "evidence_grade": "regulatory_label",
+            "evidence_roles": ["acne_treatment"],
+            "exposure": "leave_on",
+            "format": "lotion",
+            "label_effective_date": "20250815",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+            "label_verified_at": "2026-07-14",
+            "label_version": "3",
+            "ndc_product_code": "49527-117",
+            "otc_drug": true,
+            "source_hash": "f81949978b0534ebcd1c56e3a53d1fa5e7b2536aea7bfd9fbcff21e4266e28da",
+            "source_set_id": "0d0cfec0-5d18-c347-e063-6394a90a912c"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P469520",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html",
+          "retrieved_at": "2026-07-14T16:53:55Z",
+          "source_sha256": "e794c409bc51ab5dd020632398cd4c9599794bdb770eade112fe5ac9110a95e2",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": ["daily_support"],
+            "exposure": "rinse_off",
+            "format": "cleanser",
+            "intended_areas": ["face"],
+            "routine_roles": ["cleanser"]
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P469517",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.paulaschoice.com/clear-oil-free-moisturizer/380.html",
+          "retrieved_at": "2026-07-14T16:50:14Z",
+          "source_sha256": "6e8c7d8d5dc03ff9350c32841bc71850366aa62cbfc4ee7a09b7dfd475b83a0b",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://www.paulaschoice.com/clear-oil-free-moisturizer/380.html",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": ["daily_support"],
+            "exposure": "leave_on",
+            "format": "lotion",
+            "intended_areas": ["face"],
+            "routine_roles": ["moisturizer"]
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P476733",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://supergoop.com/products/smooth-and-poreless-mattescreen?variant=39625226879074",
+          "retrieved_at": "2026-07-14T16:50:01.076Z",
+          "source_sha256": "cc800f2b32e54148b9b88526198378c0ccf2a2b2e027a1b8e62ed64eb56341e7",
+          "facts": {
+            "broad_spectrum": true,
+            "cadence": "per_label",
+            "cadence_source": "https://supergoop.com/products/smooth-and-poreless-mattescreen?variant=39625226879074",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_drug_facts",
+            "evidence_roles": ["daily_support"],
+            "exposure": "leave_on",
+            "format": "cream",
+            "intended_areas": ["face"],
+            "label_source": "https://supergoop.com/products/smooth-and-poreless-mattescreen?variant=39625226879074",
+            "label_verified_at": "2026-07-14",
+            "routine_roles": ["sunscreen"],
+            "spf": 40
+          }
+        }
+      ]
+    }
+  ]
+}

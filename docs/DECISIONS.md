@@ -628,3 +628,27 @@ Detailed per-product rejection evidence is written only to an explicit debug
 artifact. If any requested role is unfilled, analysis reports
 `required_roles_unfilled` and no routine artifact is published. Primary,
 tier-2, and drug catalog files are identified separately in provenance.
+
+## D-031 — Duplicate vetoes apply to therapeutic actives (2026-07-14)
+
+Cross-product duplicate rejection applies only to carried treatment actives.
+Repeated support ingredients such as glycerin, ceramides, or hyaluronic acid
+are normal across cleanser, moisturizer, and sunscreen and do not constitute
+duplicate therapy. The explicit active-conflict matrix, profile allergy checks,
+current-treatment duplication checks, and the ban on treatment actives in
+support roles remain unchanged.
+
+## D-032 — Identified agents may approve factual catalog evidence (2026-07-14)
+
+Catalog verification is an auditable source-checking decision, not clinical
+approval. A human or AI agent may approve a schema-v2 verification assertion
+after checking that the authoritative source matches the exact product variant
+and explicitly supports every asserted fact. Every approved assertion records
+the reviewer's stable identity, reviewer type (`human` or `agent`), approval
+time, source URL, retrieval time, and source hash. Proposed or stale assertions
+remain ineligible.
+
+Agent catalog approval does not satisfy D-029's separate qualified-clinician
+release gates for triage, calibration, therapy policy, or medical instructions,
+and it is not release certification. This decision replaces the operational
+human-only wording for catalog evidence without weakening those clinical gates.

@@ -50,7 +50,7 @@ def _strength(ingredient: ET.Element) -> str | None:
         return None
     n_unit = (numerator.get("unit") or "").lower()
     d_unit = (denominator.get("unit") or "").lower()
-    if n_unit == "mg" and d_unit == "g" and d:
+    if n_unit == "mg" and d_unit in {"g", "ml"} and d:
         value = n / d / 10
     elif n_unit == "g" and d_unit == "g" and d:
         value = n / d * 100
@@ -76,8 +76,12 @@ def parse_spl(
     set_id = _first_attr(root, "setId", "root")
     version = _first_attr(root, "versionNumber", "value")
     effective = _first_attr(root, "effectiveTime", "value")
-    title = " ".join("".join(node.itertext()).strip() for node in _local(root, "title"))
-    title = title.strip() or "DailyMed topical drug"
+    title_node = next(
+        (node for node in list(root) if node.tag.rsplit("}", 1)[-1] == "title"),
+        None,
+    )
+    title = (" ".join("".join(title_node.itertext()).split())
+             if title_node is not None else "") or "DailyMed topical drug"
     form_text = " ".join(
         filter(None, (node.get("displayName") for node in _local(root, "formCode")))
     ).lower()
@@ -92,13 +96,28 @@ def parse_spl(
         filter(None, (node.get("displayName") or node.get("code")
                       for node in _local(root, "speciesCode")))
     ).lower()
+    document_label_text = " ".join(
+        filter(None, (node.get("displayName") or node.get("code")
+                      for node in _local(root, "code")
+                      if node.get("codeSystem") == "2.16.840.1.113883.6.1"))
+    ).lower()
+    document_text = " ".join("".join(root.itertext()).split()).lower()
     form = next((item for item in TOPICAL_FORMS if item in form_text), None)
-    if (not set_id or not form or "topical" not in route_text
-            or "otc" not in marketing_text or "human" not in species_text):
+    human_otc_document = "human otc drug label" in document_label_text
+    human = "human" in species_text or human_otc_document
+    otc = "otc" in marketing_text or human_otc_document
+    topical = "topical" in route_text or (
+        not route_text and "for external use only" in document_text
+    )
+    if not set_id or not form or not topical or not otc or not human:
         return []
 
     actives: list[VerifiedActive] = []
-    for ingredient in _local(root, "activeIngredient"):
+    active_ingredients = _local(root, "activeIngredient") + [
+        node for node in _local(root, "ingredient")
+        if node.get("classCode") == "ACTIB"
+    ]
+    for ingredient in active_ingredients:
         names = ["".join(node.itertext()).strip().upper()
                  for node in _local(ingredient, "name")]
         canonical = next((ACTIVE_NAMES[name] for name in names if name in ACTIVE_NAMES), None)
@@ -108,8 +127,14 @@ def parse_spl(
     if exact not in {tuple(sorted(item)) for item in MODELED_STRENGTHS}:
         return []
 
-    ndcs = sorted({node.get("code") for node in _local(root, "code")
-                   if node.get("codeSystem") == "2.16.840.1.113883.6.69" and node.get("code")})
+    ndcs = sorted({
+        node.get("code")
+        for product in _local(root, "manufacturedProduct")
+        for node in list(product)
+        if node.tag.rsplit("}", 1)[-1] == "code"
+        and node.get("codeSystem") == "2.16.840.1.113883.6.69"
+        and node.get("code")
+    })
     if not ndcs:
         return []
     source_hash = hashlib.sha256(xml_bytes).hexdigest()
@@ -123,7 +148,7 @@ def parse_spl(
             intended_areas=["face"], routine_roles=[],
             format=form, exposure="leave_on", drug_actives=actives,
             otc_drug=True, label_source=source_url, label_verified_at=retrieved_at,
-            evidence_roles=[], evidence_grade="pending_human_approval",
+            evidence_roles=[], evidence_grade="pending_review",
             cadence="per_label", cadence_source=source_url,
             source_set_id=set_id, ndc_product_code=ndc, label_version=version,
             label_effective_date=effective, source_hash=source_hash,
