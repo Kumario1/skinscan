@@ -181,6 +181,12 @@ def test_approve_enforces_batch_membership(root: Path):
     assert approve(root, batch) == 0
     assert manifest(root)["products"][members[1]]["state"] == "rejected"
 
+    # rejected products stay out of later selections
+    assert rebuild(root) == 0
+    assert loop(root, "select", "--batch-size", "6") == 0
+    entry = manifest(root)["products"][members[1]]
+    assert entry["state"] == "rejected" and entry["batch"] == batch
+
 
 def test_unmatched_approved_id_is_flagged(root: Path, capsys):
     overlay = {"schema_version": "2", "products": [{"product_id": "GHOST", "assertions": [{
