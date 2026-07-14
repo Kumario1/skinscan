@@ -18,6 +18,19 @@ Output: 5 routine archetypes (best overall, budget, gentle/sensitive, minimal,
 comprehensive), each a safety-valid AM/PM routine with a per-product `why`
 built from the exact signal values the ranker used.
 
+To publish both recommendation contracts atomically from the SA-RPN pipeline:
+
+```bash
+python -m src.pipeline.e2e \
+  --image path/to/image.jpg --api http://localhost:8000/predict \
+  --recsys --out runs/e2e/sample
+```
+
+The run directory keeps the existing `routine.json` and adds the standalone
+`recommendations.json`. Use `--recsys-data-root recsys/data/derived` and
+`--recsys-catalog recsys/data/derived/catalog_full.json` for the local full
+catalog build.
+
 ## Tests
 
 ```bash

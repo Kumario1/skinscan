@@ -334,6 +334,49 @@ def test_fixture_e2e_writes_complete_v3_artifact_set(tmp_path, fake_sarpn_server
     assert all("legacy" not in path for path in fake_sarpn_server.paths)
 
 
+def test_recsys_flag_adds_standalone_recommendations_artifact(
+    tmp_path, fake_sarpn_server,
+):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_verified_catalog(catalog_path)
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
+    args.append("--recsys")
+
+    assert main(args) == 0
+
+    recommendations = json.loads((output_dir / "recommendations.json").read_text())
+    assert recommendations["schema_version"] == "recsys-1"
+    assert recommendations["status"] == "ok"
+    assert len(recommendations["routines"]) == 5
+    import hashlib
+    assert recommendations["inputs"]["analysis_sha256"] == hashlib.sha256(
+        (output_dir / "analysis.json").read_bytes()
+    ).hexdigest()
+
+
+def test_recsys_failure_preserves_prior_published_output(
+    tmp_path, fake_sarpn_server,
+):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_verified_catalog(catalog_path)
+    output_dir.mkdir()
+    prior = '{"marker": "prior-published-output"}\n'
+    (output_dir / "analysis.json").write_text(prior)
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
+    args += ["--recsys", "--recsys-catalog", str(tmp_path / "missing.json")]
+
+    assert main(args) == 1
+
+    assert (output_dir / "analysis.json").read_text() == prior
+    assert {path.name for path in output_dir.iterdir()} == {"analysis.json"}
+
+
 def test_oracle_xml_is_annotation_derived_and_replay_distinct(tmp_path, fake_sarpn_server):
     image = tmp_path / "face.jpg"
     catalog = tmp_path / "catalog.json"
