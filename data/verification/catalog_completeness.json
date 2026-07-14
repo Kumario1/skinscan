@@ -1,9 +1,9 @@
 {
   "complete": false,
   "eligible_by_role": {
-    "cleanser": 1,
-    "moisturizer": 1,
-    "sunscreen": 1
+    "cleanser": 4,
+    "moisturizer": 3,
+    "sunscreen": 2
   },
   "missing_treatment_paths": [
     "azelaic_acid_10",
@@ -11,9 +11,9 @@
   ],
   "schema_version": "1",
   "shortfalls": {
-    "cleanser": 24,
-    "moisturizer": 24,
-    "sunscreen": 24
+    "cleanser": 21,
+    "moisturizer": 22,
+    "sunscreen": 23
   },
   "support_minimum": 25,
   "treatment_paths": {

@@ -354,7 +354,9 @@ def cmd_select(paths: Paths, args) -> int:
             quarantine.update(read_json(path)["products"])
     products = {p.product_id: p for p in load_all_products(paths)}
     rank = candidate_rank(paths)
-    taken = {pid for pid, e in manifest["products"].items() if e["state"] in ACTIVE_STATES}
+    # rejected products need a manual requeue (edit the manifest) to re-enter
+    taken = {pid for pid, e in manifest["products"].items()
+             if e["state"] in ACTIVE_STATES or e["state"] == "rejected"}
 
     picks: list[tuple[str, str, list[str]]] = []  # (product_id, target, reasons)
 

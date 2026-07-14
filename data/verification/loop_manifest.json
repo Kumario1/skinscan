@@ -1,19 +1,55 @@
 {
-  "audits": [],
-  "batch_seq": 2,
+  "audits": [
+    {
+      "at": "2026-07-14T18:29:48.936600Z",
+      "brief": "data/verification/audits/001/AUDIT_BRIEF.md",
+      "notes": "3 sampled assertions re-fetched fresh 2026-07-14: Tatcha Rice Wash page (cadence/face/rinse quotes present), Farmacy Green Clean page (face cleanser/rinse/Morning+Evening present), Clinique SPL (BP 2.5%, thin layer, v3; fresh fetch byte-identical to snapshot hash f819499...)",
+      "products": [
+        "P188306",
+        "P417238",
+        "P461537"
+      ],
+      "result": "pass"
+    }
+  ],
+  "batch_seq": 5,
   "batches": {
     "002": {
+      "approved_at": "2026-07-14T18:15:15.692272Z",
+      "approved_file": "data/verification/batches/002/approved.json",
       "brief": "data/verification/batches/002/RESEARCH_BRIEF.md",
-      "created_at": "2026-07-14T17:41:56.372733Z"
+      "created_at": "2026-07-14T17:41:56.372733Z",
+      "review_file": "data/verification/batches/002/REVIEW.md",
+      "reviewer_id": "claude-fable-5-catalog-loop"
+    },
+    "003": {
+      "approved_at": "2026-07-14T18:21:56.405122Z",
+      "approved_file": "data/verification/batches/003/approved.json",
+      "brief": "data/verification/batches/003/RESEARCH_BRIEF.md",
+      "created_at": "2026-07-14T18:15:16.108391Z",
+      "review_file": "data/verification/batches/003/REVIEW.md",
+      "reviewer_id": "claude-fable-5-catalog-loop"
+    },
+    "004": {
+      "approved_at": "2026-07-14T18:28:58.505164Z",
+      "approved_file": "data/verification/batches/004/approved.json",
+      "brief": "data/verification/batches/004/RESEARCH_BRIEF.md",
+      "created_at": "2026-07-14T18:21:56.830886Z",
+      "review_file": "data/verification/batches/004/REVIEW.md",
+      "reviewer_id": "claude-fable-5-catalog-loop"
+    },
+    "005": {
+      "brief": "data/verification/batches/005/RESEARCH_BRIEF.md",
+      "created_at": "2026-07-14T18:28:58.949143Z"
     }
   },
   "last_rebuild": {
-    "at": "2026-07-14T17:41:56.326642Z",
+    "at": "2026-07-14T18:28:58.898643Z",
     "complete": false,
     "eligible_by_role": {
-      "cleanser": 1,
-      "moisturizer": 1,
-      "sunscreen": 1
+      "cleanser": 4,
+      "moisturizer": 3,
+      "sunscreen": 2
     },
     "logs": {
       "tier1": {
@@ -32,17 +68,9 @@
     "unmatched": []
   },
   "products": {
-    "P188306": {
-      "batch": "002",
-      "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
-      "reasons": [],
-      "state": "researching",
-      "target": "treatment",
-      "updated_at": "2026-07-14T17:41:56.371949Z"
-    },
-    "P411387": {
-      "batch": "002",
-      "name": "Superfood Antioxidant Cleanser",
+    "P126301": {
+      "batch": "005",
+      "name": "Take The Day Off Cleansing Balm Makeup Remover",
       "reasons": [
         "routine_role_not_verified",
         "instruction_cadence_unknown",
@@ -50,27 +78,29 @@
       ],
       "state": "researching",
       "target": "cleanser",
-      "updated_at": "2026-07-14T17:41:56.372538Z"
+      "updated_at": "2026-07-14T18:28:58.948936Z"
     },
-    "P427411": {
+    "P188306": {
       "batch": "002",
-      "name": "Azelaic Acid 10% Suspension Brightening Cream",
+      "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
+      "reasons": [],
+      "state": "eligible",
+      "target": "treatment",
+      "updated_at": "2026-07-14T18:28:58.898606Z"
+    },
+    "P248407": {
+      "batch": "004",
+      "name": "Ultra Repair Cream Intense Hydration",
       "reasons": [
-        "routine_role_not_verified",
-        "instruction_cadence_unknown",
-        "instruction_cadence_source_missing",
-        "otc_status_not_verified",
-        "drug_active_not_verified",
-        "label_source_missing",
-        "label_verification_timestamp_missing"
+        "firstaidbeauty.com page verified (face+body cream, once or twice daily) but makes no non-comedogenic claim - cannot clear moisturizer quarantine; requeue if claim standards change"
       ],
-      "state": "researching",
-      "target": "azelaic_acid_10",
-      "updated_at": "2026-07-14T17:41:56.372532Z"
+      "state": "rejected",
+      "target": "moisturizer",
+      "updated_at": "2026-07-14T18:28:28.661832Z"
     },
-    "P427421": {
-      "batch": "002",
-      "name": "Protini Polypeptide Firming Refillable Moisturizer",
+    "P394639": {
+      "batch": "005",
+      "name": "The True Cream Aqua Bomb",
       "reasons": [
         "routine_role_not_verified",
         "instruction_cadence_unknown",
@@ -79,11 +109,98 @@
       ],
       "state": "researching",
       "target": "moisturizer",
-      "updated_at": "2026-07-14T17:41:56.372541Z"
+      "updated_at": "2026-07-14T18:28:58.948933Z"
     },
-    "P454380": {
-      "batch": "002",
-      "name": "Unseen Sunscreen SPF 40 PA+++",
+    "P409800": {
+      "batch": "004",
+      "name": "Cleansing & Exfoliating Wipes",
+      "reasons": [
+        "SEPHORA COLLECTION house brand - the only manufacturer page is sephora.com which is bot-walled (403); no retrievable manufacturer evidence"
+      ],
+      "state": "rejected",
+      "target": "cleanser",
+      "updated_at": "2026-07-14T18:28:28.610565Z"
+    },
+    "P411387": {
+      "batch": "003",
+      "name": "Superfood Antioxidant Cleanser",
+      "reasons": [
+        "re-selected after rejection (pre-fix); youthtothepeople.com still bot-walled"
+      ],
+      "state": "rejected",
+      "target": "cleanser",
+      "updated_at": "2026-07-14T18:16:50.823756Z"
+    },
+    "P417238": {
+      "batch": "003",
+      "name": "Green Clean Makeup Removing Cleansing Balm",
+      "reasons": [],
+      "state": "eligible",
+      "target": "cleanser",
+      "updated_at": "2026-07-14T18:28:58.898624Z"
+    },
+    "P418218": {
+      "batch": "004",
+      "name": "The Water Cream Oil-Free Pore Minimizing Moisturizer",
+      "reasons": [],
+      "state": "eligible",
+      "target": "moisturizer",
+      "updated_at": "2026-07-14T18:28:58.898627Z"
+    },
+    "P427411": {
+      "batch": "003",
+      "name": "Azelaic Acid 10% Suspension Brightening Cream",
+      "reasons": [
+        "re-selected after rejection (pre-fix); azelaic 10% policy gap unchanged"
+      ],
+      "state": "rejected",
+      "target": "azelaic_acid_10",
+      "updated_at": "2026-07-14T18:16:50.779499Z"
+    },
+    "P427415": {
+      "batch": "005",
+      "name": "100% Organic Cold-Pressed Rose Hip Seed Oil",
+      "reasons": [
+        "routine_role_not_verified",
+        "instruction_cadence_unknown",
+        "instruction_cadence_source_missing",
+        "noncomedogenic_claim_not_verified"
+      ],
+      "state": "researching",
+      "target": "moisturizer",
+      "updated_at": "2026-07-14T18:28:58.948942Z"
+    },
+    "P427421": {
+      "batch": "003",
+      "name": "Protini Polypeptide Firming Refillable Moisturizer",
+      "reasons": [
+        "quarantined on noncomedogenic_claim_not_verified; current drunkelephant.com page (snapshot 98d629ae) makes no non-comedogenic claim - nothing further to verify unless the brand adds one"
+      ],
+      "state": "rejected",
+      "target": "moisturizer",
+      "updated_at": "2026-07-14T18:16:50.870956Z"
+    },
+    "P427536": {
+      "batch": "004",
+      "name": "The Deep Cleanse Gentle Exfoliating Cleanser",
+      "reasons": [],
+      "state": "eligible",
+      "target": "cleanser",
+      "updated_at": "2026-07-14T18:28:58.898630Z"
+    },
+    "P429242": {
+      "batch": "005",
+      "name": "Clear Sunscreen Stick SPF 50+",
+      "reasons": [
+        "noncomedogenic_claim_not_verified"
+      ],
+      "state": "researching",
+      "target": "sunscreen",
+      "updated_at": "2026-07-14T18:28:58.948928Z"
+    },
+    "P429953": {
+      "batch": "005",
+      "name": "Glow Stick Sunscreen SPF 50 PA++++",
       "reasons": [
         "routine_role_not_verified",
         "instruction_cadence_unknown",
@@ -96,31 +213,140 @@
       ],
       "state": "researching",
       "target": "sunscreen",
-      "updated_at": "2026-07-14T17:41:56.372543Z"
+      "updated_at": "2026-07-14T18:28:58.948939Z"
+    },
+    "P441101": {
+      "batch": "003",
+      "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
+      "reasons": [],
+      "state": "eligible",
+      "target": "moisturizer",
+      "updated_at": "2026-07-14T18:28:58.898633Z"
+    },
+    "P443833": {
+      "batch": "005",
+      "name": "Salicylic Acid Acne + Pore Cleanser",
+      "reasons": [
+        "routine_role_not_verified",
+        "instruction_cadence_unknown",
+        "instruction_cadence_source_missing"
+      ],
+      "state": "researching",
+      "target": "cleanser",
+      "updated_at": "2026-07-14T18:28:58.948945Z"
+    },
+    "P454380": {
+      "batch": "003",
+      "name": "Unseen Sunscreen SPF 40 PA+++",
+      "reasons": [
+        "quarantined on noncomedogenic_claim_not_verified; Supergoop sells only the reformulated SPF 50 face variant, no current brand page exists for the catalog's SPF 40 - variant retired at manufacturer"
+      ],
+      "state": "rejected",
+      "target": "sunscreen",
+      "updated_at": "2026-07-14T18:16:50.919848Z"
+    },
+    "P456218": {
+      "batch": "003",
+      "name": "Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Niacinamide",
+      "reasons": [],
+      "state": "eligible",
+      "target": "sunscreen",
+      "updated_at": "2026-07-14T18:28:58.898635Z"
+    },
+    "P456392": {
+      "batch": "004",
+      "name": "Daily UV Defense Invisible Broad Spectrum SPF 36 Sunscreen",
+      "reasons": [
+        "innisfree SPF 36 marketing status 'completed' on every lot in the current SPL (last expiries 2026-2027) and us.innisfree.com redirects the SPF 36 handle to an SPF 50 successor - variant discontinued at manufacturer"
+      ],
+      "state": "rejected",
+      "target": "sunscreen",
+      "updated_at": "2026-07-14T18:28:28.510575Z"
+    },
+    "P461537": {
+      "batch": "004",
+      "name": "The Rice Wash Skin-Softening Cleanser",
+      "reasons": [],
+      "state": "eligible",
+      "target": "cleanser",
+      "updated_at": "2026-07-14T18:28:58.898636Z"
+    },
+    "P467976": {
+      "batch": "005",
+      "name": "(Re)setting 100% Mineral Powder Sunscreen SPF 35 PA+++",
+      "reasons": [
+        "routine_role_not_verified",
+        "instruction_cadence_unknown",
+        "instruction_cadence_source_missing",
+        "broad_spectrum_not_verified",
+        "spf_below_30_or_unknown",
+        "label_source_missing",
+        "label_verification_timestamp_missing",
+        "noncomedogenic_claim_not_verified"
+      ],
+      "state": "researching",
+      "target": "sunscreen",
+      "updated_at": "2026-07-14T18:28:58.948947Z"
     },
     "P469517": {
       "batch": "002",
       "name": "CLEAR Oil-Free Moisturizer",
       "reasons": [],
-      "state": "researching",
+      "state": "eligible",
       "target": "moisturizer",
-      "updated_at": "2026-07-14T17:41:56.372131Z"
+      "updated_at": "2026-07-14T18:28:58.898637Z"
     },
     "P469520": {
       "batch": "002",
       "name": "RESIST Perfectly Balanced Foaming Cleanser",
       "reasons": [],
-      "state": "researching",
+      "state": "eligible",
       "target": "cleanser",
-      "updated_at": "2026-07-14T17:41:56.372265Z"
+      "updated_at": "2026-07-14T18:28:58.898639Z"
+    },
+    "P470259": {
+      "batch": "004",
+      "name": "Faded Serum for Dark Spots & Discoloration",
+      "reasons": [
+        "Topicals Faded is a cosmetic serum; azelaic acid has no authoritative drug label at cosmetic strengths - same azelaic_acid_10 policy gap as P427411"
+      ],
+      "state": "rejected",
+      "target": "azelaic_acid_10",
+      "updated_at": "2026-07-14T18:28:28.560299Z"
     },
     "P476733": {
       "batch": "002",
       "name": "Mineral Mattescreen Sunscreen SPF 40 PA+++",
       "reasons": [],
-      "state": "researching",
+      "state": "eligible",
       "target": "sunscreen",
-      "updated_at": "2026-07-14T17:41:56.372385Z"
+      "updated_at": "2026-07-14T18:28:58.898640Z"
+    },
+    "P482535": {
+      "batch": "005",
+      "name": "Strawberry Smooth BHA + AHA Salicylic Acid Serum",
+      "reasons": [
+        "routine_role_not_verified",
+        "instruction_cadence_unknown",
+        "instruction_cadence_source_missing",
+        "otc_status_not_verified",
+        "drug_active_not_verified",
+        "label_source_missing",
+        "label_verification_timestamp_missing"
+      ],
+      "state": "researching",
+      "target": "azelaic_acid_10",
+      "updated_at": "2026-07-14T18:28:58.948909Z"
+    },
+    "P7880": {
+      "batch": "003",
+      "name": "Soy Hydrating Gentle Face Cleanser",
+      "reasons": [
+        "fresh.com is an Estee Lauder property behind the same WAF as clinique.com (403 on all fetches); no manufacturer evidence retrievable without a browser"
+      ],
+      "state": "rejected",
+      "target": "cleanser",
+      "updated_at": "2026-07-14T18:21:56.304631Z"
     }
   },
   "schema_version": "1"

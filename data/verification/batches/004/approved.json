@@ -1,0 +1,134 @@
+{
+  "products": [
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:28:58.505164Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/the-water-cream-lightweight-moisturizer",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "cream",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "moisturizer"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:27:51.301104Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "3d68f821ae06bc50c94b60280d97153dde19c3506efc340882113e664bc53971",
+          "source_url": "https://tatcha.com/products/the-water-cream-lightweight-moisturizer",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P418218"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:28:58.505164Z",
+          "facts": {
+            "cadence": "daily",
+            "cadence_source": "https://tatcha.com/products/the-deep-cleanse",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "rinse_off",
+            "format": "cleanser",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:27:51.301104Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "9fca6f5ab6c4afb4ff12199777242a49bb5c6871145239a7e79bc9a1c708b259",
+          "source_url": "https://tatcha.com/products/the-deep-cleanse",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P427536"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:28:58.505164Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/rice-wash-soft-cream-cleanser",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "rinse_off",
+            "format": "cleanser",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:27:51.301104Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "615436bd1e5352eb4f544e71e6cfd9232f12e9f25185077bdcb9404d2cca9784",
+          "source_url": "https://tatcha.com/products/rice-wash-soft-cream-cleanser",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P461537"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:28:58.505164Z",
+          "facts": {
+            "broad_spectrum": true,
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/15a786f2-2939-4aa2-a413-b661ff6d2dd9.xml",
+            "evidence_grade": "regulatory_label",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "stick",
+            "intended_areas": [
+              "face"
+            ],
+            "label_effective_date": "20241223",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/15a786f2-2939-4aa2-a413-b661ff6d2dd9.xml",
+            "label_verified_at": "2026-07-14",
+            "label_version": "2",
+            "otc_drug": true,
+            "routine_roles": [
+              "sunscreen"
+            ],
+            "source_set_id": "15a786f2-2939-4aa2-a413-b661ff6d2dd9",
+            "spf": 50
+          },
+          "retrieved_at": "2026-07-14T18:27:51.301104Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "9be337200f65be18e894a7b9c7b0ea1a1be478eb1f536ce291cdfcb2d0711ce7",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/15a786f2-2939-4aa2-a413-b661ff6d2dd9.xml",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P429242"
+    }
+  ],
+  "schema_version": "2"
+}
