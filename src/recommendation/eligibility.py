@@ -156,7 +156,11 @@ def check_eligibility(
     selected_carried: set[str] = set()
     for selected in selected_products.values():
         selected_carried.update(_carried(selected))
-    for duplicate in sorted(carried & selected_carried):
+    # Repeating benign support ingredients (for example glycerin in a cleanser
+    # and moisturizer) is normal and is not therapeutic duplication. Only
+    # carried treatment actives participate in the cross-product duplicate
+    # veto; the explicit ACTIVE_CONFLICTS matrix remains independently enforced.
+    for duplicate in sorted(carried & selected_carried & TREATMENT_ACTIVES):
         reject(f"duplicates_selected_active:{duplicate}", "actives")
     for active in sorted(carried):
         for other in sorted(selected_carried):

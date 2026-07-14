@@ -91,7 +91,7 @@ def test_ranker_and_scorer_never_see_hard_rejected_product():
     assert result.selected_products["treatment"].product_id == "aza"
 
 
-def test_scorer_never_sees_product_rejected_by_selected_role_context():
+def test_repeated_benign_support_ingredient_is_not_therapeutic_duplication():
     products = catalog()
     products[0].actives = ["glycerin"]
     duplicate_moisturizer = product("duplicate-moist", "moisturizer")
@@ -105,10 +105,8 @@ def test_scorer_never_sees_product_rejected_by_selected_role_context():
             return 100
 
     result = run(active_report(), products, concern_scorer=Spy())
-    assert "duplicate-moist" not in seen
-    assert "duplicates_selected_active:glycerin" in result.eligibility_rejections[
-        "moisturizer:duplicate-moist"
-    ]
+    assert "duplicate-moist" in seen
+    assert result.selected_products["moisturizer"].product_id == "duplicate-moist"
 
 
 def test_support_choice_cannot_suppress_an_available_primary_treatment():
@@ -121,7 +119,7 @@ def test_support_choice_cannot_suppress_an_available_primary_treatment():
                 product("moist", "moisturizer"), product("spf", "sunscreen")]
     result = run(active_report(), products)
     assert result.selected_products["treatment"].product_id == "aza-niacinamide"
-    assert result.selected_products["cleanser"].product_id == "b-cleanser"
+    assert result.selected_products["cleanser"].product_id == "a-cleanser"
     assert result.decision.therapy_disposition == "active_treatment"
 
 

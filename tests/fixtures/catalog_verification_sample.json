@@ -10,6 +10,7 @@
           "retrieved_at": "2026-07-13T00:00:00Z",
           "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
           "reviewer_id": "synthetic-test-reviewer",
+          "reviewer_type": "human",
           "approved_at": "2026-07-13T00:00:00Z",
           "facts": {
             "cadence": "per_label",
@@ -38,6 +39,7 @@
           "retrieved_at": "2026-07-13T00:00:00Z",
           "source_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
           "reviewer_id": "synthetic-test-reviewer",
+          "reviewer_type": "human",
           "approved_at": "2026-07-13T00:00:00Z",
           "facts": {
             "broad_spectrum": true,

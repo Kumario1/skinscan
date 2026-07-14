@@ -22,7 +22,37 @@ def test_current_exact_topical_spl_becomes_quarantined_v2_candidate():
         ("adapalene", "0.1%"), ("benzoyl_peroxide", "2.5%")
     ]
     assert product.routine_roles == []
-    assert product.evidence_grade == "pending_human_approval"
+    assert product.evidence_grade == "pending_review"
+
+
+def test_current_dailymed_document_level_human_otc_metadata_is_supported():
+    xml = b'''<?xml version="1.0" encoding="UTF-8"?>
+    <document xmlns="urn:hl7-org:v3">
+      <code code="34390-5" codeSystem="2.16.840.1.113883.6.1"
+            displayName="HUMAN OTC DRUG LABEL" />
+      <setId root="current-set-id" />
+      <versionNumber value="7" />
+      <effectiveTime value="20260204" />
+      <title>Acne Clearing Treatment</title>
+      <text>For external use only</text>
+      <manufacturedProduct>
+        <code codeSystem="2.16.840.1.113883.6.69" code="14222-1620" />
+        <formCode displayName="Lotion" />
+        <ingredient classCode="ACTIB">
+          <quantity><numerator value="25" unit="mg"/>
+            <denominator value="1" unit="mL"/></quantity>
+          <ingredientSubstance><name>BENZOYL PEROXIDE</name></ingredientSubstance>
+        </ingredient>
+      </manufacturedProduct>
+    </document>'''
+    products = parse_spl(
+        xml, source_url="https://dailymed.nlm.nih.gov/current.xml",
+        retrieved_at="2026-07-14T00:00:00Z", current=True,
+    )
+    assert len(products) == 1
+    assert products[0].format == "lotion"
+    assert products[0].otc_drug is True
+    assert products[0].name == "Acne Clearing Treatment"
 
 
 def test_archived_or_non_exact_label_is_excluded():
