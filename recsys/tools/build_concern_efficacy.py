@@ -1,6 +1,6 @@
 """Cached review labels -> concern-efficacy signal store.
 
-The paid labeling pass is deliberately separate from aggregation: this command
+The model-labeling pass is deliberately separate from aggregation: this command
 consumes the append-only JSONL contract produced by the D-023 labeler. That
 keeps deterministic store rebuilds free, resumable, and networkless.
 """
@@ -14,7 +14,7 @@ from pathlib import Path
 from ..contracts import sha256_file
 from .common import STORE_SCHEMA_VERSION, register_store, write_json
 
-PROMPT_VERSION = "p1"
+PROMPT_VERSION = "p7"
 BUILDER = "recsys.tools.build_concern_efficacy@1"
 ACNE_CONCERNS = frozenset((
     "acne_comedonal", "acne_inflammatory", "acne_cystic", "acne_general",
@@ -42,6 +42,7 @@ def build(
     data_root: Path,
     *,
     catalog_products: int,
+    catalog_product_ids: frozenset[str] | None = None,
     smoothing_m: float = 20,
     sub_cell_min_n: int = 5,
 ) -> dict:
@@ -51,9 +52,11 @@ def build(
     product_counts: dict[tuple[str, str], dict[str, int]] = defaultdict(lambda: defaultdict(int))
     skin_counts: dict[tuple[str, str, str], dict[str, int]] = defaultdict(lambda: defaultdict(int))
     for record in records:
-        if record.get("status") != "ok":
+        if record.get("status") != "ok" or record.get("prompt_version") != PROMPT_VERSION:
             continue
         product_id = str(record["product_id"])
+        if catalog_product_ids is not None and product_id not in catalog_product_ids:
+            continue
         skin_type = str(record.get("skin_type") or "unknown")
         for label in record.get("labels") or []:
             concern = label.get("concern")
@@ -127,9 +130,15 @@ def main(argv=None) -> int:
     parser.add_argument("--sub-cell-min-n", type=int, default=5)
     args = parser.parse_args(argv)
     catalog = json.loads(args.catalog.read_text(encoding="utf-8"))
+    catalog_product_ids = frozenset(
+        str(product["product_id"])
+        for product in catalog.get("products") or []
+        if product.get("product_id") is not None
+    )
     coverage = build(
         args.labels, args.out, args.data_root,
-        catalog_products=len(catalog.get("products") or []),
+        catalog_products=len(catalog_product_ids),
+        catalog_product_ids=catalog_product_ids,
         smoothing_m=args.smoothing_m,
         sub_cell_min_n=args.sub_cell_min_n,
     )

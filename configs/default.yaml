@@ -100,11 +100,11 @@ concern:                              # concern-efficacy labeling (D-023, spec 2
   stats_path: data/processed/concern_stats.json             # smoothed product x concern cells
   batch_state_path: runs/concern/batches.json               # batch-id resume state
   batch_spool_dir: runs/concern/openrouter_batches           # durable synchronous-request results
-  labeling_model: nvidia/nemotron-3-super-120b-a12b:free    # pinned free MoE; strict JSON verified against live API
+  labeling_model: nvidia/nemotron-3-ultra-550b-a55b:free    # strongest available free MoE; strict JSON verified before full pass
   input_price_per_million: 0.0
   output_price_per_million: 0.0
   max_budget_usd: 0.0                  # free endpoint only; any priced fallback must fail preflight
-  reviews_per_request: 10              # amortize the system prompt without losing uid attribution
+  reviews_per_request: 250             # 202k rows fit inside the 1,000 free requests/day cap
   request_concurrency: 10
   text_truncate_chars: 1200           # review text sent to the labeler is capped here
   batch_chunk_size: 1000              # rows checkpointed per local batch

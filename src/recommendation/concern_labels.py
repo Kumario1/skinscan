@@ -31,6 +31,7 @@ CONCERNS = [
 ]
 ACNE_CONCERNS = CONCERNS[:4]
 VALID_OUTCOMES = {"helped", "worsened", "unclear"}
+PROMPT_VERSION = "p7"
 
 USECOLS = ["author_id", "rating", "is_recommended", "skin_tone", "skin_type",
            "product_id", "review_text", "review_title"]
@@ -76,8 +77,9 @@ def _batch_schema(uids: list[str]) -> dict:
     }
 
 SYSTEM_PROMPT = """\
-You label skincare product reviews for mentions of skin concerns and whether \
-THIS product helped or worsened each one.
+You label skincare product reviews for EVERY explicit skin concern and whether \
+THIS product helped or worsened that exact concern. Apply the checklist below \
+literally; do not infer broader concerns from a subtype.
 
 Concern ids (use exactly these):
 - acne_comedonal: blackheads, whiteheads, clogged pores, comedones
@@ -87,19 +89,284 @@ Concern ids (use exactly these):
 - hyperpigmentation: dark spots, acne scars/marks, discoloration, melasma
 - dryness: dryness, flaking, dry patches, dehydrated skin
 
-For each concern mentioned, output one label:
+For each explicitly mentioned concern, output exactly one label:
 - outcome "helped": this product improved it ("cleared my blackheads",
   "faded my dark spots"; "did not break me out" is acne_general helped).
 - outcome "worsened": this product caused or worsened it ("broke me out",
   "made my acne worse", "clogged my pores").
 - outcome "unclear": mentioned without a clear product effect
   ("I have acne-prone skin").
-- reviewer_has_condition: true if the reviewer has (or had) the concern.
+- reviewer_has_condition: true if the reviewer personally has/had the concern,
+  including when this product caused it.
 
 Rules: negation flips the outcome. Attribute outcomes to this product only.
 "Bought it for wrinkles but it cleared my acne" -> acne_general helped.
 No concern mentioned -> empty labels list.
+
+Mandatory checklist for EACH review:
+1. Scan for every concern phrase and map each phrase independently. Emit both a
+   subtype and acne_general when both subtype language and generic acne,
+   breakout, or blemish language appear.
+2. Decide outcome concern-by-concern. Use helped/worsened only for an effect
+   explicitly attributed to this product. Otherwise use unclear.
+3. Decide reviewer_has_condition separately from outcome using only who has
+   the concern; never infer it from a generic product claim.
+4. Before returning, rescan for missed pimples, whiteheads, breakouts, dark
+   spots, and dry/drying language.
+
+Literal rules and examples:
+- Emit one label for EVERY explicitly mentioned concern. A review may have
+  several labels. Do not collapse pimples into acne_general or clogged pores
+  into acne_general. Emit acne_general separately only when generic acne,
+  breakout, or blemish language also appears.
+- blackheads, whiteheads, clogged/unclogged pores -> acne_comedonal.
+  pimples, zits, papules, pustules -> acne_inflammatory.
+- Whiteheads are comedonal only, never inflammatory. Pimples are inflammatory.
+- "did not clog my pores" -> acne_comedonal helped. "did not break me out" ->
+  acne_general helped. Prevention/non-worsening counts as helped.
+- Hydrating/moisturizing dry skin -> dryness helped. Product-caused dryness,
+  flaking, or tightness -> dryness worsened. A dry-skin mention with no effect
+  attributable to this product -> dryness unclear.
+- Never infer hyperpigmentation from acne alone. Require dark spots, marks,
+  scars/scarring, discoloration, melasma, sun spots, or hyperpigmentation.
+- reviewer_has_condition is true only when the reviewer says they personally
+  have/had the concern, including a concern caused by this product. It is false
+  for generic claims, hypothetical users, and preventive statements such as
+  "didn't break me out" when no prior breakouts are stated.
+- A benefit attributed to several products/routine changes rather than this
+  product alone is unclear. A generic claim that this product is effective for
+  a concern may be helped with reviewer_has_condition false.
+- First-person ownership such as "my pores", "my problem areas", "my skin is
+  dry", or "I get breakouts" makes reviewer_has_condition true. A cousin or
+  other person is false. "It caused breakouts" is worsened/true even when the
+  reviewer did not have breakouts before.
+- A concern named only as treatment context ("I use this moisturizer while
+  treating acne") is unclear, not helped. "It works" counts as helped only
+  when the surrounding sentence clearly says it works for that concern.
+- Purging or bringing existing blackheads/whiteheads to the surface is unclear
+  unless the reviewer explicitly says the concern became worse.
+- Keep outcomes concern-specific: if this product clogged pores, label
+  acne_comedonal worsened; generic acne mentioned elsewhere stays unclear
+  unless the product's effect on acne is also explicit.
+- "dark spots" always emits hyperpigmentation; use unclear if no product effect
+  is stated. "dry skin" always emits dryness; moisturizing/hydrating that dry
+  skin is helped, while merely being compatible with an acne routine is not an
+  acne benefit.
 """
+
+LITERAL_PATTERNS = {
+    "acne_comedonal": re.compile(
+        r"\b(?:blackheads?|whiteheads?|comedones?|(?:clogg\w*|unclog\w*|"
+        r"clear(?:ed|s|ing)?)(?:\s+\w+){0,4}\s+pores?|"
+        r"pores?\s+(?:look(?:ed)?\s+)?"
+        r"(?:clogg\w*|plugg\w*))\b", re.I,
+    ),
+    "acne_inflammatory": re.compile(r"\b(?:pimples?|zits?|pustules?|papules?)\b", re.I),
+    "acne_cystic": re.compile(
+        r"\b(?:cystic acne|hormonal acne|hormonal breakouts?|deep painful bumps?)\b", re.I,
+    ),
+    "acne_general": re.compile(
+        r"\b(?:(?<!cystic )(?<!hormonal )acne(?!\s+(?:scars?|scarring|marks?))|"
+        r"br(?:eak|ake)\s?outs?|blemishes?)\b", re.I,
+    ),
+    "hyperpigmentation": re.compile(
+        r"\b(?:dark spots?|acne (?:scars?|marks?)|discoloration|melasma|"
+        r"sun spots?|hyper[- ]?pigmentation)\b", re.I,
+    ),
+    "dryness": re.compile(
+        r"\b(?:dry|drying|dryness|flak\w*|dry patches?|dehydrat\w*)\b", re.I,
+    ),
+}
+
+_HELPED = re.compile(
+    r"\b(?:clear\w*|decreas\w*|reduc\w*|smaller|calm\w*|unclog\w*|"
+    r"fad\w*|improv\w*|help\w*|sav(?:e|ed)|stops?|works? great|amazing for|"
+    r"effective for|good for|keeps?\b.*\bclear)\b", re.I,
+)
+_WORSENED = re.compile(
+    r"\b(?:caus\w*|wors\w*|gave me|made my|broke me out|breaking me out|"
+    r"clogged up|plugged up)\b", re.I,
+)
+_PRODUCT_PREVENTION = re.compile(
+    r"\b(?:did not|didn['’]t|does not|doesn['’]t|has not|hasn['’]t|"
+    r"have not|haven['’]t|never)\b[^.!?]{0,45}"
+    r"\b(?:break\s?outs?|br(?:eak|oke) me out|clog\w* pores?)\b|"
+    r"\bwithout (?:any )?(?:break\s?outs?|clogg\w* pores?)\b", re.I,
+)
+_ABSENT_CONDITION = re.compile(
+    r"\bi (?:do not|don't|dont|did not|didn't|never) (?:really )?"
+    r"(?:get|have)[^.!?]{0,25}\b", re.I,
+)
+
+
+def _concern_sentences(text: str, concern: str) -> list[str]:
+    pattern = LITERAL_PATTERNS[concern]
+    matches = [sentence.strip() for sentence in re.split(r"[.!?]+", text)
+               if pattern.search(sentence)]
+    if concern == "dryness":
+        matches = [sentence for sentence in matches
+                   if not (re.search(r"\b(?:once dry|let it dry|dr(?:y|ies) down|dry finish)\b",
+                                     sentence, re.I)
+                           and not re.search(r"\b(?:skin|face|cheeks?|jawline|patches|dryness|drying)\b",
+                                             sentence, re.I))]
+    return matches
+
+
+def _explicit_outcome(concern: str, sentences: list[str]) -> str | None:
+    joined = " ".join(sentences)
+    if not joined:
+        return None
+    if re.search(r"\b(?:this(?: product)?|it|the product)\s+"
+                 r"(?:caused?|gave me|made my)\b", joined, re.I):
+        return "worsened"
+    if _PRODUCT_PREVENTION.search(joined):
+        return "helped"
+    if re.search(r"\bstops?\b[^.!?]{0,30}\b(?:acne|break\s?outs?|blemishes?)\b",
+                 joined, re.I):
+        return "helped"
+    if _WORSENED.search(joined):
+        return "worsened"
+    if _HELPED.search(joined):
+        return "helped"
+    if concern == "acne_cystic" and re.search(r"\bproduct is amazing\b", joined, re.I):
+        return "helped"
+    return None
+
+
+def _personal_condition(concern: str, sentences: list[str], outcome: str | None) -> bool | None:
+    joined = " ".join(sentences)
+    if not joined:
+        return None
+    term = LITERAL_PATTERNS[concern].pattern
+    if re.search(rf"\bmy\b[^.!?]{{0,45}}(?:{term})", joined, re.I):
+        return True
+    if re.search(rf"\bi\s+(?:have|had|get|got|do|am|was|suffer\w*|experience\w*|"
+                 rf"undergo\w*)\b[^.!?]{{0,150}}(?:{term})", joined, re.I):
+        return True
+    if _ABSENT_CONDITION.search(joined):
+        return False
+    if concern == "dryness" and re.search(r"\bmy skin (?:feels?|is|was)\b[^.!?]{0,25}\bdry\b",
+                                           joined, re.I):
+        return True
+    if concern == "acne_general" and re.search(r"\bmy skin\b[^.!?]{0,25}\bacne[- ]prone\b",
+                                                joined, re.I):
+        return True
+    if concern == "acne_general" and re.search(r"\bi have\b[^.!?]{0,35}\bacne[- ]prone skin\b",
+                                                joined, re.I):
+        return True
+    if outcome == "worsened" and re.search(r"\b(?:me|my|i)\b", joined, re.I):
+        return True
+    if _PRODUCT_PREVENTION.search(joined):
+        return False
+    if (re.search(r"\bmy (?:face|skin|chin|nose|cheeks?|jawline)\b", joined, re.I)
+            and LITERAL_PATTERNS[concern].search(joined)):
+        return True
+    if (concern != "dryness" and not re.search(r"\b(?:i|my|me)\b", joined, re.I)
+            and re.search(r"\b(?:amazing|good|effective) for\b|\b(?:reduc|calm|stop)\w*\b",
+                          joined, re.I)):
+        return False
+    return None
+
+
+def enforce_literal_policy(text: str, labels: list[dict]) -> list[dict]:
+    """Apply high-confidence, reviewable rules after semantic model labeling.
+
+    The model still resolves attribution and nuanced outcomes. This layer makes
+    exhaustive literal mentions, personal-condition semantics, and subtype
+    boundaries deterministic so free-model omissions cannot silently skew the
+    aggregate store.
+    """
+    by_concern = {label["concern"]: dict(label) for label in labels
+                  if label.get("concern") in CONCERNS}
+    sentences = {concern: _concern_sentences(text, concern) for concern in CONCERNS}
+    by_concern = {concern: label for concern, label in by_concern.items()
+                  if sentences[concern]}
+    for concern in CONCERNS:
+        if not sentences[concern]:
+            continue
+        explicit = _explicit_outcome(concern, sentences[concern])
+        personal = _personal_condition(concern, sentences[concern], explicit)
+        if (personal is False and _ABSENT_CONDITION.search(" ".join(sentences[concern]))
+                and not _PRODUCT_PREVENTION.search(" ".join(sentences[concern]))):
+            explicit = None
+        label = by_concern.get(concern)
+        if label is None:
+            outcome = explicit
+            if outcome is None and concern in ACNE_CONCERNS:
+                sibling_outcomes = {
+                    item["outcome"] for key, item in by_concern.items()
+                    if key in ACNE_CONCERNS and item["outcome"] != "unclear"
+                }
+                if len(sibling_outcomes) == 1 and personal is not False:
+                    outcome = sibling_outcomes.pop()
+            by_concern[concern] = {
+                "concern": concern,
+                "outcome": outcome or "unclear",
+                "reviewer_has_condition": bool(personal),
+            }
+            label = by_concern[concern]
+        if explicit is not None:
+            label["outcome"] = explicit
+        elif (concern in ACNE_CONCERNS and concern != "acne_general"
+              and _PRODUCT_PREVENTION.search(" ".join(sentences["acne_general"]))):
+            label["outcome"] = "unclear"
+        if personal is not None:
+            label["reviewer_has_condition"] = personal
+
+        if (concern == "dryness"
+                and re.search(r"\bif\b[^.!?]{0,60}\btoo drying\b", " ".join(sentences[concern]), re.I)):
+            label["outcome"] = "unclear"
+            label["reviewer_has_condition"] = False
+
+    low = text.lower()
+    context_only_acne = bool(re.search(
+        r"(?:undergoing|after|from|with|using|use)[^.!?]{0,45}\bacne "
+        r"(?:treatments?|products?|wash|system)\b|\bdry skin and acne\b", low,
+    )) and not _PRODUCT_PREVENTION.search(text)
+    if context_only_acne and "acne_general" in by_concern:
+        by_concern["acne_general"]["outcome"] = "unclear"
+        if (re.search(r"\bacne (?:products?|wash|system)\b", low)
+                and not re.search(r"\b(?:my acne|acne[- ]prone|i have acne)\b", low)):
+            by_concern["acne_general"]["reviewer_has_condition"] = False
+
+    if "acne_general" in by_concern:
+        if re.search(r"\b(?:acne|break\s?outs?|blemishes?)\b[^.!?]{0,30}"
+                     r"\b(?:is|are|stayed?|remains?)\b[^.!?]{0,20}"
+                     r"\b(?:the same|unchanged|no different)\b", text, re.I):
+            by_concern["acne_general"]["outcome"] = "unclear"
+        if re.search(r"\b(?:plan|will|going) to\b[^.!?]{0,55}\b"
+                     r"(?:daughter|son|child|teen)\b[^.!?]{0,55}\bacne\b", text, re.I):
+            by_concern["acne_general"]["outcome"] = "unclear"
+            by_concern["acne_general"]["reviewer_has_condition"] = False
+        if (by_concern["acne_general"]["outcome"] == "worsened"
+                and re.search(r"\bmoisturizers? typically break\s?out\b", text, re.I)
+                and not re.search(r"\b(?:this|it)\b[^.!?]{0,30}\bbreak\s?out", text, re.I)):
+            by_concern["acne_general"]["outcome"] = "unclear"
+
+    direct_general_worsening = re.search(
+        r"\b(?:broke me out|breaking me out|caus\w*[^.!?]{0,25}break\s?outs?|"
+        r"made[^.!?]{0,25}(?:acne|break\s?outs?|blemishes?)\s+worse)\b", text, re.I,
+    )
+    if (by_concern.get("acne_comedonal", {}).get("outcome") == "worsened"
+            and by_concern.get("acne_general", {}).get("outcome") == "worsened"
+            and not direct_general_worsening):
+        by_concern["acne_general"]["outcome"] = "unclear"
+
+    if ("dryness" in by_concern
+            and re.search(r"\b(?:purchased|started|used) this,[^.]{0,250}\band\b", text, re.I)
+            and not re.search(r"\bthis\b[^.!?]{0,35}\b(?:help\w*|moisturiz\w*|hydrat\w*)\b",
+                              text, re.I)):
+        by_concern["dryness"]["outcome"] = "unclear"
+    if ("dryness" in by_concern
+            and re.search(r"\b(?:moisturizer works great|helps? with (?:the )?dryness|"
+                          r"keeps? my [^.]{0,30}(?:moisturiz|hydrat))", text, re.I)):
+        by_concern["dryness"]["outcome"] = "helped"
+    if ("dryness" in by_concern
+            and re.search(r"\b(?:within|after)\b[^.!?]{0,65}\bmy skin feels?\b"
+                          r"[^.!?]{0,20}\bdry\b", text, re.I)):
+        by_concern["dryness"]["outcome"] = "worsened"
+
+    return [by_concern[concern] for concern in CONCERNS if concern in by_concern]
 
 
 def compile_prefilter(prefilter_cfg: dict) -> dict[str, re.Pattern]:
@@ -157,7 +424,7 @@ def load_review_rows(reviews_dir, catalog_ids: set, patterns: dict,
     return rows
 
 
-def load_cache(path) -> dict[str, dict]:
+def load_cache(path, prompt_version: str = PROMPT_VERSION) -> dict[str, dict]:
     """uid -> cached record. Missing file -> empty (first run)."""
     path = Path(path)
     if not path.exists():
@@ -167,7 +434,8 @@ def load_cache(path) -> dict[str, dict]:
         for line in f:
             if line.strip():
                 rec = json.loads(line)
-                out[rec["uid"]] = rec
+                if rec.get("prompt_version") == prompt_version:
+                    out[rec["uid"]] = rec
     return out
 
 
@@ -199,6 +467,7 @@ def _record(row: dict, status: str, labels: list) -> dict:
             "product_id": row["product_id"], "skin_type": row["skin_type"],
             "skin_tone": row["skin_tone"], "rating": row["rating"],
             "is_recommended": row["is_recommended"],
+            "prompt_version": PROMPT_VERSION,
             "status": status, "labels": labels}
 
 
@@ -240,7 +509,7 @@ def run_labeling(rows, labeler, cache_path, state_path, chunk_size,
                 summary["failed"] += 1     # not cached -> retryable
             else:
                 try:
-                    labels = _parse_labels(text)
+                    labels = enforce_literal_policy(row["text"], _parse_labels(text))
                     new.append(_record(row, "ok", labels))
                     summary["ok"] += 1
                 except (ValueError, KeyError, TypeError, AttributeError):
@@ -330,7 +599,10 @@ class OpenRouterLabeler:
             return [(uid, None, type(exc).__name__) for uid in uids]
 
     def submit(self, rows) -> str:
-        digest = hashlib.md5("|".join(r["uid"] for r in rows).encode()).hexdigest()
+        digest = hashlib.md5(
+            (PROMPT_VERSION + "|" + self.model + "|"
+             + "|".join(r["uid"] for r in rows)).encode()
+        ).hexdigest()
         batch_id = f"openrouter_{digest}"
         path = self.spool_dir / f"{batch_id}.jsonl"
         existing = {}

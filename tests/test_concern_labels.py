@@ -17,6 +17,7 @@ from src.recommendation.concern_labels import (
     cmd_label,
     compile_prefilter,
     estimate_cost,
+    enforce_literal_policy,
     load_cache,
     load_review_rows,
     review_uid,
@@ -170,6 +171,158 @@ def test_invalid_label_entries_filtered_but_row_ok():
         assert rec["status"] == "ok" and len(rec["labels"]) == 1
 
 
+def _label(concern, outcome, condition):
+    return {"concern": concern, "outcome": outcome,
+            "reviewer_has_condition": condition}
+
+
+def test_literal_policy_adds_missed_explicit_subtypes():
+    labels = [_label("acne_general", "helped", True)]
+    text = ("My pimples and breakouts got much smaller after this serum. "
+            "It also decreased the blackheads on my nose.")
+    actual = enforce_literal_policy(text, labels)
+    assert {tuple(item.values()) for item in actual} == {
+        ("acne_comedonal", "helped", True),
+        ("acne_general", "helped", True),
+        ("acne_inflammatory", "helped", True),
+    }
+
+
+def test_literal_policy_keeps_prevention_and_generic_claims_nonpersonal():
+    preventive = enforce_literal_policy(
+        "This did not give me breakouts.",
+        [_label("acne_general", "helped", True)],
+    )
+    generic = enforce_literal_policy(
+        "This product is amazing for cystic acne.",
+        [_label("acne_cystic", "unclear", True)],
+    )
+    assert preventive == [_label("acne_general", "helped", False)]
+    assert generic == [_label("acne_cystic", "helped", False)]
+
+
+def test_literal_policy_preserves_context_as_unclear():
+    actual = enforce_literal_policy(
+        "I use harsh acne treatments and this moisturizer keeps my dry skin hydrated.",
+        [_label("acne_general", "helped", True), _label("dryness", "helped", True)],
+    )
+    assert actual == [
+        _label("acne_general", "unclear", True),
+        _label("dryness", "helped", True),
+    ]
+
+
+def test_literal_policy_does_not_spread_clogged_pore_worsening_to_acne():
+    actual = enforce_literal_policy(
+        "My pores clogged up. I had my breakouts in check before this.",
+        [_label("acne_comedonal", "worsened", True),
+         _label("acne_general", "worsened", True)],
+    )
+    assert actual == [
+        _label("acne_comedonal", "worsened", True),
+        _label("acne_general", "unclear", True),
+    ]
+
+
+def test_literal_policy_adds_context_only_dark_spots_and_dryness():
+    actual = enforce_literal_policy(
+        "I am concerned with my dark spots. A few hours later my skin feels so dry.",
+        [],
+    )
+    assert actual == [
+        _label("hyperpigmentation", "unclear", True),
+        _label("dryness", "unclear", True),
+    ]
+
+
+def test_literal_policy_marks_multi_product_result_unclear():
+    actual = enforce_literal_policy(
+        "I purchased this, a serum, and an oil. My dry flaky skin is now soft.",
+        [_label("dryness", "helped", True)],
+    )
+    assert actual == [_label("dryness", "unclear", True)]
+
+
+def test_literal_policy_recognizes_explicit_dryness_benefit():
+    actual = enforce_literal_policy(
+        "My cheeks get really dry but this moisturizer works great.",
+        [_label("dryness", "unclear", True)],
+    )
+    assert actual == [_label("dryness", "helped", True)]
+
+
+def test_literal_policy_keeps_negated_subtype_separate_from_personal_breakouts():
+    actual = enforce_literal_policy(
+        "I don't really get blackheads, but I do break out on my chin. This saved me.",
+        [_label("acne_general", "helped", True)],
+    )
+    assert actual == [
+        _label("acne_comedonal", "unclear", False),
+        _label("acne_general", "helped", True),
+    ]
+
+
+def test_literal_policy_prioritizes_explicit_causation_over_unrelated_negation():
+    actual = enforce_literal_policy(
+        "I didn't want to believe it, but this caused itchy breakouts.",
+        [_label("acne_general", "helped", False)],
+    )
+    assert actual == [_label("acne_general", "worsened", True)]
+
+
+def test_literal_policy_does_not_spread_prevention_to_existing_subtypes():
+    actual = enforce_literal_policy(
+        "I have had acne for years and have a few pimples. This did not cause additional breakouts. If a product is too drying I break out.",
+        [_label("acne_general", "helped", True),
+         _label("acne_inflammatory", "helped", False),
+         _label("dryness", "unclear", True)],
+    )
+    assert actual == [
+        _label("acne_inflammatory", "unclear", True),
+        _label("acne_general", "helped", True),
+        _label("dryness", "unclear", False),
+    ]
+
+
+def test_literal_policy_does_not_infer_acne_from_acne_scarring():
+    actual = enforce_literal_policy(
+        "My dark spots come from acne scarring and this faded them.",
+        [_label("acne_general", "helped", True),
+         _label("hyperpigmentation", "helped", True)],
+    )
+    assert actual == [_label("hyperpigmentation", "helped", True)]
+
+
+def test_literal_policy_handles_unchanged_and_hypothetical_outcomes():
+    unchanged = enforce_literal_policy(
+        "My acne is the same as it has always been.",
+        [_label("acne_general", "helped", True)],
+    )
+    future = enforce_literal_policy(
+        "I plan to have my daughter try it to see if it helps her acne.",
+        [_label("acne_general", "helped", False)],
+    )
+    assert unchanged == [_label("acne_general", "unclear", True)]
+    assert future == [_label("acne_general", "unclear", False)]
+
+
+def test_literal_policy_distinguishes_product_finish_from_skin_dryness():
+    actual = enforce_literal_policy(
+        "It stops blemishes in their tracks and has a smooth finish once dry.",
+        [_label("acne_general", "worsened", True),
+         _label("dryness", "unclear", False)],
+    )
+    assert actual == [_label("acne_general", "helped", False)]
+
+
+def test_literal_policy_recognizes_product_associated_dryness():
+    actual = enforce_literal_policy(
+        "This oil falls short; within a couple hours my skin feels so dry.",
+        [_label("dryness", "unclear", True)],
+    )
+    assert actual == [_label("dryness", "worsened", True)]
+
+
 def test_chunking_respects_chunk_size():
     rows = [_row(f"a{i}", "PA", f"cleared my blackheads {i}") for i in range(5)]
     stub = StubLabeler({r["uid"]: LABEL_OK for r in rows})
@@ -234,6 +387,13 @@ def test_full_run_is_pinned_to_zero_cost_endpoint():
     rows = [{"text": "x" * 1200}] * 202_000
     assert estimate_cost(rows, cfg) == cfg["max_budget_usd"] == 0
     assert cfg["labeling_model"].endswith(":free")
+
+
+def test_full_run_fits_free_daily_request_budget():
+    cfg = load_config()["concern"]
+    row_count = 202_000
+    groups = (row_count + cfg["reviews_per_request"] - 1) // cfg["reviews_per_request"]
+    assert groups <= 900  # preserve headroom under OpenRouter's 1,000 free requests/day
 
 
 def test_full_label_requires_p2_signoff():
