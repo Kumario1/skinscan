@@ -16,6 +16,7 @@ import hashlib
 import json
 import os
 import re
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -634,16 +635,129 @@ class OpenRouterLabeler:
         return list(latest.values())
 
 
+class AzureResponsesLabeler(OpenRouterLabeler):
+    """Azure Responses API transport reusing the durable local spool."""
+
+    def __init__(self, deployment: str, spool_dir, reviews_per_request=250,
+                 concurrency=10, session=None, usage_path=None):
+        import requests
+        key = os.environ.get("AZURE_KEY") or os.environ.get("AZURE_OPENAI_API_KEY")
+        url = os.environ.get("TARGET_URL") or os.environ.get("AZURE_OPENAI_ENDPOINT")
+        if not key or not url or not deployment:
+            raise RuntimeError(
+                "Azure labeling requires TARGET_URL/AZURE_OPENAI_ENDPOINT, "
+                "AZURE_KEY/AZURE_OPENAI_API_KEY, and AZURE_OPENAI_DEPLOYMENT"
+            )
+        self.model = deployment
+        self.url = url
+        self.spool_dir = Path(spool_dir)
+        self.spool_dir.mkdir(parents=True, exist_ok=True)
+        self.group_size = reviews_per_request
+        self.concurrency = concurrency
+        self.session = session or requests
+        self.headers = {"api-key": key, "Content-Type": "application/json"}
+        self.usage_path = Path(usage_path or self.spool_dir.parent / "azure_usage.jsonl")
+        self._usage_lock = threading.Lock()
+
+    @staticmethod
+    def _output_text(data: dict) -> str:
+        if data.get("output_text"):
+            return data["output_text"]
+        for item in data.get("output") or []:
+            for content in item.get("content") or []:
+                if content.get("type") == "output_text" and content.get("text"):
+                    return content["text"]
+        raise ValueError("Azure response contained no output text")
+
+    def _call(self, rows):
+        uids = [row["uid"] for row in rows]
+        reviews = "\n".join(json.dumps({"uid": row["uid"], "text": row["text"]})
+                            for row in rows)
+        body = {
+            "model": self.model,
+            "instructions": SYSTEM_PROMPT,
+            "input": reviews,
+            "max_output_tokens": 120 * len(rows),
+            "store": False,
+            "text": {"format": {
+                "type": "json_schema",
+                "name": "review_concern_labels",
+                "strict": True,
+                "schema": _batch_schema(uids),
+            }},
+        }
+        if self.model.startswith(("gpt-5", "o1", "o3", "o4")):
+            body["reasoning"] = {"effort": "minimal"}
+        try:
+            response = self.session.post(
+                self.url, headers=self.headers, json=body, timeout=180,
+            )
+            response.raise_for_status()
+            data = response.json()
+            usage = data.get("usage") or {}
+            if usage:
+                record = {
+                    "model": self.model,
+                    "prompt_version": PROMPT_VERSION,
+                    "rows": len(rows),
+                    "input_tokens": usage.get("input_tokens", 0),
+                    "output_tokens": usage.get("output_tokens", 0),
+                    "total_tokens": usage.get("total_tokens", 0),
+                }
+                self.usage_path.parent.mkdir(parents=True, exist_ok=True)
+                with self._usage_lock, self.usage_path.open("a", encoding="utf-8") as handle:
+                    handle.write(json.dumps(record, sort_keys=True) + "\n")
+            parsed = json.loads(self._output_text(data))
+            by_uid = {item["uid"]: item["labels"] for item in parsed["results"]}
+            return [(uid, json.dumps({"labels": by_uid[uid]}), None)
+                    if uid in by_uid else (uid, None, "missing_result")
+                    for uid in uids]
+        except Exception as exc:
+            return [(uid, None, type(exc).__name__) for uid in uids]
+
+
+def _azure_settings() -> tuple[str, str, str] | None:
+    key = os.environ.get("AZURE_KEY") or os.environ.get("AZURE_OPENAI_API_KEY")
+    url = os.environ.get("TARGET_URL") or os.environ.get("AZURE_OPENAI_ENDPOINT")
+    deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT")
+    if not any((key, url, deployment)):
+        return None
+    if not all((key, url, deployment)):
+        raise RuntimeError(
+            "Azure configuration is incomplete; set TARGET_URL/AZURE_OPENAI_ENDPOINT, "
+            "AZURE_KEY/AZURE_OPENAI_API_KEY, and AZURE_OPENAI_DEPLOYMENT"
+        )
+    return key, url, deployment
+
+
 def estimate_cost(rows, ccfg) -> float:
-    """Conservative token estimate for a grouped OpenRouter pass."""
+    """Conservative provider cost estimate using the maximum output allowance."""
     groups = (len(rows) + ccfg["reviews_per_request"] - 1) // ccfg["reviews_per_request"]
     input_tokens = sum(len(r["text"]) for r in rows) / 4 + 450 * groups
-    output_tokens = 80 * len(rows)
+    output_tokens = 120 * len(rows)
+    if _azure_settings() is not None:
+        input_price = os.environ.get("AZURE_INPUT_PRICE_PER_MILLION")
+        output_price = os.environ.get("AZURE_OUTPUT_PRICE_PER_MILLION")
+        if input_price is None or output_price is None:
+            raise RuntimeError(
+                "Azure full-pass preflight requires AZURE_INPUT_PRICE_PER_MILLION "
+                "and AZURE_OUTPUT_PRICE_PER_MILLION"
+            )
+        return (input_tokens / 1e6 * float(input_price)
+                + output_tokens / 1e6 * float(output_price))
     return (input_tokens / 1e6 * ccfg["input_price_per_million"]
             + output_tokens / 1e6 * ccfg["output_price_per_million"])
 
 
 def _labeler(ccfg):
+    azure = _azure_settings()
+    if azure is not None:
+        _key, _url, deployment = azure
+        return AzureResponsesLabeler(
+            deployment, ccfg["batch_spool_dir"], ccfg["reviews_per_request"],
+            ccfg["request_concurrency"],
+            usage_path=ccfg.get("azure_usage_path"),
+        )
     return OpenRouterLabeler(
         ccfg["labeling_model"], ccfg["batch_spool_dir"],
         ccfg["reviews_per_request"], ccfg["request_concurrency"])
