@@ -1,0 +1,116 @@
+{
+  "products": [
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:21:56.405122Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://www.farmacybeauty.com/products/green-clean-cleansing-balm",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "rinse_off",
+            "format": "cleanser",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:21:17.942408Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "1da3b1a06a95b394dd5745c609c40c583f104ccdd8f669aa1cbe6953274f40aa",
+          "source_url": "https://www.farmacybeauty.com/products/green-clean-cleansing-balm",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P417238"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:21:56.405122Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "cream",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "moisturizer"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:21:17.942408Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "965b7cce539295e0c4916690a543da1e65a36fef07f920b8750b2b646b66f4b1",
+          "source_url": "https://tatcha.com/products/the-dewy-skin-cream",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P441101"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:21:56.405122Z",
+          "facts": {
+            "broad_spectrum": true,
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21569637-332a-461b-bf6c-33af6a83a155.xml",
+            "evidence_grade": "regulatory_label",
+            "exposure": "leave_on",
+            "format": "cream",
+            "label_effective_date": "20260109",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21569637-332a-461b-bf6c-33af6a83a155.xml",
+            "label_verified_at": "2026-07-14",
+            "label_version": "8",
+            "otc_drug": true,
+            "source_set_id": "21569637-332a-461b-bf6c-33af6a83a155",
+            "spf": 40
+          },
+          "retrieved_at": "2026-07-14T18:21:17.942408Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "ec588ae92b30d15eff5ca69d48730131defd6daa6336341ac6f4e43fe8f72093",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21569637-332a-461b-bf6c-33af6a83a155.xml",
+          "status": "approved"
+        },
+        {
+          "approved_at": "2026-07-14T18:21:56.405122Z",
+          "facts": {
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "sunscreen"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:21:17.942408Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "6042206c437fdd22e2d07ad2ec26af697b741a1d70ff665bb9bde3e63088e92a",
+          "source_url": "https://supergoop.com/products/glowscreen-spf-40",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P456218"
+    }
+  ],
+  "schema_version": "2"
+}
