@@ -61,12 +61,13 @@ def test_direct_verified_azelaic_leave_on_treatment_passes():
     assert check_eligibility(treatment(), "treatment", option(), profile()).eligible
 
 
-def test_non_otc_or_unknown_treatment_is_rejected():
+def test_non_otc_treatment_is_not_rejected_for_otc_status():
+    # D-033: verified actives + label suffice; OTC status no longer gates
     for value in (False, None):
         result = check_eligibility(
             treatment(otc_drug=value), "treatment", option(), profile()
         )
-        assert "otc_status_not_verified" in result.reasons
+        assert result.eligible
 
 
 def test_treatment_cadence_must_match_concrete_policy_direction():

@@ -653,3 +653,20 @@ Agent catalog approval does not satisfy D-029's separate qualified-clinician
 release gates for triage, calibration, therapy policy, or medical instructions,
 and it is not release certification. This decision replaces the operational
 human-only wording for catalog evidence without weakening those clinical gates.
+
+## D-033 — OTC status no longer gates treatment eligibility (2026-07-14)
+
+Owner decision. The treatment role previously required `otc_drug: true`, which
+made two modeled paths unfillable by any real product: azelaic acid 10% exists
+only as cosmetics (Rx starts at 15%), and every adapalene 0.1% + benzoyl
+peroxide 2.5% combination is prescription-only. Per the amended D-002, the app
+may surface prescription-strength options while advising the user to see a
+doctor to obtain them.
+
+Consequence: `otc_status_not_verified` is removed from both the storage-time
+quarantine and the request-time eligibility check. Everything else still
+gates: exact active + strength match against the therapy policy, per-active
+source URLs, `label_source`, `label_verified_at`, cadence, and exposure.
+`otc_drug` remains a recorded fact so presentation can distinguish OTC from
+prescription products. Therapy policy itself (which paths exist) remains
+D-029 clinician-gated.
