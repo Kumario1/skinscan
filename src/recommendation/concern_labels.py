@@ -32,6 +32,7 @@ CONCERNS = [
 ]
 ACNE_CONCERNS = CONCERNS[:4]
 VALID_OUTCOMES = {"helped", "worsened", "unclear"}
+COMPACT_OUTCOMES = ["helped", "worsened", "unclear"]
 PROMPT_VERSION = "p7"
 
 USECOLS = ["author_id", "rating", "is_recommended", "skin_tone", "skin_type",
@@ -74,6 +75,34 @@ def _batch_schema(uids: list[str]) -> dict:
             "additionalProperties": False,
         }}},
         "required": ["results"],
+        "additionalProperties": False,
+    }
+
+
+def _compact_batch_schema(row_count: int) -> dict:
+    """Short Azure wire keys reduce paid output tokens; cache stays canonical."""
+    return {
+        "type": "object",
+        "properties": {"r": {"type": "array", "items": {
+            "type": "object",
+            "properties": {
+                "i": {"type": "integer", "enum": list(range(row_count))},
+                "l": {"type": "array", "items": {
+                    "type": "object",
+                    "properties": {
+                        "c": {"type": "integer", "enum": list(range(len(CONCERNS)))},
+                        "o": {"type": "integer",
+                              "enum": list(range(len(COMPACT_OUTCOMES)))},
+                        "h": {"type": "boolean"},
+                    },
+                    "required": ["c", "o", "h"],
+                    "additionalProperties": False,
+                }},
+            },
+            "required": ["i", "l"],
+            "additionalProperties": False,
+        }}},
+        "required": ["r"],
         "additionalProperties": False,
     }
 
@@ -671,11 +700,19 @@ class AzureResponsesLabeler(OpenRouterLabeler):
 
     def _call(self, rows):
         uids = [row["uid"] for row in rows]
-        reviews = "\n".join(json.dumps({"uid": row["uid"], "text": row["text"]})
-                            for row in rows)
+        reviews = "\n".join(json.dumps({"i": index, "text": row["text"]})
+                            for index, row in enumerate(rows))
+        compact_instructions = (
+            SYSTEM_PROMPT
+            + "\n\nFor this request, use the compact integer encoding in the schema: "
+            + ", ".join(f"{i}={value}" for i, value in enumerate(CONCERNS))
+            + ". Outcomes: "
+            + ", ".join(f"{i}={value}" for i, value in enumerate(COMPACT_OUTCOMES))
+            + ". Copy each input i to output i exactly once."
+        )
         body = {
             "model": self.model,
-            "instructions": SYSTEM_PROMPT,
+            "instructions": compact_instructions,
             "input": reviews,
             "max_output_tokens": 120 * len(rows),
             "store": False,
@@ -683,7 +720,7 @@ class AzureResponsesLabeler(OpenRouterLabeler):
                 "type": "json_schema",
                 "name": "review_concern_labels",
                 "strict": True,
-                "schema": _batch_schema(uids),
+                "schema": _compact_batch_schema(len(rows)),
             }},
         }
         if self.model.startswith(("gpt-5", "o1", "o3", "o4")):
@@ -708,10 +745,19 @@ class AzureResponsesLabeler(OpenRouterLabeler):
                 with self._usage_lock, self.usage_path.open("a", encoding="utf-8") as handle:
                     handle.write(json.dumps(record, sort_keys=True) + "\n")
             parsed = json.loads(self._output_text(data))
-            by_uid = {item["uid"]: item["labels"] for item in parsed["results"]}
-            return [(uid, json.dumps({"labels": by_uid[uid]}), None)
-                    if uid in by_uid else (uid, None, "missing_result")
-                    for uid in uids]
+            by_index = {
+                item["i"]: [{
+                    "concern": CONCERNS[label["c"]],
+                    "outcome": COMPACT_OUTCOMES[label["o"]],
+                    "reviewer_has_condition": label["h"],
+                } for label in item["l"]]
+                for item in parsed["r"]
+            }
+            if len(by_index) != len(parsed["r"]):
+                raise ValueError("Azure response repeated a row index")
+            return [(uid, json.dumps({"labels": by_index[index]}), None)
+                    if index in by_index else (uid, None, "missing_result")
+                    for index, uid in enumerate(uids)]
         except Exception as exc:
             return [(uid, None, type(exc).__name__) for uid in uids]
 
@@ -730,12 +776,34 @@ def _azure_settings() -> tuple[str, str, str] | None:
     return key, url, deployment
 
 
+def _calibrated_output_tokens_per_row(ccfg: dict, deployment: str) -> float:
+    path = Path(ccfg.get("azure_usage_path") or "")
+    if not path.is_file():
+        return 120.0
+    rows = output_tokens = 0
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        record = json.loads(line)
+        if (record.get("model") != deployment
+                or record.get("prompt_version") != PROMPT_VERSION):
+            continue
+        rows += int(record.get("rows") or 0)
+        output_tokens += int(record.get("output_tokens") or 0)
+    if rows < 50:
+        return 120.0
+    return output_tokens / rows * 1.25
+
+
 def estimate_cost(rows, ccfg) -> float:
     """Conservative provider cost estimate using the maximum output allowance."""
     groups = (len(rows) + ccfg["reviews_per_request"] - 1) // ccfg["reviews_per_request"]
     input_tokens = sum(len(r["text"]) for r in rows) / 4 + 450 * groups
+    azure = _azure_settings()
     output_tokens = 120 * len(rows)
-    if _azure_settings() is not None:
+    if azure is not None:
+        _key, _url, deployment = azure
+        output_tokens = _calibrated_output_tokens_per_row(ccfg, deployment) * len(rows)
         input_price = os.environ.get("AZURE_INPUT_PRICE_PER_MILLION")
         output_price = os.environ.get("AZURE_OUTPUT_PRICE_PER_MILLION")
         if input_price is None or output_price is None:
