@@ -80,6 +80,13 @@ python -m recsys.tools.import_verification \
   --out-root recsys/data/verification
 ```
 
+When Azure is configured, the labeler requires `TARGET_URL` (or
+`AZURE_OPENAI_ENDPOINT`), `AZURE_KEY` (or `AZURE_OPENAI_API_KEY`), the exact
+`AZURE_OPENAI_DEPLOYMENT`, and explicit `AZURE_INPUT_PRICE_PER_MILLION` /
+`AZURE_OUTPUT_PRICE_PER_MILLION` values. The full pass refuses partial Azure
+configuration, writes an ignored token ledger, and enforces the configured
+$15 preflight ceiling before submitting work.
+
 Full-catalog twins go to `recsys/data/derived/` (gitignored). Build signal
 stores under `derived/signals/` with `--data-root recsys/data/derived`, then run
 with `--data-root recsys/data/derived`; static knowledge and verification fall

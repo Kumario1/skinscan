@@ -8,10 +8,13 @@ import sys
 import tempfile
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.config import load_config
 from src.recommendation.concern_labels import (
+    AzureResponsesLabeler,
     CONCERNS,
     OpenRouterLabeler,
     cmd_label,
@@ -22,6 +25,7 @@ from src.recommendation.concern_labels import (
     load_review_rows,
     review_uid,
     run_labeling,
+    _labeler,
 )
 
 
@@ -382,10 +386,96 @@ def test_openrouter_grouped_results_are_spooled_and_reused():
                 __import__("os").environ["OPENROUTER_API_KEY"] = old
 
 
+def test_azure_responses_grouped_results_are_spooled(monkeypatch, tmp_path):
+    rows = [_row(f"a{i}", "PA", f"cleared my blackheads {i}") for i in range(2)]
+
+    class Response:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            results = [{"uid": row["uid"], "labels": json.loads(LABEL_OK)["labels"]}
+                       for row in rows]
+            return {
+                "output_text": json.dumps({"results": results}),
+                "usage": {"input_tokens": 100, "output_tokens": 40},
+            }
+
+    class Session:
+        calls = 0
+
+        def post(self, *args, **kwargs):
+            self.calls += 1
+            self.request = kwargs
+            return Response()
+
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses?api-version=test")
+    session = Session()
+    labeler = AzureResponsesLabeler(
+        "cheap-deployment", tmp_path, 250, 1, session,
+        usage_path=tmp_path / "usage.jsonl",
+    )
+
+    bid = labeler.submit(rows)
+
+    assert session.calls == 1
+    assert len(labeler.fetch(bid)) == 2
+    body = session.request["json"]
+    assert body["model"] == "cheap-deployment"
+    assert body["text"]["format"]["type"] == "json_schema"
+    assert json.loads((tmp_path / "usage.jsonl").read_text())["output_tokens"] == 40
+
+
+def test_labeler_selects_complete_azure_configuration(monkeypatch, tmp_path):
+    cfg = {**load_config()["concern"], "batch_spool_dir": str(tmp_path)}
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "cheap-deployment")
+
+    assert isinstance(_labeler(cfg), AzureResponsesLabeler)
+
+
+def test_labeler_refuses_partial_azure_configuration(monkeypatch, tmp_path):
+    cfg = {**load_config()["concern"], "batch_spool_dir": str(tmp_path)}
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    monkeypatch.delenv("AZURE_OPENAI_DEPLOYMENT", raising=False)
+
+    with pytest.raises(RuntimeError, match="AZURE_OPENAI_DEPLOYMENT"):
+        _labeler(cfg)
+
+
+def test_azure_cost_preflight_requires_explicit_prices(monkeypatch):
+    cfg = load_config()["concern"]
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "cheap-deployment")
+    monkeypatch.delenv("AZURE_INPUT_PRICE_PER_MILLION", raising=False)
+    monkeypatch.delenv("AZURE_OUTPUT_PRICE_PER_MILLION", raising=False)
+
+    with pytest.raises(RuntimeError, match="preflight requires"):
+        estimate_cost([{"text": "x" * 400}], cfg)
+
+
+def test_azure_cost_preflight_uses_conservative_output_allowance(monkeypatch):
+    cfg = {**load_config()["concern"], "reviews_per_request": 10}
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "cheap-deployment")
+    monkeypatch.setenv("AZURE_INPUT_PRICE_PER_MILLION", "1")
+    monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "2")
+
+    cost = estimate_cost([{"text": "x" * 400}], cfg)
+
+    assert cost == pytest.approx((100 + 450) / 1e6 + 120 / 1e6 * 2)
+
+
 def test_full_run_is_pinned_to_zero_cost_endpoint():
     cfg = load_config()["concern"]
     rows = [{"text": "x" * 1200}] * 202_000
-    assert estimate_cost(rows, cfg) == cfg["max_budget_usd"] == 0
+    assert estimate_cost(rows, cfg) == 0
+    assert cfg["max_budget_usd"] <= 20
     assert cfg["labeling_model"].endswith(":free")
 
 
