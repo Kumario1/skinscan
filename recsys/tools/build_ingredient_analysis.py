@@ -24,6 +24,8 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from ..catalog import load_catalog
@@ -113,7 +115,7 @@ def _entry(product: dict, model: str, data: dict) -> dict:
     }
 
 
-def label_product(product: dict, model: str, session=None) -> dict:
+def label_product(product: dict, model: str, session=None, sleep=time.sleep, retries: int = 4) -> dict:
     """Label one product through OpenRouter structured output."""
     import requests  # lazy: tests and inference need no network client
 
@@ -123,7 +125,7 @@ def label_product(product: dict, model: str, session=None) -> dict:
     body = {
         "model": model,
         "temperature": 0,
-        "max_tokens": 800,
+        "max_tokens": 2000,
         "reasoning": {"enabled": False},
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
@@ -140,22 +142,32 @@ def label_product(product: dict, model: str, session=None) -> dict:
         }},
         "provider": {"require_parameters": True},
     }
-    response = (session or requests).post(
-        URL,
-        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
-                 "X-Title": "SkinScan ingredient analysis"},
-        json=body,
-        timeout=120,
-    )
-    response.raise_for_status()
-    choice = response.json()["choices"][0]
-    if choice.get("finish_reason") == "content_filter":
-        raise RuntimeError(f"ingredient analysis refused product {product['product_id']}")
-    return _entry(product, model, json.loads(choice["message"]["content"]))
+    last_error = None
+    for attempt in range(retries):
+        try:
+            response = (session or requests).post(
+                URL,
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
+                         "X-Title": "SkinScan ingredient analysis"},
+                json=body,
+                timeout=120,
+            )
+            response.raise_for_status()
+            choice = response.json()["choices"][0]
+            if choice.get("finish_reason") == "content_filter":
+                raise RuntimeError(f"ingredient analysis refused product {product['product_id']}")
+            return _entry(product, model, json.loads(choice["message"]["content"]))
+        except Exception as exc:
+            last_error = exc
+            if attempt + 1 < retries:
+                sleep(2 ** attempt)
+    raise RuntimeError(
+        f"ingredient analysis failed for {product['product_id']} after {retries} attempts"
+    ) from last_error
 
 
 def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
-          model: str, max_new_labels: int = 100) -> dict:
+          model: str, max_new_labels: int = 100, concurrency: int = 1) -> dict:
     products, _header = load_catalog(catalog_path)
     product_rows = [product.to_dict() for product in products]
     cache = read_cache(cache_path)
@@ -168,18 +180,31 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
             f"refusing {uncached} paid labels; rerun with "
             f"--max-new-labels {uncached} after checking cost"
         )
+    pending = [product for product in product_rows
+               if (product["product_id"], product["inci_sha256"], PROMPT_VERSION) not in cache]
+    failures = []
+    with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
+        futures = {pool.submit(label_product, product, model): product for product in pending}
+        for future in as_completed(futures):
+            product = futures[future]
+            try:
+                entry = future.result()
+            except Exception as exc:
+                failures.append((product["product_id"], str(exc)))
+                continue
+            append_cache(cache_path, entry)
+            cache[(product["product_id"], product["inci_sha256"], PROMPT_VERSION)] = entry
+    if failures:
+        raise RuntimeError(
+            f"ingredient analysis failed for {len(failures)} products; rerun resumes cache: "
+            + ", ".join(product_id for product_id, _error in failures[:10])
+        )
+
     entries = []
-    # ponytail: sequential calls; reuse the grouped spool in concern_labels.py
-    # if a measured full-catalog run makes latency worth the extra machinery.
     for product in product_rows:
         key = (product["product_id"], product["inci_sha256"], PROMPT_VERSION)
-        entry = cache.get(key)
-        if entry is None:
-            entry = label_product(product, model)
-            append_cache(cache_path, entry)
-            cache[key] = entry
-        entry = _entry(product, entry.get("model_id", model), entry)
-        entries.append(entry)
+        entry = cache[key]
+        entries.append(_entry(product, entry.get("model_id", model), entry))
 
     payload = {
         "schema_version": STORE_SCHEMA_VERSION,
@@ -213,11 +238,12 @@ def main(argv=None) -> int:
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--max-new-labels", type=int, default=100,
                         help="paid-call guard; raise explicitly for larger runs")
+    parser.add_argument("--concurrency", type=int, default=1)
     args = parser.parse_args(argv)
     cache_path = args.cache or args.data_root / "cache" / "ingredient_analysis_cache.jsonl"
 
     build(args.catalog, args.out, args.data_root, cache_path, args.model,
-          args.max_new_labels)
+          args.max_new_labels, args.concurrency)
     return 0
 
 

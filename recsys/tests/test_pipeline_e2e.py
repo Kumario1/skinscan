@@ -77,8 +77,10 @@ def test_every_step_has_evidence_backed_why(document):
 def test_data_versions_match_disk(document):
     catalog_entry = document["data_versions"]["catalog"]
     assert catalog_entry["sha256"] == sha256_file(catalog_entry["path"])
+    names = set()
     for store in document["data_versions"]["signals"]:
-        assert store["name"] in ("review_stats", "popularity")
+        names.add(store["name"])
+    assert names == {"ingredient_analysis", "review_stats", "popularity"}
 
 
 def test_budget_archetype_respects_caps(document):

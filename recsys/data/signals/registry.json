@@ -2,6 +2,26 @@
   "schema_version": "recsys-registry-1",
   "stores": [
     {
+      "builder": "recsys.tools.build_ingredient_analysis@1",
+      "coverage": {
+        "catalog_products": 54,
+        "products": 54
+      },
+      "kind": "ingredient_analysis",
+      "name": "ingredient_analysis",
+      "path": "signals/ingredient_analysis.v1.json",
+      "sha256": "ed0802c0d6706d818661832eb0227d539f0ea312aa08ffc49cbcfd53525dae75",
+      "source": {
+        "catalog_sha256": "88dd8ec98e44814c4de5d95a102d2b4f633b75f22d1977a2a79b5c72d184ec5c",
+        "model_ids": [
+          "nvidia/nemotron-3-super-120b-a12b:free"
+        ],
+        "prompt_version": "p1"
+      },
+      "status": "active",
+      "version": "v1"
+    },
+    {
       "builder": "recsys.tools.build_popularity@1",
       "coverage": {
         "catalog_products": 54,

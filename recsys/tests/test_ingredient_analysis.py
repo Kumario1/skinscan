@@ -68,6 +68,35 @@ def test_openrouter_structured_output(monkeypatch):
     assert session.request["json"]["provider"] == {"require_parameters": True}
 
 
+def test_free_endpoint_malformed_reply_is_retried(monkeypatch):
+    class Response:
+        def __init__(self, content):
+            self.content = content
+
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"choices": [{"message": {"content": self.content}}]}
+
+    class Session:
+        calls = 0
+
+        def post(self, _url, **_kwargs):
+            self.calls += 1
+            if self.calls == 1:
+                return Response('{"irritancy_tier":')
+            content = {k: v for k, v in analysis_entry().items()
+                       if k not in {"product_id", "inci_sha256", "prompt_version", "model_id"}}
+            return Response(json.dumps(content))
+
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    session = Session()
+    entry = label_product(PRODUCT, "test/model", session, sleep=lambda _seconds: None)
+    assert entry["irritancy_tier"] == "low"
+    assert session.calls == 2
+
+
 def test_cached_build_registers_provider(tmp_path):
     data_root = tmp_path / "data"
     catalog_path = tmp_path / "catalog.json"
