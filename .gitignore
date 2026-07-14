@@ -19,6 +19,7 @@ venv/
 
 # local
 .DS_Store
+.env
 configs/local.yaml
 old model/
 eval_runs.zip
@@ -28,3 +29,5 @@ AcneSCU.v1-acnescu-original.voc/
 .claude/worktrees/
 recsys/data/derived/
 recsys/data/cache/
+runs/concern/
+runs/recsys/full-catalog-smoke/

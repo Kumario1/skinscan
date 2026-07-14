@@ -280,9 +280,9 @@ class OpenRouterLabeler:
     def __init__(self, model: str, spool_dir, reviews_per_request=10,
                  concurrency=20, session=None):
         import requests  # lazy: free CLI paths and tests need no HTTP client
-        key = os.environ.get("OPENROUTER_API_KEY")
+        key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENROUTER_KEY")
         if not key:
-            raise RuntimeError("OPENROUTER_API_KEY is required")
+            raise RuntimeError("OPENROUTER_API_KEY or OPENROUTER_KEY is required")
         self.model = model
         self.spool_dir = Path(spool_dir)
         self.spool_dir.mkdir(parents=True, exist_ok=True)
@@ -306,6 +306,7 @@ class OpenRouterLabeler:
             "model": self.model,
             "temperature": 0,
             "max_tokens": 120 * len(rows),
+            "reasoning": {"enabled": False},
             "messages": [{"role": "system", "content": SYSTEM_PROMPT},
                          {"role": "user", "content": reviews}],
             "response_format": {"type": "json_schema", "json_schema": {

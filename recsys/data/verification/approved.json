@@ -1,0 +1,462 @@
+{
+  "products": [
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:15:15.692272Z",
+          "facts": {
+            "amount": "thin_layer",
+            "amount_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+            "contraindications": [
+              "sensitive"
+            ],
+            "drug_actives": [
+              {
+                "name": "benzoyl_peroxide",
+                "source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+                "strength": "2.5%"
+              }
+            ],
+            "evidence_grade": "regulatory_label",
+            "evidence_roles": [
+              "acne_treatment"
+            ],
+            "exposure": "leave_on",
+            "format": "lotion",
+            "label_effective_date": "20250815",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+            "label_verified_at": "2026-07-14",
+            "label_version": "3",
+            "ndc_product_code": "49527-117",
+            "otc_drug": true,
+            "routine_roles": [
+              "treatment"
+            ],
+            "source_hash": "f81949978b0534ebcd1c56e3a53d1fa5e7b2536aea7bfd9fbcff21e4266e28da",
+            "source_set_id": "0d0cfec0-5d18-c347-e063-6394a90a912c"
+          },
+          "retrieved_at": "2026-07-14T18:13:41.489734Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "f81949978b0534ebcd1c56e3a53d1fa5e7b2536aea7bfd9fbcff21e4266e28da",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P188306"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:21:56.405122Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://www.farmacybeauty.com/products/green-clean-cleansing-balm",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "rinse_off",
+            "format": "cleanser",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:21:17.942408Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "1da3b1a06a95b394dd5745c609c40c583f104ccdd8f669aa1cbe6953274f40aa",
+          "source_url": "https://www.farmacybeauty.com/products/green-clean-cleansing-balm",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P417238"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:28:58.505164Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/the-water-cream-lightweight-moisturizer",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "cream",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "moisturizer"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:27:51.301104Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "3d68f821ae06bc50c94b60280d97153dde19c3506efc340882113e664bc53971",
+          "source_url": "https://tatcha.com/products/the-water-cream-lightweight-moisturizer",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P418218"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:15:15.692272Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://www.drunkelephant.com/collections/moisturizers/protini-polypeptide-firming-refillable-moisturizer-999DE00000103.html",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "cream",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "moisturizer"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:13:41.489734Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "98d629aebf8c5c235f5b3518bdb6cb100bf28da2bda150cabd552ab6db3e5f48",
+          "source_url": "https://www.drunkelephant.com/collections/moisturizers/protini-polypeptide-firming-refillable-moisturizer-999DE00000103.html",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P427421"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:28:58.505164Z",
+          "facts": {
+            "cadence": "daily",
+            "cadence_source": "https://tatcha.com/products/the-deep-cleanse",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "rinse_off",
+            "format": "cleanser",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:27:51.301104Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "9fca6f5ab6c4afb4ff12199777242a49bb5c6871145239a7e79bc9a1c708b259",
+          "source_url": "https://tatcha.com/products/the-deep-cleanse",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P427536"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:28:58.505164Z",
+          "facts": {
+            "broad_spectrum": true,
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/15a786f2-2939-4aa2-a413-b661ff6d2dd9.xml",
+            "evidence_grade": "regulatory_label",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "stick",
+            "intended_areas": [
+              "face"
+            ],
+            "label_effective_date": "20241223",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/15a786f2-2939-4aa2-a413-b661ff6d2dd9.xml",
+            "label_verified_at": "2026-07-14",
+            "label_version": "2",
+            "otc_drug": true,
+            "routine_roles": [
+              "sunscreen"
+            ],
+            "source_set_id": "15a786f2-2939-4aa2-a413-b661ff6d2dd9",
+            "spf": 50
+          },
+          "retrieved_at": "2026-07-14T18:27:51.301104Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "9be337200f65be18e894a7b9c7b0ea1a1be478eb1f536ce291cdfcb2d0711ce7",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/15a786f2-2939-4aa2-a413-b661ff6d2dd9.xml",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P429242"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:21:56.405122Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "cream",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "moisturizer"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:21:17.942408Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "965b7cce539295e0c4916690a543da1e65a36fef07f920b8750b2b646b66f4b1",
+          "source_url": "https://tatcha.com/products/the-dewy-skin-cream",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P441101"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:15:15.692272Z",
+          "facts": {
+            "broad_spectrum": true,
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0670214e-520b-4126-8f28-71c765117276.xml",
+            "evidence_grade": "regulatory_label",
+            "exposure": "leave_on",
+            "format": "cream",
+            "label_effective_date": "20240807",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0670214e-520b-4126-8f28-71c765117276.xml",
+            "label_verified_at": "2026-07-14",
+            "label_version": "10",
+            "otc_drug": true,
+            "routine_roles": [
+              "sunscreen"
+            ],
+            "source_set_id": "0670214e-520b-4126-8f28-71c765117276",
+            "spf": 40
+          },
+          "retrieved_at": "2026-07-14T18:13:41.489734Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "a87bd1db66aefb21e6bed3dbd55f3f3bc148dea8d031c1331458b28ad5aefaaf",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0670214e-520b-4126-8f28-71c765117276.xml",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P454380"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:21:56.405122Z",
+          "facts": {
+            "broad_spectrum": true,
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21569637-332a-461b-bf6c-33af6a83a155.xml",
+            "evidence_grade": "regulatory_label",
+            "exposure": "leave_on",
+            "format": "cream",
+            "label_effective_date": "20260109",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21569637-332a-461b-bf6c-33af6a83a155.xml",
+            "label_verified_at": "2026-07-14",
+            "label_version": "8",
+            "otc_drug": true,
+            "source_set_id": "21569637-332a-461b-bf6c-33af6a83a155",
+            "spf": 40
+          },
+          "retrieved_at": "2026-07-14T18:21:17.942408Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "ec588ae92b30d15eff5ca69d48730131defd6daa6336341ac6f4e43fe8f72093",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21569637-332a-461b-bf6c-33af6a83a155.xml",
+          "status": "approved"
+        },
+        {
+          "approved_at": "2026-07-14T18:21:56.405122Z",
+          "facts": {
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "sunscreen"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:21:17.942408Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "6042206c437fdd22e2d07ad2ec26af697b741a1d70ff665bb9bde3e63088e92a",
+          "source_url": "https://supergoop.com/products/glowscreen-spf-40",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P456218"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:28:58.505164Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/rice-wash-soft-cream-cleanser",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "rinse_off",
+            "format": "cleanser",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:27:51.301104Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "615436bd1e5352eb4f544e71e6cfd9232f12e9f25185077bdcb9404d2cca9784",
+          "source_url": "https://tatcha.com/products/rice-wash-soft-cream-cleanser",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P461537"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:15:15.692272Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://www.paulaschoice.com/clear-oil-free-moisturizer/380.html",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "lotion",
+            "routine_roles": [
+              "moisturizer"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:13:41.489734Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "6e8c7d8d5dc03ff9350c32841bc71850366aa62cbfc4ee7a09b7dfd475b83a0b",
+          "source_url": "https://www.paulaschoice.com/clear-oil-free-moisturizer/380.html",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P469517"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:15:15.692272Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "rinse_off",
+            "format": "cleanser",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:13:41.489734Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "e794c409bc51ab5dd020632398cd4c9599794bdb770eade112fe5ac9110a95e2",
+          "source_url": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P469520"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-14T18:15:15.692272Z",
+          "facts": {
+            "broad_spectrum": true,
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/08671d39-3be2-d666-e063-6294a90a6207.xml",
+            "evidence_grade": "regulatory_label",
+            "exposure": "leave_on",
+            "format": "lotion",
+            "label_effective_date": "20260604",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/08671d39-3be2-d666-e063-6294a90a6207.xml",
+            "label_verified_at": "2026-07-14",
+            "label_version": "5",
+            "otc_drug": true,
+            "source_set_id": "08671d39-3be2-d666-e063-6294a90a6207",
+            "spf": 40
+          },
+          "retrieved_at": "2026-07-14T18:13:41.489734Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "293660367c20a287ca9e7983d33ad784a3b3c3ec81e9e651cc9c7ca724d2066e",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/08671d39-3be2-d666-e063-6294a90a6207.xml",
+          "status": "approved"
+        },
+        {
+          "approved_at": "2026-07-14T18:15:15.692272Z",
+          "facts": {
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "sunscreen"
+            ]
+          },
+          "retrieved_at": "2026-07-14T18:13:41.489734Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "source_sha256": "b9f85343d7a3688329a766f1dd33459ae9bebf5aa3bf27243511417f086ed652",
+          "source_url": "https://supergoop.com/products/smooth-and-poreless-mattescreen",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P476733"
+    }
+  ],
+  "schema_version": "recsys-verification-1"
+}

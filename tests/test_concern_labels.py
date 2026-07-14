@@ -229,10 +229,11 @@ def test_openrouter_grouped_results_are_spooled_and_reused():
                 __import__("os").environ["OPENROUTER_API_KEY"] = old
 
 
-def test_full_run_estimate_fits_configured_balance():
+def test_full_run_is_pinned_to_zero_cost_endpoint():
     cfg = load_config()["concern"]
     rows = [{"text": "x" * 1200}] * 202_000
-    assert estimate_cost(rows, cfg) < cfg["max_budget_usd"] <= 9
+    assert estimate_cost(rows, cfg) == cfg["max_budget_usd"] == 0
+    assert cfg["labeling_model"].endswith(":free")
 
 
 def test_full_label_requires_p2_signoff():

@@ -154,3 +154,22 @@ def test_referral_only_path(tmp_path):
     assert document["routines"] == []
     assert "dermatologist" in document["triage"]["see_doctor_note"]
     assert document["framing"]["cosmetic_only"] is True
+
+
+def test_full_derived_data_root_uses_full_catalog_and_static_knowledge(tmp_path):
+    derived = tmp_path / "derived"
+    derived.mkdir()
+    (derived / "catalog_full.json").write_bytes(
+        (DATA / "catalog" / "seed_catalog.json").read_bytes()
+    )
+
+    document = run(
+        ANALYSIS,
+        FIXTURES / "profile_complete.json",
+        data_root=derived,
+        generated_at="2026-07-14T00:00:00+00:00",
+    )
+
+    assert document["status"] == "ok"
+    assert document["data_versions"]["catalog"]["path"] == str(derived / "catalog_full.json")
+    assert document["data_versions"]["verification"]["products"] == 13

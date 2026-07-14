@@ -180,8 +180,92 @@ class IngredientAnalysisSignal:
         )
 
 
+class ConcernEfficacySignal:
+    """Review-text outcomes conditioned on the report's target concerns.
+
+    Bayesian smoothing happens in the offline builder. Inference additionally
+    shrinks small cells toward neutral so a thin cell cannot dominate a
+    routine merely because its observed help rate is extreme.
+    """
+
+    name = "concern_efficacy"
+
+    def __init__(self, store: dict, meta: dict):
+        self.products = store.get("products") or {}
+        self.version = meta.get("version", "v?")
+        self.confidence_n = float(store.get("confidence_n", 20))
+
+    def score(self, product: CatalogProduct, slot: str, ctx: ScoringContext):
+        product_cells = self.products.get(product.product_id) or {}
+        matches = []
+        weighted = []
+        for target in ctx.targets:
+            ladder = "exact"
+            concern = target.concern
+            entry = product_cells.get(concern)
+            if entry is None and concern.startswith("acne_"):
+                ladder = "acne_general"
+                concern = "acne_general"
+                entry = product_cells.get(concern)
+            if entry is None:
+                continue
+            cell = (entry.get("by_skin_type") or {}).get(ctx.profile.skin_type)
+            cell = cell or entry.get("all")
+            if not cell or not cell.get("n"):
+                continue
+            n = int(cell["n"])
+            smoothed = float(cell["smoothed"])
+            reliability = n / (n + self.confidence_n)
+            adjusted = 0.5 + (smoothed - 0.5) * reliability
+            target_weight = target.severity * max(target.confidence, 0.01)
+            weighted.append((adjusted, target_weight))
+            matches.append({
+                "target": target.concern,
+                "cell_concern": concern,
+                "ladder": ladder,
+                "n": n,
+                "help_rate": cell["help_rate"],
+                "smoothed": smoothed,
+                "reliability": round(reliability, 6),
+            })
+        if not weighted:
+            return None
+        value = sum(v * weight for v, weight in weighted) / sum(weight for _, weight in weighted)
+        evidence = "; ".join(
+            f"{m['help_rate']:.0%} of {m['n']} reviewers said it helped "
+            f"{ctx.knowledge.phrasing.get(m['target'], m['target'])}"
+            + (" (general-acne fallback)" if m["ladder"] != "exact" else "")
+            for m in matches
+        )
+        return SignalScore(self.name, round(value, 6), evidence, {"matches": matches})
+
+
+class MediaSignal:
+    """Verified editorial/media evidence, isolated from safety decisions."""
+
+    name = "media"
+
+    def __init__(self, store: dict, meta: dict):
+        self.products = store.get("products") or {}
+        self.version = meta.get("version", "v?")
+
+    def score(self, product: CatalogProduct, slot: str, ctx: ScoringContext):
+        entry = self.products.get(product.product_id)
+        if not entry:
+            return None
+        value = entry.get("value")
+        evidence = entry.get("evidence")
+        if not isinstance(value, (int, float)) or not 0 <= value <= 1 or not evidence:
+            raise ContractViolation("media", f"invalid entry for {product.product_id}")
+        details = {key: value for key, value in entry.items()
+                   if key not in {"value", "evidence"}}
+        return SignalScore(self.name, float(value), str(evidence), details)
+
+
 STORE_PROVIDERS: dict[str, type] = {
+    "concern_efficacy": ConcernEfficacySignal,
     "ingredient_analysis": IngredientAnalysisSignal,
+    "media": MediaSignal,
     "review_stats": ReviewQualitySignal,
     "popularity": PopularitySignal,
 }

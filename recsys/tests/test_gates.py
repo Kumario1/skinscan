@@ -8,12 +8,13 @@ from recsys.knowledge import load_knowledge
 K = load_knowledge(Path(__file__).parents[1] / "data" / "knowledge")
 
 
-def product(pid="p1", category="treatment", actives=(), spf=None, price=None):
+def product(pid="p1", category="treatment", actives=(), spf=None, price=None, **verified):
     return CatalogProduct(
         product_id=pid, name=pid, brand="b", category=category,
         price_usd=price, size=None, format=None, spf=spf,
         spf_source="name_parse" if spf else None,
         inci=(), inci_sha256="", actives=tuple(actives),
+        **verified,
     )
 
 
@@ -47,6 +48,23 @@ def test_price_cap():
     pricey = product(price=50.0)
     profile = Profile(pregnancy_status="not_pregnant", max_price_usd=20.0)
     assert "price_above_profile_cap" in profile_gate_reasons(pricey, "treatment", profile, K)
+
+
+def test_verified_discontinued_and_non_daily_products_are_vetoed():
+    profile = Profile(pregnancy_status="not_pregnant")
+    assert "product_discontinued" in profile_gate_reasons(
+        product(discontinued=True), "treatment", profile, K
+    )
+    assert "cadence_not_daily" in profile_gate_reasons(
+        product(cadence="weekly"), "treatment", profile, K
+    )
+    assert profile_gate_reasons(product(cadence="per_label"), "treatment", profile, K) == []
+    sensitive = Profile(
+        pregnancy_status="not_pregnant", sensitivity_conditions=("sensitive",)
+    )
+    assert "product_contraindication:sensitive" in profile_gate_reasons(
+        product(contraindications=("sensitive",)), "treatment", sensitive, K
+    )
 
 
 def test_duplicate_treatment_actives_only():

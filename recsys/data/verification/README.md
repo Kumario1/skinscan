@@ -1,18 +1,18 @@
-# Verification overlay (Phase 3 — scaffold only)
+# Verification overlay
 
 Facts that back **safety-relevant claims** get verified here; everything
 mechanical (name, price, INCI, review stats) comes straight from the dump and
 needs no verification.
 
-What will live here, ported from the proven loop in
+Assertions are approved by the proven loop in
 `src/recommendation/verification_loop.py` (state machine: candidate →
 researching → proposed → approved → eligible | quarantined | rejected):
 
-- `approved.json` — approved fact assertions keyed by `product_id`
+- `approved.json` — imported approved fact assertions keyed by `product_id`
   (initially: verified `spf` + `broad_spectrum`; discontinued/reformulated
   flags; later: media/editorial claims).
 - `evidence/<sha256>` — exact retrieved source bytes per assertion.
-- Per-fact freshness windows with stale-flip; the loop never self-approves.
+- Per-fact freshness windows with stale-flip; the importer never self-approves.
 
-Until Phase 3, SPF values are parsed from product names and every output marks
-them `spf_source: "name_parse"` / `spf_value_from_name_parse_not_verified`.
+Products without a current approved assertion keep the honest name-parse
+fallback and `spf_value_from_name_parse_not_verified` uncertainty flag.
