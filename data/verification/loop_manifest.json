@@ -1,0 +1,127 @@
+{
+  "audits": [],
+  "batch_seq": 2,
+  "batches": {
+    "002": {
+      "brief": "data/verification/batches/002/RESEARCH_BRIEF.md",
+      "created_at": "2026-07-14T17:41:56.372733Z"
+    }
+  },
+  "last_rebuild": {
+    "at": "2026-07-14T17:41:56.326642Z",
+    "complete": false,
+    "eligible_by_role": {
+      "cleanser": 1,
+      "moisturizer": 1,
+      "sunscreen": 1
+    },
+    "logs": {
+      "tier1": {
+        "kept": 1634,
+        "rows": 8494
+      },
+      "tier2": {
+        "kept": 681,
+        "rows": 1000
+      }
+    },
+    "missing_treatment_paths": [
+      "azelaic_acid_10",
+      "adapalene_0_1_benzoyl_peroxide_2_5"
+    ],
+    "unmatched": []
+  },
+  "products": {
+    "P188306": {
+      "batch": "002",
+      "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
+      "reasons": [],
+      "state": "researching",
+      "target": "treatment",
+      "updated_at": "2026-07-14T17:41:56.371949Z"
+    },
+    "P411387": {
+      "batch": "002",
+      "name": "Superfood Antioxidant Cleanser",
+      "reasons": [
+        "routine_role_not_verified",
+        "instruction_cadence_unknown",
+        "instruction_cadence_source_missing"
+      ],
+      "state": "researching",
+      "target": "cleanser",
+      "updated_at": "2026-07-14T17:41:56.372538Z"
+    },
+    "P427411": {
+      "batch": "002",
+      "name": "Azelaic Acid 10% Suspension Brightening Cream",
+      "reasons": [
+        "routine_role_not_verified",
+        "instruction_cadence_unknown",
+        "instruction_cadence_source_missing",
+        "otc_status_not_verified",
+        "drug_active_not_verified",
+        "label_source_missing",
+        "label_verification_timestamp_missing"
+      ],
+      "state": "researching",
+      "target": "azelaic_acid_10",
+      "updated_at": "2026-07-14T17:41:56.372532Z"
+    },
+    "P427421": {
+      "batch": "002",
+      "name": "Protini Polypeptide Firming Refillable Moisturizer",
+      "reasons": [
+        "routine_role_not_verified",
+        "instruction_cadence_unknown",
+        "instruction_cadence_source_missing",
+        "noncomedogenic_claim_not_verified"
+      ],
+      "state": "researching",
+      "target": "moisturizer",
+      "updated_at": "2026-07-14T17:41:56.372541Z"
+    },
+    "P454380": {
+      "batch": "002",
+      "name": "Unseen Sunscreen SPF 40 PA+++",
+      "reasons": [
+        "routine_role_not_verified",
+        "instruction_cadence_unknown",
+        "instruction_cadence_source_missing",
+        "broad_spectrum_not_verified",
+        "spf_below_30_or_unknown",
+        "label_source_missing",
+        "label_verification_timestamp_missing",
+        "noncomedogenic_claim_not_verified"
+      ],
+      "state": "researching",
+      "target": "sunscreen",
+      "updated_at": "2026-07-14T17:41:56.372543Z"
+    },
+    "P469517": {
+      "batch": "002",
+      "name": "CLEAR Oil-Free Moisturizer",
+      "reasons": [],
+      "state": "researching",
+      "target": "moisturizer",
+      "updated_at": "2026-07-14T17:41:56.372131Z"
+    },
+    "P469520": {
+      "batch": "002",
+      "name": "RESIST Perfectly Balanced Foaming Cleanser",
+      "reasons": [],
+      "state": "researching",
+      "target": "cleanser",
+      "updated_at": "2026-07-14T17:41:56.372265Z"
+    },
+    "P476733": {
+      "batch": "002",
+      "name": "Mineral Mattescreen Sunscreen SPF 40 PA+++",
+      "reasons": [],
+      "state": "researching",
+      "target": "sunscreen",
+      "updated_at": "2026-07-14T17:41:56.372385Z"
+    }
+  },
+  "schema_version": "1"
+}

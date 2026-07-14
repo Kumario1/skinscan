@@ -38,3 +38,19 @@ python -m src.recommendation.catalog_completeness \
 
 The command exits non-zero until every support role has 25 eligible products
 and every modeled treatment path has at least one exact eligible product.
+
+## Loop orchestrator
+
+`python -m src.recommendation.verification_loop run` is the resumable command
+that drives the whole cycle: rebuild catalogs from raw sources plus every
+approved overlay, mark stale evidence, select the next batch from coverage
+shortfalls, validate proposed research, and report stopping criteria. It owns
+`loop_manifest.json` (per-product states: researching, proposed, approved,
+eligible, quarantined, refresh_due, rejected), `batches/<N>/` (research brief,
+proposed.json, REVIEW.md, approved.json), `evidence/<sha256>` (exact retrieved
+bytes for every assertion), `audits/`, and `dailymed-pool.json` (new base rows
+from `discover`; an overlay can only enrich a product ID that already exists in
+a base catalog). Research, review, and `approve` remain reviewer actions; the
+orchestrator never signs anything itself. `status` exits 0 only when coverage,
+unmatched IDs, in-flight products, snapshots, freshness, and audits all pass.
+See `.claude/skills/catalog-loop/SKILL.md` for the agent runbook.
