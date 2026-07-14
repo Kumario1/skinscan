@@ -427,6 +427,9 @@ def run_pipeline(
     clock=lambda: datetime.now(timezone.utc),
     git_reader=_read_git_state,
     eligibility_debug: bool = False,
+    recsys_enabled: bool = False,
+    recsys_data_root: Path | None = None,
+    recsys_catalog: Path | None = None,
 ) -> PipelineResult:
     if profile is None:
         profile = UserProfile(
@@ -587,6 +590,27 @@ def run_pipeline(
             (staging / "eligibility_rejections.json").write_text(
                 json.dumps(debug_rejections, indent=2) + "\n"
             )
+        if recsys_enabled:
+            command = [
+                sys.executable, "-m", "recsys", "recommend",
+                "--analysis", str(staging / "analysis.json"),
+                "--out", str(staging / "recommendations.json"),
+            ]
+            if recsys_data_root is not None:
+                command += ["--data-root", str(recsys_data_root)]
+            if recsys_catalog is not None:
+                command += ["--catalog", str(recsys_catalog)]
+            completed = subprocess.run(
+                command,
+                cwd=Path(__file__).resolve().parents[2],
+                capture_output=True,
+                text=True,
+            )
+            if completed.returncode:
+                raise RuntimeError(
+                    "standalone recommendation failed: "
+                    + (completed.stderr.strip() or completed.stdout.strip())
+                )
         _publish_staging(staging, output_dir)
     finally:
         _remove_path(staging)
@@ -605,6 +629,10 @@ def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
     parser.add_argument("--catalog-tier2", type=Path, default=None)
     parser.add_argument("--catalog-drug", type=Path, default=None)
     parser.add_argument("--eligibility-debug", action="store_true")
+    parser.add_argument("--recsys", action="store_true",
+                        help="also write standalone recsys recommendations.json")
+    parser.add_argument("--recsys-data-root", type=Path, default=None)
+    parser.add_argument("--recsys-catalog", type=Path, default=None)
     parser.add_argument("--face-landmarker", type=Path, default=Path(paths["face_landmarker"]))
     parser.add_argument("--tile-size", type=int, default=sa_rpn["tile_size"])
     parser.add_argument("--overlap", type=int, default=sa_rpn["tile_overlap"])
@@ -692,6 +720,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             detector_sha256=args.detector_sha256,
             oracle_annotations=args.oracle_annotations,
             eligibility_debug=args.eligibility_debug,
+            recsys_enabled=args.recsys,
+            recsys_data_root=args.recsys_data_root,
+            recsys_catalog=args.recsys_catalog,
         )
     except Exception as exc:
         print(f"analysis failed: {exc}", file=sys.stderr)

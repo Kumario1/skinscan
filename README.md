@@ -448,6 +448,8 @@ partially overwrites a prior result):
   --profile path/to/profile.json \
   [--catalog data/processed/catalog.json] \
   [--therapy-policy path/to/clinician-reviewed-policy.json] \
+  [--recsys --recsys-data-root recsys/data/derived \
+   --recsys-catalog recsys/data/derived/catalog_full.json] \
   [--dataset-name cohort-name --sample-id sample-1 \
    --dataset-split valid --split-proof manifest-sha256 \
    --detector-sha256 immutable-model-sha256]
@@ -464,7 +466,8 @@ Full CLI options: `--image, --out, --api, --catalog, --face-landmarker,
 --request-batch-size, --min-score, --dedupe-threshold, --profile, --skin-type,
 --pregnancy-status, --pregnant` (legacy migration), `--therapy-policy,
 --dataset-name, --sample-id, --dataset-split, --split-proof,
---detector-sha256, --oracle-annotations, --top`. Profile defaults are explicit
+--detector-sha256, --oracle-annotations, --recsys, --recsys-data-root,
+--recsys-catalog, --top`. Profile defaults are explicit
 unknowns; conflicting legacy/new pregnancy inputs fail before detector HTTP
 work. Writes into
 `runs/e2e/<image stem>/` (or `--out`):
@@ -473,6 +476,7 @@ work. Writes into
 analysis.json          always — schema_version "3", detections, concerns,
                         decision, provenance, recommendation_status
 routine.json           optional — only for a validated v3 regimen
+recommendations.json   optional — standalone recsys-1 output with --recsys
 detections.jpg
 region_overlay.jpg
 lesion_sheet.jpg
