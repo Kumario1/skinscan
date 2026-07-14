@@ -22,3 +22,7 @@ venv/
 configs/local.yaml
 old model/
 eval_runs.zip
+
+# session-local
+AcneSCU.v1-acnescu-original.voc/
+.claude/worktrees/
