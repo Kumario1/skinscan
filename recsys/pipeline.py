@@ -12,7 +12,7 @@ from pathlib import Path
 from . import ENGINE_VERSION
 from .candidates import generate_candidates
 from .catalog import load_catalog
-from .compose import compose_all
+from .compose import compose_all, validate_routine
 from .contracts import (
     REFERRAL_ONLY_TRIAGE,
     SCHEMA_VERSION,
@@ -100,6 +100,11 @@ def run(
             "skin_type": profile.skin_type,
             "tone_bucket": profile.tone_bucket,
             "pregnancy_status": profile.pregnancy_status,
+            "age_years": profile.age_years,
+            "allergies": list(profile.allergies),
+            "sensitivity_conditions": list(profile.sensitivity_conditions),
+            "current_actives": list(profile.current_actives),
+            "current_medications": list(profile.current_medications),
             "max_price_usd": profile.max_price_usd,
         },
         "data_versions": {
@@ -171,8 +176,27 @@ def run(
 
     routines = compose_all(archetype_scored, targets, profile, knowledge)
 
-    document["status"] = "ok"
-    document["routines"] = [routine_to_dict(r, knowledge, profile) for r in routines]
+    valid_routines = []
+    unavailable = []
+    for routine in routines:
+        reasons = validate_routine(
+            routine, profile, knowledge, has_targets=bool(targets)
+        )
+        if reasons:
+            unavailable.append({
+                "archetype": routine.archetype["id"],
+                "reasons": reasons,
+            })
+        else:
+            valid_routines.append(routine)
+    document["status"] = (
+        "ok" if len(valid_routines) == len(routines)
+        else "partial" if valid_routines else "unavailable"
+    )
+    document["routines"] = [
+        routine_to_dict(r, knowledge, profile) for r in valid_routines
+    ]
+    document["unavailable_archetypes"] = unavailable
     document["veto_log"] = {
         "profile": [v.to_dict() for v in profile_vetoes],
         "compose": {r.archetype["id"]: r.compose_vetoes for r in routines},

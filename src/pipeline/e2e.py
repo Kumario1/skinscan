@@ -591,30 +591,48 @@ def run_pipeline(
                 json.dumps(debug_rejections, indent=2) + "\n"
             )
         if recsys_enabled:
-            command = [
-                sys.executable, "-m", "recsys", "recommend",
-                "--analysis", str(staging / "analysis.json"),
-                "--out", str(staging / "recommendations.json"),
-            ]
-            if recsys_data_root is not None:
-                command += ["--data-root", str(recsys_data_root)]
-            if recsys_catalog is not None:
-                command += ["--catalog", str(recsys_catalog)]
-            completed = subprocess.run(
-                command,
-                cwd=Path(__file__).resolve().parents[2],
-                capture_output=True,
-                text=True,
-            )
-            if completed.returncode:
-                raise RuntimeError(
-                    "standalone recommendation failed: "
-                    + (completed.stderr.strip() or completed.stdout.strip())
+            recommendations_path = staging / "recommendations.json"
+            if recsys_data_root is None and recsys_catalog is None:
+                _write_recsys_unavailable(
+                    recommendations_path,
+                    "standalone catalog not configured; pass --recsys-catalog or "
+                    "--recsys-data-root",
                 )
+            else:
+                command = [
+                    sys.executable, "-m", "recsys", "recommend",
+                    "--analysis", str(staging / "analysis.json"),
+                    "--out", str(recommendations_path),
+                ]
+                if recsys_data_root is not None:
+                    command += ["--data-root", str(recsys_data_root)]
+                if recsys_catalog is not None:
+                    command += ["--catalog", str(recsys_catalog)]
+                completed = subprocess.run(
+                    command,
+                    cwd=Path(__file__).resolve().parents[2],
+                    capture_output=True,
+                    text=True,
+                )
+                if completed.returncode:
+                    _write_recsys_unavailable(
+                        recommendations_path,
+                        "standalone recommendation process exited with status "
+                        f"{completed.returncode}",
+                    )
         _publish_staging(staging, output_dir)
     finally:
         _remove_path(staging)
     return PipelineResult(analysis, routine, output_dir)
+
+
+def _write_recsys_unavailable(path: Path, reason: str) -> None:
+    path.write_text(json.dumps({
+        "schema_version": "recsys-1",
+        "status": "unavailable",
+        "reason": reason,
+        "routines": [],
+    }, indent=2) + "\n")
 
 
 def _parser(config: dict[str, object]) -> argparse.ArgumentParser:

@@ -1,9 +1,10 @@
+import json
 from pathlib import Path
 
 import pytest
 
 from recsys.catalog import load_catalog
-from recsys.contracts import SLOTS
+from recsys.contracts import ContractViolation, SLOTS
 from recsys.inci import parse_ingredients
 
 DATA = Path(__file__).parents[1] / "data"
@@ -39,6 +40,17 @@ def test_seed_catalog_valid_and_covering():
     assert any(p.price_usd is not None and p.price_usd <= 20 for p in by_category["spf"])
     assert any("retinol" in p.actives for p in products)
     assert any("benzoyl_peroxide" in p.actives for p in products)
+
+
+@pytest.mark.parametrize("field", ["inci_sha256", "actives"])
+def test_catalog_rejects_stale_derived_inci_fields(tmp_path, field):
+    data = json.loads((DATA / "catalog" / "seed_catalog.json").read_text())
+    data["products"][0][field] = "bad" if field == "inci_sha256" else ["retinol"]
+    path = tmp_path / "catalog.json"
+    path.write_text(json.dumps(data))
+
+    with pytest.raises(ContractViolation, match=field):
+        load_catalog(path)
 
 
 @pytest.mark.raw_dump

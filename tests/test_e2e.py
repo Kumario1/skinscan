@@ -343,21 +343,24 @@ def test_recsys_flag_adds_standalone_recommendations_artifact(
     _write_image(image_path)
     _write_verified_catalog(catalog_path)
     args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
-    args.append("--recsys")
+    args += [
+        "--recsys",
+        "--recsys-catalog", str(ROOT / "recsys/data/catalog/seed_catalog.json"),
+    ]
 
     assert main(args) == 0
 
     recommendations = json.loads((output_dir / "recommendations.json").read_text())
     assert recommendations["schema_version"] == "recsys-1"
-    assert recommendations["status"] == "ok"
-    assert len(recommendations["routines"]) == 5
+    assert recommendations["status"] == "partial"
+    assert len(recommendations["routines"]) == 3
     import hashlib
     assert recommendations["inputs"]["analysis_sha256"] == hashlib.sha256(
         (output_dir / "analysis.json").read_bytes()
     ).hexdigest()
 
 
-def test_recsys_failure_preserves_prior_published_output(
+def test_recsys_failure_publishes_analysis_with_unavailable_artifact(
     tmp_path, fake_sarpn_server,
 ):
     image_path = tmp_path / "face.jpg"
@@ -371,10 +374,39 @@ def test_recsys_failure_preserves_prior_published_output(
     args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
     args += ["--recsys", "--recsys-catalog", str(tmp_path / "missing.json")]
 
-    assert main(args) == 1
+    assert main(args) == 0
 
-    assert (output_dir / "analysis.json").read_text() == prior
-    assert {path.name for path in output_dir.iterdir()} == {"analysis.json"}
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    recommendations = json.loads((output_dir / "recommendations.json").read_text())
+    assert analysis["image_id"] == "face.jpg"
+    assert recommendations == {
+        "schema_version": "recsys-1",
+        "status": "unavailable",
+        "reason": "standalone recommendation process exited with status 1",
+        "routines": [],
+    }
+    assert prior not in (output_dir / "analysis.json").read_text()
+
+
+def test_recsys_without_explicit_catalog_is_unavailable(
+    tmp_path, fake_sarpn_server,
+):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_verified_catalog(catalog_path)
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
+    args.append("--recsys")
+
+    assert main(args) == 0
+
+    recommendations = json.loads((output_dir / "recommendations.json").read_text())
+    assert recommendations["status"] == "unavailable"
+    assert recommendations["reason"] == (
+        "standalone catalog not configured; pass --recsys-catalog or "
+        "--recsys-data-root"
+    )
 
 
 def test_oracle_xml_is_annotation_derived_and_replay_distinct(tmp_path, fake_sarpn_server):

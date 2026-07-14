@@ -1,4 +1,4 @@
-"""End-to-end: the real analysis artifact + seed catalog -> 5 valid routines."""
+"""End-to-end: verified products yield valid routines or explicit unavailability."""
 import json
 from pathlib import Path
 
@@ -12,6 +12,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 DATA = Path(__file__).parents[1] / "data"
 ANALYSIS = FIXTURES / "analysis_v3_sample.json"
 ARCHETYPE_IDS = ["best_overall", "budget", "gentle_sensitive", "minimal", "comprehensive"]
+AVAILABLE_ARCHETYPE_IDS = ["best_overall", "minimal", "comprehensive"]
 
 K = load_knowledge(DATA / "knowledge")
 
@@ -26,15 +27,23 @@ def _catalog_ids():
     return {p["product_id"]: p for p in catalog["products"]}
 
 
+def _steps(routine):
+    return routine["am"] + routine["pm"] + routine["per_label"]
+
+
 def test_status_and_archetypes(document):
-    assert document["status"] == "ok"
-    assert [r["archetype"] for r in document["routines"]] == ARCHETYPE_IDS
+    assert document["status"] == "partial"
+    assert [r["archetype"] for r in document["routines"]] == AVAILABLE_ARCHETYPE_IDS
+    unavailable = {item["archetype"]: item["reasons"]
+                   for item in document["unavailable_archetypes"]}
+    assert set(unavailable) == set(ARCHETYPE_IDS) - set(AVAILABLE_ARCHETYPE_IDS)
+    assert "required_role_missing:treatment" in unavailable["gentle_sensitive"]
 
 
 def test_every_product_exists_in_catalog(document):
     catalog = _catalog_ids()
     for routine in document["routines"]:
-        for step in routine["am"] + routine["pm"]:
+        for step in _steps(routine):
             assert step["product_id"] in catalog
 
 
@@ -64,7 +73,7 @@ def test_triage_and_framing_passthrough(document):
 def test_every_step_has_evidence_backed_why(document):
     for routine in document["routines"]:
         seen = set()
-        for step in routine["am"] + routine["pm"]:
+        for step in _steps(routine):
             if step["product_id"] in seen:
                 continue
             seen.add(step["product_id"])
@@ -83,31 +92,25 @@ def test_data_versions_match_disk(document):
     assert names == {"ingredient_analysis", "review_stats", "popularity"}
 
 
-def test_budget_archetype_respects_caps(document):
-    budget = next(r for r in document["routines"] if r["archetype"] == "budget")
-    catalog = _catalog_ids()
-    assert budget["total_price_usd"] <= 75
-    seen = set()
-    for step in budget["am"] + budget["pm"]:
-        seen.add(step["product_id"])
-        assert catalog[step["product_id"]]["price_usd"] <= 20
+def test_budget_archetype_fails_closed_when_verified_products_exceed_cap(document):
+    budget = next(item for item in document["unavailable_archetypes"]
+                  if item["archetype"] == "budget")
+    assert "required_role_missing:treatment" in budget["reasons"]
 
 
-def test_gentle_archetype_excludes_harsh_actives(document):
-    gentle = next(r for r in document["routines"] if r["archetype"] == "gentle_sensitive")
-    catalog = _catalog_ids()
-    for step in gentle["am"] + gentle["pm"]:
-        actives = set(catalog[step["product_id"]]["actives"])
-        assert not (actives & K.gentle_excluded_actives), step["product_id"]
+def test_gentle_archetype_fails_closed_without_verified_gentle_treatment(document):
+    gentle = next(item for item in document["unavailable_archetypes"]
+                  if item["archetype"] == "gentle_sensitive")
+    assert gentle["reasons"] == ["required_role_missing:treatment"]
 
 
 def test_routines_are_diverse(document):
     best = {s["product_id"] for r in document["routines"] if r["archetype"] == "best_overall"
-            for s in r["am"] + r["pm"]}
+            for s in _steps(r)}
     for routine in document["routines"]:
         if routine["archetype"] == "best_overall":
             continue
-        ids = {s["product_id"] for s in routine["am"] + routine["pm"]}
+        ids = {s["product_id"] for s in _steps(routine)}
         assert ids != best, routine["archetype"]
 
 
@@ -124,7 +127,7 @@ def test_pregnancy_unknown_excludes_retinoids():
                    generated_at="2026-07-14T00:00:00+00:00")
     catalog = _catalog_ids()
     for routine in document["routines"]:
-        for step in routine["am"] + routine["pm"]:
+        for step in _steps(routine):
             actives = set(catalog[step["product_id"]]["actives"])
             assert not (actives & K.retinoids), step["product_id"]
     reasons = {v["reason"] for v in document["veto_log"]["profile"]}
@@ -139,7 +142,7 @@ def test_allergy_removes_products(tmp_path):
     document = run(ANALYSIS, path, generated_at="2026-07-14T00:00:00+00:00")
     catalog = _catalog_ids()
     for routine in document["routines"]:
-        for step in routine["am"] + routine["pm"]:
+        for step in _steps(routine):
             assert "niacinamide" not in catalog[step["product_id"]]["actives"]
     assert any(v["reason"] == "profile_allergy:niacinamide"
                for v in document["veto_log"]["profile"])
@@ -172,6 +175,6 @@ def test_full_derived_data_root_uses_full_catalog_and_static_knowledge(tmp_path)
         generated_at="2026-07-14T00:00:00+00:00",
     )
 
-    assert document["status"] == "ok"
+    assert document["status"] == "partial"
     assert document["data_versions"]["catalog"]["path"] == str(derived / "catalog_full.json")
     assert document["data_versions"]["verification"]["products"] == 13

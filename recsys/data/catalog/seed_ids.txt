@@ -4,6 +4,7 @@
 #     --only-ids recsys/data/catalog/seed_ids.txt --out recsys/data/catalog/seed_catalog.json
 P12045  # moisturizer/budget $12 Caudalie — Grape Water Moisturizing Face Mist
 P173726  # cleanser/budget-plain $13 Shiseido — Facial Cotton
+P188306  # treatment/verified BP $26 CLINIQUE — Acne Solutions All-Over Clearing Treatment
 P248407  # moisturizer/plain $38 First Aid Beauty — Ultra Repair Cream Intense Hydration
 P269122  # treatment/retinoid $92 Dr. Dennis Gross Skincare — Alpha Beta Extra Strength Daily Peel Pads
 P377533  # treatment/retinoid $92 Dr. Dennis Gross Skincare — Alpha Beta Universal Daily Peel Pads
@@ -27,6 +28,7 @@ P427417  # serum/niacinamide-gentle $6 The Ordinary — Niacinamide 10% + Zinc 1
 P427419  # serum/budget-gentle $16 The Ordinary — Hyaluronic Acid 2% + B5 Hydrating Serum
 P427420  # serum/hydration $31 The Ordinary — Multi-Peptide + HA Serum
 P427421  # moisturizer/barrier $68 Drunk Elephant — Protini Polypeptide Firming Refillable Moisturizer
+P427536  # cleanser/verified $40 Tatcha — The Deep Cleanse Gentle Exfoliating Cleanser
 P429242  # spf/spf30 $30 Shiseido — Clear Sunscreen Stick SPF 50+
 P429953  # spf/spf30 $26 Supergoop! — Glow Stick Sunscreen SPF 50 PA++++
 P439926  # serum/retinol $74 Drunk Elephant — A-Passioni Retinol Cream
@@ -46,9 +48,13 @@ P456218  # spf/spf30 $38 Supergoop! — Glowscreen Sunscreen SPF 40 PA+++ with H
 P456392  # spf/spf30 $16 innisfree — Daily UV Defense Invisible Broad Spectrum SPF 36 Sunscreen
 P457008  # treatment/budget $15 Dr. Jart+ — Cryo Rubber Masks
 P458219  # treatment/gentle $34 Glow Recipe — Watermelon Glow PHA + BHA Pore-Tight Toner
+P461537  # cleanser/verified $40 Tatcha — The Rice Wash Skin-Softening Cleanser
 P466123  # serum/niacinamide-gentle $35 Glow Recipe — Watermelon Glow Niacinamide Dew Drops
 P467249  # moisturizer/spf-moisturizer $39 Fenty Skin — Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Suns
 P467976  # spf/spf30 $35 Supergoop! — (Re)setting 100% Mineral Powder Sunscreen SPF 35 PA+++
+P469517  # moisturizer/verified $29 Paula's Choice — CLEAR Oil-Free Moisturizer
+P469520  # cleanser/verified $22 Paula's Choice — RESIST Perfectly Balanced Foaming Cleanser
+P476733  # spf/verification candidate $38 Supergoop! — Mineral Mattescreen Sunscreen SPF 40 PA+++
 P479348  # treatment/azelaic-gentle $30 Skinfix — Acne+ 2% BHA and Azelaic Acid Acne Spot Treatment
 P504283  # spf/budget-spf30 $18 ROSE INC — Mini Solar Power Luminous SPF 30 Serum
 P504614  # treatment/azelaic-gentle $34 Farmacy — Brighten Up 3% TXA Dark Spot Toner with Azelaic Acid

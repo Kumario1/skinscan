@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 
 from .catalog import CatalogProduct
 from .contracts import SLOTS, Profile
-from .gates import duplicate_active_reasons
+from .gates import duplicate_active_reasons, profile_gate_reasons
 from .knowledge import Knowledge
 from .scoring import ScoredCandidate
 from .signals import TargetConcern
@@ -49,6 +49,8 @@ class ComposedRoutine:
 
 
 def _sessions(usage: str) -> frozenset[str]:
+    if usage == "PER_LABEL":
+        return frozenset()
     return frozenset(("AM", "PM")) if usage == "AM_PM" else frozenset((usage,))
 
 
@@ -56,6 +58,12 @@ def preferred_usage(product: CatalogProduct, slot: str, k: Knowledge) -> tuple[s
     """(usage, pinned). Pinned sessions may never flip."""
     if slot == "spf":
         return "AM", True
+    verified = {
+        "am": "AM", "pm": "PM", "am_pm": "AM_PM", "twice_daily": "AM_PM",
+        "daily": "PER_LABEL", "once_daily": "PER_LABEL", "per_label": "PER_LABEL",
+    }
+    if product.cadence in verified:
+        return verified[product.cadence], True
     if slot in ("cleanser", "moisturizer"):
         return "AM_PM", True
     actives = set(product.actives)
@@ -75,6 +83,55 @@ def _conflict_between(a: CatalogProduct, b: CatalogProduct, k: Knowledge):
             if frozenset((x, y)) in k.active_conflicts:
                 return x, y
     return None
+
+
+def validate_routine(
+    routine: ComposedRoutine,
+    profile: Profile,
+    k: Knowledge,
+    *,
+    has_targets: bool,
+) -> list[str]:
+    """Final fail-closed validation over the complete selected regimen."""
+    reasons: list[str] = []
+    by_slot = {step.slot: step for step in routine.steps}
+    required = {"cleanser", "moisturizer", "spf"}
+    if has_targets:
+        required.add("treatment")
+    for slot in sorted(required - set(by_slot)):
+        reasons.append(f"required_role_missing:{slot}")
+    if len(by_slot) != len(routine.steps):
+        reasons.append("more_than_one_product_per_role")
+    for step in routine.steps:
+        for reason in profile_gate_reasons(step.scored.product, step.slot, profile, k):
+            reasons.append(f"product_ineligible:{step.scored.product.product_id}:{reason}")
+        active_set = set(step.scored.product.actives)
+        for pair in sorted(k.active_conflicts, key=lambda value: sorted(value)):
+            if pair <= active_set:
+                x, y = sorted(pair)
+                reasons.append(
+                    f"self_conflict:{step.scored.product.product_id}:{x}:{y}"
+                )
+    for index, first in enumerate(routine.steps):
+        for second in routine.steps[index + 1:]:
+            conflict = _conflict_between(
+                first.scored.product, second.scored.product, k
+            )
+            if conflict:
+                reasons.append(
+                    "routine_conflict:"
+                    f"{first.scored.product.product_id}:"
+                    f"{second.scored.product.product_id}:"
+                    f"{conflict[0]}:{conflict[1]}"
+                )
+            duplicates = (
+                set(first.scored.product.actives)
+                & set(second.scored.product.actives)
+                & k.treatment_actives
+            )
+            for active in sorted(duplicates):
+                reasons.append(f"routine_duplicate_active:{active}")
+    return sorted(set(reasons))
 
 
 def try_place(product: CatalogProduct, slot: str, steps: list[Step], k: Knowledge):

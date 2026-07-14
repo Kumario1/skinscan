@@ -1,7 +1,8 @@
 from pathlib import Path
 
 from recsys.catalog import CatalogProduct
-from recsys.compose import Step, preferred_usage, try_place
+from recsys.compose import ComposedRoutine, Step, preferred_usage, try_place, validate_routine
+from recsys.contracts import Profile
 from recsys.knowledge import load_knowledge
 from recsys.scoring import ScoredCandidate
 
@@ -57,3 +58,22 @@ def test_vitamin_c_flips_when_am_conflicts():
     usage, reason = try_place(vitc, "serum", [bp_am], K)
     assert reason is None
     assert usage == "PM"  # AM preference flips away from the BP conflict
+
+
+def test_whole_routine_validator_rejects_self_conflicts_and_missing_roles():
+    conflicting = product(
+        "p1", "treatment", ["retinol", "benzoyl_peroxide"]
+    )
+    routine = ComposedRoutine(
+        archetype={"id": "test"},
+        steps=[step(conflicting, "treatment", "PM")],
+    )
+
+    reasons = validate_routine(
+        routine, Profile(pregnancy_status="not_pregnant"), K, has_targets=True
+    )
+
+    assert "self_conflict:p1:benzoyl_peroxide:retinol" in reasons
+    assert "required_role_missing:cleanser" in reasons
+    assert "required_role_missing:moisturizer" in reasons
+    assert "required_role_missing:spf" in reasons

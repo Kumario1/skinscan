@@ -27,6 +27,11 @@ def generate_candidates(
     for product in sorted(catalog, key=lambda p: p.product_id):
         if product.category in CARRIER_SLOTS:
             by_slot[product.category].append(product)
-        elif product.category in ACTIVE_SLOTS and set(product.actives) & target_actives:
-            by_slot[product.category].append(product)
+        elif product.category in ACTIVE_SLOTS:
+            therapeutic_actives = (
+                {active.get("name") for active in product.drug_actives}
+                if product.category == "treatment" else set(product.actives)
+            )
+            if therapeutic_actives & target_actives:
+                by_slot[product.category].append(product)
     return by_slot

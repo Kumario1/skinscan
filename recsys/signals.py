@@ -190,8 +190,9 @@ class ConcernEfficacySignal:
 
     name = "concern_efficacy"
 
-    def __init__(self, store: dict, meta: dict):
+    def __init__(self, store: dict, meta: dict, pooled_store: dict | None = None):
         self.products = store.get("products") or {}
+        self.pooled_products = (pooled_store or {}).get("products") or {}
         self.version = meta.get("version", "v?")
         self.confidence_n = float(store.get("confidence_n", 20))
 
@@ -203,20 +204,36 @@ class ConcernEfficacySignal:
             ladder = "exact"
             concern = target.concern
             entry = product_cells.get(concern)
-            if entry is None and concern.startswith("acne_"):
+            cell = None
+            if entry:
+                cell = (entry.get("by_skin_type") or {}).get(ctx.profile.skin_type)
+                cell = cell or entry.get("all")
+                if not cell or not cell.get("n"):
+                    cell = None
+            if cell is None and target.concern.startswith("acne_"):
                 ladder = "acne_general"
                 concern = "acne_general"
                 entry = product_cells.get(concern)
-            if entry is None:
-                continue
-            cell = (entry.get("by_skin_type") or {}).get(ctx.profile.skin_type)
-            cell = cell or entry.get("all")
-            if not cell or not cell.get("n"):
-                continue
-            n = int(cell["n"])
-            smoothed = float(cell["smoothed"])
-            reliability = n / (n + self.confidence_n)
-            adjusted = 0.5 + (smoothed - 0.5) * reliability
+                cell = None
+                if entry:
+                    cell = (entry.get("by_skin_type") or {}).get(ctx.profile.skin_type)
+                    cell = cell or entry.get("all")
+                    if not cell or not cell.get("n"):
+                        cell = None
+            if cell:
+                n = int(cell["n"])
+                smoothed = float(cell["smoothed"])
+                reliability = n / (n + self.confidence_n)
+                adjusted = 0.5 + (smoothed - 0.5) * reliability
+            else:
+                pooled = self.pooled_products.get(product.product_id)
+                if not pooled or not pooled.get("n"):
+                    continue
+                ladder = "pooled"
+                concern = "pooled"
+                n = int(pooled["n"])
+                smoothed = (float(pooled["smoothed"]) - 1) / 4
+                adjusted = max(0.0, min(1.0, smoothed))
             target_weight = target.severity * max(target.confidence, 0.01)
             weighted.append((adjusted, target_weight))
             matches.append({
@@ -224,17 +241,20 @@ class ConcernEfficacySignal:
                 "cell_concern": concern,
                 "ladder": ladder,
                 "n": n,
-                "help_rate": cell["help_rate"],
+                "help_rate": cell.get("help_rate") if cell else None,
                 "smoothed": smoothed,
-                "reliability": round(reliability, 6),
+                "reliability": round(reliability, 6) if cell else 1.0,
             })
         if not weighted:
             return None
         value = sum(v * weight for v, weight in weighted) / sum(weight for _, weight in weighted)
         evidence = "; ".join(
-            f"{m['help_rate']:.0%} of {m['n']} reviewers said it helped "
-            f"{ctx.knowledge.phrasing.get(m['target'], m['target'])}"
-            + (" (general-acne fallback)" if m["ladder"] != "exact" else "")
+            (
+                f"{m['help_rate']:.0%} of {m['n']} reviewers said it helped "
+                f"{ctx.knowledge.phrasing.get(m['target'], m['target'])}"
+                + (" (general-acne fallback)" if m["ladder"] == "acne_general" else "")
+            ) if m["ladder"] != "pooled" else
+            f"{m['smoothed'] * 4 + 1:.1f}★ across {m['n']} pooled reviews"
             for m in matches
         )
         return SignalScore(self.name, round(value, 6), evidence, {"matches": matches})
@@ -288,6 +308,7 @@ def load_providers(data_root: str | Path) -> tuple[list, list[dict], list[str]]:
             "registry.schema_version",
             f"expected {REGISTRY_SCHEMA_VERSION!r}, got {registry.get('schema_version')!r}",
         )
+    loaded = []
     for entry in registry.get("stores") or []:
         if entry.get("status") != "active":
             continue
@@ -305,7 +326,17 @@ def load_providers(data_root: str | Path) -> tuple[list, list[dict], list[str]]:
                 f"registry entry (expected {entry.get('sha256')}, got {actual})",
             )
         store = json.loads(store_path.read_text(encoding="utf-8"))
-        providers.append(cls(store, entry))
+        loaded.append((entry, cls, store))
+
+    pooled_store = next(
+        (store for entry, _cls, store in loaded if entry.get("kind") == "review_stats"),
+        None,
+    )
+    for entry, cls, store in loaded:
+        if entry.get("kind") == "concern_efficacy":
+            providers.append(cls(store, entry, pooled_store=pooled_store))
+        else:
+            providers.append(cls(store, entry))
         meta.append({"name": entry.get("name"), "version": entry.get("version"),
                      "sha256": entry.get("sha256")})
     return providers, meta, warnings

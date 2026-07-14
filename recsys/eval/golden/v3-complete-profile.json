@@ -3,7 +3,7 @@
     "catalog": {
       "path": "seed_catalog.json",
       "schema": "recsys-catalog-1",
-      "sha256": "88dd8ec98e44814c4de5d95a102d2b4f633b75f22d1977a2a79b5c72d184ec5c"
+      "sha256": "177d15f160576e0b1efa2eb5198c7c94ec8985d0678319a9042c91064144d003"
     },
     "knowledge": [
       {
@@ -39,7 +39,7 @@
     "verification": {
       "path": "approved.json",
       "products": 13,
-      "sha256": "79c8bccc1cd9b9d723a5fea3f466d9b9cb4db0e4230bb419a81c20e0cacf15f7"
+      "sha256": "e6365faaaba7f954b5d2776379a01bdc79d5c2011e01015a5d769206346ca655"
     }
   },
   "engine": {
@@ -59,8 +59,13 @@
     "source_image_sha256": "51357c8008eabcbba96fe685dc69547faf84bccf87de2df729e7b5e413320fb6"
   },
   "profile_used": {
+    "age_years": 25,
+    "allergies": [],
+    "current_actives": [],
+    "current_medications": [],
     "max_price_usd": null,
     "pregnancy_status": "not_pregnant",
+    "sensitivity_conditions": [],
     "skin_type": "oily",
     "tone_bucket": "medium"
   },
@@ -68,25 +73,31 @@
     {
       "am": [
         {
-          "brand": "Youth To The People",
-          "name": "Superfood Antioxidant Cleanser",
+          "brand": "Farmacy",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://www.farmacybeauty.com/products/green-clean-cleansing-balm"
+          },
+          "name": "Green Clean Makeup Removing Cleansing Balm",
           "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P411387",
+          "price_usd": 36.0,
+          "product_id": "P417238",
           "slot": "cleanser",
           "usage": "AM_PM",
           "why": {
-            "score": 0.789152,
+            "score": 0.579844,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); vitamin c targets the appearance of post-acne marks, the appearance of dark spots",
+                "evidence": "no concern-targeting actives",
                 "name": "concern_fit",
-                "value": 0.769231
+                "value": 0.0
               },
               {
-                "evidence": "$39.00 \u2014 cheaper than 0% of cleanser options in this catalog",
+                "evidence": "$36.00 \u2014 cheaper than 31% of cleanser options in this catalog",
                 "name": "price_value",
-                "value": 0.0
+                "value": 0.307692
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
@@ -96,38 +107,95 @@
               {
                 "evidence": "more loved than 100% of cleanser products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 1.0
+                "value": 0.9957
               },
               {
-                "evidence": "4.2\u2605 from 794 oily-skin reviewers",
+                "evidence": "4.5\u2605 from 719 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.798225
+                "value": 0.880575
               }
             ],
-            "summary": "Contains gluconolactone, vitamin c, which targets the appearance of post-acne marks; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
+            "summary": "A daily cleanser to start each routine.",
             "uncertainty": []
           }
         },
         {
-          "brand": "Fenty Skin",
-          "name": "Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Sunscreen with Niacinamide + Kalahari Melon",
+          "brand": "CLINIQUE",
+          "directions": {
+            "amount": "thin_layer",
+            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
+            "cadence": "am_pm",
+            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
+          },
+          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P467249",
+          "price_usd": 26.0,
+          "product_id": "P188306",
+          "slot": "treatment",
+          "usage": "AM_PM",
+          "why": {
+            "score": 0.413287,
+            "signals": [
+              {
+                "evidence": "benzoyl peroxide targets inflamed breakouts",
+                "name": "concern_fit",
+                "value": 0.230769
+              },
+              {
+                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
+                "name": "price_value",
+                "value": 0.545455
+              },
+              {
+                "evidence": "no data",
+                "name": "ingredient_analysis",
+                "value": 0.5
+              },
+              {
+                "evidence": "no data",
+                "name": "popularity",
+                "value": 0.5
+              },
+              {
+                "evidence": "no data",
+                "name": "review_quality",
+                "value": 0.5
+              }
+            ],
+            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
+            "uncertainty": [
+              "no_ingredient_analysis_data",
+              "no_popularity_data",
+              "no_review_quality_data"
+            ]
+          }
+        },
+        {
+          "brand": "Tatcha",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+          },
+          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
+          "notes": [],
+          "price_usd": 70.0,
+          "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "why": {
-            "score": 0.740646,
+            "score": 0.599055,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); niacinamide targets inflamed breakouts, the appearance of dark spots",
+                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
                 "name": "concern_fit",
-                "value": 0.692308
+                "value": 0.230769
               },
               {
-                "evidence": "$39.00 \u2014 cheaper than 40% of moisturizer options in this catalog",
+                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.4
+                "value": 0.0
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
@@ -135,22 +203,28 @@
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 90% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.8993
+                "value": 0.9982
               },
               {
-                "evidence": "3.8\u2605 from 124 oily-skin reviewers",
+                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.71005
+                "value": 0.767475
               }
             ],
-            "summary": "Contains gluconolactone, niacinamide, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
+            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
             "uncertainty": []
           }
         },
         {
           "brand": "Supergoop!",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21569637-332a-461b-bf6c-33af6a83a155.xml"
+          },
           "name": "Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Niacinamide",
           "notes": [],
           "price_usd": 38.0,
@@ -158,7 +232,7 @@
           "slot": "spf",
           "usage": "AM",
           "why": {
-            "score": 0.68626,
+            "score": 0.685069,
             "signals": [
               {
                 "evidence": "niacinamide targets inflamed breakouts, the appearance of dark spots",
@@ -166,9 +240,9 @@
                 "value": 0.461538
               },
               {
-                "evidence": "$38.00 \u2014 cheaper than 14% of spf options in this catalog",
+                "evidence": "$38.00 \u2014 cheaper than 12% of spf options in this catalog",
                 "name": "price_value",
-                "value": 0.142857
+                "value": 0.125
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list",
@@ -192,28 +266,37 @@
         }
       ],
       "archetype": "best_overall",
-      "notes": [],
+      "notes": [
+        "slot_unfilled:serum"
+      ],
+      "per_label": [],
       "pm": [
         {
-          "brand": "Youth To The People",
-          "name": "Superfood Antioxidant Cleanser",
+          "brand": "Farmacy",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://www.farmacybeauty.com/products/green-clean-cleansing-balm"
+          },
+          "name": "Green Clean Makeup Removing Cleansing Balm",
           "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P411387",
+          "price_usd": 36.0,
+          "product_id": "P417238",
           "slot": "cleanser",
           "usage": "AM_PM",
           "why": {
-            "score": 0.789152,
+            "score": 0.579844,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); vitamin c targets the appearance of post-acne marks, the appearance of dark spots",
+                "evidence": "no concern-targeting actives",
                 "name": "concern_fit",
-                "value": 0.769231
+                "value": 0.0
               },
               {
-                "evidence": "$39.00 \u2014 cheaper than 0% of cleanser options in this catalog",
+                "evidence": "$36.00 \u2014 cheaper than 31% of cleanser options in this catalog",
                 "name": "price_value",
-                "value": 0.0
+                "value": 0.307692
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
@@ -223,120 +306,95 @@
               {
                 "evidence": "more loved than 100% of cleanser products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 1.0
+                "value": 0.9957
               },
               {
-                "evidence": "4.2\u2605 from 794 oily-skin reviewers",
+                "evidence": "4.5\u2605 from 719 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.798225
+                "value": 0.880575
               }
             ],
-            "summary": "Contains gluconolactone, vitamin c, which targets the appearance of post-acne marks; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
+            "summary": "A daily cleanser to start each routine.",
             "uncertainty": []
           }
         },
         {
-          "brand": "The Ordinary",
-          "name": "AHA 30% + BHA 2% Exfoliating Peeling Solution",
+          "brand": "CLINIQUE",
+          "directions": {
+            "amount": "thin_layer",
+            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
+            "cadence": "am_pm",
+            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
+          },
+          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
-          "price_usd": 9.5,
-          "product_id": "P442563",
+          "price_usd": 26.0,
+          "product_id": "P188306",
           "slot": "treatment",
-          "usage": "PM",
+          "usage": "AM_PM",
           "why": {
-            "score": 0.899302,
+            "score": 0.413287,
             "signals": [
               {
-                "evidence": "glycolic acid targets the appearance of post-acne marks, the appearance of dark spots, clogged-pore breakouts (blackheads and whiteheads); lactic acid targets the appearance of post-acne marks; salicylic acid targets inflamed breakouts, clogged-pore breakouts (blackheads and whiteheads)",
+                "evidence": "benzoyl peroxide targets inflamed breakouts",
                 "name": "concern_fit",
-                "value": 1.0
+                "value": 0.230769
               },
               {
-                "evidence": "$9.50 \u2014 cheaper than 100% of treatment options in this catalog",
+                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
                 "name": "price_value",
-                "value": 1.0
+                "value": 0.545455
               },
               {
-                "evidence": "model-estimated high irritancy from the INCI list",
+                "evidence": "no data",
                 "name": "ingredient_analysis",
-                "value": 0.0
+                "value": 0.5
               },
               {
-                "evidence": "more loved than 100% of treatment products on Sephora (snapshot-2023)",
+                "evidence": "no data",
                 "name": "popularity",
-                "value": 0.9973
+                "value": 0.5
               },
               {
-                "evidence": "4.6\u2605 from 525 oily-skin reviewers",
+                "evidence": "no data",
                 "name": "review_quality",
-                "value": 0.899525
+                "value": 0.5
               }
             ],
-            "summary": "Contains glycolic acid, lactic acid, salicylic acid, which targets the appearance of post-acne marks; inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
+            "uncertainty": [
+              "no_ingredient_analysis_data",
+              "no_popularity_data",
+              "no_review_quality_data"
+            ]
           }
         },
         {
-          "brand": "The Ordinary",
-          "name": "Azelaic Acid 10% Suspension Brightening Cream",
+          "brand": "Tatcha",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+          },
+          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
           "notes": [],
-          "price_usd": 11.1,
-          "product_id": "P427411",
-          "slot": "serum",
-          "usage": "PM",
-          "why": {
-            "score": 0.799435,
-            "signals": [
-              {
-                "evidence": "azelaic acid targets inflamed breakouts, the appearance of dark spots, clogged-pore breakouts (blackheads and whiteheads)",
-                "name": "concern_fit",
-                "value": 0.692308
-              },
-              {
-                "evidence": "$11.10 \u2014 cheaper than 58% of serum options in this catalog",
-                "name": "price_value",
-                "value": 0.583333
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 96% of serum products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.9603
-              },
-              {
-                "evidence": "4.2\u2605 from 166 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.81315
-              }
-            ],
-            "summary": "Contains azelaic acid, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Fenty Skin",
-          "name": "Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Sunscreen with Niacinamide + Kalahari Melon",
-          "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P467249",
+          "price_usd": 70.0,
+          "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "why": {
-            "score": 0.740646,
+            "score": 0.599055,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); niacinamide targets inflamed breakouts, the appearance of dark spots",
+                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
                 "name": "concern_fit",
-                "value": 0.692308
+                "value": 0.230769
               },
               {
-                "evidence": "$39.00 \u2014 cheaper than 40% of moisturizer options in this catalog",
+                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.4
+                "value": 0.0
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
@@ -344,17 +402,17 @@
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 90% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.8993
+                "value": 0.9982
               },
               {
-                "evidence": "3.8\u2605 from 124 oily-skin reviewers",
+                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.71005
+                "value": 0.767475
               }
             ],
-            "summary": "Contains gluconolactone, niacinamide, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
+            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
             "uncertainty": []
           }
         }
@@ -378,63 +436,28 @@
           "rule": "one_product_per_slot"
         }
       ],
-      "slot_count": 5,
+      "slot_count": 4,
       "title": "Best overall",
-      "total_price_usd": 136.6
+      "total_price_usd": 170.0
     },
     {
       "am": [
         {
-          "brand": "The INKEY List",
-          "name": "Salicylic Acid Acne + Pore Cleanser",
+          "brand": "Paula's Choice",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html"
+          },
+          "name": "RESIST Perfectly Balanced Foaming Cleanser",
           "notes": [],
-          "price_usd": 11.99,
-          "product_id": "P443833",
+          "price_usd": 22.0,
+          "product_id": "P469520",
           "slot": "cleanser",
           "usage": "AM_PM",
           "why": {
-            "score": 0.694812,
-            "signals": [
-              {
-                "evidence": "salicylic acid targets inflamed breakouts, clogged-pore breakouts (blackheads and whiteheads)",
-                "name": "concern_fit",
-                "value": 0.461538
-              },
-              {
-                "evidence": "$11.99 \u2014 cheaper than 70% of cleanser options in this catalog",
-                "name": "price_value",
-                "value": 0.7
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 97% of cleanser products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.9702
-              },
-              {
-                "evidence": "4.3\u2605 from 273 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.83445
-              }
-            ],
-            "summary": "Contains salicylic acid, which targets inflamed breakouts; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "The Ordinary",
-          "name": "100% Organic Cold-Pressed Rose Hip Seed Oil",
-          "notes": [],
-          "price_usd": 10.9,
-          "product_id": "P427415",
-          "slot": "moisturizer",
-          "usage": "AM_PM",
-          "why": {
-            "score": 0.668097,
+            "score": 0.330769,
             "signals": [
               {
                 "evidence": "no concern-targeting actives",
@@ -442,410 +465,111 @@
                 "value": 0.0
               },
               {
-                "evidence": "$10.90 \u2014 cheaper than 100% of moisturizer options in this catalog",
+                "evidence": "$22.00 \u2014 cheaper than 46% of cleanser options in this catalog",
                 "name": "price_value",
-                "value": 1.0
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 99% of moisturizer products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.9908
-              },
-              {
-                "evidence": "4.4\u2605 from 218 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.853975
-              }
-            ],
-            "summary": "Keeps your skin barrier hydrated alongside the treatment steps.",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "innisfree",
-          "name": "Daily UV Defense Invisible Broad Spectrum SPF 36 Sunscreen",
-          "notes": [],
-          "price_usd": 16.0,
-          "product_id": "P456392",
-          "slot": "spf",
-          "usage": "AM",
-          "why": {
-            "score": 0.615507,
-            "signals": [
-              {
-                "evidence": "no concern-targeting actives",
-                "name": "concern_fit",
-                "value": 0.0
-              },
-              {
-                "evidence": "$16.00 \u2014 cheaper than 86% of spf options in this catalog",
-                "name": "price_value",
-                "value": 0.857143
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 98% of spf products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.9794
-              },
-              {
-                "evidence": "4.5\u2605 from 195 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.873225
-              }
-            ],
-            "summary": "Daily broad-spectrum sun protection \u2014 also helps prevent new dark spots.",
-            "uncertainty": [
-              "spf_value_from_name_parse_not_verified"
-            ]
-          }
-        }
-      ],
-      "archetype": "budget",
-      "notes": [],
-      "pm": [
-        {
-          "brand": "The INKEY List",
-          "name": "Salicylic Acid Acne + Pore Cleanser",
-          "notes": [],
-          "price_usd": 11.99,
-          "product_id": "P443833",
-          "slot": "cleanser",
-          "usage": "AM_PM",
-          "why": {
-            "score": 0.694812,
-            "signals": [
-              {
-                "evidence": "salicylic acid targets inflamed breakouts, clogged-pore breakouts (blackheads and whiteheads)",
-                "name": "concern_fit",
                 "value": 0.461538
               },
               {
-                "evidence": "$11.99 \u2014 cheaper than 70% of cleanser options in this catalog",
-                "name": "price_value",
-                "value": 0.7
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list",
+                "evidence": "no data",
                 "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 97% of cleanser products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.9702
-              },
-              {
-                "evidence": "4.3\u2605 from 273 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.83445
-              }
-            ],
-            "summary": "Contains salicylic acid, which targets inflamed breakouts; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "The Ordinary",
-          "name": "Glycolic Acid 7% Exfoliating Toning Solution",
-          "notes": [],
-          "price_usd": 13.0,
-          "product_id": "P427406",
-          "slot": "treatment",
-          "usage": "PM",
-          "why": {
-            "score": 0.806919,
-            "signals": [
-              {
-                "evidence": "glycolic acid targets the appearance of post-acne marks, the appearance of dark spots, clogged-pore breakouts (blackheads and whiteheads)",
-                "name": "concern_fit",
-                "value": 0.769231
-              },
-              {
-                "evidence": "$13.00 \u2014 cheaper than 90% of treatment options in this catalog",
-                "name": "price_value",
-                "value": 0.9
-              },
-              {
-                "evidence": "model-estimated high irritancy from the INCI list",
-                "name": "ingredient_analysis",
-                "value": 0.0
-              },
-              {
-                "evidence": "more loved than 100% of treatment products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 1.0
-              },
-              {
-                "evidence": "4.3\u2605 from 454 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.832275
-              }
-            ],
-            "summary": "Contains glycolic acid, which targets the appearance of post-acne marks; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "The Ordinary",
-          "name": "Niacinamide 10% + Zinc 1% Oil Control Serum",
-          "notes": [],
-          "price_usd": 6.0,
-          "product_id": "P427417",
-          "slot": "serum",
-          "usage": "PM",
-          "why": {
-            "score": 0.809127,
-            "signals": [
-              {
-                "evidence": "niacinamide targets inflamed breakouts, the appearance of dark spots",
-                "name": "concern_fit",
-                "value": 0.461538
-              },
-              {
-                "evidence": "$6.00 \u2014 cheaper than 100% of serum options in this catalog",
-                "name": "price_value",
-                "value": 1.0
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 100% of serum products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 1.0
-              },
-              {
-                "evidence": "4.3\u2605 from 1288 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.819175
-              }
-            ],
-            "summary": "Contains niacinamide, which targets inflamed breakouts; the appearance of dark spots.",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "The Ordinary",
-          "name": "100% Organic Cold-Pressed Rose Hip Seed Oil",
-          "notes": [],
-          "price_usd": 10.9,
-          "product_id": "P427415",
-          "slot": "moisturizer",
-          "usage": "AM_PM",
-          "why": {
-            "score": 0.668097,
-            "signals": [
-              {
-                "evidence": "no concern-targeting actives",
-                "name": "concern_fit",
-                "value": 0.0
-              },
-              {
-                "evidence": "$10.90 \u2014 cheaper than 100% of moisturizer options in this catalog",
-                "name": "price_value",
-                "value": 1.0
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 99% of moisturizer products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.9908
-              },
-              {
-                "evidence": "4.4\u2605 from 218 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.853975
-              }
-            ],
-            "summary": "Keeps your skin barrier hydrated alongside the treatment steps.",
-            "uncertainty": []
-          }
-        }
-      ],
-      "rationale": "Targets the same concerns while keeping every item affordable and the total under a cap.",
-      "safety_checks": [
-        {
-          "passed": true,
-          "rule": "spf_am_only"
-        },
-        {
-          "passed": true,
-          "rule": "retinoids_pm_only"
-        },
-        {
-          "passed": true,
-          "rule": "no_conflicting_actives_in_same_session"
-        },
-        {
-          "passed": true,
-          "rule": "one_product_per_slot"
-        }
-      ],
-      "slot_count": 5,
-      "title": "Budget-friendly",
-      "total_price_usd": 57.89
-    },
-    {
-      "am": [
-        {
-          "brand": "Youth To The People",
-          "name": "Superfood Antioxidant Cleanser",
-          "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P411387",
-          "slot": "cleanser",
-          "usage": "AM_PM",
-          "why": {
-            "score": 0.839401,
-            "signals": [
-              {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); vitamin c targets the appearance of post-acne marks, the appearance of dark spots",
-                "name": "concern_fit",
-                "value": 0.769231
-              },
-              {
-                "evidence": "$39.00 \u2014 cheaper than 0% of cleanser options in this catalog",
-                "name": "price_value",
-                "value": 0.0
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 100% of cleanser products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 1.0
-              },
-              {
-                "evidence": "4.2\u2605 from 794 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.798225
-              }
-            ],
-            "summary": "Contains gluconolactone, vitamin c, which targets the appearance of post-acne marks; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Skinfix",
-          "name": "Acne+ 2% BHA and Azelaic Acid Acne Spot Treatment",
-          "notes": [],
-          "price_usd": 30.0,
-          "product_id": "P479348",
-          "slot": "treatment",
-          "usage": "AM",
-          "why": {
-            "score": 0.81559,
-            "signals": [
-              {
-                "evidence": "azelaic acid targets inflamed breakouts, the appearance of dark spots, clogged-pore breakouts (blackheads and whiteheads); niacinamide targets inflamed breakouts, the appearance of dark spots",
-                "name": "concern_fit",
-                "value": 0.692308
-              },
-              {
-                "evidence": "$30.00 \u2014 cheaper than 50% of treatment options in this catalog",
-                "name": "price_value",
                 "value": 0.5
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 69% of treatment products on Sephora (snapshot-2023)",
+                "evidence": "no data",
                 "name": "popularity",
-                "value": 0.6944
+                "value": 0.5
               },
               {
-                "evidence": "4.6\u2605 from 58 oily-skin reviewers",
+                "evidence": "no data",
                 "name": "review_quality",
-                "value": 0.87815
+                "value": 0.5
               }
             ],
-            "summary": "Contains azelaic acid, niacinamide, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "A daily cleanser to start each routine.",
+            "uncertainty": [
+              "no_ingredient_analysis_data",
+              "no_popularity_data",
+              "no_review_quality_data"
+            ]
           }
         },
         {
-          "brand": "Drunk Elephant",
-          "name": "C-Firma Fresh Vitamin-C Day Serum",
+          "brand": "CLINIQUE",
+          "directions": {
+            "amount": "thin_layer",
+            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
+            "cadence": "am_pm",
+            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
+          },
+          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
-          "price_usd": 78.0,
-          "product_id": "P400259",
-          "slot": "serum",
-          "usage": "AM",
+          "price_usd": 26.0,
+          "product_id": "P188306",
+          "slot": "treatment",
+          "usage": "AM_PM",
           "why": {
-            "score": 0.844296,
+            "score": 0.413287,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); vitamin c targets the appearance of post-acne marks, the appearance of dark spots",
+                "evidence": "benzoyl peroxide targets inflamed breakouts",
                 "name": "concern_fit",
-                "value": 0.769231
+                "value": 0.230769
               },
               {
-                "evidence": "$78.00 \u2014 cheaper than 0% of serum options in this catalog",
+                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
                 "name": "price_value",
-                "value": 0.0
+                "value": 0.545455
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list",
+                "evidence": "no data",
                 "name": "ingredient_analysis",
-                "value": 1.0
+                "value": 0.5
               },
               {
-                "evidence": "more loved than 99% of serum products on Sephora (snapshot-2023)",
+                "evidence": "no data",
                 "name": "popularity",
-                "value": 0.9868
+                "value": 0.5
               },
               {
-                "evidence": "4.3\u2605 from 151 oily-skin reviewers",
+                "evidence": "no data",
                 "name": "review_quality",
-                "value": 0.828925
+                "value": 0.5
               }
             ],
-            "summary": "Contains gluconolactone, vitamin c, which targets the appearance of post-acne marks; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
+            "uncertainty": [
+              "no_ingredient_analysis_data",
+              "no_popularity_data",
+              "no_review_quality_data"
+            ]
           }
         },
         {
-          "brand": "Fenty Skin",
-          "name": "Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Sunscreen with Niacinamide + Kalahari Melon",
+          "brand": "Tatcha",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+          },
+          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
           "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P467249",
+          "price_usd": 70.0,
+          "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "why": {
-            "score": 0.806314,
+            "score": 0.599055,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); niacinamide targets inflamed breakouts, the appearance of dark spots",
+                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
                 "name": "concern_fit",
-                "value": 0.692308
+                "value": 0.230769
               },
               {
-                "evidence": "$39.00 \u2014 cheaper than 40% of moisturizer options in this catalog",
+                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.4
+                "value": 0.0
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
@@ -853,22 +577,28 @@
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 90% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.8993
+                "value": 0.9982
               },
               {
-                "evidence": "3.8\u2605 from 124 oily-skin reviewers",
+                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.71005
+                "value": 0.767475
               }
             ],
-            "summary": "Contains gluconolactone, niacinamide, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
+            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
             "uncertainty": []
           }
         },
         {
           "brand": "Supergoop!",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21569637-332a-461b-bf6c-33af6a83a155.xml"
+          },
           "name": "Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Niacinamide",
           "notes": [],
           "price_usd": 38.0,
@@ -876,7 +606,7 @@
           "slot": "spf",
           "usage": "AM",
           "why": {
-            "score": 0.768089,
+            "score": 0.685069,
             "signals": [
               {
                 "evidence": "niacinamide targets inflamed breakouts, the appearance of dark spots",
@@ -884,9 +614,9 @@
                 "value": 0.461538
               },
               {
-                "evidence": "$38.00 \u2014 cheaper than 14% of spf options in this catalog",
+                "evidence": "$38.00 \u2014 cheaper than 12% of spf options in this catalog",
                 "name": "price_value",
-                "value": 0.142857
+                "value": 0.125
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list",
@@ -909,311 +639,141 @@
           }
         }
       ],
-      "archetype": "gentle_sensitive",
-      "notes": [],
-      "pm": [
-        {
-          "brand": "Youth To The People",
-          "name": "Superfood Antioxidant Cleanser",
-          "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P411387",
-          "slot": "cleanser",
-          "usage": "AM_PM",
-          "why": {
-            "score": 0.839401,
-            "signals": [
-              {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); vitamin c targets the appearance of post-acne marks, the appearance of dark spots",
-                "name": "concern_fit",
-                "value": 0.769231
-              },
-              {
-                "evidence": "$39.00 \u2014 cheaper than 0% of cleanser options in this catalog",
-                "name": "price_value",
-                "value": 0.0
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 100% of cleanser products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 1.0
-              },
-              {
-                "evidence": "4.2\u2605 from 794 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.798225
-              }
-            ],
-            "summary": "Contains gluconolactone, vitamin c, which targets the appearance of post-acne marks; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Fenty Skin",
-          "name": "Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Sunscreen with Niacinamide + Kalahari Melon",
-          "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P467249",
-          "slot": "moisturizer",
-          "usage": "AM_PM",
-          "why": {
-            "score": 0.806314,
-            "signals": [
-              {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); niacinamide targets inflamed breakouts, the appearance of dark spots",
-                "name": "concern_fit",
-                "value": 0.692308
-              },
-              {
-                "evidence": "$39.00 \u2014 cheaper than 40% of moisturizer options in this catalog",
-                "name": "price_value",
-                "value": 0.4
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 90% of moisturizer products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.8993
-              },
-              {
-                "evidence": "3.8\u2605 from 124 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.71005
-              }
-            ],
-            "summary": "Contains gluconolactone, niacinamide, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
-          }
-        }
-      ],
-      "rationale": "Avoids the harsher actives (retinoids, benzoyl peroxide, glycolic acid) and leans on gentler ingredients that still target your concerns.",
-      "safety_checks": [
-        {
-          "passed": true,
-          "rule": "spf_am_only"
-        },
-        {
-          "passed": true,
-          "rule": "retinoids_pm_only"
-        },
-        {
-          "passed": true,
-          "rule": "no_conflicting_actives_in_same_session"
-        },
-        {
-          "passed": true,
-          "rule": "one_product_per_slot"
-        }
-      ],
-      "slot_count": 5,
-      "title": "Gentle on sensitive skin",
-      "total_price_usd": 224.0
-    },
-    {
-      "am": [
-        {
-          "brand": "Youth To The People",
-          "name": "Superfood Antioxidant Cleanser",
-          "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P411387",
-          "slot": "cleanser",
-          "usage": "AM_PM",
-          "why": {
-            "score": 0.789152,
-            "signals": [
-              {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); vitamin c targets the appearance of post-acne marks, the appearance of dark spots",
-                "name": "concern_fit",
-                "value": 0.769231
-              },
-              {
-                "evidence": "$39.00 \u2014 cheaper than 0% of cleanser options in this catalog",
-                "name": "price_value",
-                "value": 0.0
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 100% of cleanser products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 1.0
-              },
-              {
-                "evidence": "4.2\u2605 from 794 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.798225
-              }
-            ],
-            "summary": "Contains gluconolactone, vitamin c, which targets the appearance of post-acne marks; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Fenty Skin",
-          "name": "Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Sunscreen with Niacinamide + Kalahari Melon",
-          "notes": [
-            "covers_spf"
-          ],
-          "price_usd": 39.0,
-          "product_id": "P467249",
-          "slot": "moisturizer",
-          "usage": "AM_PM",
-          "why": {
-            "score": 0.740646,
-            "signals": [
-              {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); niacinamide targets inflamed breakouts, the appearance of dark spots",
-                "name": "concern_fit",
-                "value": 0.692308
-              },
-              {
-                "evidence": "$39.00 \u2014 cheaper than 40% of moisturizer options in this catalog",
-                "name": "price_value",
-                "value": 0.4
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 90% of moisturizer products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.8993
-              },
-              {
-                "evidence": "3.8\u2605 from 124 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.71005
-              }
-            ],
-            "summary": "Contains gluconolactone, niacinamide, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
-          }
-        }
-      ],
       "archetype": "minimal",
       "notes": [
-        "moisturizer_covers_spf"
+        "diversified_from_best_overall:cleanser",
+        "spf_added_to_minimal"
       ],
+      "per_label": [],
       "pm": [
         {
-          "brand": "Youth To The People",
-          "name": "Superfood Antioxidant Cleanser",
+          "brand": "Paula's Choice",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html"
+          },
+          "name": "RESIST Perfectly Balanced Foaming Cleanser",
           "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P411387",
+          "price_usd": 22.0,
+          "product_id": "P469520",
           "slot": "cleanser",
           "usage": "AM_PM",
           "why": {
-            "score": 0.789152,
+            "score": 0.330769,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); vitamin c targets the appearance of post-acne marks, the appearance of dark spots",
+                "evidence": "no concern-targeting actives",
                 "name": "concern_fit",
-                "value": 0.769231
-              },
-              {
-                "evidence": "$39.00 \u2014 cheaper than 0% of cleanser options in this catalog",
-                "name": "price_value",
                 "value": 0.0
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "evidence": "$22.00 \u2014 cheaper than 46% of cleanser options in this catalog",
+                "name": "price_value",
+                "value": 0.461538
+              },
+              {
+                "evidence": "no data",
                 "name": "ingredient_analysis",
-                "value": 1.0
+                "value": 0.5
               },
               {
-                "evidence": "more loved than 100% of cleanser products on Sephora (snapshot-2023)",
+                "evidence": "no data",
                 "name": "popularity",
-                "value": 1.0
+                "value": 0.5
               },
               {
-                "evidence": "4.2\u2605 from 794 oily-skin reviewers",
+                "evidence": "no data",
                 "name": "review_quality",
-                "value": 0.798225
+                "value": 0.5
               }
             ],
-            "summary": "Contains gluconolactone, vitamin c, which targets the appearance of post-acne marks; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "A daily cleanser to start each routine.",
+            "uncertainty": [
+              "no_ingredient_analysis_data",
+              "no_popularity_data",
+              "no_review_quality_data"
+            ]
           }
         },
         {
-          "brand": "The Ordinary",
-          "name": "AHA 30% + BHA 2% Exfoliating Peeling Solution",
+          "brand": "CLINIQUE",
+          "directions": {
+            "amount": "thin_layer",
+            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
+            "cadence": "am_pm",
+            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
+          },
+          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
-          "price_usd": 9.5,
-          "product_id": "P442563",
+          "price_usd": 26.0,
+          "product_id": "P188306",
           "slot": "treatment",
-          "usage": "PM",
+          "usage": "AM_PM",
           "why": {
-            "score": 0.899302,
+            "score": 0.413287,
             "signals": [
               {
-                "evidence": "glycolic acid targets the appearance of post-acne marks, the appearance of dark spots, clogged-pore breakouts (blackheads and whiteheads); lactic acid targets the appearance of post-acne marks; salicylic acid targets inflamed breakouts, clogged-pore breakouts (blackheads and whiteheads)",
+                "evidence": "benzoyl peroxide targets inflamed breakouts",
                 "name": "concern_fit",
-                "value": 1.0
+                "value": 0.230769
               },
               {
-                "evidence": "$9.50 \u2014 cheaper than 100% of treatment options in this catalog",
+                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
                 "name": "price_value",
-                "value": 1.0
+                "value": 0.545455
               },
               {
-                "evidence": "model-estimated high irritancy from the INCI list",
+                "evidence": "no data",
                 "name": "ingredient_analysis",
-                "value": 0.0
+                "value": 0.5
               },
               {
-                "evidence": "more loved than 100% of treatment products on Sephora (snapshot-2023)",
+                "evidence": "no data",
                 "name": "popularity",
-                "value": 0.9973
+                "value": 0.5
               },
               {
-                "evidence": "4.6\u2605 from 525 oily-skin reviewers",
+                "evidence": "no data",
                 "name": "review_quality",
-                "value": 0.899525
+                "value": 0.5
               }
             ],
-            "summary": "Contains glycolic acid, lactic acid, salicylic acid, which targets the appearance of post-acne marks; inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
+            "uncertainty": [
+              "no_ingredient_analysis_data",
+              "no_popularity_data",
+              "no_review_quality_data"
+            ]
           }
         },
         {
-          "brand": "Fenty Skin",
-          "name": "Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Sunscreen with Niacinamide + Kalahari Melon",
-          "notes": [
-            "covers_spf"
-          ],
-          "price_usd": 39.0,
-          "product_id": "P467249",
+          "brand": "Tatcha",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+          },
+          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
+          "notes": [],
+          "price_usd": 70.0,
+          "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "why": {
-            "score": 0.740646,
+            "score": 0.599055,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); niacinamide targets inflamed breakouts, the appearance of dark spots",
+                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
                 "name": "concern_fit",
-                "value": 0.692308
+                "value": 0.230769
               },
               {
-                "evidence": "$39.00 \u2014 cheaper than 40% of moisturizer options in this catalog",
+                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.4
+                "value": 0.0
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
@@ -1221,17 +781,17 @@
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 90% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.8993
+                "value": 0.9982
               },
               {
-                "evidence": "3.8\u2605 from 124 oily-skin reviewers",
+                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.71005
+                "value": 0.767475
               }
             ],
-            "summary": "Contains gluconolactone, niacinamide, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
+            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
             "uncertainty": []
           }
         }
@@ -1255,22 +815,28 @@
           "rule": "one_product_per_slot"
         }
       ],
-      "slot_count": 3,
+      "slot_count": 4,
       "title": "Minimal 3-step",
-      "total_price_usd": 87.5
+      "total_price_usd": 156.0
     },
     {
       "am": [
         {
-          "brand": "SEPHORA COLLECTION",
-          "name": "Cleansing & Exfoliating Wipes",
+          "brand": "Paula's Choice",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html"
+          },
+          "name": "RESIST Perfectly Balanced Foaming Cleanser",
           "notes": [],
-          "price_usd": 3.0,
-          "product_id": "P409800",
+          "price_usd": 22.0,
+          "product_id": "P469520",
           "slot": "cleanser",
           "usage": "AM_PM",
           "why": {
-            "score": 0.613898,
+            "score": 0.330769,
             "signals": [
               {
                 "evidence": "no concern-targeting actives",
@@ -1278,50 +844,111 @@
                 "value": 0.0
               },
               {
-                "evidence": "$3.00 \u2014 cheaper than 100% of cleanser options in this catalog",
+                "evidence": "$22.00 \u2014 cheaper than 46% of cleanser options in this catalog",
                 "name": "price_value",
-                "value": 1.0
+                "value": 0.461538
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "evidence": "no data",
                 "name": "ingredient_analysis",
-                "value": 1.0
+                "value": 0.5
               },
               {
-                "evidence": "more loved than 99% of cleanser products on Sephora (snapshot-2023)",
+                "evidence": "no data",
                 "name": "popularity",
-                "value": 0.9872
+                "value": 0.5
               },
               {
-                "evidence": "4.4\u2605 from 380 oily-skin reviewers",
+                "evidence": "no data",
                 "name": "review_quality",
-                "value": 0.849375
+                "value": 0.5
               }
             ],
             "summary": "A daily cleanser to start each routine.",
-            "uncertainty": []
+            "uncertainty": [
+              "no_ingredient_analysis_data",
+              "no_popularity_data",
+              "no_review_quality_data"
+            ]
           }
         },
         {
-          "brand": "Fenty Skin",
-          "name": "Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Sunscreen with Niacinamide + Kalahari Melon",
+          "brand": "CLINIQUE",
+          "directions": {
+            "amount": "thin_layer",
+            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
+            "cadence": "am_pm",
+            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
+          },
+          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P467249",
+          "price_usd": 26.0,
+          "product_id": "P188306",
+          "slot": "treatment",
+          "usage": "AM_PM",
+          "why": {
+            "score": 0.413287,
+            "signals": [
+              {
+                "evidence": "benzoyl peroxide targets inflamed breakouts",
+                "name": "concern_fit",
+                "value": 0.230769
+              },
+              {
+                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
+                "name": "price_value",
+                "value": 0.545455
+              },
+              {
+                "evidence": "no data",
+                "name": "ingredient_analysis",
+                "value": 0.5
+              },
+              {
+                "evidence": "no data",
+                "name": "popularity",
+                "value": 0.5
+              },
+              {
+                "evidence": "no data",
+                "name": "review_quality",
+                "value": 0.5
+              }
+            ],
+            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
+            "uncertainty": [
+              "no_ingredient_analysis_data",
+              "no_popularity_data",
+              "no_review_quality_data"
+            ]
+          }
+        },
+        {
+          "brand": "Tatcha",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+          },
+          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
+          "notes": [],
+          "price_usd": 70.0,
+          "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "why": {
-            "score": 0.740646,
+            "score": 0.599055,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); niacinamide targets inflamed breakouts, the appearance of dark spots",
+                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
                 "name": "concern_fit",
-                "value": 0.692308
+                "value": 0.230769
               },
               {
-                "evidence": "$39.00 \u2014 cheaper than 40% of moisturizer options in this catalog",
+                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.4
+                "value": 0.0
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
@@ -1329,22 +956,28 @@
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 90% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.8993
+                "value": 0.9982
               },
               {
-                "evidence": "3.8\u2605 from 124 oily-skin reviewers",
+                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.71005
+                "value": 0.767475
               }
             ],
-            "summary": "Contains gluconolactone, niacinamide, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
+            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
             "uncertainty": []
           }
         },
         {
           "brand": "Supergoop!",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21569637-332a-461b-bf6c-33af6a83a155.xml"
+          },
           "name": "Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Niacinamide",
           "notes": [],
           "price_usd": 38.0,
@@ -1352,7 +985,7 @@
           "slot": "spf",
           "usage": "AM",
           "why": {
-            "score": 0.68626,
+            "score": 0.685069,
             "signals": [
               {
                 "evidence": "niacinamide targets inflamed breakouts, the appearance of dark spots",
@@ -1360,9 +993,9 @@
                 "value": 0.461538
               },
               {
-                "evidence": "$38.00 \u2014 cheaper than 14% of spf options in this catalog",
+                "evidence": "$38.00 \u2014 cheaper than 12% of spf options in this catalog",
                 "name": "price_value",
-                "value": 0.142857
+                "value": 0.125
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list",
@@ -1388,19 +1021,26 @@
       "archetype": "comprehensive",
       "notes": [
         "diversified_from_best_overall:cleanser",
-        "serum_not_complementary_no_uncovered_concern"
+        "slot_unfilled:serum"
       ],
+      "per_label": [],
       "pm": [
         {
-          "brand": "SEPHORA COLLECTION",
-          "name": "Cleansing & Exfoliating Wipes",
+          "brand": "Paula's Choice",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html"
+          },
+          "name": "RESIST Perfectly Balanced Foaming Cleanser",
           "notes": [],
-          "price_usd": 3.0,
-          "product_id": "P409800",
+          "price_usd": 22.0,
+          "product_id": "P469520",
           "slot": "cleanser",
           "usage": "AM_PM",
           "why": {
-            "score": 0.613898,
+            "score": 0.330769,
             "signals": [
               {
                 "evidence": "no concern-targeting actives",
@@ -1408,132 +1048,111 @@
                 "value": 0.0
               },
               {
-                "evidence": "$3.00 \u2014 cheaper than 100% of cleanser options in this catalog",
+                "evidence": "$22.00 \u2014 cheaper than 46% of cleanser options in this catalog",
                 "name": "price_value",
-                "value": 1.0
+                "value": 0.461538
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "evidence": "no data",
                 "name": "ingredient_analysis",
-                "value": 1.0
+                "value": 0.5
               },
               {
-                "evidence": "more loved than 99% of cleanser products on Sephora (snapshot-2023)",
+                "evidence": "no data",
                 "name": "popularity",
-                "value": 0.9872
+                "value": 0.5
               },
               {
-                "evidence": "4.4\u2605 from 380 oily-skin reviewers",
+                "evidence": "no data",
                 "name": "review_quality",
-                "value": 0.849375
+                "value": 0.5
               }
             ],
             "summary": "A daily cleanser to start each routine.",
-            "uncertainty": []
+            "uncertainty": [
+              "no_ingredient_analysis_data",
+              "no_popularity_data",
+              "no_review_quality_data"
+            ]
           }
         },
         {
-          "brand": "The Ordinary",
-          "name": "AHA 30% + BHA 2% Exfoliating Peeling Solution",
+          "brand": "CLINIQUE",
+          "directions": {
+            "amount": "thin_layer",
+            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
+            "cadence": "am_pm",
+            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
+          },
+          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
-          "price_usd": 9.5,
-          "product_id": "P442563",
+          "price_usd": 26.0,
+          "product_id": "P188306",
           "slot": "treatment",
-          "usage": "PM",
+          "usage": "AM_PM",
           "why": {
-            "score": 0.899302,
+            "score": 0.413287,
             "signals": [
               {
-                "evidence": "glycolic acid targets the appearance of post-acne marks, the appearance of dark spots, clogged-pore breakouts (blackheads and whiteheads); lactic acid targets the appearance of post-acne marks; salicylic acid targets inflamed breakouts, clogged-pore breakouts (blackheads and whiteheads)",
+                "evidence": "benzoyl peroxide targets inflamed breakouts",
                 "name": "concern_fit",
-                "value": 1.0
+                "value": 0.230769
               },
               {
-                "evidence": "$9.50 \u2014 cheaper than 100% of treatment options in this catalog",
+                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
                 "name": "price_value",
-                "value": 1.0
+                "value": 0.545455
               },
               {
-                "evidence": "model-estimated high irritancy from the INCI list",
+                "evidence": "no data",
                 "name": "ingredient_analysis",
-                "value": 0.0
+                "value": 0.5
               },
               {
-                "evidence": "more loved than 100% of treatment products on Sephora (snapshot-2023)",
+                "evidence": "no data",
                 "name": "popularity",
-                "value": 0.9973
+                "value": 0.5
               },
               {
-                "evidence": "4.6\u2605 from 525 oily-skin reviewers",
+                "evidence": "no data",
                 "name": "review_quality",
-                "value": 0.899525
+                "value": 0.5
               }
             ],
-            "summary": "Contains glycolic acid, lactic acid, salicylic acid, which targets the appearance of post-acne marks; inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
+            "uncertainty": [
+              "no_ingredient_analysis_data",
+              "no_popularity_data",
+              "no_review_quality_data"
+            ]
           }
         },
         {
-          "brand": "The Ordinary",
-          "name": "Azelaic Acid 10% Suspension Brightening Cream",
+          "brand": "Tatcha",
+          "directions": {
+            "amount": null,
+            "amount_source": null,
+            "cadence": "am_pm",
+            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+          },
+          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
           "notes": [],
-          "price_usd": 11.1,
-          "product_id": "P427411",
-          "slot": "serum",
-          "usage": "PM",
-          "why": {
-            "score": 0.799435,
-            "signals": [
-              {
-                "evidence": "azelaic acid targets inflamed breakouts, the appearance of dark spots, clogged-pore breakouts (blackheads and whiteheads)",
-                "name": "concern_fit",
-                "value": 0.692308
-              },
-              {
-                "evidence": "$11.10 \u2014 cheaper than 58% of serum options in this catalog",
-                "name": "price_value",
-                "value": 0.583333
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 96% of serum products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.9603
-              },
-              {
-                "evidence": "4.2\u2605 from 166 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.81315
-              }
-            ],
-            "summary": "Contains azelaic acid, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Fenty Skin",
-          "name": "Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Sunscreen with Niacinamide + Kalahari Melon",
-          "notes": [],
-          "price_usd": 39.0,
-          "product_id": "P467249",
+          "price_usd": 70.0,
+          "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "why": {
-            "score": 0.740646,
+            "score": 0.599055,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads); niacinamide targets inflamed breakouts, the appearance of dark spots",
+                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
                 "name": "concern_fit",
-                "value": 0.692308
+                "value": 0.230769
               },
               {
-                "evidence": "$39.00 \u2014 cheaper than 40% of moisturizer options in this catalog",
+                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.4
+                "value": 0.0
               },
               {
                 "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
@@ -1541,17 +1160,17 @@
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 90% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.8993
+                "value": 0.9982
               },
               {
-                "evidence": "3.8\u2605 from 124 oily-skin reviewers",
+                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.71005
+                "value": 0.767475
               }
             ],
-            "summary": "Contains gluconolactone, niacinamide, which targets inflamed breakouts; the appearance of dark spots; clogged-pore breakouts (blackheads and whiteheads).",
+            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
             "uncertainty": []
           }
         }
@@ -1575,13 +1194,13 @@
           "rule": "one_product_per_slot"
         }
       ],
-      "slot_count": 5,
+      "slot_count": 4,
       "title": "Comprehensive",
-      "total_price_usd": 100.6
+      "total_price_usd": 156.0
     }
   ],
   "schema_version": "recsys-1",
-  "status": "ok",
+  "status": "partial",
   "target_concerns": [
     {
       "concern": "acne_scarring",
@@ -1622,49 +1241,743 @@
     ],
     "see_doctor_note": "These routines are safe to start, but a professional review is recommended for the number or severity of detected lesions, possible scarring, persistent dark-spot concerns. The analysis also noticed a spot it cannot assess (nevus_observation) \u2014 worth showing to a doctor."
   },
+  "unavailable_archetypes": [
+    {
+      "archetype": "budget",
+      "reasons": [
+        "required_role_missing:cleanser",
+        "required_role_missing:moisturizer",
+        "required_role_missing:spf",
+        "required_role_missing:treatment"
+      ]
+    },
+    {
+      "archetype": "gentle_sensitive",
+      "reasons": [
+        "required_role_missing:treatment"
+      ]
+    }
+  ],
   "veto_log": {
     "compose": {
-      "best_overall": [
-        {
-          "product_id": "P439926",
-          "reason": "conflicts_selected_active:retinol:glycolic_acid",
-          "slot": "serum"
-        }
-      ],
-      "budget": [
-        {
-          "product_id": "P442563",
-          "reason": "duplicates_selected_active:salicylic_acid",
-          "slot": "treatment"
-        }
-      ],
-      "comprehensive": [
-        {
-          "product_id": "P439926",
-          "reason": "conflicts_selected_active:retinol:glycolic_acid",
-          "slot": "serum"
-        },
-        {
-          "product_id": "P443833",
-          "reason": "duplicates_selected_active:salicylic_acid",
-          "slot": "cleanser"
-        },
-        {
-          "product_id": "P4016",
-          "reason": "duplicates_selected_active:salicylic_acid",
-          "slot": "cleanser"
-        }
-      ],
-      "gentle_sensitive": [
-        {
-          "product_id": "P427411",
-          "reason": "duplicates_selected_active:azelaic_acid",
-          "slot": "serum"
-        }
-      ],
+      "best_overall": [],
+      "budget": [],
+      "comprehensive": [],
+      "gentle_sensitive": [],
       "minimal": []
     },
-    "profile": []
+    "profile": [
+      {
+        "product_id": "P173726",
+        "reason": "intended_area_not_verified:face",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P173726",
+        "reason": "role_not_verified:cleanser",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P173726",
+        "reason": "exposure_not_verified:rinse_off",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P173726",
+        "reason": "cadence_unverified",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P4016",
+        "reason": "intended_area_not_verified:face",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P4016",
+        "reason": "role_not_verified:cleanser",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P4016",
+        "reason": "exposure_not_verified:rinse_off",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P4016",
+        "reason": "cadence_unverified",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P4016",
+        "reason": "treatment_active_in_support_role:salicylic_acid",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P405096",
+        "reason": "intended_area_not_verified:face",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P405096",
+        "reason": "role_not_verified:cleanser",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P405096",
+        "reason": "exposure_not_verified:rinse_off",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P405096",
+        "reason": "cadence_unverified",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P409800",
+        "reason": "intended_area_not_verified:face",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P409800",
+        "reason": "role_not_verified:cleanser",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P409800",
+        "reason": "exposure_not_verified:rinse_off",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P409800",
+        "reason": "cadence_unverified",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P411387",
+        "reason": "intended_area_not_verified:face",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P411387",
+        "reason": "role_not_verified:cleanser",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P411387",
+        "reason": "exposure_not_verified:rinse_off",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P411387",
+        "reason": "cadence_unverified",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P443833",
+        "reason": "intended_area_not_verified:face",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P443833",
+        "reason": "role_not_verified:cleanser",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P443833",
+        "reason": "exposure_not_verified:rinse_off",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P443833",
+        "reason": "cadence_unverified",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P443833",
+        "reason": "treatment_active_in_support_role:salicylic_acid",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P444718",
+        "reason": "intended_area_not_verified:face",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P444718",
+        "reason": "role_not_verified:cleanser",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P444718",
+        "reason": "exposure_not_verified:rinse_off",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P444718",
+        "reason": "cadence_unverified",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P455364",
+        "reason": "intended_area_not_verified:face",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P455364",
+        "reason": "role_not_verified:cleanser",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P455364",
+        "reason": "exposure_not_verified:rinse_off",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P455364",
+        "reason": "cadence_unverified",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P502749",
+        "reason": "intended_area_not_verified:face",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P502749",
+        "reason": "role_not_verified:cleanser",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P502749",
+        "reason": "exposure_not_verified:rinse_off",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P502749",
+        "reason": "cadence_unverified",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P502749",
+        "reason": "treatment_active_in_support_role:benzoyl_peroxide",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P7880",
+        "reason": "intended_area_not_verified:face",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P7880",
+        "reason": "role_not_verified:cleanser",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P7880",
+        "reason": "exposure_not_verified:rinse_off",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P7880",
+        "reason": "cadence_unverified",
+        "slot": "cleanser"
+      },
+      {
+        "product_id": "P12045",
+        "reason": "intended_area_not_verified:face",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P12045",
+        "reason": "role_not_verified:moisturizer",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P12045",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P12045",
+        "reason": "cadence_unverified",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P248407",
+        "reason": "intended_area_not_verified:face",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P248407",
+        "reason": "role_not_verified:moisturizer",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P248407",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P248407",
+        "reason": "cadence_unverified",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P394639",
+        "reason": "intended_area_not_verified:face",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P394639",
+        "reason": "role_not_verified:moisturizer",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P394639",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P394639",
+        "reason": "cadence_unverified",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P427415",
+        "reason": "intended_area_not_verified:face",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P427415",
+        "reason": "role_not_verified:moisturizer",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P427415",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P427415",
+        "reason": "cadence_unverified",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P439928",
+        "reason": "intended_area_not_verified:face",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P439928",
+        "reason": "role_not_verified:moisturizer",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P439928",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P439928",
+        "reason": "cadence_unverified",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P448852",
+        "reason": "intended_area_not_verified:face",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P448852",
+        "reason": "role_not_verified:moisturizer",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P448852",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P448852",
+        "reason": "cadence_unverified",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P455369",
+        "reason": "intended_area_not_verified:face",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P455369",
+        "reason": "role_not_verified:moisturizer",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P455369",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P455369",
+        "reason": "cadence_unverified",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P467249",
+        "reason": "intended_area_not_verified:face",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P467249",
+        "reason": "role_not_verified:moisturizer",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P467249",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P467249",
+        "reason": "cadence_unverified",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P469517",
+        "reason": "intended_area_not_verified:face",
+        "slot": "moisturizer"
+      },
+      {
+        "product_id": "P429953",
+        "reason": "intended_area_not_verified:face",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P429953",
+        "reason": "role_not_verified:sunscreen",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P429953",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P429953",
+        "reason": "cadence_unverified",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P429953",
+        "reason": "spf_broad_spectrum_unverified",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P454380",
+        "reason": "intended_area_not_verified:face",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P456392",
+        "reason": "intended_area_not_verified:face",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P456392",
+        "reason": "role_not_verified:sunscreen",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P456392",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P456392",
+        "reason": "cadence_unverified",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P456392",
+        "reason": "spf_broad_spectrum_unverified",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P467976",
+        "reason": "intended_area_not_verified:face",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P467976",
+        "reason": "role_not_verified:sunscreen",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P467976",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P467976",
+        "reason": "cadence_unverified",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P467976",
+        "reason": "spf_broad_spectrum_unverified",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P504283",
+        "reason": "intended_area_not_verified:face",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P504283",
+        "reason": "role_not_verified:sunscreen",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P504283",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P504283",
+        "reason": "cadence_unverified",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P504283",
+        "reason": "spf_broad_spectrum_unverified",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P505711",
+        "reason": "intended_area_not_verified:face",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P505711",
+        "reason": "role_not_verified:sunscreen",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P505711",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P505711",
+        "reason": "cadence_unverified",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P505711",
+        "reason": "spf_broad_spectrum_unverified",
+        "slot": "spf"
+      },
+      {
+        "product_id": "P400259",
+        "reason": "intended_area_not_verified:face",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P400259",
+        "reason": "role_not_verified:serum",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P400259",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P400259",
+        "reason": "cadence_unverified",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427410",
+        "reason": "intended_area_not_verified:face",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427410",
+        "reason": "role_not_verified:serum",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427410",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427410",
+        "reason": "cadence_unverified",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427411",
+        "reason": "intended_area_not_verified:face",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427411",
+        "reason": "role_not_verified:serum",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427411",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427411",
+        "reason": "cadence_unverified",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427412",
+        "reason": "intended_area_not_verified:face",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427412",
+        "reason": "role_not_verified:serum",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427412",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427412",
+        "reason": "cadence_unverified",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427413",
+        "reason": "intended_area_not_verified:face",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427413",
+        "reason": "role_not_verified:serum",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427413",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427413",
+        "reason": "cadence_unverified",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427417",
+        "reason": "intended_area_not_verified:face",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427417",
+        "reason": "role_not_verified:serum",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427417",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P427417",
+        "reason": "cadence_unverified",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P439926",
+        "reason": "intended_area_not_verified:face",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P439926",
+        "reason": "role_not_verified:serum",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P439926",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P439926",
+        "reason": "cadence_unverified",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P443842",
+        "reason": "intended_area_not_verified:face",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P443842",
+        "reason": "role_not_verified:serum",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P443842",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P443842",
+        "reason": "cadence_unverified",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P466123",
+        "reason": "intended_area_not_verified:face",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P466123",
+        "reason": "role_not_verified:serum",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P466123",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P466123",
+        "reason": "cadence_unverified",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P469515",
+        "reason": "intended_area_not_verified:face",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P469515",
+        "reason": "role_not_verified:serum",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P469515",
+        "reason": "exposure_not_verified:leave_on",
+        "slot": "serum"
+      },
+      {
+        "product_id": "P469515",
+        "reason": "cadence_unverified",
+        "slot": "serum"
+      }
+    ]
   },
   "warnings": []
 }
