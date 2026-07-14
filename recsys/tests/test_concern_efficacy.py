@@ -11,11 +11,12 @@ from recsys.tools.build_concern_efficacy import build
 DATA = Path(__file__).parents[1] / "data"
 
 
-def _record(uid, outcome, skin_type="oily"):
+def _record(uid, outcome, skin_type="oily", product_id="p1"):
     return {
         "uid": uid,
-        "product_id": "p1",
+        "product_id": product_id,
         "skin_type": skin_type,
+        "prompt_version": "p7",
         "status": "ok",
         "labels": [{
             "concern": "acne_comedonal",
@@ -58,3 +59,25 @@ def test_cached_labels_build_registered_concern_signal(tmp_path):
     assert 0.5 < score.value < store["products"]["p1"]["acne_comedonal"]["by_skin_type"]["oily"]["smoothed"]
     assert "80% of 10 reviewers" in score.evidence
     assert score.details["matches"][0]["ladder"] == "exact"
+
+
+def test_build_only_includes_products_in_selected_catalog(tmp_path):
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text("\n".join((
+        json.dumps(_record("in", "helped")),
+        json.dumps(_record("out", "helped", product_id="p2")),
+    )) + "\n")
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "concern_efficacy.v1.json"
+
+    coverage = build(
+        labels,
+        out,
+        data_root,
+        catalog_products=1,
+        catalog_product_ids=frozenset({"p1"}),
+    )
+
+    store = json.loads(out.read_text())
+    assert set(store["products"]) == {"p1"}
+    assert coverage["products"] == 1

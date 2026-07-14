@@ -63,7 +63,8 @@ python -m recsys.tools.build_ingredient_analysis \
   --catalog recsys/data/catalog/seed_catalog.json \
   --out recsys/data/signals/ingredient_analysis.v1.json --data-root recsys/data
 
-# Phase 2 reuses the proven D-023 labeler through its append-only file contract.
+# Phase 2 uses semantic model labels plus the versioned literal-policy layer.
+# p7 passed the independent 50-row exact-set gate at 44/50 (88%).
 python -m src.recommendation.concern_labels probe
 python -m src.recommendation.concern_labels calibrate
 python -m src.recommendation.concern_labels label --yes --p2-approved
