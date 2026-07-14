@@ -53,6 +53,8 @@ paths:
   acne04_raw: data/raw/acne04
   catalog_raw: data/raw/sephora
   catalog_processed: data/processed/catalog.json
+  catalog_tier2: data/processed/catalog_tier2.json
+  catalog_drug: data/processed/catalog_drug.json
   reviews_raw: data/raw/sephora       # Sephora review CSVs (reviews_*.csv) alongside products — D-015 extension
   face_landmarker: models/face_landmarker.task  # MediaPipe Tasks bundle for D-020 regions
 

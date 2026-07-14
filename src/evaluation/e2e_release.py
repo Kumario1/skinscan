@@ -369,16 +369,6 @@ def evaluate_release(
         role_violations += _product_role_violations(routine)
         selected_product_total += _selected_product_total(routine)
         explanation_violations += _explanation_violations(routine)
-        if routine:
-            validation = routine.get("validation_errors", [])
-            validation_violations += len(validation) if isinstance(validation, list) else 1
-            if isinstance(validation, list):
-                contraindication_conflict_violations += sum(
-                    "contraindicat" in str(item).lower()
-                    or "conflict" in str(item).lower()
-                    or "duplicate_active" in str(item).lower()
-                    for item in validation
-                )
         analysis_errors = analysis.get("recommendation_errors", [])
         if isinstance(analysis_errors, list):
             validation_violations += len(analysis_errors)

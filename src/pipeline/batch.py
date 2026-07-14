@@ -170,7 +170,12 @@ def _fragment(request: BatchRequest, stage: str) -> dict[str, object]:
         "e2e_profile": e2e.get("profile"),
         "e2e_dataset": e2e.get("dataset"),
         "evidence_source": "prediction",
-        "catalog_file": catalog_bundle_identity(e2e.get("catalog_path")),
+        "catalog_file": catalog_bundle_identity(
+            e2e.get("catalog_path", runtime_config["paths"]["catalog_processed"]),
+            e2e.get("catalog_tier2_path", runtime_config["paths"]["catalog_tier2"]),
+            e2e.get("catalog_drug_path", runtime_config["paths"]["catalog_drug"]),
+        ),
+        "eligibility_debug": bool(e2e.get("eligibility_debug", False)),
         "therapy_policy_file": file_identity(e2e.get("therapy_policy_path")),
     })
     if stage == "decision_and_recommendation":
@@ -527,12 +532,21 @@ class E2EStageRunner:
             if decision.therapy_disposition == "active_treatment" and plan.primary is None:
                 decision = replace(decision, therapy_disposition="defer")
             catalog_path_raw = values.get("catalog_path")
-            catalog_path = Path(catalog_path_raw) if isinstance(catalog_path_raw, str) else None
-            catalog, catalog_reason = load_optional_catalog(catalog_path)
-            if catalog_reason is None and not catalog:
-                catalog_reason = "catalog is empty"
             from src.config import load_config
             runtime_config = load_config()
+            catalog_path = (Path(catalog_path_raw) if isinstance(catalog_path_raw, str)
+                            else Path(runtime_config["paths"]["catalog_processed"]))
+            tier2_raw = values.get("catalog_tier2_path")
+            tier2_path = (Path(tier2_raw) if isinstance(tier2_raw, str)
+                          else Path(runtime_config["paths"]["catalog_tier2"]))
+            drug_raw = values.get("catalog_drug_path")
+            drug_path = (Path(drug_raw) if isinstance(drug_raw, str)
+                         else Path(runtime_config["paths"]["catalog_drug"]))
+            catalog, catalog_reason = load_optional_catalog(
+                catalog_path, tier2_path, drug_path
+            )
+            if catalog_reason is None and not catalog:
+                catalog_reason = "catalog is empty"
             provenance = build_provenance(
                 {
                     "source_image_sha256": request.source_image_sha256,
@@ -573,7 +587,7 @@ class E2EStageRunner:
                         else {"sha256": values.get("detector_sha256")}
                     ),
                                "classifier": {"state": "not_applicable", "sha256": None}},
-                    "catalog": catalog_bundle_identity(catalog_path),
+                    "catalog": catalog_bundle_identity(catalog_path, tier2_path, drug_path),
                     "ranker": {"state": "none", "sha256": None},
                     "policies": {
                         "triage": {"identity": triage_policy.identifier,
@@ -610,22 +624,13 @@ class E2EStageRunner:
                 recommendation = recommend(
                     report, catalog, profile, triage_policy=triage_policy,
                     therapy_policy=therapy_policy,
+                    collect_eligibility_details=bool(values.get("eligibility_debug", False)),
                 )
-                analysis["decision"] = recommendation.decision.to_dict()
-                analysis["therapy_plan"] = recommendation.therapy_plan.to_dict()
-                if recommendation.validation_errors:
-                    analysis["recommendation_status"] = "invalid"
-                    analysis["recommendation_errors"] = recommendation.validation_errors
-                else:
-                    from .e2e import v3_routine_payload
-                    routine = v3_routine_payload(recommendation, provenance)
-                    analysis["recommendation_status"] = (
-                        "partial"
-                        if (recommendation.decision.therapy_disposition == "defer"
-                            and recommendation.therapy_plan.primary is not None)
-                        else "complete"
-                    )
-            return {"analysis": analysis, "routine": routine}
+                from .e2e import recommendation_artifacts
+                fields, routine, debug = recommendation_artifacts(recommendation, provenance)
+                analysis.update(fields)
+            return {"analysis": analysis, "routine": routine,
+                    "eligibility_debug": debug if not catalog_reason else None}
 
         if stage == "rendered":
             from .regions import locate_regions
@@ -654,6 +659,11 @@ class E2EStageRunner:
                     atomic_write_json(routine_path, context["routine"])
                 elif routine_path.exists():
                     routine_path.unlink()
+                debug_path = request.artifact_dir / "eligibility_rejections.json"
+                if context.get("eligibility_debug") is not None:
+                    atomic_write_json(debug_path, context["eligibility_debug"])
+                elif debug_path.exists():
+                    debug_path.unlink()
                 rendered = request.artifact_dir / ".rendered"
                 for name in context["rendered_files"]:
                     os.replace(rendered / name, request.artifact_dir / name)

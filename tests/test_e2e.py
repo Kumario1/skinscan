@@ -301,6 +301,9 @@ def test_fixture_e2e_writes_complete_v3_artifact_set(tmp_path, fake_sarpn_server
     }
     assert all(not isinstance(value, list) for value in routine["selected_products"].values())
     assert "routines" not in routine
+    assert "eligibility_rejections" not in routine
+    assert "validation_errors" not in routine
+    assert analysis["recommendation_summary"]["missing_roles"] == []
     assert routine["replay_key"] == analysis["replay_key"]
     assert routine["input_profile"] == analysis["input_profile"]
     semantic = analysis["semantic_inputs"]
@@ -377,6 +380,23 @@ def test_pipeline_emits_selected_regimen_not_category_menu(tmp_path, fake_sarpn_
     assert selected.isdisjoint(alternatives)
 
 
+def test_eligibility_debug_is_opt_in_and_stale_file_is_removed(
+    tmp_path, fake_sarpn_server,
+):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_verified_catalog(catalog_path)
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
+    assert main(args + ["--eligibility-debug"]) == 0
+    debug = json.loads((output_dir / "eligibility_rejections.json").read_text())
+    assert debug["schema_version"] == "1"
+    assert "rejections" in debug
+    assert main(args) == 0
+    assert not (output_dir / "eligibility_rejections.json").exists()
+
+
 def test_routine_payload_carries_independent_decision_axes(tmp_path, fake_sarpn_server):
     """e2elogic finding (2026-07-13): a consumer must be able to tell the
     engine's deliberate safety fallback apart from a matching bug."""
@@ -387,9 +407,11 @@ def test_routine_payload_carries_independent_decision_axes(tmp_path, fake_sarpn_
     _write_catalog(catalog_path)
 
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
-    routine = json.loads((output_dir / "routine.json").read_text())
-    assert routine["decision"]["triage_level"] == "routine"
-    assert routine["decision"]["therapy_disposition"] == "defer"
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    assert analysis["decision"]["triage_level"] == "routine"
+    assert analysis["decision"]["therapy_disposition"] == "defer"
+    assert analysis["recommendation_reason"] == "required_roles_unfilled"
+    assert not (output_dir / "routine.json").exists()
 
 
 def _payload_for(report, recommendation, safety=()):
@@ -509,11 +531,11 @@ def test_routine_payload_reports_target_coverage(tmp_path, fake_sarpn_server):
 
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
     analysis = json.loads((output_dir / "analysis.json").read_text())
-    routine = json.loads((output_dir / "routine.json").read_text())
-    assert analysis["recommendation_status"] == "partial"
-    assert routine["decision"]["therapy_disposition"] == "defer"
-    assert routine["selected_products"] == {}
-    assert routine["eligibility_rejections"]["role:treatment"] == ["no_eligible_product"]
+    assert analysis["recommendation_status"] == "unavailable"
+    assert analysis["recommendation_reason"] == "required_roles_unfilled"
+    assert analysis["recommendation_summary"]["selected_roles"] == []
+    assert "treatment" in analysis["recommendation_summary"]["missing_roles"]
+    assert not (output_dir / "routine.json").exists()
 
 
 def test_broken_ranker_artifact_degrades_to_rules_only(
@@ -536,7 +558,7 @@ def test_broken_ranker_artifact_degrades_to_rules_only(
 
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
     analysis = json.loads((output_dir / "analysis.json").read_text())
-    assert analysis["recommendation_status"] == "partial"
+    assert analysis["recommendation_status"] == "unavailable"
 
 
 @pytest.mark.parametrize("catalog_case", ["missing", "invalid", "unreadable"])
@@ -750,7 +772,7 @@ def test_main_replaces_prior_pipeline_output_dir(tmp_path, fake_sarpn_server):
     assert not (output_dir / "stale.jpg").exists()
     analysis = json.loads((output_dir / "analysis.json").read_text())
     assert analysis["schema_version"] == "3"
-    assert analysis["recommendation_status"] == "partial"
+    assert analysis["recommendation_status"] == "unavailable"
 
 
 # --- Finding 11: regular file at --out is refused early (chosen behavior) --
@@ -1081,7 +1103,7 @@ def test_main_surfaces_professional_review_safety_observation(tmp_path, capsys):
         assert f"{obs['code']}: professional review recommended" in combined
 
 
-def test_main_prints_routine_flags_when_recommendation_available(tmp_path, capsys):
+def test_main_surfaces_safety_when_required_products_are_unavailable(tmp_path, capsys):
     image_path = tmp_path / "face.jpg"
     catalog_path = tmp_path / "catalog.json"
     output_dir = tmp_path / "output"
@@ -1094,9 +1116,6 @@ def test_main_prints_routine_flags_when_recommendation_available(tmp_path, capsy
 
     assert exit_code == 0
 
-    routine = json.loads((output_dir / "routine.json").read_text())
-    assert routine["flags"], "fixture must produce at least one routine flag"
-
     combined = "".join(capsys.readouterr())
-    for flag in routine["flags"]:
-        assert flag in combined
+    assert "see a dermatologist" in combined
+    assert not (output_dir / "routine.json").exists()

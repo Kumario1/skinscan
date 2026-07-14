@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Callable, Mapping
 
 
 VOLATILE_REPLAY_KEYS = {
@@ -76,12 +76,18 @@ def file_identity(path: str | Path | None) -> dict[str, object]:
     return {"state": "available", "sha256": sha256_file(path), "name": path.name}
 
 
-def catalog_bundle_identity(path: str | Path | None) -> dict[str, object]:
-    """Identify every catalog file implicitly consumed by the E2E loader."""
+def catalog_bundle_identity(
+    path: str | Path | None,
+    tier2_path: str | Path | None = None,
+    drug_path: str | Path | None = None,
+) -> dict[str, object]:
+    """Identify every explicitly consumed catalog in the recommendation bundle."""
     primary = file_identity(path)
-    tier2_path = Path(path).with_name("catalog_tier2.json") if path is not None else None
+    if tier2_path is None and path is not None:
+        tier2_path = Path(path).with_name("catalog_tier2.json")
     tier2 = file_identity(tier2_path)
-    identities = {"primary": primary, "tier2": tier2}
+    drug = file_identity(drug_path)
+    identities = {"primary": primary, "tier2": tier2, "drug": drug}
     return {
         "state": primary["state"],
         "sha256": compute_replay_key(identities),

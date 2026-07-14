@@ -64,13 +64,15 @@ def routine_from(analysis, *, violation=False):
         "alternatives": {},
         "explanation": [{"role": "treatment", "product_id": "aza",
                          "delivered_active": "azelaic_acid"}],
-        "validation_errors": ["injected"] if violation else [],
+        "validation_status": "valid",
     }
 
 
 def write_run(tmp_path, analysis, *, routine=True, violation=False):
     run = tmp_path / analysis["dataset"]["sample_id"]
     run.mkdir()
+    if violation:
+        analysis = {**analysis, "recommendation_errors": ["injected"]}
     (run / "analysis.json").write_text(json.dumps(analysis))
     if routine:
         (run / "routine.json").write_text(json.dumps(routine_from(analysis, violation=violation)))

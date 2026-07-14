@@ -15,7 +15,7 @@ import tempfile
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.recommendation.import_catalog import (
-    import_csv, load_catalog, parse_ingredients, product_from_row,
+    build_completeness_report, import_csv, load_catalog, parse_ingredients, product_from_row,
     sephora_row_to_simple,
 )
 from src.recommendation.engine import Recommendation, recommend
@@ -241,7 +241,10 @@ def test_unknown_verification_values_do_not_turn_into_false(tmp_path):
 
 def test_malformed_overlay_names_product_and_field(tmp_path):
     bad = tmp_path / "bad.json"
-    bad.write_text('{"products":[{"product_id":"P480274","drug_actives":"no"}]}')
+    bad.write_text('{"schema_version":"2","products":[{"product_id":"P480274",'
+                   '"assertions":[{"status":"approved","source_url":"synthetic://x",'
+                   '"retrieved_at":"now","source_sha256":"0000000000000000000000000000000000000000000000000000000000000000",'
+                   '"reviewer_id":"test","approved_at":"now","facts":{"drug_actives":"no"}}]}]}')
     try:
         import_csv(SEPHORA_FIXTURE, tmp_path / "out.json", fmt="sephora", verification=bad)
     except ValueError as exc:
@@ -253,7 +256,10 @@ def test_malformed_overlay_names_product_and_field(tmp_path):
 
 def test_wrong_typed_spf_overlay_names_product_and_field(tmp_path):
     bad = tmp_path / "bad-spf.json"
-    bad.write_text('{"products":[{"product_id":"P504987","spf":"50"}]}')
+    bad.write_text('{"schema_version":"2","products":[{"product_id":"P504987",'
+                   '"assertions":[{"status":"approved","source_url":"synthetic://x",'
+                   '"retrieved_at":"now","source_sha256":"0000000000000000000000000000000000000000000000000000000000000000",'
+                   '"reviewer_id":"test","approved_at":"now","facts":{"spf":"50"}}]}]}')
     try:
         import_csv(SEPHORA_FIXTURE, tmp_path / "out.json", fmt="sephora", verification=bad)
     except ValueError as exc:
@@ -272,6 +278,27 @@ def test_verified_import_and_quarantine_are_byte_identical(tmp_path):
                quarantine_out=second_q)
     assert first_catalog.read_bytes() == second_catalog.read_bytes()
     assert first_q.read_bytes() == second_q.read_bytes()
+
+
+def test_proposed_assertion_cannot_grant_eligibility(tmp_path):
+    value = __import__("json").loads(VERIFICATION.read_text())
+    value["products"][0]["assertions"][0]["status"] = "proposed"
+    proposed = tmp_path / "proposed.json"
+    proposed.write_text(__import__("json").dumps(value))
+    out = tmp_path / "catalog.json"
+    import_csv(SEPHORA_FIXTURE, out, fmt="sephora", verification=proposed)
+    product = next(item for item in load_catalog(out) if item.product_id == "P480274")
+    assert product.routine_roles == []
+    assert product.drug_actives == []
+
+
+def test_completeness_reports_support_role_shortfalls(tmp_path):
+    out = tmp_path / "catalog.json"
+    import_csv(SEPHORA_FIXTURE, out, fmt="sephora", verification=VERIFICATION)
+    report = build_completeness_report(load_catalog(out), support_minimum=25)
+    assert report["complete"] is False
+    assert report["shortfalls"]["cleanser"] == 25
+    assert report["eligible_by_role"]["sunscreen"] == 1
 
 
 if __name__ == "__main__":

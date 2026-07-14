@@ -618,3 +618,13 @@ standing in for verified treatment; ranker repair of an ineligible product;
 multiple selected products per role; unsourced medicine directions; stale or
 mixed release metrics; unbounded whole-batch restart; and claims that this code
 change is clinical approval or a release certification.
+
+## D-030 — Eligibility diagnostics are compact by default (2026-07-13)
+
+Routine artifacts contain only a validated selected regimen and its provenance;
+validation internals and per-product rejection maps are not public routine
+fields. Analysis retains role-level eligible/rejected counts and reason counts.
+Detailed per-product rejection evidence is written only to an explicit debug
+artifact. If any requested role is unfilled, analysis reports
+`required_roles_unfilled` and no routine artifact is published. Primary,
+tier-2, and drug catalog files are identified separately in provenance.
