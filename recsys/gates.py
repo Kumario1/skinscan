@@ -30,12 +30,27 @@ def profile_gate_reasons(
 ) -> list[str]:
     reasons: list[str] = []
     actives = set(product.actives)
+    expected_role = "sunscreen" if slot == "spf" else slot
     if product.discontinued:
         reasons.append("product_discontinued")
-    if product.cadence not in (None, "am", "pm", "am_pm", "daily", "once_daily",
-                               "twice_daily", "per_label"):
+    if "face" not in product.intended_areas:
+        reasons.append("intended_area_not_verified:face")
+    if expected_role not in product.routine_roles:
+        reasons.append(f"role_not_verified:{expected_role}")
+    expected_exposure = "rinse_off" if slot == "cleanser" else "leave_on"
+    if product.exposure != expected_exposure:
+        reasons.append(f"exposure_not_verified:{expected_exposure}")
+    if product.cadence is None or not product.cadence_source:
+        reasons.append("cadence_unverified")
+    elif product.cadence not in ("am", "pm", "am_pm", "daily", "once_daily",
+                                 "twice_daily", "per_label"):
         reasons.append("cadence_not_daily")
-    for condition in sorted(set(product.contraindications) & set(profile.sensitivity_conditions)):
+    profile_contraindications = (
+        set(profile.sensitivity_conditions)
+        | set(profile.current_medications)
+        | {profile.pregnancy_status}
+    )
+    for condition in sorted(set(product.contraindications) & profile_contraindications):
         reasons.append(f"product_contraindication:{condition}")
     if actives & knowledge.retinoids and (
         profile.pregnancy_status in knowledge.pregnancy_excluded_statuses
@@ -45,8 +60,27 @@ def profile_gate_reasons(
         reasons.append(f"profile_allergy:{allergy}")
     for duplicate in sorted(actives & set(profile.current_actives)):
         reasons.append(f"duplicates_current_active:{duplicate}")
-    if slot == "spf" and (product.spf is None or product.spf < knowledge.min_spf):
-        reasons.append("spf_below_30_or_unknown")
+    if slot in ("cleanser", "moisturizer", "spf"):
+        for active in sorted(actives & knowledge.treatment_actives):
+            reasons.append(f"treatment_active_in_support_role:{active}")
+    if slot == "treatment":
+        verified_drug_actives = {
+            active.get("name") for active in product.drug_actives
+            if isinstance(active, dict)
+        }
+        if not verified_drug_actives or not (verified_drug_actives & actives):
+            reasons.append("treatment_active_unverified")
+        if product.format in ("mask", "peel", "scrub"):
+            reasons.append(f"treatment_format_not_daily_leave_on:{product.format}")
+        if not product.label_source or not product.label_verified_at:
+            reasons.append("treatment_label_unverified")
+    if slot == "spf":
+        if product.spf is None or product.spf < knowledge.min_spf:
+            reasons.append("spf_below_30_or_unknown")
+        if product.broad_spectrum is False:
+            reasons.append("spf_not_broad_spectrum")
+        elif product.broad_spectrum is not True:
+            reasons.append("spf_broad_spectrum_unverified")
     if (
         profile.max_price_usd is not None
         and product.price_usd is not None

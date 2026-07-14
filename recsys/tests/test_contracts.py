@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -35,6 +36,25 @@ def test_rejects_unknown_concern(tmp_path):
     bad = tmp_path / "bad.json"
     bad.write_text(json.dumps(data))
     with pytest.raises(ContractViolation, match="concern"):
+        load_analysis(bad)
+
+
+def test_rejects_duplicate_concerns(tmp_path):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["concerns"].append(dict(data["concerns"][0]))
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps(data))
+    with pytest.raises(ContractViolation, match="duplicate"):
+        load_analysis(bad)
+
+
+@pytest.mark.parametrize("confidence", [math.nan, math.inf, -0.1, 1.1])
+def test_rejects_invalid_confidence(tmp_path, confidence):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["concerns"][0]["confidence"] = confidence
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps(data))
+    with pytest.raises(ContractViolation, match="confidence"):
         load_analysis(bad)
 
 

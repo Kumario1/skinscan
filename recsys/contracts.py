@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -78,17 +79,26 @@ def load_analysis(path: str | Path) -> AnalysisInput:
         )
 
     concerns = []
+    seen_concerns: set[str] = set()
     for i, c in enumerate(data.get("concerns") or []):
         name = c.get("concern")
         if name not in CONCERNS:
             raise ContractViolation(f"concerns[{i}].concern", f"unknown {name!r}")
+        if name in seen_concerns:
+            raise ContractViolation(f"concerns[{i}].concern", f"duplicate {name!r}")
+        seen_concerns.add(name)
         severity = c.get("severity")
         if not isinstance(severity, int) or not 0 <= severity <= 4:
             raise ContractViolation(f"concerns[{i}].severity", f"expected int 0..4, got {severity!r}")
+        confidence = float(c.get("confidence") or 0.0)
+        if not math.isfinite(confidence) or not 0 <= confidence <= 1:
+            raise ContractViolation(
+                f"concerns[{i}].confidence", f"expected finite 0..1, got {confidence!r}"
+            )
         concerns.append(ConcernFinding(
             concern=name,
             severity=severity,
-            confidence=float(c.get("confidence") or 0.0),
+            confidence=confidence,
             lesion_count=c.get("lesion_count"),
             regions=tuple(c.get("regions") or []),
             evidence_labels=dict((c.get("evidence") or {}).get("labels") or {}),

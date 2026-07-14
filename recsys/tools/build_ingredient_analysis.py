@@ -12,8 +12,8 @@ Store (signals/ingredient_analysis.v1.json), keyed by product_id:
      "prompt_version": "...", "model_id": "...", "inci_sha256": "..."}
 
 Cache (data/cache/ingredient_analysis_cache.jsonl): append-only JSONL keyed by
-(product_id, inci_sha256, prompt_version) — a product is re-labeled only when
-its INCI or the prompt changes. Crash-safe: rerun resumes from the cache.
+(product_id, inci_sha256, prompt_version, model_id) — a product is re-labeled
+when its INCI, prompt, or provider model changes. Crash-safe: rerun resumes.
 
 This output is a SCORING signal only, always labeled model-derived in
 explanations; safety gates key off the deterministic INCI parser and
@@ -69,14 +69,15 @@ claims. Use normalized lowercase ingredient names in arrays.
 """
 
 
-def read_cache(cache_path: Path) -> dict[tuple[str, str, str], dict]:
-    cache: dict[tuple[str, str, str], dict] = {}
+def read_cache(cache_path: Path) -> dict[tuple[str, str, str, str | None], dict]:
+    cache: dict[tuple[str, str, str, str | None], dict] = {}
     if cache_path.exists():
         for line in cache_path.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
             entry = json.loads(line)
-            cache[(entry["product_id"], entry["inci_sha256"], entry["prompt_version"])] = entry
+            cache[(entry["product_id"], entry["inci_sha256"],
+                   entry["prompt_version"], entry.get("model_id"))] = entry
     return cache
 
 
@@ -214,7 +215,7 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
     product_rows = [product.to_dict() for product in products]
     cache = read_cache(cache_path)
     uncached = sum(
-        (product["product_id"], product["inci_sha256"], PROMPT_VERSION) not in cache
+        (product["product_id"], product["inci_sha256"], PROMPT_VERSION, model) not in cache
         for product in product_rows
     )
     if uncached > max_new_labels:
@@ -223,7 +224,8 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
             f"--max-new-labels {uncached} after checking cost"
         )
     pending = [product for product in product_rows
-               if (product["product_id"], product["inci_sha256"], PROMPT_VERSION) not in cache]
+               if (product["product_id"], product["inci_sha256"],
+                   PROMPT_VERSION, model) not in cache]
     batch_size = max(1, products_per_request)
     batches = [pending[i:i + batch_size] for i in range(0, len(pending), batch_size)]
     failures = []
@@ -238,7 +240,8 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
                 continue
             for product, entry in zip(batch, batch_entries, strict=True):
                 append_cache(cache_path, entry)
-                cache[(product["product_id"], product["inci_sha256"], PROMPT_VERSION)] = entry
+                cache[(product["product_id"], product["inci_sha256"],
+                       PROMPT_VERSION, model)] = entry
     if failures:
         raise RuntimeError(
             f"ingredient analysis failed for {len(failures)} products; rerun resumes cache: "
@@ -247,7 +250,7 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
 
     entries = []
     for product in product_rows:
-        key = (product["product_id"], product["inci_sha256"], PROMPT_VERSION)
+        key = (product["product_id"], product["inci_sha256"], PROMPT_VERSION, model)
         entry = cache[key]
         entries.append(_entry(product, entry.get("model_id", model), entry))
 

@@ -62,10 +62,15 @@ def _step_summary(step: Step, k: Knowledge) -> str:
             f"Contains {', '.join(a.replace('_', ' ') for a in actives)}, "
             f"which targets {'; '.join(phrases)}."
         )
+    spf_summary = (
+        "Daily verified broad-spectrum sun protection — also helps prevent new dark spots."
+        if step.scored.product.broad_spectrum is True
+        else "Daily sun protection; broad-spectrum status is not verified."
+    )
     defaults = {
         "cleanser": "A daily cleanser to start each routine.",
         "moisturizer": "Keeps your skin barrier hydrated alongside the treatment steps.",
-        "spf": "Daily broad-spectrum sun protection — also helps prevent new dark spots.",
+        "spf": spf_summary,
     }
     return defaults.get(step.slot, "Supports the routine.")
 
@@ -94,6 +99,12 @@ def step_to_dict(step: Step, k: Knowledge, profile: Profile) -> dict:
         "brand": product.brand,
         "price_usd": product.price_usd,
         "usage": step.usage,
+        "directions": {
+            "cadence": product.cadence,
+            "cadence_source": product.cadence_source,
+            "amount": product.amount,
+            "amount_source": product.amount_source,
+        },
         "notes": list(step.notes),
         "why": {
             "summary": _step_summary(step, k),
@@ -139,6 +150,9 @@ def routine_to_dict(routine: ComposedRoutine, k: Knowledge, profile: Profile) ->
         "slot_count": len(routine.steps),
         "am": [s for s, raw in zip(steps, routine.steps) if raw.usage in ("AM", "AM_PM")],
         "pm": [s for s, raw in zip(steps, routine.steps) if raw.usage in ("PM", "AM_PM")],
+        "per_label": [
+            s for s, raw in zip(steps, routine.steps) if raw.usage == "PER_LABEL"
+        ],
         "safety_checks": safety_checks(routine, k),
         "notes": sorted(set(routine.notes)),
     }

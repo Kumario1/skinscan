@@ -27,7 +27,7 @@ PRODUCT = {
     "spf": None,
     "spf_source": None,
     "inci": ["Water", "Cocos Nucifera Oil"],
-    "inci_sha256": "abc123",
+    "inci_sha256": "42bdd5aaf9ef28381fc9ed2011322686e0ffedc432f56a716c15cf8731fd5fa0",
     "actives": [],
 }
 
@@ -35,7 +35,7 @@ PRODUCT = {
 def analysis_entry():
     return {
         "product_id": "p1",
-        "inci_sha256": "abc123",
+        "inci_sha256": PRODUCT["inci_sha256"],
         "prompt_version": PROMPT_VERSION,
         "model_id": "test/model",
         "actives_beyond_table": ["Beta Glucan"],
@@ -145,7 +145,7 @@ def test_cached_build_registers_provider(tmp_path):
     append_cache(cache_path, analysis_entry())
     out_path = data_root / "signals" / "ingredient_analysis.v1.json"
 
-    build(catalog_path, out_path, data_root, cache_path, "unused/model")
+    build(catalog_path, out_path, data_root, cache_path, "test/model")
     store = json.loads(out_path.read_text())
     registry = json.loads((data_root / "signals" / "registry.json").read_text())
     assert registry["stores"][0]["source"]["model_ids"] == ["test/model"]

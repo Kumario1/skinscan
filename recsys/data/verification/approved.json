@@ -43,6 +43,25 @@
           "source_sha256": "f81949978b0534ebcd1c56e3a53d1fa5e7b2536aea7bfd9fbcff21e4266e28da",
           "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
           "status": "approved"
+        },
+        {
+          "approved_at": "2026-07-14T23:28:47Z",
+          "facts": {
+            "amount": "thin_layer",
+            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
+            "cadence": "am_pm",
+            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
+            "evidence_grade": "manufacturer_product_page",
+            "intended_areas": [
+              "face"
+            ]
+          },
+          "retrieved_at": "2026-07-14T23:28:47Z",
+          "reviewer_id": "codex-main-catalog-verification",
+          "reviewer_type": "agent",
+          "source_sha256": "4675c450fc9e141d2192ec7b965a4d2c3d1f5045b45ba8bbfbf5d066e2dad1fd",
+          "source_url": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
+          "status": "approved"
         }
       ],
       "product_id": "P188306"
