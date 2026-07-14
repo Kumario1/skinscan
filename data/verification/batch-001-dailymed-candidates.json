@@ -1,0 +1,50 @@
+[
+  {
+    "actives": [
+      "benzoyl_peroxide"
+    ],
+    "amount": null,
+    "amount_source": null,
+    "brand": "DailyMed SPL",
+    "broad_spectrum": null,
+    "cadence": "per_label",
+    "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+    "catalog_schema_version": "2",
+    "category": "treatment",
+    "comedogenic_claim": "unknown",
+    "comedogenic_flags": [],
+    "contraindications": [],
+    "drug_actives": [
+      {
+        "name": "benzoyl_peroxide",
+        "source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+        "strength": "2.5%"
+      }
+    ],
+    "evidence_grade": "pending_review",
+    "evidence_roles": [],
+    "exposure": "leave_on",
+    "format": "lotion",
+    "ingredient_match": {},
+    "intended_areas": [
+      "face"
+    ],
+    "irritant_features": [],
+    "label_effective_date": "20250815",
+    "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+    "label_verified_at": "2026-07-14T16:57:47.576903Z",
+    "label_version": "3",
+    "name": "ACNE SOLUTIONS ALL-OVER CLEARING TREATMENT",
+    "ndc_product_code": "49527-117",
+    "no_outcome_data": false,
+    "otc_drug": true,
+    "price_is_stale": true,
+    "price_usd": null,
+    "product_id": "dailymed:0d0cfec0-5d18-c347-e063-6394a90a912c:49527-117:benzoyl_peroxide-2.5%",
+    "routine_roles": [],
+    "source_hash": "f81949978b0534ebcd1c56e3a53d1fa5e7b2536aea7bfd9fbcff21e4266e28da",
+    "source_set_id": "0d0cfec0-5d18-c347-e063-6394a90a912c",
+    "spf": null,
+    "tier": 1
+  }
+]

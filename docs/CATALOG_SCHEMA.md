@@ -14,10 +14,11 @@ D-015) is messy; it gets normalized into this on import. See DECISIONS.md D-009.
 - **Prices are decorative.** Stored if present, never trusted, never used in
   logic. (D-001: no live pricing.)
 
-## Product schema
+## Product schema v2 (D-029)
 
 ```json
 {
+  "catalog_schema_version": "2",
   "product_id": "string",
   "name": "CeraVe Foaming Facial Cleanser",
   "brand": "CeraVe",
@@ -26,9 +27,42 @@ D-015) is messy; it gets normalized into this on import. See DECISIONS.md D-009.
   "comedogenic_flags": [],
   "price_usd": 15.99,
   "price_is_stale": true,
-  "raw_ingredients": "aqua, niacinamide, ..."
+  "intended_areas": ["face"],
+  "routine_roles": ["cleanser"],
+  "format": "gel",
+  "exposure": "rinse_off",
+  "drug_actives": [],
+  "otc_drug": false,
+  "label_source": "https://authoritative.example/label",
+  "label_verified_at": "2026-07-13T00:00:00Z",
+  "broad_spectrum": null,
+  "spf": null,
+  "comedogenic_claim": "unknown",
+  "irritant_features": [],
+  "contraindications": [],
+  "evidence_roles": ["cleanser"],
+  "evidence_grade": "verified_label",
+  "cadence": "per_label",
+  "cadence_source": "https://authoritative.example/label",
+  "amount": null,
+  "amount_source": null,
+  "source_set_id": null,
+  "ndc_product_code": null,
+  "label_version": null,
+  "label_effective_date": null,
+  "source_hash": null
 }
 ```
+
+`actives` is the complete set of canonical actives known to be carried from
+the ingredient list. It is not proof of delivered strength or therapeutic
+role. `drug_actives` holds only independently verified active/strength/source
+tuples. Legacy rows still load with `catalog_schema_version: "legacy"` and
+unknown/empty v2 fields, but gain no eligibility by inference.
+
+Storage validity is deliberately broader than recommendation eligibility.
+Unknown metadata is preserved, then the importer writes a deterministic
+quarantine report listing each unavailable role and stable reason codes.
 
 ## Closed category vocabulary
 
@@ -93,16 +127,18 @@ CSV** (8,494 rows, 39 skincare pairs, 2026-07-09) — not written from memory.
 | → category | Sephora (secondary / tertiary) pairs |
 |------------|--------------------------------------|
 | cleanser | Cleansers / Face Wash & Cleansers · Cleansers / Makeup Removers · Cleansers / Face Wipes · Cleansers / _(empty)_ |
-| treatment | Cleansers / Toners · Cleansers / Exfoliators · Treatments / Facial Peels · Treatments / Blemish & Acne Treatments · Masks / Face Masks · Masks / Sheet Masks |
+| treatment storage category | Cleansers / Toners · Cleansers / Exfoliators · Treatments / Facial Peels · Treatments / Blemish & Acne Treatments · Masks / Face Masks · Masks / Sheet Masks |
 | serum | Treatments / Face Serums |
-| moisturizer | Moisturizers / Moisturizers · Mists & Essences · Face Oils · Night Creams · Decollete & Neck Creams · _(empty)_ |
+| moisturizer storage category | Moisturizers / Moisturizers · Mists & Essences · Face Oils · Night Creams · Decollete & Neck Creams · _(empty)_ |
 | spf | Sunscreen / Face Sunscreen · Sunscreen / _(empty)_ |
 
-Non-obvious calls: Removers/Wipes are the cleansing phase; Toners are LEAVE-ON
-(2026-07-13: an actives-bearing BHA toner in the rinse-off cleanser step
-misstated delivery) so they join Exfoliators and Masks in the treatment step
-regardless of Sephora's grouping; Mists/Essences/Oils/Night/Neck creams are
-leave-on moisturizers.
+These mappings preserve a coarse historical storage category only. They do
+not assign v3 routine eligibility. Source facts survive separately: removers
+and wipes are rinse-off cleansing formats; exfoliators are scrubs; peels and
+masks remain peel/mask exposures with no daily treatment role; decollete/neck
+cream has intended area `neck` and no facial moisturizer role. Only explicit
+verification overlay data may add a role, source, strength, claim, cadence, or
+amount.
 
 Everything else is **dropped and counted** in the import log's
 `dropped_by_category` breakdown: non-Skincare primaries (Makeup, Hair, …) and
@@ -111,12 +147,44 @@ sets, mini sizes, high-tech tools, wellness/supplements, self-tanners, BB/CC
 creams, body sunscreen, blotting papers. On the full dump this keeps **1,634
 products** (all five categories non-empty, ~89% with ≥1 canonical active).
 
+## Verification overlay and quarantine
+
+The optional overlay uses `schema_version: "2"` and product rows containing
+one or more evidence assertions. Only assertions with `status: "approved"`
+are applied. Each approved assertion carries its source URL, retrieval time,
+content SHA-256, reviewer identity, approval time, and a non-overlapping
+`facts` object. The required `reviewer_type` is `human` or `agent`; AI approval
+is limited to factual catalog evidence and does not satisfy clinical release
+gates. `proposed` and `stale` assertions grant no eligibility. Every
+supplied fact is schema-validated with product/field context, then merged in
+sorted product order. Verified drug actives are also included in the complete
+carried-active set so safety checks cannot miss an unrelated active. The raw
+Sephora/BeautyAPI import never manufactures strengths, label URLs,
+verification timestamps, broad-spectrum claims, contraindications, cadence,
+or amounts.
+
+Treatment quarantine checks face area, treatment role, daily format,
+leave-on/approved exposure, verified drug active strength, label source, and
+timestamp. SPF additionally requires explicit broad-spectrum `true` and
+numeric SPF ≥30. Unknown comedogenic/contraindication metadata remains unknown,
+not false. Masks, scrubs, peels, neck products, and trace-active rinse-off
+cleansers cannot masquerade as verified leave-on therapy.
+
+DailyMed-derived candidate rows additionally retain SET ID, NDC product code, label
+version/effective date, and source-content hash. Import requires a current,
+non-archived, human, topical OTC SPL from an HTTPS source plus an independent
+retrieval timestamp. Import leaves `routine_roles` empty and marks the evidence
+`pending_review`; an identified human or agent must still approve an overlay
+before the row can become eligible. Prescription labels, non-DailyMed hosts, and local fixture
+paths cannot create eligible catalog rows.
+
 ## What this deliberately excludes
 
 - No reviews / ratings / loves on the catalog itself — popularity ranking
   exists (D-028) but lives in the review-stats artifact and the ranker, never
   on the catalog schema.
-- No concentration data (INCI lists don't provide it reliably).
+- No concentration claims derived from INCI lists. Strength may exist only in
+  `drug_actives` when an authoritative overlay supplies it.
 - No stock / availability.
 
 ## Review-stats & ranker artifacts

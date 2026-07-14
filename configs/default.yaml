@@ -42,6 +42,8 @@ sa_rpn:
 recommendation:
   concern_confidence_cutoff: 0.5    # below -> "possible, verify" (RULES.md §5)
   downrank_comedogenic: true
+  therapy_policy_path: null         # no production clinician-reviewed policy is bundled
+  triage_policy_status: unreviewed  # numeric nodule gates must come from external review
 
 evaluation:
   disaggregate_by: fitzpatrick      # D-016, mandatory
@@ -51,6 +53,8 @@ paths:
   acne04_raw: data/raw/acne04
   catalog_raw: data/raw/sephora
   catalog_processed: data/processed/catalog.json
+  catalog_tier2: data/processed/catalog_tier2.json
+  catalog_drug: data/processed/catalog_drug.json
   reviews_raw: data/raw/sephora       # Sephora review CSVs (reviews_*.csv) alongside products — D-015 extension
   face_landmarker: models/face_landmarker.task  # MediaPipe Tasks bundle for D-020 regions
 
@@ -59,8 +63,8 @@ concern_report:                     # consumed by the future Stage 2->3 bridge
 
 # --- Verbose hybrid recommender (PRD #1); keys delivered by issue #2, inert until consumed ---
 
-profile:                            # inference-time user profile (D-021)
-  skin_types: [combination, dry, normal, oily]   # closed set == review skin_type vocabulary
+profile:                            # inference-time user profile (D-021/D-029)
+  skin_types: [combination, dry, normal, oily, unknown]  # unknown is explicit, never inferred as combination
 
 regions:                            # D-020 face-region polygons (issue #6)
   perioral_scale: 1.55              # lip-hull dilation that forms the perioral ring

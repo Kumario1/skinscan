@@ -153,6 +153,14 @@ class SarpnTransportError(SarpnAnalysisError):
     """The SA-RPN endpoint could not successfully serve a tile."""
 
 
+class SarpnHTTPStatusError(SarpnTransportError):
+    """An HTTP response whose status determines retry safety."""
+
+    def __init__(self, message: str, status_code: int):
+        super().__init__(message)
+        self.status_code = status_code
+
+
 class SarpnResponseError(SarpnAnalysisError):
     """The SA-RPN endpoint returned a response outside its strict contract."""
 
@@ -313,9 +321,14 @@ def _infer_tile(
             # raise_for_status(); scrub it before it reaches logs or analysis.json.
             safe_endpoint = sanitize_endpoint(settings.endpoint_url)
             detail = _scrub_error_text(str(exc), settings)
-            raise SarpnTransportError(
-                f"tile {tile.index} request to {safe_endpoint} failed: {detail}"
-            ) from exc
+            message = f"tile {tile.index} request to {safe_endpoint} failed: {detail}"
+            status_code = (
+                exc.response.status_code
+                if isinstance(exc, requests.HTTPError) and exc.response is not None else None
+            )
+            if status_code is not None:
+                raise SarpnHTTPStatusError(message, status_code) from exc
+            raise SarpnTransportError(message) from exc
         try:
             payload = response.json()
         except (requests.JSONDecodeError, ValueError) as exc:
@@ -391,7 +404,8 @@ def _severity(labels: Counter, scores: list[float], region_count: int, config: M
 
 def build_sarpn_concern_report(image_id: str, observations: Sequence[LesionObservation],
                                regions: Sequence[str], severity_config: Mapping[str, Any], *,
-                               low_light_flag: bool = False):
+                               low_light_flag: bool = False,
+                               evidence_source: str = "prediction"):
     if len(observations) != len(regions):
         raise ValueError("observations and regions must have the same length")
     grouped = defaultdict(list)
@@ -417,7 +431,9 @@ def build_sarpn_concern_report(image_id: str, observations: Sequence[LesionObser
         labels = Counter(label for label, _, _ in members)
         scores = [score for _, score, _ in members]
         concern_regions = sorted({region for _, _, region in members})
-        evidence = ConcernEvidence(dict(labels), max(scores), len(concern_regions))
+        evidence = ConcernEvidence(
+            dict(labels), max(scores), len(concern_regions), evidence_source,
+        )
         concerns.append(Concern(concern_name, concern_regions[0],
                                 _severity(labels, scores, len(concern_regions), severity_config, concern_name),
                                 sum(scores) / len(scores), len(members), concern_regions, evidence))
@@ -442,7 +458,8 @@ def concern_to_dict(concern: Concern) -> dict[str, object]:
             "confidence": concern.confidence, "lesion_count": concern.lesion_count,
             "evidence": {"labels": dict(concern.evidence.labels),
                          "max_confidence": concern.evidence.max_confidence,
-                         "affected_region_count": concern.evidence.affected_region_count}}
+                         "affected_region_count": concern.evidence.affected_region_count,
+                         "source": concern.evidence.source}}
 
 
 def sanitize_endpoint(url: str) -> str:

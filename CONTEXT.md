@@ -8,7 +8,8 @@ here.
 
 **concern** — A cosmetic skin issue the system reports on, never a medical
 condition (D-002). Closed vocabulary: `acne_comedonal`, `acne_inflammatory`,
-`acne_cystic`, `hyperpigmentation`, `dryness` (`docs/CONCERN_SCHEMA.md`). The CV
+`acne_cystic`, `acne_scarring`, `hyperpigmentation`, `dryness`
+(`docs/CONCERN_SCHEMA.md`). The CV
 pipeline currently produces only the acne concerns.
 
 **region** — A named area of the face a concern is localized to. Closed
@@ -16,13 +17,15 @@ vocabulary: `forehead`, `nose`, `left_cheek`, `right_cheek`, `chin_jaw`,
 `perioral` (D-008 / D-020).
 
 **active** — A canonical skincare ingredient the rules reason over (e.g.
-`salicylic_acid`, `niacinamide`, `retinol`). Products are interchangeable
-carriers of actives (D-006); the closed ~30-item list lives in
+`salicylic_acid`, `niacinamide`, `retinol`). A carried active is a safety fact,
+not proof that products are therapeutically interchangeable; role, exposure,
+strength, and source must also match (D-006/D-029). The closed list lives in
 `docs/CATALOG_SCHEMA.md`.
 
 **ConcernReport** — The fixed JSON contract between the CV side (Stage 2) and the
-rules side (Stage 3): one entry per (concern, region) with severity, lesion
-count, and confidence, plus clear-skin and low-light meta flags (D-008,
+decision side: one aggregated entry per concern with a `regions` list,
+severity, lesion count, raw score aggregate, and evidence, plus clear-skin and
+low-light meta flags (D-008,
 `docs/CONCERN_SCHEMA.md`). Neither side reaches around it.
 
 **bridge** — The step that turns raw per-lesion model output into a ConcernReport;
@@ -34,9 +37,11 @@ through the SA-RPN detector, and seam duplicates are removed before the bridge.
 Its rejected alternative, the **zoom pipeline** (YOLO areas upscaled to 1024px),
 stays defined only as the dead end it is (README §8).
 
-**profile** — The inference-time facts about the user that personalize a report:
-skin_type (required; combination/dry/normal/oily), tone bucket (optional), and a
-pregnancy/nursing flag (D-021). Intake asks only what something downstream uses.
+**profile** — The exact, normalized safety intake used for an inference
+(D-021/D-029): unknown-capable skin/tone/pregnancy, age, allergies,
+sensitivity conditions, current actives/medications, treatment history,
+duration, pain/deep-lesion report, prior scarring, and optional budget. Unknown
+is data and is never collapsed to a favorable default.
 
 **tone bucket** — A coarse skin-tone band — `light`, `medium`, `deep`, or
 `unknown` — self-reported or estimated from the photo via ITA, used to
@@ -47,11 +52,38 @@ D-016); `unknown` is always reported, never dropped.
 or `PM` (evening). Conflicting actives are split across slots (e.g. retinoids PM,
 SPF AM-only) rather than one being dropped (`docs/RULES.md`).
 
-**ranker** — The re-ranker that reorders rule-approved candidate products within
-a category (D-005 / D-022) — today a statistical champion (Bayesian-smoothed
-pooled product rating plus a small popularity nudge; `StatsRanker`), with the
-learned slot open to any model that beats it under the D-022 ratchet. It only
-reorders — it never selects, gates, or overrides safety.
+**ranker** — An optional ordering mechanism that sees only products that have
+already passed hard role eligibility (D-005/D-022/D-029). Concern outcome
+evidence and tolerability precede evidence completeness/budget; pooled
+`StatsRanker` review/popularity data is only a final deterministic tie-break.
+It never admits, repairs, schedules, or overrides safety.
+
+**care decision** — The concern-evidence result whose independent axes are
+`triage_level`/referral reasons and `therapy_disposition`. A review referral
+does not inherently suppress eligible treatment. Raw detector confidence is
+not a calibrated probability (D-029).
+
+**therapy plan** — Product-independent intent from a reviewed policy: primary
+therapy class/strength/exposure/cadence, alternatives, support roles, course
+and review timing, or explicit deferral reasons. Repository defaults are
+unreviewed and therefore cannot fabricate a primary therapy.
+
+**routine role** — A closed functional position (`cleanser`, `treatment`,
+`moisturizer`, `sunscreen`) that a verified product may occupy. Category or an
+ingredient-list match does not prove a role.
+
+**eligibility** — A hard, role-specific veto over area, role, format, exposure,
+therapy/strength/label source, sunscreen claims, profile, and every carried
+active. Unknown required data is ineligible, not a score penalty.
+
+**selected regimen** — At most one selected product per requested role plus
+sourced AM/PM instructions. Independently eligible lower-ranked choices live
+under `alternatives` and never appear in selected steps.
+
+**provenance envelope** — Semantic input identities, code commit/dirty state,
+schema version, generation time, and a deterministic **replay key**. Volatile
+render/attempt fields do not change that key. Stale or mixed envelopes are not
+release-comparable.
 
 **popularity** — How much a product is bought/wanted, proxied by Sephora
 `loves_count` (no purchase counts exist in the data). Distinct from
@@ -78,6 +110,8 @@ Where the built artifacts live; paths are configurable in `configs/default.yaml`
 | Stage 2 type classifier (Keras) | `models/classification/acne_model.keras` |
 | FaceLandmarker bundle (MediaPipe Tasks) | `models/face_landmarker.task` |
 | Normalized product catalog | `data/processed/catalog.json` |
+| Catalog role quarantine | `data/processed/catalog_quarantine.json` |
+| Clinician-reviewed therapy policy | external; none bundled for production |
 | Ranker model (sklearn) | `models/ranker/ranker.joblib` |
 | Review-stats table | `data/processed/review_stats.json` |
 | Raw source data (Sephora, ACNE04) | `data/raw/` |

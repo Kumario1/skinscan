@@ -1,0 +1,24 @@
+{
+  "complete": false,
+  "eligible_by_role": {
+    "cleanser": 1,
+    "moisturizer": 1,
+    "sunscreen": 1
+  },
+  "missing_treatment_paths": [
+    "azelaic_acid_10",
+    "adapalene_0_1_benzoyl_peroxide_2_5"
+  ],
+  "schema_version": "1",
+  "shortfalls": {
+    "cleanser": 24,
+    "moisturizer": 24,
+    "sunscreen": 24
+  },
+  "support_minimum": 25,
+  "treatment_paths": {
+    "adapalene_0_1_benzoyl_peroxide_2_5": 0,
+    "azelaic_acid_10": 0,
+    "benzoyl_peroxide_2_5": 1
+  }
+}

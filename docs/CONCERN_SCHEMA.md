@@ -4,9 +4,10 @@ The fixed interface between the CV side and the rules side. The CV pipeline
 produces exactly this; the recommender consumes exactly this. See DECISIONS.md
 D-008.
 
-**V2 is the default (D-026/D-027).** The production `src.pipeline.e2e`
-SA-RPN path (README §7/§9) emits `schema_version: "2.0"` with the aggregated
-shape documented below. The historical YOLOv8m + EfficientNetB0 two-stage
+**The aggregated ConcernReport remains the v2 Stage 2→decision contract
+(D-026/D-027); public E2E artifacts are schema `"3"` (D-029).** Production
+`src.pipeline.e2e` embeds the aggregated shape below inside a v3 analysis
+artifact. The historical YOLOv8m + EfficientNetB0 two-stage
 pipeline (README §1-§4, evaluation-only, not called by the default CLI) still
 produces the older one-entry-per-(concern, region) shape through
 `src/recommendation/bridge.py` — see the "V1 aggregation" note under Field
@@ -18,8 +19,10 @@ rules.
   (forehead, cheeks, chin/jaw, nose), not exact coordinates. Pixel boxes are a
   Stage-1 internal detail; by the time we hit the contract they're summarized
   into regions. This keeps the rules stable even as detectors change.
-- **Uncertainty is first-class.** Every concern carries a confidence. The rules
-  layer decides how to treat low confidence (D-002: loud about uncertainty).
+- **Uncertainty is first-class.** Every concern carries a raw aggregation of
+  detector scores. It is not a clinical probability. The v3 decision layer
+  records quality/source/calibration separately and populates probability only
+  through a named calibrator in an approved policy (D-002/D-029).
 - **Concern vocabulary is a closed set.** The rules table keys on these exact
   strings. Adding a concern type is a logged decision.
 
@@ -95,7 +98,8 @@ still the max severity across `acne_*` concerns, used to trigger the cystic
       "evidence": {
         "labels": {"papule": 5, "pustule": 4},
         "max_confidence": 0.91,
-        "affected_region_count": 2
+        "affected_region_count": 2,
+        "source": "prediction"
       }
     }
   ],
@@ -123,7 +127,7 @@ still the max severity across `acne_*` concerns, used to trigger the cystic
     original v1 shape this document used to describe as the default.
 - `lesion_count` is the count of retained detections that produced the
   concern; still nullable for concerns without a discrete count (dryness).
-- `confidence` is the **mean of the retained detection scores** that produced
+- `confidence` is the **mean of the retained detector scores** that produced
   the concern (`sum(scores) / len(scores)`), in `[0, 1]`. Below `recommend()`'s
   `conf_cutoff` default of 0.5 (`src/recommendation/engine.py`; the
   `configs/default.yaml` key `recommendation.concern_confidence_cutoff` is
@@ -131,11 +135,20 @@ still the max severity across `acne_*` concerns, used to trigger the cystic
   `"possible — verify"` and adds **no actives** for it — see `docs/RULES.md`
   §5 for the V2 confidence-gating change (it previously still listed the
   ingredient under the flag; it no longer does).
+  This number is never serialized as `DecisionEvidence.probability` unless a
+  named calibrator and approved policy transform it. Ordinary evidence uses
+  `probability: null`, `calibrated: false`, a quality bucket, and source/reason
+  tags. Safety-critical uncalibrated nodule evidence yields an abstention
+  rather than a binary photo-derived conclusion.
 - `evidence` (V2 only) carries the raw signal behind the aggregation:
   `labels` (per-source-label detection counts, e.g.
   `{"papule": 5, "pustule": 4}`), `max_confidence` (highest single retained
   detection score), and `affected_region_count` (must equal `len(regions)`
-  whenever evidence is non-default — enforced in `Concern.__post_init__`).
+  whenever evidence is non-default — enforced in `Concern.__post_init__`). Its
+  `source` is `prediction` for detector output or `annotation_oracle` for an
+  evaluation-only AcneSCU VOC XML counterfactual. Oracle annotations are
+  hashed into the artifact's semantic inputs and replay key; they are never
+  inferred from, or substituted by, a prediction artifact.
 - Unknown SA-RPN labels, and the closed `nevus`/`other` labels
   (`SARPN_NON_ACTIONABLE_LABELS`), never become concerns. They surface as
   `safety_observations` in `analysis.json` instead — non-actionable
@@ -151,3 +164,14 @@ still the max severity across `acne_*` concerns, used to trigger the cystic
 - No product info (that's Stage 3's job).
 - No skin-type-wide labels ("oily skin") — this contract works per-concern,
   optionally per-region, only.
+
+## V3 decision boundary
+
+`ConcernReport` feeds `decide_care`; it does not choose products. Count-derived
+severity 4 without high-risk evidence may add `high_count_or_severity_review`
+while preserving active-treatment disposition. Scarring and persistent pigment
+are independent referral axes. Nodule evidence is the only safety-critical
+path in the current policy seam: approved calibrated evidence may route
+`derm_first`, while raw/unreviewed evidence routes `abstain`. Unsupported,
+`nevus`, and `other` observations remain visible safety evidence and never
+become acne therapy targets.

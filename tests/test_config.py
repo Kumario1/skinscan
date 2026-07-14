@@ -44,7 +44,9 @@ def test_load_config_has_recommender_milestone_keys():
     cfg = load_config()
 
     # Profile skin-type vocabulary — the closed set matching the review data (D-021).
-    assert cfg["profile"]["skin_types"] == ["combination", "dry", "normal", "oily"]
+    assert cfg["profile"]["skin_types"] == [
+        "combination", "dry", "normal", "oily", "unknown",
+    ]
 
     # ITA tone-bucket cutoffs and low-light L* threshold (D-021).
     assert cfg["tone"]["ita_light_min"] == 41

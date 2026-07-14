@@ -1,0 +1,62 @@
+{
+  "schema_version": "2",
+  "products": [
+    {
+      "product_id": "P480274",
+      "assertions": [
+        {
+          "status": "approved",
+          "source_url": "synthetic://aza-label",
+          "retrieved_at": "2026-07-13T00:00:00Z",
+          "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "reviewer_id": "synthetic-test-reviewer",
+          "reviewer_type": "human",
+          "approved_at": "2026-07-13T00:00:00Z",
+          "facts": {
+            "cadence": "per_label",
+            "cadence_source": "synthetic://aza-label",
+            "comedogenic_claim": "not_claimed",
+            "drug_actives": [{"name": "azelaic_acid", "source": "synthetic://aza-label", "strength": "10%"}],
+            "evidence_grade": "synthetic_test",
+            "evidence_roles": ["acne_treatment_alternative"],
+            "exposure": "leave_on",
+            "format": "solution",
+            "intended_areas": ["face"],
+            "label_source": "synthetic://aza-label",
+            "label_verified_at": "2026-07-13",
+            "otc_drug": true,
+            "routine_roles": ["treatment"]
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P504987",
+      "assertions": [
+        {
+          "status": "approved",
+          "source_url": "synthetic://spf-label",
+          "retrieved_at": "2026-07-13T00:00:00Z",
+          "source_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "reviewer_id": "synthetic-test-reviewer",
+          "reviewer_type": "human",
+          "approved_at": "2026-07-13T00:00:00Z",
+          "facts": {
+            "broad_spectrum": true,
+            "cadence": "per_label",
+            "cadence_source": "synthetic://spf-label",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "synthetic_test",
+            "exposure": "leave_on",
+            "format": "stick",
+            "intended_areas": ["face"],
+            "label_source": "synthetic://spf-label",
+            "label_verified_at": "2026-07-13",
+            "routine_roles": ["sunscreen"],
+            "spf": 50
+          }
+        }
+      ]
+    }
+  ]
+}
