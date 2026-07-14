@@ -28,9 +28,9 @@ Standalone rebuild of the SkinScan recommendation half. Design decisions:
 | Knowledge | `recsys/data/knowledge/*.json` | **Yes** | hand-authored, PR-reviewed | tests pin the safety invariants |
 | Review stats | `recsys/data/signals/review_stats.v1.json` | **Yes** (seed scope) | `build_review_stats.py`: n, mean, Bayesian-smoothed rating (m=20), per-skin-type cells (n≥20) | static per dump |
 | Popularity | `recsys/data/signals/popularity.v1.json` | **Yes** (seed scope) | `build_popularity.py`: loves + full-dump same-category percentile | marked `snapshot-2023` |
-| Ingredient analysis (Phase 1) | `signals/ingredient_analysis.v1.json` + JSONL cache | Store yes / cache no | LLM batch over INCI, keyed `(product_id, inci_sha256, prompt_version)` | re-labeled only on key change |
-| Concern efficacy (Phase 2) | `signals/concern_efficacy.v1.json` + cache | Store yes / cache no | port of D-023 review mining; cells carry n | static per dump |
-| Media/editorial (future) | `signals/media.v1.json` | when built | AI research + verification loop | freshness window via overlay |
+| Ingredient analysis (Phase 1) | `signals/ingredient_analysis.v1.json` + JSONL cache | Store yes / cache no | pinned free Nemotron MoE over INCI, keyed `(product_id, inci_sha256, prompt_version)` | re-labeled only on key change |
+| Concern efficacy (Phase 2) | `signals/concern_efficacy.v1.json` + cache | Store yes / cache no | proven D-023 labeler → file contract → deterministic recsys aggregate; cells carry n | static per dump |
+| Media/editorial | `signals/media.v1.json` | when evidence exists | verified value/evidence/source entries through `MediaSignal` | freshness window via overlay |
 | Verification overlay (Phase 3) | `recsys/data/verification/` | **Yes** | port of `src/recommendation/verification_loop.py` state machine | per-fact stale-flip windows |
 | Signal registry | `recsys/data/signals/registry.json` | **Yes** | written by each build tool | engine refuses sha256-mismatched stores |
 
@@ -55,13 +55,15 @@ deterministic INCI parser + `knowledge/safety_rules.json`, never LLM output.
 4. **apply_gates** (`gates.py`) — deterministic reason codes, never
    score-overridden: `retinoid_pregnancy_status_excluded` (pregnant/trying/
    nursing/**unknown**), `profile_allergy:<x>`, `duplicates_current_active:<x>`,
-   `spf_below_30_or_unknown`, `price_above_profile_cap`. Triage `derm_first`/
+   `spf_below_30_or_unknown`, `price_above_profile_cap`,
+   `product_discontinued`, `cadence_not_daily`. Triage `derm_first`/
    `abstain` short-circuits to a `referral_only` document before any of this.
 5. **score** (`signals.py` + `scoring.py`) — providers return
    `SignalScore(value 0..1, evidence, details)` or `None` (= neutral 0.5 + an
    uncertainty note; missing data is never a hidden penalty). Final = weighted
    mean; the full per-signal breakdown is retained (decomposability is
-   tested). v0 signals: concern_fit, review_quality, popularity, price_value.
+   tested). Signals: concern fit, concern efficacy, ingredient analysis,
+   review quality, popularity, price value, and optional verified media.
 6. **compose** (`compose.py`) — archetypes are data (`archetypes.json`), not
    code branches. Session rules: SPF AM-only, retinoids PM-only, conflict
    pairs (BP×retinoid, BP×vitC, glycolic×retinoid) never share a session —
@@ -96,7 +98,7 @@ every number reproducible from the named store.
 | 4 — Full catalog + hardening | full-scope stores in `derived/`; media-store interface; dummy-provider conformance test; golden-file eval harness | new signal addable with zero pipeline edits |
 | 5 — Integration | `src/pipeline/e2e.py` optionally invokes the recsys CLI after writing analysis.json (subprocess/file handoff, no imports) | run dir carries both old `routine.json` and new `recommendations.json` |
 
-Known v0 gaps (deliberate): no cadence data (a weekly peel can rank as a daily
-treatment — Phase 3 restores label-verified cadence); no product
-contraindications field (Phase 3); SPF from name-parse (Phase 3); review
-signal is pooled star ratings, not concern-specific outcomes (Phase 2).
+Unverified products still degrade honestly: cadence/contraindications remain
+unknown, SPF stays name-parsed with an uncertainty flag, and missing model
+signals are neutral rather than silently penalized. Approved overlay facts and
+concern-efficacy cells replace those fallbacks product by product.

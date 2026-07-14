@@ -44,13 +44,38 @@ python -m recsys.tools.build_popularity --raw-dir $RAW \
   --catalog recsys/data/catalog/seed_catalog.json \
   --out recsys/data/signals/popularity.v1.json --data-root recsys/data
 
-# Paid, offline Phase 1 build (requires OPENROUTER_API_KEY; default cap: 100 new labels)
+# Free, offline Phase 1 build (OPENROUTER_API_KEY or OPENROUTER_KEY).
+# The pinned free MoE is recorded in every cache/store entry.
 python -m recsys.tools.build_ingredient_analysis \
   --catalog recsys/data/catalog/seed_catalog.json \
   --out recsys/data/signals/ingredient_analysis.v1.json --data-root recsys/data
+
+# Phase 2 reuses the proven D-023 labeler through its append-only file contract.
+python -m src.recommendation.concern_labels probe
+python -m src.recommendation.concern_labels calibrate
+python -m src.recommendation.concern_labels label --yes --p2-approved
+python -m recsys.tools.build_concern_efficacy \
+  --labels data/processed/review_concern_labels.jsonl \
+  --catalog recsys/data/catalog/seed_catalog.json \
+  --out recsys/data/signals/concern_efficacy.v1.json --data-root recsys/data
+
+# Import only already-approved assertions; this command never approves facts.
+python -m recsys.tools.import_verification \
+  --source data/verification/approved-combined.json \
+  --source-evidence data/verification/evidence \
+  --out-root recsys/data/verification
 ```
 
-Full-catalog twins go to `recsys/data/derived/` (gitignored).
+Full-catalog twins go to `recsys/data/derived/` (gitignored). Build signal
+stores under `derived/signals/` with `--data-root recsys/data/derived`, then run
+with `--data-root recsys/data/derived`; static knowledge and verification fall
+back to the committed data root.
+
+Golden evaluation:
+
+```bash
+python -m recsys.evaluate recsys/eval/cases.json
+```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the data architecture, pipeline
 stages, and the phase plan (ingredient analysis, concern efficacy, verification

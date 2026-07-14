@@ -32,6 +32,7 @@ from .common import STORE_SCHEMA_VERSION, register_store, write_json
 
 PROMPT_VERSION = "p1"
 BUILDER = "recsys.tools.build_ingredient_analysis@1"
+DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
 URL = "https://openrouter.ai/api/v1/chat/completions"
 IRRITANCY_TIERS = ("low", "medium", "high")
 
@@ -116,13 +117,14 @@ def label_product(product: dict, model: str, session=None) -> dict:
     """Label one product through OpenRouter structured output."""
     import requests  # lazy: tests and inference need no network client
 
-    key = os.environ.get("OPENROUTER_API_KEY")
+    key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENROUTER_KEY")
     if not key:
-        raise RuntimeError("OPENROUTER_API_KEY is required")
+        raise RuntimeError("OPENROUTER_API_KEY or OPENROUTER_KEY is required")
     body = {
         "model": model,
         "temperature": 0,
         "max_tokens": 800,
+        "reasoning": {"enabled": False},
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": json.dumps({
@@ -208,7 +210,7 @@ def main(argv=None) -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--cache", type=Path, default=None)
-    parser.add_argument("--model", default="qwen/qwen3-235b-a22b")
+    parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--max-new-labels", type=int, default=100,
                         help="paid-call guard; raise explicitly for larger runs")
     args = parser.parse_args(argv)

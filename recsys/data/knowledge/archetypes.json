@@ -1,13 +1,13 @@
 {
   "schema_version": "recsys-knowledge-1",
-  "default_weights": {"concern_fit": 0.45, "ingredient_analysis": 0.05, "review_quality": 0.3, "popularity": 0.15, "price_value": 0.05},
+  "default_weights": {"concern_fit": 0.25, "concern_efficacy": 0.25, "ingredient_analysis": 0.05, "review_quality": 0.25, "popularity": 0.15, "price_value": 0.05},
   "archetypes": [
     {
       "id": "best_overall",
       "title": "Best overall",
       "rationale": "The highest-scoring safe routine across all signals: concern fit first, then review quality, popularity, and value.",
       "slots": ["cleanser", "treatment", "serum", "moisturizer", "spf"],
-      "weights": {"concern_fit": 0.45, "ingredient_analysis": 0.05, "review_quality": 0.3, "popularity": 0.15, "price_value": 0.05},
+      "weights": {"concern_fit": 0.25, "concern_efficacy": 0.25, "ingredient_analysis": 0.05, "review_quality": 0.25, "popularity": 0.15, "price_value": 0.05},
       "constraints": {}
     },
     {
@@ -15,7 +15,7 @@
       "title": "Budget-friendly",
       "rationale": "Targets the same concerns while keeping every item affordable and the total under a cap.",
       "slots": ["cleanser", "treatment", "serum", "moisturizer", "spf"],
-      "weights": {"concern_fit": 0.4, "ingredient_analysis": 0.05, "review_quality": 0.15, "popularity": 0.1, "price_value": 0.3},
+      "weights": {"concern_fit": 0.25, "concern_efficacy": 0.2, "ingredient_analysis": 0.05, "review_quality": 0.1, "popularity": 0.1, "price_value": 0.3},
       "constraints": {"max_item_price_usd": 20, "max_total_price_usd": 75}
     },
     {
@@ -23,7 +23,7 @@
       "title": "Gentle on sensitive skin",
       "rationale": "Avoids the harsher actives (retinoids, benzoyl peroxide, glycolic acid) and leans on gentler ingredients that still target your concerns.",
       "slots": ["cleanser", "treatment", "serum", "moisturizer", "spf"],
-      "weights": {"concern_fit": 0.3, "ingredient_analysis": 0.25, "review_quality": 0.25, "popularity": 0.15, "price_value": 0.05},
+      "weights": {"concern_fit": 0.2, "concern_efficacy": 0.15, "ingredient_analysis": 0.25, "review_quality": 0.2, "popularity": 0.15, "price_value": 0.05},
       "constraints": {"gentle": true}
     },
     {
@@ -31,7 +31,7 @@
       "title": "Minimal 3-step",
       "rationale": "The fewest steps that still address your top concern: cleanse, one treatment, moisturize (plus SPF in the morning).",
       "slots": ["cleanser", "treatment", "moisturizer"],
-      "weights": {"concern_fit": 0.45, "ingredient_analysis": 0.05, "review_quality": 0.3, "popularity": 0.15, "price_value": 0.05},
+      "weights": {"concern_fit": 0.25, "concern_efficacy": 0.25, "ingredient_analysis": 0.05, "review_quality": 0.25, "popularity": 0.15, "price_value": 0.05},
       "constraints": {"single_treatment_active": true, "spf_policy": "fold_or_add"}
     },
     {
@@ -39,7 +39,7 @@
       "title": "Comprehensive",
       "rationale": "A fully built-out routine where the treatment and serum target different concerns, split across morning and night.",
       "slots": ["cleanser", "treatment", "serum", "moisturizer", "spf"],
-      "weights": {"concern_fit": 0.45, "ingredient_analysis": 0.05, "review_quality": 0.3, "popularity": 0.15, "price_value": 0.05},
+      "weights": {"concern_fit": 0.25, "concern_efficacy": 0.25, "ingredient_analysis": 0.05, "review_quality": 0.25, "popularity": 0.15, "price_value": 0.05},
       "constraints": {"complementary_serum": true}
     }
   ]

@@ -100,10 +100,10 @@ concern:                              # concern-efficacy labeling (D-023, spec 2
   stats_path: data/processed/concern_stats.json             # smoothed product x concern cells
   batch_state_path: runs/concern/batches.json               # batch-id resume state
   batch_spool_dir: runs/concern/openrouter_batches           # durable synchronous-request results
-  labeling_model: qwen/qwen3-235b-a22b-2507                  # capable, inexpensive structured-output model
-  input_price_per_million: 0.09
-  output_price_per_million: 0.10
-  max_budget_usd: 8.50                 # preflight estimate ceiling; leaves retry headroom
+  labeling_model: nvidia/nemotron-3-super-120b-a12b:free    # pinned free MoE; strict JSON verified against live API
+  input_price_per_million: 0.0
+  output_price_per_million: 0.0
+  max_budget_usd: 0.0                  # free endpoint only; any priced fallback must fail preflight
   reviews_per_request: 10              # amortize the system prompt without losing uid attribution
   request_concurrency: 10
   text_truncate_chars: 1200           # review text sent to the labeler is capped here

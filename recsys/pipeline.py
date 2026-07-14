@@ -26,6 +26,7 @@ from .gates import apply_profile_gates
 from .knowledge import load_knowledge
 from .scoring import score_products
 from .signals import ScoringContext, TargetConcern, load_providers
+from .verification import apply_verification, load_verification_overlay
 
 DEFAULT_DATA_ROOT = Path(__file__).parent / "data"
 
@@ -55,13 +56,33 @@ def run(
     generated_at: str | None = None,
 ) -> dict:
     data_root = Path(data_root) if data_root else DEFAULT_DATA_ROOT
-    catalog_path = Path(catalog_path) if catalog_path else data_root / "catalog" / "seed_catalog.json"
+    if catalog_path:
+        catalog_path = Path(catalog_path)
+    elif (data_root / "catalog_full.json").exists():
+        catalog_path = data_root / "catalog_full.json"
+    else:
+        catalog_path = data_root / "catalog" / "seed_catalog.json"
+    static_root = data_root if (data_root / "knowledge").exists() else DEFAULT_DATA_ROOT
 
-    knowledge = load_knowledge(data_root / "knowledge")
+    knowledge = load_knowledge(static_root / "knowledge")
     analysis = load_analysis(analysis_path)
     profile = resolve_profile(profile_path, analysis)
     products, catalog_header = load_catalog(catalog_path)
-    providers, store_meta, warnings = load_providers(data_root)
+    verification_now = (
+        _dt.datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
+        if generated_at else _dt.datetime.now(_dt.timezone.utc)
+    )
+    verification_root = (
+        data_root / "verification"
+        if (data_root / "verification" / "approved.json").exists()
+        else static_root / "verification"
+    )
+    overlay, verification_warnings, verification_meta = load_verification_overlay(
+        verification_root, now=verification_now
+    )
+    products = apply_verification(products, overlay)
+    providers, store_meta, signal_warnings = load_providers(data_root)
+    warnings = verification_warnings + signal_warnings
 
     targets = select_targets(analysis)
     document: dict = {
@@ -92,6 +113,7 @@ def run(
                 {"name": name, "sha256": digest}
                 for name, digest in sorted(knowledge.file_sha256s.items())
             ],
+            "verification": verification_meta,
         },
         "framing": {"cosmetic_only": True, "not_medical_advice": True, "text": FRAMING_TEXT},
         "triage": {

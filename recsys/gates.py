@@ -30,6 +30,13 @@ def profile_gate_reasons(
 ) -> list[str]:
     reasons: list[str] = []
     actives = set(product.actives)
+    if product.discontinued:
+        reasons.append("product_discontinued")
+    if product.cadence not in (None, "am", "pm", "am_pm", "daily", "once_daily",
+                               "twice_daily", "per_label"):
+        reasons.append("cadence_not_daily")
+    for condition in sorted(set(product.contraindications) & set(profile.sensitivity_conditions)):
+        reasons.append(f"product_contraindication:{condition}")
     if actives & knowledge.retinoids and (
         profile.pregnancy_status in knowledge.pregnancy_excluded_statuses
     ):

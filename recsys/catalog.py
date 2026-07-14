@@ -25,6 +25,10 @@ class CatalogProduct:
     inci: tuple[str, ...]
     inci_sha256: str
     actives: tuple[str, ...]
+    broad_spectrum: bool | None = None
+    cadence: str | None = None
+    contraindications: tuple[str, ...] = ()
+    discontinued: bool = False
 
     def to_dict(self) -> dict:
         return {
@@ -40,6 +44,10 @@ class CatalogProduct:
             "inci": list(self.inci),
             "inci_sha256": self.inci_sha256,
             "actives": list(self.actives),
+            "broad_spectrum": self.broad_spectrum,
+            "cadence": self.cadence,
+            "contraindications": list(self.contraindications),
+            "discontinued": self.discontinued,
         }
 
     @classmethod
@@ -65,6 +73,10 @@ class CatalogProduct:
             inci=tuple(d.get("inci") or []),
             inci_sha256=d.get("inci_sha256") or "",
             actives=tuple(d.get("actives") or []),
+            broad_spectrum=d.get("broad_spectrum"),
+            cadence=d.get("cadence"),
+            contraindications=tuple(d.get("contraindications") or []),
+            discontinued=bool(d.get("discontinued", False)),
         )
 
 
