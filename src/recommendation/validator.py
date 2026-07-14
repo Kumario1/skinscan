@@ -24,8 +24,7 @@ def validate_recommendation(
         required.add(recommendation.therapy_plan.primary.role)
     for role in sorted(required):
         if role not in recommendation.selected_products:
-            reasons = recommendation.eligibility_rejections.get(f"role:{role}", [])
-            if not reasons:
+            if not recommendation.eligibility_diagnostics.role_has_missing_reason(role):
                 add(f"required_role_missing_without_reason:{role}")
 
     # The public type is one product per key; reject malformed callers that

@@ -32,6 +32,7 @@ def product(product_id, role, active=None, grade="verified_label"):
     if role == "treatment":
         values.update(
             actives=[active], drug_actives=[VerifiedActive(active, "10%", "synthetic://label")],
+            otc_drug=True,
             label_source="synthetic://label", label_verified_at="2026-07-13",
         )
     if role == "sunscreen":

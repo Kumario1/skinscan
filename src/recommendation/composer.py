@@ -5,6 +5,7 @@ from collections.abc import Mapping
 
 from .schema import (
     CareDecision,
+    EligibilityDiagnostics,
     Product,
     Recommendation,
     RoutineInstruction,
@@ -84,6 +85,7 @@ def compose_regimen(
     eligible_by_role: Mapping[str, list[Product]],
     profile: UserProfile,
     *,
+    eligibility_diagnostics: EligibilityDiagnostics | None = None,
     eligibility_rejections: Mapping[str, list[str]] | None = None,
     concern_scorer=None,
     pooled_ranker=None,
@@ -98,7 +100,13 @@ def compose_regimen(
 
     selected: dict[str, Product] = {}
     alternatives: dict[str, list[Product]] = {}
-    rejections = {key: list(value) for key, value in (eligibility_rejections or {}).items()}
+    diagnostics = eligibility_diagnostics or EligibilityDiagnostics(
+        requested, collect_details=bool(eligibility_rejections)
+    )
+    for key, reasons in (eligibility_rejections or {}).items():
+        if ":" in key and not key.startswith("role:"):
+            role, product_id = key.split(":", 1)
+            diagnostics.record(role, product_id, list(reasons))
     explanation: list[dict[str, object]] = []
     used_ids: set[str] = set()
 
@@ -109,7 +117,7 @@ def compose_regimen(
         )
         ranked = [product for product in ranked if product.product_id not in used_ids]
         if not ranked:
-            rejections.setdefault(f"role:{role}", []).append("no_eligible_product")
+            diagnostics.mark_missing(role)
             continue
         selected[role] = ranked[0]
         used_ids.add(ranked[0].product_id)
@@ -154,7 +162,7 @@ def compose_regimen(
         selected_products=selected,
         selected_regimen=regimen,
         alternatives=alternatives,
-        eligibility_rejections=rejections,
+        eligibility_diagnostics=diagnostics,
         explanation=explanation,
         flags=[],
         validation_errors=[],

@@ -16,8 +16,8 @@ import re
 from collections import Counter
 from dataclasses import dataclass, replace
 from .schema import (
-    CareDecision, ConcernReport, Product, Recommendation as V3Recommendation,
-    UserProfile, CATEGORIES,
+    ConcernReport, Product, Recommendation as V3Recommendation,
+    EligibilityDiagnostics, UserProfile, CATEGORIES,
 )
 
 # RULES.md §1 — concern -> first-line actives (seed; expand from the doc)
@@ -237,6 +237,7 @@ def recommend(
     # explicit policies; no-policy calls are isolated to recommend_legacy.
     ranker=None,
     conf_cutoff: float = 0.5,
+    collect_eligibility_details: bool = False,
 ) -> V3Recommendation | Recommendation:
     """Run v3 or explicitly isolate a historical v2 caller.
 
@@ -270,7 +271,7 @@ def recommend(
     role_order = ("cleanser", "treatment", "moisturizer", "sunscreen")
     requested = [role for role in role_order if role in requested]
 
-    rejections: dict[str, list[str]] = {}
+    diagnostics = EligibilityDiagnostics(requested, collect_eligibility_details)
     ranked_by_role: dict[str, list[Product]] = {}
     # Choose therapeutic intent first. Support products are filtered around an
     # available primary treatment before any scorer sees them.
@@ -285,7 +286,9 @@ def recommend(
             if result.eligible:
                 context_eligible.append(product)
             else:
-                rejections[f"{role}:{product.product_id}"] = result.reasons
+                diagnostics.record(role, product.product_id, result.reasons)
+            if result.eligible:
+                diagnostics.record(role, product.product_id, [])
         ranked, _ = rank_equivalents(
             context_eligible,
             profile,
@@ -313,7 +316,9 @@ def recommend(
             if result.eligible:
                 safe.append(product)
             else:
-                rejections[f"{role}:{product.product_id}"] = result.reasons
+                diagnostics.reject_previously_eligible(
+                    role, product.product_id, result.reasons
+                )
         chosen = selected_context.get(role)
         if chosen in safe:
             safe.remove(chosen)
@@ -325,7 +330,7 @@ def recommend(
         therapy_plan,
         eligible_by_role,
         profile,
-        eligibility_rejections=rejections,
+        eligibility_diagnostics=diagnostics,
         concern_scorer=concern_scorer,
         pooled_ranker=pooled_ranker,
     )

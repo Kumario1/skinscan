@@ -19,6 +19,7 @@ def treatment(active="azelaic_acid", strength="10%", **overrides):
         "category": "treatment", "actives": [active], "intended_areas": ["face"],
         "routine_roles": ["treatment"], "format": "gel", "exposure": "leave_on",
         "drug_actives": [VerifiedActive(active, strength, "https://label.test")],
+        "otc_drug": True,
         "label_source": "https://label.test", "label_verified_at": "2026-07-13",
         "comedogenic_claim": "not_claimed", "evidence_grade": "synthetic_test",
         "cadence": "per_label", "cadence_source": "https://label.test",
@@ -58,6 +59,14 @@ def support(role, **overrides):
 
 def test_direct_verified_azelaic_leave_on_treatment_passes():
     assert check_eligibility(treatment(), "treatment", option(), profile()).eligible
+
+
+def test_non_otc_or_unknown_treatment_is_rejected():
+    for value in (False, None):
+        result = check_eligibility(
+            treatment(otc_drug=value), "treatment", option(), profile()
+        )
+        assert "otc_status_not_verified" in result.reasons
 
 
 def test_treatment_cadence_must_match_concrete_policy_direction():

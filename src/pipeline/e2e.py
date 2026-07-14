@@ -47,14 +47,20 @@ class PipelineResult:
     output_dir: Path
 
 
-def load_optional_catalog(path: Path | None) -> tuple[list[Product] | None, str | None]:
+def load_optional_catalog(
+    path: Path | None,
+    tier2_path: Path | None = None,
+    drug_path: Path | None = None,
+) -> tuple[list[Product] | None, str | None]:
     if path is None:
         return None, "catalog path is missing"
     try:
         products = load_catalog(path)
-        tier2_path = path.with_name("catalog_tier2.json")
-        if tier2_path.exists():
-            products = products + load_catalog(tier2_path)
+        if tier2_path is None:
+            tier2_path = path.with_name("catalog_tier2.json")
+        for additional in (tier2_path, drug_path):
+            if additional is not None and additional.exists():
+                products += load_catalog(additional)
         return products, None
     except FileNotFoundError:
         return None, f"catalog is missing: {path}"
@@ -194,6 +200,41 @@ def v3_routine_payload(
         **recommendation.to_dict(),
         "validation_status": "valid",
     }
+
+
+def recommendation_artifacts(
+    recommendation: Recommendation,
+    provenance: Mapping[str, object],
+) -> tuple[dict[str, object], dict[str, object] | None, dict[str, object] | None]:
+    """Derive compact analysis fields and optional public/debug artifacts."""
+    summary = recommendation.eligibility_diagnostics.to_summary(
+        list(recommendation.selected_products)
+    )
+    fields: dict[str, object] = {
+        "decision": recommendation.decision.to_dict(),
+        "therapy_plan": recommendation.therapy_plan.to_dict(),
+        "recommendation_summary": summary,
+    }
+    if recommendation.validation_errors:
+        fields.update({
+            "recommendation_status": "invalid",
+            "recommendation_reason": "regimen_validation_failed",
+            "recommendation_errors": list(recommendation.validation_errors),
+        })
+        routine = None
+    elif summary["missing_roles"]:
+        fields.update({
+            "recommendation_status": "unavailable",
+            "recommendation_reason": "required_roles_unfilled",
+        })
+        routine = None
+    else:
+        fields["recommendation_status"] = "complete"
+        routine = v3_routine_payload(recommendation, provenance)
+    debug = recommendation.eligibility_diagnostics.debug_payload()
+    if debug is not None:
+        debug = {**debug, "replay_key": provenance.get("replay_key")}
+    return fields, routine, debug
 
 
 def _remove_path(path: Path) -> None:
@@ -368,6 +409,8 @@ def run_pipeline(
     *,
     settings: SarpnSettings,
     catalog_path: Path | None,
+    catalog_tier2_path: Path | None = None,
+    catalog_drug_path: Path | None = None,
     face_landmarker_path: Path | None,
     profile: UserProfile | None = None,
     # Historical direct-call compatibility. The CLI always passes profile.
@@ -383,6 +426,7 @@ def run_pipeline(
     oracle_annotations: Path | None = None,
     clock=lambda: datetime.now(timezone.utc),
     git_reader=_read_git_state,
+    eligibility_debug: bool = False,
 ) -> PipelineResult:
     if profile is None:
         profile = UserProfile(
@@ -391,7 +435,9 @@ def run_pipeline(
         )
     therapy_policy = load_therapy_policy(therapy_policy_path)
     triage_policy = conservative_unreviewed_policy()
-    catalog, catalog_reason = load_optional_catalog(catalog_path)
+    catalog, catalog_reason = load_optional_catalog(
+        catalog_path, catalog_tier2_path, catalog_drug_path
+    )
     if catalog_reason is None and not catalog:
         catalog_reason = "catalog is empty"
 
@@ -462,7 +508,9 @@ def run_pipeline(
                 }),
                 "classifier": {"state": "not_applicable", "sha256": None},
             },
-            "catalog": catalog_bundle_identity(catalog_path),
+            "catalog": catalog_bundle_identity(
+                catalog_path, catalog_tier2_path, catalog_drug_path
+            ),
             "ranker": {"state": "none", "sha256": None},
             "policies": {
                 "triage": {
@@ -505,6 +553,7 @@ def run_pipeline(
     }
 
     routine: dict[str, object] | None = None
+    debug_rejections: dict[str, object] | None = None
     if catalog_reason:
         analysis["recommendation_reason"] = catalog_reason
     else:
@@ -515,21 +564,12 @@ def run_pipeline(
                 therapy_policy=therapy_policy,
                 concern_scorer=None,
                 pooled_ranker=None,
+                collect_eligibility_details=eligibility_debug,
             )
-            analysis["decision"] = recommendation.decision.to_dict()
-            analysis["therapy_plan"] = recommendation.therapy_plan.to_dict()
-            if recommendation.validation_errors:
-                analysis["recommendation_status"] = "invalid"
-                analysis["recommendation_reason"] = "regimen_validation_failed"
-                analysis["recommendation_errors"] = recommendation.validation_errors
-            else:
-                routine = v3_routine_payload(recommendation, provenance)
-                analysis["recommendation_status"] = (
-                    "partial"
-                    if (recommendation.decision.therapy_disposition == "defer"
-                        and recommendation.therapy_plan.primary is not None)
-                    else "complete"
-                )
+            fields, routine, debug_rejections = recommendation_artifacts(
+                recommendation, provenance
+            )
+            analysis.update(fields)
         except Exception as exc:
             analysis["recommendation_reason"] = f"recommendation unavailable: {exc}"
 
@@ -543,6 +583,10 @@ def run_pipeline(
         (staging / "analysis.json").write_text(json.dumps(analysis, indent=2) + "\n")
         if routine is not None:
             (staging / "routine.json").write_text(json.dumps(routine, indent=2) + "\n")
+        if debug_rejections is not None:
+            (staging / "eligibility_rejections.json").write_text(
+                json.dumps(debug_rejections, indent=2) + "\n"
+            )
         _publish_staging(staging, output_dir)
     finally:
         _remove_path(staging)
@@ -558,6 +602,9 @@ def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
                         help="output dir (default runs/e2e/<image stem>)")
     parser.add_argument("--api", default=sa_rpn["endpoint_url"])
     parser.add_argument("--catalog", type=Path, default=Path(paths["catalog_processed"]))
+    parser.add_argument("--catalog-tier2", type=Path, default=None)
+    parser.add_argument("--catalog-drug", type=Path, default=None)
+    parser.add_argument("--eligibility-debug", action="store_true")
     parser.add_argument("--face-landmarker", type=Path, default=Path(paths["face_landmarker"]))
     parser.add_argument("--tile-size", type=int, default=sa_rpn["tile_size"])
     parser.add_argument("--overlap", type=int, default=sa_rpn["tile_overlap"])
@@ -600,6 +647,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     config = load_config()
     args = _parser(config).parse_args(argv)
     output_dir = args.out or Path("runs/e2e") / args.image.stem
+    default_catalog = Path(config["paths"]["catalog_processed"])
+    catalog_tier2 = args.catalog_tier2
+    catalog_drug = args.catalog_drug
+    if args.catalog == default_catalog:
+        catalog_tier2 = catalog_tier2 or Path(config["paths"]["catalog_tier2"])
+        catalog_drug = catalog_drug or Path(config["paths"]["catalog_drug"])
     try:
         profile = load_input_profile(
             args.profile,
@@ -626,6 +679,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_dir,
             settings=settings,
             catalog_path=args.catalog,
+            catalog_tier2_path=catalog_tier2,
+            catalog_drug_path=catalog_drug,
             face_landmarker_path=args.face_landmarker,
             profile=profile,
             top=args.top,
@@ -636,6 +691,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             split_proof=args.split_proof,
             detector_sha256=args.detector_sha256,
             oracle_annotations=args.oracle_annotations,
+            eligibility_debug=args.eligibility_debug,
         )
     except Exception as exc:
         print(f"analysis failed: {exc}", file=sys.stderr)

@@ -384,6 +384,11 @@ _VERIFICATION_FIELDS = {
     "amount_source",
 }
 
+_EVIDENCE_FIELDS = {
+    "status", "source_url", "retrieved_at", "source_sha256", "reviewer_id",
+    "approved_at", "facts",
+}
+
 
 def load_verification_overlay(path: str | Path | None) -> dict[str, dict[str, object]]:
     if path is None:
@@ -393,7 +398,9 @@ def load_verification_overlay(path: str | Path | None) -> dict[str, dict[str, ob
         value = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise ValueError(f"verification overlay {path}: invalid JSON: {exc}") from exc
-    rows = value.get("products") if isinstance(value, dict) else value
+    if not isinstance(value, dict) or str(value.get("schema_version")) != "2":
+        raise ValueError("verification overlay: schema_version must be '2'")
+    rows = value.get("products")
     if not isinstance(rows, list):
         raise ValueError("verification overlay: expected a list or {products: [...]} object")
     result: dict[str, dict[str, object]] = {}
@@ -406,10 +413,45 @@ def load_verification_overlay(path: str | Path | None) -> dict[str, dict[str, ob
             raise ValueError(f"{field_path}.product_id: expected a non-empty string")
         if product_id in result:
             raise ValueError(f"{field_path}.product_id: duplicate {product_id!r}")
-        unknown = set(row) - _VERIFICATION_FIELDS - {"product_id"}
+        unknown = set(row) - {"product_id", "assertions"}
         if unknown:
             raise ValueError(f"verification product {product_id}: unknown fields {sorted(unknown)}")
-        result[product_id] = {key: row[key] for key in _VERIFICATION_FIELDS if key in row}
+        assertions = row.get("assertions")
+        if not isinstance(assertions, list) or not assertions:
+            raise ValueError(f"verification product {product_id}.assertions: expected a list")
+        patch: dict[str, object] = {}
+        for assertion_index, assertion in enumerate(assertions):
+            assertion_path = f"verification product {product_id}.assertions[{assertion_index}]"
+            if not isinstance(assertion, dict):
+                raise ValueError(f"{assertion_path}: expected an object")
+            extra = set(assertion) - _EVIDENCE_FIELDS
+            if extra:
+                raise ValueError(f"{assertion_path}: unknown fields {sorted(extra)}")
+            status = assertion.get("status")
+            if status not in {"approved", "proposed", "stale"}:
+                raise ValueError(f"{assertion_path}.status: expected approved, proposed, or stale")
+            facts = assertion.get("facts")
+            if not isinstance(facts, dict) or not facts:
+                raise ValueError(f"{assertion_path}.facts: expected a non-empty object")
+            fact_extra = set(facts) - _VERIFICATION_FIELDS
+            if fact_extra:
+                raise ValueError(f"{assertion_path}.facts: unknown fields {sorted(fact_extra)}")
+            if status != "approved":
+                continue
+            for key in (
+                "source_url", "retrieved_at", "source_sha256", "reviewer_id", "approved_at"
+            ):
+                if not isinstance(assertion.get(key), str) or not assertion[key]:
+                    raise ValueError(f"{assertion_path}.{key}: expected a non-empty string")
+            source_hash = assertion["source_sha256"]
+            if len(source_hash) != 64 or any(c not in "0123456789abcdef" for c in source_hash.lower()):
+                raise ValueError(f"{assertion_path}.source_sha256: expected a SHA-256 hex digest")
+            overlap = set(patch) & set(facts)
+            if overlap:
+                raise ValueError(f"{assertion_path}.facts: duplicate approved fields {sorted(overlap)}")
+            patch.update(facts)
+        if patch:
+            result[product_id] = patch
     return result
 
 
@@ -460,6 +502,8 @@ def _quarantine_reasons(product: Product, role: str) -> list[str]:
     if not product.cadence_source:
         reasons.append("instruction_cadence_source_missing")
     if role == "treatment":
+        if product.otc_drug is not True:
+            reasons.append("otc_status_not_verified")
         if not product.drug_actives:
             reasons.append("drug_active_not_verified")
         if any(active.strength is None for active in product.drug_actives):
@@ -509,6 +553,46 @@ def build_quarantine_report(
         "schema_version": "1",
         "products": rows,
         "unmatched_verification_ids": sorted(unmatched_verification_ids or []),
+    }
+
+
+def build_completeness_report(
+    products: list[Product], *, support_minimum: int = 25
+) -> dict[str, object]:
+    """Report verified support-role inventory without weakening eligibility."""
+    roles = ("cleanser", "moisturizer", "sunscreen")
+    counts = {
+        role: sum(not _quarantine_reasons(product, role) for product in products)
+        for role in roles
+    }
+    modeled = {
+        "azelaic_acid_10": (("azelaic_acid", "10%"),),
+        "benzoyl_peroxide_2_5": (("benzoyl_peroxide", "2.5%"),),
+        "adapalene_0_1_benzoyl_peroxide_2_5": (
+            ("adapalene", "0.1%"), ("benzoyl_peroxide", "2.5%")
+        ),
+    }
+    treatment_counts = {key: 0 for key in modeled}
+    for product in products:
+        exact = tuple(sorted((active.name, active.strength) for active in product.drug_actives))
+        for key, expected in modeled.items():
+            if exact == tuple(sorted(expected)) and not _quarantine_reasons(product, "treatment"):
+                treatment_counts[key] += 1
+    support_complete = all(count >= support_minimum for count in counts.values())
+    treatment_complete = all(treatment_counts.values())
+    return {
+        "schema_version": "1",
+        "support_minimum": support_minimum,
+        "eligible_by_role": counts,
+        "shortfalls": {
+            role: support_minimum - count
+            for role, count in counts.items() if count < support_minimum
+        },
+        "treatment_paths": treatment_counts,
+        "missing_treatment_paths": [
+            key for key, count in treatment_counts.items() if not count
+        ],
+        "complete": support_complete and treatment_complete,
     }
 
 

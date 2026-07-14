@@ -215,6 +215,7 @@ def test_production_stage_runner_resume_makes_no_second_sarpn_request(tmp_path):
                 "dataset": {"name": "synthetic", "sample_id": "face", "split": "smoke",
                             "split_proof": "fixture"},
                 "detector_sha256": "synthetic-detector",
+                "eligibility_debug": True,
             },
         }
         req = BatchRequest("face", sha256_file(image), tmp_path / "artifacts", semantic)
@@ -234,6 +235,17 @@ def test_production_stage_runner_resume_makes_no_second_sarpn_request(tmp_path):
                             monotonic=lambda: 1)
         assert summary.exit_code == 0
         assert server.request_count == 1
+        routine = json.loads((req.artifact_dir / "routine.json").read_text())
+        assert "eligibility_rejections" not in routine
+        assert "validation_errors" not in routine
+        assert (req.artifact_dir / "eligibility_rejections.json").exists()
+
+        semantic["e2e"]["eligibility_debug"] = False
+        summary = run_batch([req], manifest, real, sleeper=lambda _: None,
+                            monotonic=lambda: 1)
+        assert summary.exit_code == 0
+        assert server.request_count == 1
+        assert not (req.artifact_dir / "eligibility_rejections.json").exists()
 
 
 def test_production_stage_runner_rejects_source_hash_mismatch_before_http(tmp_path):

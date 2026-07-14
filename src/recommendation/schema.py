@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import math
-from typing import Any, Mapping, Optional
+from collections import Counter
+from typing import Mapping, Optional
 
 
 CONCERNS = {
@@ -162,6 +163,11 @@ class Product:
     cadence_source: str | None = None
     amount: str | None = None
     amount_source: str | None = None
+    source_set_id: str | None = None
+    ndc_product_code: str | None = None
+    label_version: str | None = None
+    label_effective_date: str | None = None
+    source_hash: str | None = None
     catalog_schema_version: str = "legacy"
 
     def __post_init__(self) -> None:
@@ -192,6 +198,8 @@ class Product:
         for field_name in (
             "label_source", "label_verified_at", "cadence", "cadence_source",
             "amount", "amount_source",
+            "source_set_id", "ndc_product_code", "label_version",
+            "label_effective_date", "source_hash",
         ):
             value = getattr(self, field_name)
             if value is not None and not isinstance(value, str):
@@ -286,6 +294,11 @@ class Product:
             "cadence_source": self.cadence_source,
             "amount": self.amount,
             "amount_source": self.amount_source,
+            "source_set_id": self.source_set_id,
+            "ndc_product_code": self.ndc_product_code,
+            "label_version": self.label_version,
+            "label_effective_date": self.label_effective_date,
+            "source_hash": self.source_hash,
         }
 
 
@@ -543,13 +556,87 @@ class RoutineInstruction:
 
 
 @dataclass
+class EligibilityDiagnostics:
+    """Compact role-level eligibility evidence with optional debug detail."""
+
+    requested_roles: list[str]
+    collect_details: bool = False
+    _eligible_counts: Counter[str] = field(default_factory=Counter, repr=False)
+    _rejected_counts: Counter[str] = field(default_factory=Counter, repr=False)
+    _reason_counts: dict[str, Counter[str]] = field(default_factory=dict, repr=False)
+    _details: dict[str, dict[str, list[str]]] = field(default_factory=dict, repr=False)
+    missing_roles: list[str] = field(default_factory=list)
+
+    def record(self, role: str, product_id: str, reasons: list[str]) -> None:
+        reasons = list(dict.fromkeys(reasons))
+        if reasons:
+            self._rejected_counts[role] += 1
+            self._reason_counts.setdefault(role, Counter()).update(reasons)
+        else:
+            self._eligible_counts[role] += 1
+        if self.collect_details:
+            self._details.setdefault(role, {})[product_id] = reasons
+
+    def reject_previously_eligible(
+        self, role: str, product_id: str, reasons: list[str]
+    ) -> None:
+        """Replace a first-pass eligible result with a contextual rejection."""
+        if self._eligible_counts[role]:
+            self._eligible_counts[role] -= 1
+        reasons = list(dict.fromkeys(reasons))
+        self._rejected_counts[role] += 1
+        self._reason_counts.setdefault(role, Counter()).update(reasons)
+        if self.collect_details:
+            self._details.setdefault(role, {})[product_id] = reasons
+
+    def mark_missing(self, role: str) -> None:
+        if role not in self.missing_roles:
+            self.missing_roles.append(role)
+
+    def role_has_missing_reason(self, role: str) -> bool:
+        return role in self.missing_roles
+
+    def to_summary(self, selected_roles: list[str] | None = None) -> dict[str, object]:
+        selected = selected_roles or []
+        roles: dict[str, object] = {}
+        for role in self.requested_roles:
+            roles[role] = {
+                "eligible_count": self._eligible_counts[role],
+                "rejected_count": self._rejected_counts[role],
+                "rejection_reason_counts": dict(sorted(
+                    self._reason_counts.get(role, Counter()).items()
+                )),
+            }
+        return {
+            "requested_roles": list(self.requested_roles),
+            "selected_roles": [role for role in self.requested_roles if role in selected],
+            "missing_roles": [role for role in self.requested_roles if role in self.missing_roles],
+            "roles": roles,
+        }
+
+    def debug_payload(self) -> dict[str, object] | None:
+        if not self.collect_details:
+            return None
+        return {
+            "schema_version": "1",
+            "rejections": {
+                role: {
+                    product_id: reasons
+                    for product_id, reasons in sorted(outcomes.items()) if reasons
+                }
+                for role, outcomes in sorted(self._details.items())
+            },
+        }
+
+
+@dataclass
 class Recommendation:
     decision: CareDecision
     therapy_plan: TherapyPlan
     selected_products: dict[str, Product]
     selected_regimen: dict[str, list[RoutineInstruction]]
     alternatives: dict[str, list[Product]]
-    eligibility_rejections: dict[str, list[str]]
+    eligibility_diagnostics: EligibilityDiagnostics
     explanation: list[dict[str, object]]
     flags: list[str]
     validation_errors: list[str]
@@ -573,10 +660,20 @@ class Recommendation:
                 role: [product.to_dict() for product in products]
                 for role, products in sorted(self.alternatives.items())
             },
-            "eligibility_rejections": {
-                key: list(value) for key, value in sorted(self.eligibility_rejections.items())
-            },
             "explanation": [dict(item) for item in self.explanation],
             "flags": list(self.flags),
-            "validation_errors": list(self.validation_errors),
         }
+
+    @property
+    def eligibility_rejections(self) -> dict[str, list[str]]:
+        """Compatibility view: role-level reasons, plus detail only in debug mode."""
+        result = {
+            f"role:{role}": ["no_eligible_product"]
+            for role in self.eligibility_diagnostics.missing_roles
+        }
+        debug = self.eligibility_diagnostics.debug_payload()
+        if debug:
+            for role, rows in debug["rejections"].items():
+                for product_id, reasons in rows.items():
+                    result[f"{role}:{product_id}"] = list(reasons)
+        return result

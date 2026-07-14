@@ -40,6 +40,7 @@ def run(report, products=None, **kwargs):
         report, products if products is not None else catalog(), profile(),
         triage_policy=kwargs.pop("triage_policy", triage()),
         therapy_policy=load_therapy_policy(POLICY),
+        collect_eligibility_details=True,
         **kwargs,
     )
 

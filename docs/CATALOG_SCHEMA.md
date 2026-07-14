@@ -45,7 +45,12 @@ D-015) is messy; it gets normalized into this on import. See DECISIONS.md D-009.
   "cadence": "per_label",
   "cadence_source": "https://authoritative.example/label",
   "amount": null,
-  "amount_source": null
+  "amount_source": null,
+  "source_set_id": null,
+  "ndc_product_code": null,
+  "label_version": null,
+  "label_effective_date": null,
+  "source_hash": null
 }
 ```
 
@@ -144,9 +149,13 @@ products** (all five categories non-empty, ~89% with ≥1 canonical active).
 
 ## Verification overlay and quarantine
 
-The optional overlay is a JSON object keyed by `product_id`. Every supplied
-field is schema-validated with product/field context, then merged in sorted
-product order. Verified drug actives are also included in the complete
+The optional overlay uses `schema_version: "2"` and product rows containing
+one or more evidence assertions. Only assertions with `status: "approved"`
+are applied. Each approved assertion carries its source URL, retrieval time,
+content SHA-256, reviewer identity, approval time, and a non-overlapping
+`facts` object. `proposed` and `stale` assertions grant no eligibility. Every
+supplied fact is schema-validated with product/field context, then merged in
+sorted product order. Verified drug actives are also included in the complete
 carried-active set so safety checks cannot miss an unrelated active. The raw
 Sephora/BeautyAPI import never manufactures strengths, label URLs,
 verification timestamps, broad-spectrum claims, contraindications, cadence,
@@ -158,6 +167,14 @@ timestamp. SPF additionally requires explicit broad-spectrum `true` and
 numeric SPF ≥30. Unknown comedogenic/contraindication metadata remains unknown,
 not false. Masks, scrubs, peels, neck products, and trace-active rinse-off
 cleansers cannot masquerade as verified leave-on therapy.
+
+DailyMed-derived candidate rows additionally retain SET ID, NDC product code, label
+version/effective date, and source-content hash. Import requires a current,
+non-archived, human, topical OTC SPL from an HTTPS source plus an independent
+retrieval timestamp. Import leaves `routine_roles` empty and marks the evidence
+`pending_human_approval`; an approved overlay is still required before the row
+can become eligible. Prescription labels, non-DailyMed hosts, and local fixture
+paths cannot create eligible catalog rows.
 
 ## What this deliberately excludes
 
