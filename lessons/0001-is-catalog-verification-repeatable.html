@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Is catalog verification repeatable?</title>
+<style>
+  body{font:17px/1.55 system-ui;max-width:820px;margin:48px auto;padding:0 24px;color:#17202a}
+  h1{font-size:2.1rem}.yes{color:#176b3a}.notyet{color:#9a4d00}
+  table{border-collapse:collapse;width:100%}th,td{padding:10px;border-bottom:1px solid #dce2e8;text-align:left}
+  .test{margin-top:24px;padding:16px;background:#f4f7fa;border-radius:8px}
+</style>
+<h1>Is the catalog process repeatable?</h1>
+<p><strong class="yes">The pipeline stages are repeatable.</strong>
+<strong class="notyet">The complete autonomous loop is not built yet.</strong></p>
+<table>
+<tr><th>Stage</th><th>Today</th></tr>
+<tr><td>DailyMed candidate extraction</td><td>Automated</td></tr>
+<tr><td>Manufacturer evidence research</td><td>Agent judgment/manual capture</td></tr>
+<tr><td>Schema validation and signing</td><td>Automated after review</td></tr>
+<tr><td>Import and quarantine</td><td>Automated and deterministic</td></tr>
+<tr><td>Coverage measurement</td><td>Automated</td></tr>
+<tr><td>Next-batch selection and repetition</td><td>Not orchestrated</td></tr>
+</table>
+<p>The next engineering unit is one resumable command that owns the state
+machine described in the <a href="../reference/catalog-verification-loop.html">loop reference</a>.
+Its stopping condition must combine role/path coverage, evidence freshness,
+unmatched IDs, conflict rate, and quarantine rate.</p>
+<div class="test"><strong>Check your understanding:</strong> If an official
+page is unavailable, should the agent approve the product from its name, or
+leave it proposed/rejected? Ask the agent to check your answer.</div>
+<p>Primary sources: <a href="../docs/CATALOG_SCHEMA.md">catalog contract</a>,
+<a href="../src/recommendation/import_catalog.py">importer</a>, and
+<a href="../src/recommendation/approve_verification.py">approval signer</a>.</p>
+</html>
