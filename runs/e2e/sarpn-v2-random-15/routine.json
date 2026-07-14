@@ -1,0 +1,693 @@
+{
+  "schema_version": "2.0",
+  "image_id": "15_jpg.rf.d647872eac631774d36fad8e9984b26e.jpg",
+  "concerns": [
+    {
+      "concern": "acne_comedonal",
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "nose",
+        "right_cheek"
+      ],
+      "severity": 3,
+      "confidence": 0.6715588235294118,
+      "lesion_count": 17,
+      "evidence": {
+        "labels": {
+          "closed_comedo": 13,
+          "open_comedo": 4
+        },
+        "max_confidence": 0.9557,
+        "affected_region_count": 5
+      }
+    },
+    {
+      "concern": "acne_inflammatory",
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "nose",
+        "right_cheek"
+      ],
+      "severity": 3,
+      "confidence": 0.80186,
+      "lesion_count": 15,
+      "evidence": {
+        "labels": {
+          "papule": 14,
+          "pustule": 1
+        },
+        "max_confidence": 0.9698,
+        "affected_region_count": 5
+      }
+    },
+    {
+      "concern": "acne_scarring",
+      "regions": [
+        "left_cheek",
+        "nose",
+        "right_cheek"
+      ],
+      "severity": 3,
+      "confidence": 0.8282875000000001,
+      "lesion_count": 8,
+      "evidence": {
+        "labels": {
+          "atrophic_scar": 8
+        },
+        "max_confidence": 0.9657,
+        "affected_region_count": 3
+      }
+    },
+    {
+      "concern": "hyperpigmentation",
+      "regions": [
+        "left_cheek",
+        "right_cheek"
+      ],
+      "severity": 4,
+      "confidence": 0.812241935483871,
+      "lesion_count": 31,
+      "evidence": {
+        "labels": {
+          "melasma": 31
+        },
+        "max_confidence": 0.9729,
+        "affected_region_count": 2
+      }
+    }
+  ],
+  "clear_skin": false,
+  "notes": "Inflammation spans several regions, so peel, scrub and resurfacing formats were excluded and leave-on exfoliants are capped at one per routine. Benzoyl peroxide was set aside in favor of azelaic acid to keep the strong-active load down. No product in the catalog carries azelaic_acid. No product in the catalog carries adapalene; adapalene 0.1% gel is available over the counter (e.g., Differin) \u2014 ask a pharmacist. Pigmented-spot caution: mole-like spots were flagged for professional review \u2014 confirm dark spots are not moles before treating them with acids.",
+  "tone": {
+    "bucket": "light",
+    "ita": 44.46393155695808,
+    "median_l": 65.8144622206349,
+    "low_light": false,
+    "sample_count": 3749417,
+    "source": "photo_estimate"
+  },
+  "region_mapping": {
+    "method": "mediapipe_face_landmarker",
+    "fallback": false,
+    "reason": null,
+    "face_detected": true,
+    "face_box": [
+      33.573535203933716,
+      786.9860649108887,
+      3432.0919709205627,
+      4566.429507732391
+    ],
+    "model_path": "models/face_landmarker.task",
+    "forced_assignments": [
+      0,
+      1,
+      2,
+      3,
+      11,
+      12,
+      15,
+      17,
+      19,
+      20,
+      22,
+      23,
+      24,
+      27,
+      28,
+      29,
+      30,
+      33,
+      34,
+      35,
+      40,
+      48,
+      49,
+      53,
+      60,
+      61,
+      62,
+      63,
+      64,
+      68
+    ]
+  },
+  "region_method": "mediapipe_face_landmarker",
+  "routine_mode": "treatment",
+  "flags": [
+    "consider professional review for acne scarring",
+    "consider a professional",
+    "broad inflammation: exfoliating formats excluded",
+    "broad inflammation: reduced strong-active stacking"
+  ],
+  "target_actives": [
+    "azelaic_acid",
+    "niacinamide",
+    "salicylic_acid",
+    "adapalene",
+    "ceramides"
+  ],
+  "target_coverage": {
+    "azelaic_acid": 0,
+    "niacinamide": 11,
+    "salicylic_acid": 2,
+    "adapalene": 0,
+    "ceramides": 11
+  },
+  "slot_assignment": {
+    "azelaic_acid": [
+      "AM",
+      "PM"
+    ],
+    "niacinamide": [
+      "AM",
+      "PM"
+    ],
+    "salicylic_acid": [
+      "AM",
+      "PM"
+    ],
+    "adapalene": [
+      "PM"
+    ],
+    "ceramides": [
+      "AM",
+      "PM"
+    ]
+  },
+  "routines": {
+    "AM": {
+      "cleanser": [
+        {
+          "product_id": "P503197",
+          "brand": "alpyn beauty",
+          "name": "Juneberry & Collagen Hydrating Cold Cream Cleanser",
+          "actives": [
+            "glycerin",
+            "salicylic_acid"
+          ],
+          "price_usd": 39.0
+        },
+        {
+          "product_id": "P469520",
+          "brand": "Paula's Choice",
+          "name": "RESIST Perfectly Balanced Foaming Cleanser",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 22.0
+        },
+        {
+          "product_id": "P505133",
+          "brand": "MACRENE actives",
+          "name": "High Performance Face Cleanser for Clear Skin with Niacinamide",
+          "actives": [
+            "glycerin",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 85.0
+        },
+        {
+          "product_id": "P482681",
+          "brand": "IT Cosmetics",
+          "name": "Bye Bye Makeup 3-in-1 Makeup Melting Cleansing Balm",
+          "actives": [
+            "ceramides"
+          ],
+          "price_usd": 42.0
+        },
+        {
+          "product_id": "P505024",
+          "brand": "Benefit Cosmetics",
+          "name": "The POREfessional Get Unblocked Makeup-Removing Cleansing Oil",
+          "actives": [
+            "ceramides"
+          ],
+          "price_usd": 39.0
+        }
+      ],
+      "treatment": [
+        {
+          "product_id": "P482264",
+          "brand": "Fenty Skin",
+          "name": "Cookies N Clean Whipped Clay Pore Detox Face Mask with Salicylic Acid + Charcoal",
+          "actives": [
+            "glycerin",
+            "panthenol",
+            "salicylic_acid"
+          ],
+          "price_usd": 35.0
+        },
+        {
+          "product_id": "P504042",
+          "brand": "Dr. Jart+",
+          "name": "Ceramidin Skin Barrier Moisturizing Mask",
+          "actives": [
+            "allantoin",
+            "ceramides",
+            "glycerin",
+            "panthenol"
+          ],
+          "price_usd": 9.0
+        },
+        {
+          "product_id": "P504064",
+          "brand": "Dr. Jart+",
+          "name": "Ceramidin Cream-Infused Mask",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "panthenol"
+          ],
+          "price_usd": 15.0
+        },
+        {
+          "product_id": "P504001",
+          "brand": "Dr. Jart+",
+          "name": "Ceramidin Skin Barrier Serum Toner",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol"
+          ],
+          "price_usd": 39.0
+        },
+        {
+          "product_id": "P416589",
+          "brand": "Skin Laundry",
+          "name": "Wrinkle Release Facial Sheet Mask",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 12.0
+        }
+      ],
+      "serum": [
+        {
+          "product_id": "P500633",
+          "brand": "fresh",
+          "name": "Tea Elixir Niacinamide & Hyaluronic Acid Anti-Aging Serum",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 80.0
+        },
+        {
+          "product_id": "P459130",
+          "brand": "Dr. Lara Devgan Scientific Beauty",
+          "name": "Hyaluronic Serum",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 245.0
+        },
+        {
+          "product_id": "P503726",
+          "brand": "Sunday Riley",
+          "name": "B3 Nice 10% Niacinamide Serum",
+          "actives": [
+            "glycerin",
+            "madecassoside",
+            "niacinamide"
+          ],
+          "price_usd": 65.0
+        },
+        {
+          "product_id": "P472810",
+          "brand": "Dermalogica",
+          "name": "Smart Response Serum",
+          "actives": [
+            "glycerin",
+            "niacinamide"
+          ],
+          "price_usd": 145.0
+        },
+        {
+          "product_id": "P469110",
+          "brand": "Kate Somerville",
+          "name": "KateCeuticals Firming Serum with Hyaluronic Acid",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 110.0
+        }
+      ],
+      "moisturizer": [
+        {
+          "product_id": "P481701",
+          "brand": "EADEM",
+          "name": "Cloud Cushion Plush Moisturizer with Ceramides + Peptides",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "niacinamide",
+            "squalane"
+          ],
+          "price_usd": 58.0
+        },
+        {
+          "product_id": "P475540",
+          "brand": "Farmacy",
+          "name": "Honey Halo Moisturizer Jumbo",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "panthenol"
+          ],
+          "price_usd": 74.0
+        },
+        {
+          "product_id": "P500039",
+          "brand": "N\u00e9cessaire",
+          "name": "The Neck Serum - With 5 Peptides | 9% Peptide Blend",
+          "actives": [
+            "glycerin",
+            "niacinamide",
+            "squalane"
+          ],
+          "price_usd": 60.0
+        },
+        {
+          "product_id": "P504056",
+          "brand": "REN Clean Skincare",
+          "name": "Perfect Canvas Smooth, Prep & Plump Essence",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 55.0
+        },
+        {
+          "product_id": "P480447",
+          "brand": "iNNBEAUTY PROJECT",
+          "name": "10 + 10 Moisturizer with 10% Vitamin C + 10% Peptide Complex + Ceramides",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "squalane"
+          ],
+          "price_usd": 35.0
+        }
+      ],
+      "spf": [
+        {
+          "product_id": "P501321",
+          "brand": "Saint Jane Beauty",
+          "name": "Luxury Sun Ritual Pore Smoothing Sunscreen SPF 30",
+          "actives": [],
+          "price_usd": 38.0
+        },
+        {
+          "product_id": "P502326",
+          "brand": "Dermalogica",
+          "name": "Dynamic Skin Recovery SPF50 Moisturizer",
+          "actives": [
+            "gluconolactone",
+            "glycerin",
+            "squalane"
+          ],
+          "price_usd": 79.0
+        },
+        {
+          "product_id": "P482540",
+          "brand": "Murad",
+          "name": "Correct & Protect Broad Spectrum SPF 45| PA++++",
+          "actives": [
+            "glycerin",
+            "lactic_acid",
+            "niacinamide",
+            "squalane",
+            "vitamin_c"
+          ],
+          "price_usd": 69.0
+        },
+        {
+          "product_id": "P505158",
+          "brand": "Peter Thomas Roth",
+          "name": "Max Vitamin D-Fense Sunscreen Serum Broad Spectrum SPF 50",
+          "actives": [
+            "glycerin",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 42.0
+        },
+        {
+          "product_id": "P429242",
+          "brand": "Shiseido",
+          "name": "Clear Sunscreen Stick SPF 50+",
+          "actives": [],
+          "price_usd": 30.0
+        }
+      ]
+    },
+    "PM": {
+      "cleanser": [
+        {
+          "product_id": "P503197",
+          "brand": "alpyn beauty",
+          "name": "Juneberry & Collagen Hydrating Cold Cream Cleanser",
+          "actives": [
+            "glycerin",
+            "salicylic_acid"
+          ],
+          "price_usd": 39.0
+        },
+        {
+          "product_id": "P469520",
+          "brand": "Paula's Choice",
+          "name": "RESIST Perfectly Balanced Foaming Cleanser",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 22.0
+        },
+        {
+          "product_id": "P505133",
+          "brand": "MACRENE actives",
+          "name": "High Performance Face Cleanser for Clear Skin with Niacinamide",
+          "actives": [
+            "glycerin",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 85.0
+        },
+        {
+          "product_id": "P482681",
+          "brand": "IT Cosmetics",
+          "name": "Bye Bye Makeup 3-in-1 Makeup Melting Cleansing Balm",
+          "actives": [
+            "ceramides"
+          ],
+          "price_usd": 42.0
+        },
+        {
+          "product_id": "P505024",
+          "brand": "Benefit Cosmetics",
+          "name": "The POREfessional Get Unblocked Makeup-Removing Cleansing Oil",
+          "actives": [
+            "ceramides"
+          ],
+          "price_usd": 39.0
+        }
+      ],
+      "treatment": [
+        {
+          "product_id": "P482264",
+          "brand": "Fenty Skin",
+          "name": "Cookies N Clean Whipped Clay Pore Detox Face Mask with Salicylic Acid + Charcoal",
+          "actives": [
+            "glycerin",
+            "panthenol",
+            "salicylic_acid"
+          ],
+          "price_usd": 35.0
+        },
+        {
+          "product_id": "P479318",
+          "brand": "Farmacy",
+          "name": "10% Niacinamide Night Mask",
+          "actives": [
+            "allantoin",
+            "glycerin",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 44.0
+        },
+        {
+          "product_id": "P504042",
+          "brand": "Dr. Jart+",
+          "name": "Ceramidin Skin Barrier Moisturizing Mask",
+          "actives": [
+            "allantoin",
+            "ceramides",
+            "glycerin",
+            "panthenol"
+          ],
+          "price_usd": 9.0
+        },
+        {
+          "product_id": "P504064",
+          "brand": "Dr. Jart+",
+          "name": "Ceramidin Cream-Infused Mask",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "panthenol"
+          ],
+          "price_usd": 15.0
+        },
+        {
+          "product_id": "P504001",
+          "brand": "Dr. Jart+",
+          "name": "Ceramidin Skin Barrier Serum Toner",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol"
+          ],
+          "price_usd": 39.0
+        }
+      ],
+      "serum": [
+        {
+          "product_id": "P500633",
+          "brand": "fresh",
+          "name": "Tea Elixir Niacinamide & Hyaluronic Acid Anti-Aging Serum",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 80.0
+        },
+        {
+          "product_id": "P459130",
+          "brand": "Dr. Lara Devgan Scientific Beauty",
+          "name": "Hyaluronic Serum",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 245.0
+        },
+        {
+          "product_id": "P503726",
+          "brand": "Sunday Riley",
+          "name": "B3 Nice 10% Niacinamide Serum",
+          "actives": [
+            "glycerin",
+            "madecassoside",
+            "niacinamide"
+          ],
+          "price_usd": 65.0
+        },
+        {
+          "product_id": "P472810",
+          "brand": "Dermalogica",
+          "name": "Smart Response Serum",
+          "actives": [
+            "glycerin",
+            "niacinamide"
+          ],
+          "price_usd": 145.0
+        },
+        {
+          "product_id": "P469110",
+          "brand": "Kate Somerville",
+          "name": "KateCeuticals Firming Serum with Hyaluronic Acid",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 110.0
+        }
+      ],
+      "moisturizer": [
+        {
+          "product_id": "P481701",
+          "brand": "EADEM",
+          "name": "Cloud Cushion Plush Moisturizer with Ceramides + Peptides",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "niacinamide",
+            "squalane"
+          ],
+          "price_usd": 58.0
+        },
+        {
+          "product_id": "P475540",
+          "brand": "Farmacy",
+          "name": "Honey Halo Moisturizer Jumbo",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "panthenol"
+          ],
+          "price_usd": 74.0
+        },
+        {
+          "product_id": "P500039",
+          "brand": "N\u00e9cessaire",
+          "name": "The Neck Serum - With 5 Peptides | 9% Peptide Blend",
+          "actives": [
+            "glycerin",
+            "niacinamide",
+            "squalane"
+          ],
+          "price_usd": 60.0
+        },
+        {
+          "product_id": "P504056",
+          "brand": "REN Clean Skincare",
+          "name": "Perfect Canvas Smooth, Prep & Plump Essence",
+          "actives": [
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 55.0
+        },
+        {
+          "product_id": "P480447",
+          "brand": "iNNBEAUTY PROJECT",
+          "name": "10 + 10 Moisturizer with 10% Vitamin C + 10% Peptide Complex + Ceramides",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "squalane"
+          ],
+          "price_usd": 35.0
+        }
+      ]
+    }
+  }
+}

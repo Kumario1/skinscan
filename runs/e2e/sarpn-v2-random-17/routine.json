@@ -1,0 +1,744 @@
+{
+  "schema_version": "2.0",
+  "image_id": "17_jpg.rf.7be90a6730452872b460a681d93563ff.jpg",
+  "concerns": [
+    {
+      "concern": "acne_comedonal",
+      "regions": [
+        "forehead",
+        "left_cheek",
+        "nose",
+        "right_cheek"
+      ],
+      "severity": 3,
+      "confidence": 0.8295,
+      "lesion_count": 10,
+      "evidence": {
+        "labels": {
+          "closed_comedo": 6,
+          "open_comedo": 4
+        },
+        "max_confidence": 0.9659,
+        "affected_region_count": 4
+      }
+    },
+    {
+      "concern": "acne_cystic",
+      "regions": [
+        "right_cheek"
+      ],
+      "severity": 4,
+      "confidence": 0.9633,
+      "lesion_count": 1,
+      "evidence": {
+        "labels": {
+          "nodule": 1
+        },
+        "max_confidence": 0.9633,
+        "affected_region_count": 1
+      }
+    },
+    {
+      "concern": "acne_inflammatory",
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "perioral",
+        "right_cheek"
+      ],
+      "severity": 3,
+      "confidence": 0.76204375,
+      "lesion_count": 16,
+      "evidence": {
+        "labels": {
+          "papule": 16
+        },
+        "max_confidence": 0.973,
+        "affected_region_count": 5
+      }
+    },
+    {
+      "concern": "acne_scarring",
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "nose",
+        "perioral",
+        "right_cheek"
+      ],
+      "severity": 4,
+      "confidence": 0.617138,
+      "lesion_count": 50,
+      "evidence": {
+        "labels": {
+          "atrophic_scar": 49,
+          "hypertrophic_scar": 1
+        },
+        "max_confidence": 0.9968,
+        "affected_region_count": 6
+      }
+    },
+    {
+      "concern": "hyperpigmentation",
+      "regions": [
+        "left_cheek",
+        "right_cheek"
+      ],
+      "severity": 3,
+      "confidence": 0.8451133333333334,
+      "lesion_count": 15,
+      "evidence": {
+        "labels": {
+          "melasma": 15
+        },
+        "max_confidence": 0.9483,
+        "affected_region_count": 2
+      }
+    }
+  ],
+  "clear_skin": false,
+  "notes": "Routine held to soothing, barrier-supporting products only: this presentation should be reviewed by a professional before strong actives are layered on. Pigmented-spot caution: mole-like spots were flagged for professional review \u2014 confirm dark spots are not moles before treating them with acids.",
+  "tone": {
+    "bucket": "deep",
+    "ita": -2.9001509768629297,
+    "median_l": 48.91337896716752,
+    "low_light": false,
+    "sample_count": 3182184,
+    "source": "photo_estimate"
+  },
+  "region_mapping": {
+    "method": "mediapipe_face_landmarker",
+    "fallback": false,
+    "reason": null,
+    "face_detected": true,
+    "face_box": [
+      101.78996098041534,
+      745.8288371562958,
+      3397.5049295425415,
+      4558.890891075134
+    ],
+    "model_path": "models/face_landmarker.task",
+    "forced_assignments": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      9,
+      10,
+      11,
+      12,
+      13,
+      20,
+      28,
+      31,
+      34,
+      36,
+      38,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      61,
+      64,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      79,
+      81,
+      82,
+      84,
+      85,
+      86,
+      88
+    ]
+  },
+  "region_method": "mediapipe_face_landmarker",
+  "routine_mode": "soothe_escalation",
+  "flags": [
+    "see a dermatologist",
+    "deeper tone: emphasize sunscreen and irritation avoidance to reduce post-inflammatory hyperpigmentation risk"
+  ],
+  "target_actives": [
+    "centella",
+    "ceramides",
+    "hyaluronic_acid"
+  ],
+  "target_coverage": {
+    "centella": 19,
+    "ceramides": 10,
+    "hyaluronic_acid": 9
+  },
+  "slot_assignment": {
+    "centella": [
+      "AM",
+      "PM"
+    ],
+    "ceramides": [
+      "AM",
+      "PM"
+    ],
+    "hyaluronic_acid": [
+      "AM",
+      "PM"
+    ]
+  },
+  "routines": {
+    "AM": {
+      "cleanser": [
+        {
+          "product_id": "P501421",
+          "brand": "EADEM",
+          "name": "Dew Dream- Hydrating Makeup Removing Cleansing Balm with Tiger Grass",
+          "actives": [
+            "allantoin",
+            "centella",
+            "glycerin"
+          ],
+          "price_usd": 30.0
+        },
+        {
+          "product_id": "P500687",
+          "brand": "iNNBEAUTY PROJECT",
+          "name": "Keep It Clean Hydrating Gel Cleanser with Ceramides & 10 Amino Acids",
+          "actives": [
+            "centella",
+            "ceramides",
+            "glycerin"
+          ],
+          "price_usd": 26.0
+        },
+        {
+          "product_id": "P503877",
+          "brand": "Tata Harper",
+          "name": "Superkind Refining Cleanser",
+          "actives": [
+            "centella",
+            "glycerin",
+            "squalane"
+          ],
+          "price_usd": 88.0
+        },
+        {
+          "product_id": "P469520",
+          "brand": "Paula's Choice",
+          "name": "RESIST Perfectly Balanced Foaming Cleanser",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 22.0
+        },
+        {
+          "product_id": "P482681",
+          "brand": "IT Cosmetics",
+          "name": "Bye Bye Makeup 3-in-1 Makeup Melting Cleansing Balm",
+          "actives": [
+            "ceramides"
+          ],
+          "price_usd": 42.0
+        }
+      ],
+      "treatment": [
+        {
+          "product_id": "P505145",
+          "brand": "BeautyBio",
+          "name": "ZenBubble Bi-Phase Toner Serum",
+          "actives": [
+            "centella"
+          ],
+          "price_usd": 49.0
+        },
+        {
+          "product_id": "P461947",
+          "brand": "Kiehl's Since 1851",
+          "name": "Calendula Petal-Infused Calming Mask with Aloe Vera",
+          "actives": [
+            "centella",
+            "glycerin",
+            "squalane"
+          ],
+          "price_usd": 47.0
+        },
+        {
+          "product_id": "P443837",
+          "brand": "The INKEY List",
+          "name": "Kaolin Mask",
+          "actives": [
+            "centella",
+            "glycerin"
+          ],
+          "price_usd": 7.49
+        },
+        {
+          "product_id": "P481699",
+          "brand": "Dr. Jart+",
+          "name": "Cicapair Tiger Grass Calming Serum Mask",
+          "actives": [
+            "allantoin",
+            "centella",
+            "glycerin",
+            "madecassoside",
+            "niacinamide"
+          ],
+          "price_usd": 9.0
+        },
+        {
+          "product_id": "P481993",
+          "brand": "GUERLAIN",
+          "name": "Abeille Royale Intense Repair Youth Oil in Balm",
+          "actives": [
+            "centella",
+            "glycerin",
+            "hyaluronic_acid",
+            "panthenol"
+          ],
+          "price_usd": 235.0
+        }
+      ],
+      "serum": [
+        {
+          "product_id": "P482074",
+          "brand": "Summer Fridays",
+          "name": "Dream Oasis Deep Hydration Serum",
+          "actives": [
+            "centella",
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 44.0
+        },
+        {
+          "product_id": "P423259",
+          "brand": "Dr. Jart+",
+          "name": "Cicapair Tiger Grass Serum",
+          "actives": [
+            "centella",
+            "glycerin",
+            "madecassoside",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 52.0
+        },
+        {
+          "product_id": "P440922",
+          "brand": "Dior",
+          "name": "Capture Youth Intense Rescue Age-Delay Revitalizing Oil-Serum",
+          "actives": [
+            "centella",
+            "glycerin"
+          ],
+          "price_usd": 110.0
+        },
+        {
+          "product_id": "P500633",
+          "brand": "fresh",
+          "name": "Tea Elixir Niacinamide & Hyaluronic Acid Anti-Aging Serum",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 80.0
+        },
+        {
+          "product_id": "P469110",
+          "brand": "Kate Somerville",
+          "name": "KateCeuticals Firming Serum with Hyaluronic Acid",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 110.0
+        }
+      ],
+      "moisturizer": [
+        {
+          "product_id": "P480162",
+          "brand": "Dior",
+          "name": "Cica Recover & Repair Multi-Use Balm",
+          "actives": [
+            "centella",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 60.0
+        },
+        {
+          "product_id": "P475629",
+          "brand": "Wishful",
+          "name": "Honey Whip Peptide and Collagen Moisturizer",
+          "actives": [
+            "centella",
+            "glycerin",
+            "hyaluronic_acid",
+            "madecassoside",
+            "niacinamide"
+          ],
+          "price_usd": 43.0
+        },
+        {
+          "product_id": "P475086",
+          "brand": "Dermalogica",
+          "name": "BioLumin-C Vitamin-C Gel Moisturizer",
+          "actives": [
+            "allantoin",
+            "centella",
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 69.0
+        },
+        {
+          "product_id": "P448185",
+          "brand": "Dr. Jart+",
+          "name": "Cicapair Tiger Grass Calming Gel Cream",
+          "actives": [
+            "centella",
+            "glycerin",
+            "madecassoside",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 49.0
+        },
+        {
+          "product_id": "P505209",
+          "brand": "The Nue Co.",
+          "name": "Barrier Culture Moisturizer with Niacinamide & Squalane",
+          "actives": [
+            "centella",
+            "ceramides",
+            "glycerin",
+            "niacinamide",
+            "squalane"
+          ],
+          "price_usd": 65.0
+        }
+      ],
+      "spf": [
+        {
+          "product_id": "P456392",
+          "brand": "innisfree",
+          "name": "Daily UV Defense Invisible Broad Spectrum SPF 36 Sunscreen",
+          "actives": [
+            "centella",
+            "glycerin"
+          ],
+          "price_usd": 16.0
+        },
+        {
+          "product_id": "P481825",
+          "brand": "LANEIGE",
+          "name": "Hydro UV Defense Sunscreen Broad Spectrum SPF 50+",
+          "actives": [
+            "centella",
+            "glycerin"
+          ],
+          "price_usd": 30.0
+        },
+        {
+          "product_id": "P471045",
+          "brand": "Kate Somerville",
+          "name": "Daily Deflector Mineral Sunscreen SPF 40  PA++++",
+          "actives": [
+            "ceramides",
+            "glycerin"
+          ],
+          "price_usd": 54.0
+        },
+        {
+          "product_id": "P467976",
+          "brand": "Supergoop!",
+          "name": "(Re)setting 100% Mineral Powder Sunscreen SPF 35 PA+++",
+          "actives": [
+            "ceramides"
+          ],
+          "price_usd": 35.0
+        },
+        {
+          "product_id": "P471064",
+          "brand": "Peter Thomas Roth",
+          "name": "Max Matte Shine Control Sunscreen Broad Spectrum SPF 45",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 38.0
+        }
+      ]
+    },
+    "PM": {
+      "cleanser": [
+        {
+          "product_id": "P501421",
+          "brand": "EADEM",
+          "name": "Dew Dream- Hydrating Makeup Removing Cleansing Balm with Tiger Grass",
+          "actives": [
+            "allantoin",
+            "centella",
+            "glycerin"
+          ],
+          "price_usd": 30.0
+        },
+        {
+          "product_id": "P500687",
+          "brand": "iNNBEAUTY PROJECT",
+          "name": "Keep It Clean Hydrating Gel Cleanser with Ceramides & 10 Amino Acids",
+          "actives": [
+            "centella",
+            "ceramides",
+            "glycerin"
+          ],
+          "price_usd": 26.0
+        },
+        {
+          "product_id": "P503877",
+          "brand": "Tata Harper",
+          "name": "Superkind Refining Cleanser",
+          "actives": [
+            "centella",
+            "glycerin",
+            "squalane"
+          ],
+          "price_usd": 88.0
+        },
+        {
+          "product_id": "P469520",
+          "brand": "Paula's Choice",
+          "name": "RESIST Perfectly Balanced Foaming Cleanser",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 22.0
+        },
+        {
+          "product_id": "P482681",
+          "brand": "IT Cosmetics",
+          "name": "Bye Bye Makeup 3-in-1 Makeup Melting Cleansing Balm",
+          "actives": [
+            "ceramides"
+          ],
+          "price_usd": 42.0
+        }
+      ],
+      "treatment": [
+        {
+          "product_id": "P467615",
+          "brand": "Dr. Jart+",
+          "name": "Cicapair Tiger Grass Sleepair Intensive Mask",
+          "actives": [
+            "centella",
+            "glycerin",
+            "madecassoside",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 42.0
+        },
+        {
+          "product_id": "P505145",
+          "brand": "BeautyBio",
+          "name": "ZenBubble Bi-Phase Toner Serum",
+          "actives": [
+            "centella"
+          ],
+          "price_usd": 49.0
+        },
+        {
+          "product_id": "P461947",
+          "brand": "Kiehl's Since 1851",
+          "name": "Calendula Petal-Infused Calming Mask with Aloe Vera",
+          "actives": [
+            "centella",
+            "glycerin",
+            "squalane"
+          ],
+          "price_usd": 47.0
+        },
+        {
+          "product_id": "P443837",
+          "brand": "The INKEY List",
+          "name": "Kaolin Mask",
+          "actives": [
+            "centella",
+            "glycerin"
+          ],
+          "price_usd": 7.49
+        },
+        {
+          "product_id": "P481699",
+          "brand": "Dr. Jart+",
+          "name": "Cicapair Tiger Grass Calming Serum Mask",
+          "actives": [
+            "allantoin",
+            "centella",
+            "glycerin",
+            "madecassoside",
+            "niacinamide"
+          ],
+          "price_usd": 9.0
+        }
+      ],
+      "serum": [
+        {
+          "product_id": "P482074",
+          "brand": "Summer Fridays",
+          "name": "Dream Oasis Deep Hydration Serum",
+          "actives": [
+            "centella",
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide",
+            "panthenol",
+            "squalane"
+          ],
+          "price_usd": 44.0
+        },
+        {
+          "product_id": "P423259",
+          "brand": "Dr. Jart+",
+          "name": "Cicapair Tiger Grass Serum",
+          "actives": [
+            "centella",
+            "glycerin",
+            "madecassoside",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 52.0
+        },
+        {
+          "product_id": "P440922",
+          "brand": "Dior",
+          "name": "Capture Youth Intense Rescue Age-Delay Revitalizing Oil-Serum",
+          "actives": [
+            "centella",
+            "glycerin"
+          ],
+          "price_usd": 110.0
+        },
+        {
+          "product_id": "P500633",
+          "brand": "fresh",
+          "name": "Tea Elixir Niacinamide & Hyaluronic Acid Anti-Aging Serum",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid",
+            "niacinamide"
+          ],
+          "price_usd": 80.0
+        },
+        {
+          "product_id": "P469110",
+          "brand": "Kate Somerville",
+          "name": "KateCeuticals Firming Serum with Hyaluronic Acid",
+          "actives": [
+            "ceramides",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 110.0
+        }
+      ],
+      "moisturizer": [
+        {
+          "product_id": "P480162",
+          "brand": "Dior",
+          "name": "Cica Recover & Repair Multi-Use Balm",
+          "actives": [
+            "centella",
+            "glycerin",
+            "hyaluronic_acid"
+          ],
+          "price_usd": 60.0
+        },
+        {
+          "product_id": "P475629",
+          "brand": "Wishful",
+          "name": "Honey Whip Peptide and Collagen Moisturizer",
+          "actives": [
+            "centella",
+            "glycerin",
+            "hyaluronic_acid",
+            "madecassoside",
+            "niacinamide"
+          ],
+          "price_usd": 43.0
+        },
+        {
+          "product_id": "P475086",
+          "brand": "Dermalogica",
+          "name": "BioLumin-C Vitamin-C Gel Moisturizer",
+          "actives": [
+            "allantoin",
+            "centella",
+            "glycerin",
+            "hyaluronic_acid",
+            "squalane"
+          ],
+          "price_usd": 69.0
+        },
+        {
+          "product_id": "P448185",
+          "brand": "Dr. Jart+",
+          "name": "Cicapair Tiger Grass Calming Gel Cream",
+          "actives": [
+            "centella",
+            "glycerin",
+            "madecassoside",
+            "niacinamide",
+            "panthenol"
+          ],
+          "price_usd": 49.0
+        },
+        {
+          "product_id": "P505209",
+          "brand": "The Nue Co.",
+          "name": "Barrier Culture Moisturizer with Niacinamide & Squalane",
+          "actives": [
+            "centella",
+            "ceramides",
+            "glycerin",
+            "niacinamide",
+            "squalane"
+          ],
+          "price_usd": 65.0
+        }
+      ]
+    }
+  }
+}

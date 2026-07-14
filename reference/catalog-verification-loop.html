@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Catalog verification loop</title>
+<style>
+  body{font:16px/1.5 system-ui;max-width:900px;margin:48px auto;padding:0 24px;color:#18202a}
+  h1{font-size:2rem} ol{padding-left:1.4rem} li{margin:.75rem 0}
+  code{background:#eef2f6;padding:.12rem .3rem;border-radius:4px}
+  .gate{border-left:4px solid #315efb;padding:10px 16px;background:#f5f7ff}
+</style>
+<h1>Verified catalog loop</h1>
+<ol>
+  <li><strong>Target:</strong> choose products from the largest coverage shortfall.</li>
+  <li><strong>Research:</strong> capture exact variant sources and hashes.</li>
+  <li><strong>Propose:</strong> assert only facts explicitly supported by each source.</li>
+  <li><strong>Review:</strong> reject conflicts, missing fields, or mismatched variants.</li>
+  <li><strong>Approve:</strong> sign with reviewer identity, type, and timestamp.</li>
+  <li><strong>Import:</strong> apply the overlay and emit quarantine reasons.</li>
+  <li><strong>Measure:</strong> regenerate completeness and quality metrics.</li>
+  <li><strong>Stop or repeat:</strong> stop only when coverage, freshness, and error targets pass.</li>
+</ol>
+<p class="gate"><strong>Fail closed:</strong> unavailable evidence produces a
+rejection or proposed assertion—never a guessed approval.</p>
+</html>
