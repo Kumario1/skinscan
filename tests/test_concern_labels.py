@@ -17,6 +17,7 @@ from src.recommendation.concern_labels import (
     AzureResponsesLabeler,
     CONCERNS,
     OpenRouterLabeler,
+    PROMPT_VERSION,
     cmd_label,
     compile_prefilter,
     estimate_cost,
@@ -394,10 +395,10 @@ def test_azure_responses_grouped_results_are_spooled(monkeypatch, tmp_path):
             pass
 
         def json(self):
-            results = [{"uid": row["uid"], "labels": json.loads(LABEL_OK)["labels"]}
-                       for row in rows]
+            results = [{"i": index, "l": [{"c": 0, "o": 0, "h": True}]}
+                       for index, _row_value in enumerate(rows)]
             return {
-                "output_text": json.dumps({"results": results}),
+                "output_text": json.dumps({"r": results}),
                 "usage": {"input_tokens": 100, "output_tokens": 40},
             }
 
@@ -420,10 +421,28 @@ def test_azure_responses_grouped_results_are_spooled(monkeypatch, tmp_path):
     bid = labeler.submit(rows)
 
     assert session.calls == 1
-    assert len(labeler.fetch(bid)) == 2
+    fetched = labeler.fetch(bid)
+    assert len(fetched) == 2
+    assert all(error is None for _uid, _payload, error in fetched)
+    assert [json.loads(payload)["labels"][0] for _uid, payload, _error in fetched] == [
+        {
+            "concern": "acne_comedonal",
+            "outcome": "helped",
+            "reviewer_has_condition": True,
+        },
+    ] * 2
     body = session.request["json"]
     assert body["model"] == "cheap-deployment"
     assert body["text"]["format"]["type"] == "json_schema"
+    assert "r" in body["text"]["format"]["schema"]["properties"]
+    item_properties = body["text"]["format"]["schema"]["properties"]["r"]["items"]["properties"]
+    assert item_properties["i"] == {"type": "integer", "enum": [0, 1]}
+    assert [json.loads(line) for line in body["input"].splitlines()] == [
+        {"i": 0, "text": rows[0]["text"]},
+        {"i": 1, "text": rows[1]["text"]},
+    ]
+    assert "0=acne_comedonal" in body["instructions"]
+    assert "0=helped" in body["instructions"]
     assert json.loads((tmp_path / "usage.jsonl").read_text())["output_tokens"] == 40
 
 
@@ -469,6 +488,31 @@ def test_azure_cost_preflight_uses_conservative_output_allowance(monkeypatch):
     cost = estimate_cost([{"text": "x" * 400}], cfg)
 
     assert cost == pytest.approx((100 + 450) / 1e6 + 120 / 1e6 * 2)
+
+
+def test_azure_cost_preflight_uses_calibration_usage_with_margin(monkeypatch, tmp_path):
+    usage = tmp_path / "usage.jsonl"
+    usage.write_text(json.dumps({
+        "model": "cheap-deployment",
+        "prompt_version": PROMPT_VERSION,
+        "rows": 100,
+        "input_tokens": 20_000,
+        "output_tokens": 2_000,
+    }) + "\n")
+    cfg = {
+        **load_config()["concern"],
+        "reviews_per_request": 10,
+        "azure_usage_path": str(usage),
+    }
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "cheap-deployment")
+    monkeypatch.setenv("AZURE_INPUT_PRICE_PER_MILLION", "1")
+    monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "2")
+
+    cost = estimate_cost([{"text": "x" * 400}], cfg)
+
+    assert cost == pytest.approx((100 + 450) / 1e6 + 25 / 1e6 * 2)
 
 
 def test_full_run_is_pinned_to_zero_cost_endpoint():
