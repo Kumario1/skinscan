@@ -3,19 +3,27 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import asdict, dataclass, replace
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
 from collections.abc import Mapping, Sequence
 
 from ..config import load_config
-from ..recommendation.engine import Recommendation, recommend
+from ..recommendation.engine import Recommendation as LegacyRecommendation, recommend
+from ..recommendation.decision import conservative_unreviewed_policy
 from ..recommendation.import_catalog import load_catalog
-from ..recommendation.schema import ConcernReport, Product, UserProfile, SKIN_TYPES
+from ..recommendation.schema import (
+    ConcernReport, Product, Recommendation, UserProfile, SKIN_TYPES,
+    PREGNANCY_STATUSES,
+)
+from ..recommendation.therapy import load_therapy_policy
+from .provenance import build_provenance, catalog_bundle_identity, file_identity, sha256_file
 from .regions import locate_regions
 from .sarpn import (
     SarpnSettings,
@@ -39,14 +47,20 @@ class PipelineResult:
     output_dir: Path
 
 
-def load_optional_catalog(path: Path | None) -> tuple[list[Product] | None, str | None]:
+def load_optional_catalog(
+    path: Path | None,
+    tier2_path: Path | None = None,
+    drug_path: Path | None = None,
+) -> tuple[list[Product] | None, str | None]:
     if path is None:
         return None, "catalog path is missing"
     try:
         products = load_catalog(path)
-        tier2_path = path.with_name("catalog_tier2.json")
-        if tier2_path.exists():
-            products = products + load_catalog(tier2_path)
+        if tier2_path is None:
+            tier2_path = path.with_name("catalog_tier2.json")
+        for additional in (tier2_path, drug_path):
+            if additional is not None and additional.exists():
+                products += load_catalog(additional)
         return products, None
     except FileNotFoundError:
         return None, f"catalog is missing: {path}"
@@ -66,7 +80,7 @@ _OTC_POINTERS = {
 
 def _compose_notes(
     report: ConcernReport,
-    recommendation: Recommendation,
+    recommendation: LegacyRecommendation,
     target_coverage: Mapping[str, int],
     safety: Sequence[object],
 ) -> str:
@@ -106,7 +120,7 @@ def routine_payload(
     report: ConcernReport,
     tone: ToneEstimate,
     region_mapping: Mapping[str, object] | str,
-    recommendation: Recommendation,
+    recommendation: LegacyRecommendation,
     top: int,
     safety: Sequence[object] = (),
 ) -> dict[str, object]:
@@ -133,6 +147,7 @@ def routine_payload(
         }
         for slot in ("AM", "PM")
     }
+
     # coverage over what the payload actually shows (post-truncation), so a
     # target active nothing carries — the old phantom-centella case — is loud.
     target_coverage = {
@@ -169,6 +184,57 @@ def routine_payload(
             for slot, categories in shown.items()
         },
     }
+
+
+def v3_routine_payload(
+    recommendation: Recommendation,
+    provenance: Mapping[str, object],
+) -> dict[str, object]:
+    """Serialize one validated v3 regimen; category menus never enter it."""
+    if recommendation.validation_errors:
+        raise ValueError(
+            "invalid recommendation: " + ", ".join(recommendation.validation_errors)
+        )
+    return {
+        **dict(provenance),
+        **recommendation.to_dict(),
+        "validation_status": "valid",
+    }
+
+
+def recommendation_artifacts(
+    recommendation: Recommendation,
+    provenance: Mapping[str, object],
+) -> tuple[dict[str, object], dict[str, object] | None, dict[str, object] | None]:
+    """Derive compact analysis fields and optional public/debug artifacts."""
+    summary = recommendation.eligibility_diagnostics.to_summary(
+        list(recommendation.selected_products)
+    )
+    fields: dict[str, object] = {
+        "decision": recommendation.decision.to_dict(),
+        "therapy_plan": recommendation.therapy_plan.to_dict(),
+        "recommendation_summary": summary,
+    }
+    if recommendation.validation_errors:
+        fields.update({
+            "recommendation_status": "invalid",
+            "recommendation_reason": "regimen_validation_failed",
+            "recommendation_errors": list(recommendation.validation_errors),
+        })
+        routine = None
+    elif summary["missing_roles"]:
+        fields.update({
+            "recommendation_status": "unavailable",
+            "recommendation_reason": "required_roles_unfilled",
+        })
+        routine = None
+    else:
+        fields["recommendation_status"] = "complete"
+        routine = v3_routine_payload(recommendation, provenance)
+    debug = recommendation.eligibility_diagnostics.debug_payload()
+    if debug is not None:
+        debug = {**debug, "replay_key": provenance.get("replay_key")}
+    return fields, routine, debug
 
 
 def _remove_path(path: Path) -> None:
@@ -287,22 +353,104 @@ def _publish_staging(staging: Path, output_dir: Path) -> None:
         _remove_path(backup)
 
 
+def _read_git_state() -> dict[str, object]:
+    root = Path(__file__).resolve().parents[2]
+    try:
+        commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=root, check=True,
+            capture_output=True, text=True,
+        ).stdout.strip()
+        dirty = bool(subprocess.run(
+            ["git", "status", "--porcelain"], cwd=root, check=True,
+            capture_output=True, text=True,
+        ).stdout.strip())
+        return {"git_commit": commit, "dirty": dirty}
+    except (OSError, subprocess.SubprocessError):
+        return {"git_commit": "unknown", "dirty": None}
+
+
+def load_input_profile(
+    profile_path: Path | None,
+    *,
+    skin_type: str | None = None,
+    pregnancy_status: str | None = None,
+    pregnant: bool = False,
+) -> UserProfile:
+    """Normalize JSON intake and narrow CLI overrides before detector work."""
+    if profile_path is None:
+        raw: dict[str, object] = {}
+    else:
+        try:
+            raw_value = json.loads(profile_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"profile {profile_path}: invalid JSON: {exc}") from exc
+        if not isinstance(raw_value, dict):
+            raise ValueError("profile: expected a JSON object")
+        raw = dict(raw_value)
+    if skin_type is not None:
+        existing = raw.get("skin_type")
+        if existing not in (None, "unknown", skin_type):
+            raise ValueError("--skin-type conflicts with profile skin_type")
+        raw["skin_type"] = skin_type
+    migrated = "pregnant" if pregnant else pregnancy_status
+    if migrated is not None:
+        existing = raw.get("pregnancy_status")
+        if existing not in (None, "unknown", migrated):
+            raise ValueError("pregnancy CLI input conflicts with profile pregnancy_status")
+        raw["pregnancy_status"] = migrated
+    if pregnant and pregnancy_status is not None and pregnancy_status != "pregnant":
+        raise ValueError("--pregnant conflicts with --pregnancy-status")
+    return UserProfile.from_dict(raw)
+
+
 def run_pipeline(
     image_path: Path,
     output_dir: Path,
     *,
     settings: SarpnSettings,
     catalog_path: Path | None,
+    catalog_tier2_path: Path | None = None,
+    catalog_drug_path: Path | None = None,
     face_landmarker_path: Path | None,
-    skin_type: str,
-    pregnant_or_nursing: bool,
-    top: int,
+    profile: UserProfile | None = None,
+    # Historical direct-call compatibility. The CLI always passes profile.
+    skin_type: str | None = None,
+    pregnant_or_nursing: bool | None = None,
+    top: int = 2,
+    therapy_policy_path: Path | None = None,
+    dataset_name: str = "unknown",
+    sample_id: str | None = None,
+    dataset_split: str = "unknown",
+    split_proof: str | None = None,
+    detector_sha256: str | None = None,
+    oracle_annotations: Path | None = None,
+    clock=lambda: datetime.now(timezone.utc),
+    git_reader=_read_git_state,
+    eligibility_debug: bool = False,
 ) -> PipelineResult:
+    if profile is None:
+        profile = UserProfile(
+            skin_type=skin_type or "unknown",
+            pregnant_or_nursing=pregnant_or_nursing,
+        )
+    therapy_policy = load_therapy_policy(therapy_policy_path)
+    triage_policy = conservative_unreviewed_policy()
+    catalog, catalog_reason = load_optional_catalog(
+        catalog_path, catalog_tier2_path, catalog_drug_path
+    )
+    if catalog_reason is None and not catalog:
+        catalog_reason = "catalog is empty"
+
     rgb = load_rgb(image_path)
     # infer_native_tiles dedupes internally (dedupe=True default) — production
     # dedupe has exactly one owner there; do not dedupe a second time here
     # (Finding 13).
-    observations = infer_native_tiles(rgb, settings)
+    evidence_source = "oracle" if oracle_annotations is not None else "prediction"
+    if oracle_annotations is not None:
+        from .oracle import load_voc_oracle_observations
+        observations = load_voc_oracle_observations(oracle_annotations)
+    else:
+        observations = infer_native_tiles(rgb, settings)
     boxes = [observation.box for observation in observations]
     region_result = locate_regions(rgb, boxes, model_path=face_landmarker_path)
     tone = estimate_tone(rgb, region_result.polygons, boxes)
@@ -312,13 +460,81 @@ def run_pipeline(
         region_result.regions,
         settings.severity,
         low_light_flag=bool(tone.low_light),
+        evidence_source=("annotation_oracle" if oracle_annotations else "prediction"),
+    )
+
+    from ..recommendation.decision import decide_care
+    from ..recommendation.therapy import plan_therapy
+    decision = decide_care(report, triage_policy)
+    therapy_plan = plan_therapy(decision, report, profile, therapy_policy)
+    if decision.therapy_disposition == "active_treatment" and therapy_plan.primary is None:
+        decision = replace(decision, therapy_disposition="defer")
+
+    runtime_config = load_config()
+    provenance = build_provenance(
+        {
+            "source_image_sha256": sha256_file(image_path),
+            "evidence_source": evidence_source,
+            "oracle_annotations": file_identity(oracle_annotations),
+            "dataset": {
+                "name": dataset_name,
+                "sample_id": sample_id or image_path.stem,
+                "split": dataset_split,
+                "split_proof": split_proof,
+            },
+            "input_profile": profile.to_dict(),
+            "effective_config": {
+                "pipeline": ("acnescu-voc-oracle" if oracle_annotations
+                             else "sa-rpn-native-tiles"),
+                "endpoint": sanitize_endpoint(settings.endpoint_url),
+                "tile_size": settings.tile_size,
+                "overlap": settings.tile_overlap,
+                "minimum_score": settings.min_score,
+                "class_min_scores": dict(settings.class_min_scores),
+                "dedupe_threshold": settings.dedupe_threshold,
+                "severity": settings.severity,
+                "regions": runtime_config["regions"],
+                "tone": runtime_config["tone"],
+                "classification_crop_pad": runtime_config["classification"]["crop_pad"],
+                "face_landmarker": file_identity(face_landmarker_path),
+            },
+            "models": {
+                "detector": ({
+                    "state": "not_applicable", "sha256": None,
+                    "identity": "annotation_oracle",
+                } if oracle_annotations else {
+                    "sha256": detector_sha256,
+                    "identity": "remote_sa_rpn" if detector_sha256 else "unknown",
+                }),
+                "classifier": {"state": "not_applicable", "sha256": None},
+            },
+            "catalog": catalog_bundle_identity(
+                catalog_path, catalog_tier2_path, catalog_drug_path
+            ),
+            "ranker": {"state": "none", "sha256": None},
+            "policies": {
+                "triage": {
+                    "identity": triage_policy.identifier,
+                    "reviewed": triage_policy.approved,
+                    "sha256": None,
+                },
+                "therapy": {
+                    **file_identity(therapy_policy_path),
+                    "identity": therapy_policy.identifier,
+                    "reviewed": therapy_policy.reviewed,
+                },
+            },
+        },
+        clock=clock,
+        git_reader=git_reader,
     )
 
     analysis: dict[str, object] = {
-        "schema_version": "2.0",
+        **provenance,
         "image_id": image_path.name,
         "pipeline": {
-            "identifier": "sa-rpn-native-tiles",
+            "identifier": ("acnescu-voc-oracle" if oracle_annotations
+                           else "sa-rpn-native-tiles"),
             "endpoint": sanitize_endpoint(settings.endpoint_url),
             "tile_size": settings.tile_size,
             "overlap": settings.tile_overlap,
@@ -331,36 +547,29 @@ def run_pipeline(
         "skin_tone": asdict(tone),
         "region_mapping": dict(region_result.metadata),
         "safety_observations": [asdict(item) for item in safety],
+        "decision": decision.to_dict(),
+        "therapy_plan": therapy_plan.to_dict(),
         "recommendation_status": "unavailable",
     }
 
     routine: dict[str, object] | None = None
-    catalog, catalog_reason = load_optional_catalog(catalog_path)
-    if catalog_reason is None and not catalog:
-        catalog_reason = "catalog is empty"
+    debug_rejections: dict[str, object] | None = None
     if catalog_reason:
         analysis["recommendation_reason"] = catalog_reason
     else:
         try:
-            profile = UserProfile(
-                skin_type=skin_type,
-                tone_bucket=tone.bucket,
-                tone_source="photo",
-                pregnant_or_nursing=pregnant_or_nursing,
+            recommendation = recommend(
+                report, catalog or [], profile,
+                triage_policy=triage_policy,
+                therapy_policy=therapy_policy,
+                concern_scorer=None,
+                pooled_ranker=None,
+                collect_eligibility_details=eligibility_debug,
             )
-            # Lazy import: e2e must not load the ranker module (pandas/sklearn)
-            # unless a recommendation is actually produced (see the forbidden-
-            # imports test). load_ranker resolves Ranker/StatsRanker/None per
-            # D-022; a load failure degrades to rules-only order (D-019).
-            try:
-                from ..recommendation.ranker import load_ranker
-                ranker = load_ranker()
-            except Exception:
-                ranker = None
-            recommendation = recommend(report, catalog or [], profile=profile, ranker=ranker)
-            routine = routine_payload(report, tone, region_result.metadata,
-                                      recommendation, top, safety=safety)
-            analysis["recommendation_status"] = "complete"
+            fields, routine, debug_rejections = recommendation_artifacts(
+                recommendation, provenance
+            )
+            analysis.update(fields)
         except Exception as exc:
             analysis["recommendation_reason"] = f"recommendation unavailable: {exc}"
 
@@ -374,6 +583,10 @@ def run_pipeline(
         (staging / "analysis.json").write_text(json.dumps(analysis, indent=2) + "\n")
         if routine is not None:
             (staging / "routine.json").write_text(json.dumps(routine, indent=2) + "\n")
+        if debug_rejections is not None:
+            (staging / "eligibility_rejections.json").write_text(
+                json.dumps(debug_rejections, indent=2) + "\n"
+            )
         _publish_staging(staging, output_dir)
     finally:
         _remove_path(staging)
@@ -389,6 +602,9 @@ def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
                         help="output dir (default runs/e2e/<image stem>)")
     parser.add_argument("--api", default=sa_rpn["endpoint_url"])
     parser.add_argument("--catalog", type=Path, default=Path(paths["catalog_processed"]))
+    parser.add_argument("--catalog-tier2", type=Path, default=None)
+    parser.add_argument("--catalog-drug", type=Path, default=None)
+    parser.add_argument("--eligibility-debug", action="store_true")
     parser.add_argument("--face-landmarker", type=Path, default=Path(paths["face_landmarker"]))
     parser.add_argument("--tile-size", type=int, default=sa_rpn["tile_size"])
     parser.add_argument("--overlap", type=int, default=sa_rpn["tile_overlap"])
@@ -401,9 +617,29 @@ def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
     parser.add_argument("--min-score", type=float, default=sa_rpn["min_score"])
     parser.add_argument("--dedupe-threshold", type=float,
                         default=sa_rpn["dedupe_threshold"])
-    parser.add_argument("--skin-type", choices=sorted(SKIN_TYPES), default="combination")
+    parser.add_argument("--profile", type=Path, default=None,
+                        help="full explicit safety-profile JSON")
+    parser.add_argument("--skin-type", choices=sorted(SKIN_TYPES), default=None,
+                        help="narrow override; default remains unknown")
+    parser.add_argument("--pregnancy-status", choices=sorted(PREGNANCY_STATUSES),
+                        default=None)
     parser.add_argument("--pregnant", action="store_true")
-    parser.add_argument("--top", type=int, default=5)
+    parser.add_argument("--therapy-policy", type=Path, default=None,
+                        help="clinician-reviewed therapy policy JSON; missing defers therapy")
+    parser.add_argument("--dataset-name", default="unknown")
+    parser.add_argument("--sample-id", default=None)
+    parser.add_argument(
+        "--dataset-split",
+        choices=("train", "valid", "test", "external", "smoke", "unknown"),
+        default="unknown",
+    )
+    parser.add_argument("--split-proof", default=None)
+    parser.add_argument("--detector-sha256", default=None,
+                        help="immutable remote detector artifact hash")
+    parser.add_argument("--oracle-annotations", type=Path, default=None,
+                        help="evaluation-only AcneSCU VOC XML; derives oracle evidence")
+    parser.add_argument("--top", type=int, default=2,
+                        help="legacy display compatibility; v3 selects one product per role")
     return parser
 
 
@@ -411,7 +647,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     config = load_config()
     args = _parser(config).parse_args(argv)
     output_dir = args.out or Path("runs/e2e") / args.image.stem
+    default_catalog = Path(config["paths"]["catalog_processed"])
+    catalog_tier2 = args.catalog_tier2
+    catalog_drug = args.catalog_drug
+    if args.catalog == default_catalog:
+        catalog_tier2 = catalog_tier2 or Path(config["paths"]["catalog_tier2"])
+        catalog_drug = catalog_drug or Path(config["paths"]["catalog_drug"])
     try:
+        profile = load_input_profile(
+            args.profile,
+            skin_type=args.skin_type,
+            pregnancy_status=args.pregnancy_status,
+            pregnant=args.pregnant,
+        )
         _check_output_dir_replaceable(output_dir)
         base = SarpnSettings.from_config(config)
         settings = replace(
@@ -431,10 +679,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_dir,
             settings=settings,
             catalog_path=args.catalog,
+            catalog_tier2_path=catalog_tier2,
+            catalog_drug_path=catalog_drug,
             face_landmarker_path=args.face_landmarker,
-            skin_type=args.skin_type,
-            pregnant_or_nursing=args.pregnant,
+            profile=profile,
             top=args.top,
+            therapy_policy_path=args.therapy_policy,
+            dataset_name=args.dataset_name,
+            sample_id=args.sample_id,
+            dataset_split=args.dataset_split,
+            split_proof=args.split_proof,
+            detector_sha256=args.detector_sha256,
+            oracle_annotations=args.oracle_annotations,
+            eligibility_debug=args.eligibility_debug,
         )
     except Exception as exc:
         print(f"analysis failed: {exc}", file=sys.stderr)
@@ -442,7 +699,15 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     count = len(result.analysis["detections"])
     status = result.analysis["recommendation_status"]
-    print(f"wrote {result.output_dir}: {count} detections, recommendation {status}")
+    decision = result.analysis["decision"]
+    release = result.analysis["release_eligibility"]
+    print(
+        f"wrote {result.output_dir}: {count} detections, "
+        f"triage {decision['triage_level']}, therapy {decision['therapy_disposition']}, "
+        f"recommendation {status}, release eligible={release['eligible']}"
+    )
+    for reason in decision["referral_reasons"]:
+        print(f"  ⚑ referral: {reason}")
     _print_safety_escalations(result.analysis)
     if result.routine is not None:
         for flag in result.routine["flags"]:

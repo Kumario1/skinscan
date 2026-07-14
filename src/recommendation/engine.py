@@ -14,8 +14,11 @@ today's stable rules-only order exactly (D-019).
 from __future__ import annotations
 import re
 from collections import Counter
-from dataclasses import dataclass
-from .schema import ConcernReport, Product, UserProfile, CATEGORIES
+from dataclasses import dataclass, replace
+from .schema import (
+    ConcernReport, Product, Recommendation as V3Recommendation,
+    EligibilityDiagnostics, UserProfile, CATEGORIES,
+)
 
 # RULES.md §1 — concern -> first-line actives (seed; expand from the doc)
 CONCERN_ACTIVES: dict[str, list[str]] = {
@@ -128,9 +131,9 @@ def _add_deep_tone_guidance(flags: list[str], profile,
                      "post-inflammatory hyperpigmentation risk")
 
 
-def recommend(report: ConcernReport, catalog: list[Product],
-              profile: UserProfile | None = None, ranker=None,
-              conf_cutoff: float = 0.5) -> Recommendation:
+def recommend_legacy(report: ConcernReport, catalog: list[Product],
+                     profile: UserProfile | None = None, ranker=None,
+                     conf_cutoff: float = 0.5) -> Recommendation:
     flags: list[str] = []
     concerns = [c.concern for c in report.concerns]
     reported_concerns = set(concerns)
@@ -219,6 +222,126 @@ def recommend(report: ConcernReport, catalog: list[Product],
     kept, slots = _assign_slots(target, flags)
     return _finish(kept, catalog, needs_spf, profile, ranker, flags, slots,
                    concerns=concerns, reduced_stacking=broad_inflammation)
+
+
+def recommend(
+    report: ConcernReport,
+    catalog: list[Product],
+    profile: UserProfile | None = None,
+    *,
+    triage_policy=None,
+    therapy_policy=None,
+    concern_scorer=None,
+    pooled_ranker=None,
+    # Historical adapter inputs. New callers use pooled_ranker and both
+    # explicit policies; no-policy calls are isolated to recommend_legacy.
+    ranker=None,
+    conf_cutoff: float = 0.5,
+    collect_eligibility_details: bool = False,
+) -> V3Recommendation | Recommendation:
+    """Run v3 or explicitly isolate a historical v2 caller.
+
+    Supplying neither policy selects the legacy adapter for repository callers
+    that still consume category menus. Supplying one policy without the other
+    is an error; the v3 path never constructs a silent default profile.
+    """
+    if triage_policy is None and therapy_policy is None:
+        result = recommend_legacy(report, catalog, profile, ranker, conf_cutoff)
+        # Machine-visible without changing historical serialized flags.
+        result.legacy = True
+        return result
+    if triage_policy is None or therapy_policy is None:
+        raise ValueError("v3 recommend requires both triage_policy and therapy_policy")
+    if profile is None:
+        raise ValueError("v3 recommend requires an explicit UserProfile")
+
+    from .composer import compose_regimen, rank_equivalents
+    from .decision import decide_care
+    from .eligibility import check_eligibility
+    from .therapy import plan_therapy
+
+    decision = decide_care(report, triage_policy)
+    therapy_plan = plan_therapy(decision, report, profile, therapy_policy)
+    if decision.therapy_disposition == "active_treatment" and therapy_plan.primary is None:
+        decision = replace(decision, therapy_disposition="defer")
+
+    requested = list(therapy_plan.support_roles)
+    if therapy_plan.primary is not None:
+        requested.append(therapy_plan.primary.role)
+    role_order = ("cleanser", "treatment", "moisturizer", "sunscreen")
+    requested = [role for role in role_order if role in requested]
+
+    diagnostics = EligibilityDiagnostics(requested, collect_eligibility_details)
+    ranked_by_role: dict[str, list[Product]] = {}
+    # Choose therapeutic intent first. Support products are filtered around an
+    # available primary treatment before any scorer sees them.
+    selection_order = [role for role in ("treatment", "cleanser", "moisturizer", "sunscreen")
+                       if role in requested]
+    selected_context: dict[str, Product] = {}
+    for role in selection_order:
+        therapy = therapy_plan.primary if role == "treatment" else None
+        context_eligible: list[Product] = []
+        for product in catalog:
+            result = check_eligibility(product, role, therapy, profile, selected_context)
+            if result.eligible:
+                context_eligible.append(product)
+            else:
+                diagnostics.record(role, product.product_id, result.reasons)
+            if result.eligible:
+                diagnostics.record(role, product.product_id, [])
+        ranked, _ = rank_equivalents(
+            context_eligible,
+            profile,
+            concern_scorer=concern_scorer,
+            pooled_ranker=pooled_ranker,
+        )
+        ranked_by_role[role] = ranked
+        if ranked:
+            selected_context[role] = ranked[0]
+
+    if therapy_plan.primary is not None and "treatment" not in selected_context:
+        decision = replace(decision, therapy_disposition="defer")
+
+    # Alternatives must be valid replacements alongside every other selected
+    # role. Keep the chosen product first so composition is stable.
+    eligible_by_role: dict[str, list[Product]] = {}
+    for role in requested:
+        therapy = therapy_plan.primary if role == "treatment" else None
+        other_selected = {
+            key: value for key, value in selected_context.items() if key != role
+        }
+        safe = []
+        for product in ranked_by_role.get(role, []):
+            result = check_eligibility(product, role, therapy, profile, other_selected)
+            if result.eligible:
+                safe.append(product)
+            else:
+                diagnostics.reject_previously_eligible(
+                    role, product.product_id, result.reasons
+                )
+        chosen = selected_context.get(role)
+        if chosen in safe:
+            safe.remove(chosen)
+            safe.insert(0, chosen)
+        eligible_by_role[role] = safe
+
+    recommendation = compose_regimen(
+        decision,
+        therapy_plan,
+        eligible_by_role,
+        profile,
+        eligibility_diagnostics=diagnostics,
+        concern_scorer=concern_scorer,
+        pooled_ranker=pooled_ranker,
+    )
+    recommendation.flags.extend([
+        "release_blocked:clinician_policy_approval",
+        "release_blocked:adequate_calibration_cohort",
+        "release_blocked:external_clinical_review_set",
+        "release_blocked:verified_real_catalog_overlay",
+        "release_blocked:remote_detector_identity",
+    ])
+    return recommendation
 
 
 def _finish(target: list[str], catalog: list[Product], always_spf: bool,

@@ -157,7 +157,7 @@ def test_bridge_aggregates_evidence_regions_and_confidence():
         "concern": "acne_inflammatory", "regions": ["left_cheek", "right_cheek"],
         "severity": 2, "confidence": 0.84, "lesion_count": 2,
         "evidence": {"labels": {"papule": 1, "pustule": 1}, "max_confidence": 0.96,
-                     "affected_region_count": 2},
+                     "affected_region_count": 2, "source": "prediction"},
     }
     assert [item.normalized_label for item in updated] == ["papule", "pustule"]
     assert safety == []
@@ -253,6 +253,22 @@ def test_safety_observations_are_non_actionable_and_policy_driven():
     assert safety[0].professional_review is True
     assert safety[1].professional_review is False
     assert safety[2].professional_review is False
+
+
+def test_smoke_2_other_oracle_stays_safety_evidence_not_acne_target():
+    fixture = json.loads(
+        (Path(__file__).parent / "fixtures" / "concern_correctness_cases.json").read_text()
+    )
+    case = next(item for item in fixture["cases"] if item["sample_id"] == "smoke-2")
+    item = case["observations"][0]
+    report, updated, safety = build_sarpn_concern_report(
+        case["sample_id"], [_observation(item["label"], item["score"])],
+        [item["region"]], load_config()["sa_rpn"]["severity"],
+    )
+    assert case["held_out_release_evidence"] is False
+    assert report.concerns == []
+    assert updated[0].observation_status == "non_actionable"
+    assert [value.code for value in safety] == [case["expected"]["safety_code"]]
 
 
 def test_bridge_rejects_parallel_length_mismatch():

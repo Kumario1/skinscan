@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="urn:hl7-org:v3">
+  <setId root="fixture-set-id" />
+  <versionNumber value="3" />
+  <effectiveTime value="20260701" />
+  <title>Adapalene and Benzoyl Peroxide Gel</title>
+  <marketingCategory displayName="OTC MONOGRAPH DRUG" />
+  <speciesCode displayName="Human" />
+  <manufacturedProduct>
+    <code codeSystem="2.16.840.1.113883.6.69" code="00000-0001" />
+    <formCode displayName="Gel" />
+    <routeCode displayName="Topical" />
+    <activeIngredient>
+      <ingredientSubstance><name>ADAPALENE</name></ingredientSubstance>
+      <quantity><numerator value="1" unit="mg"/><denominator value="1" unit="g"/></quantity>
+    </activeIngredient>
+    <activeIngredient>
+      <ingredientSubstance><name>BENZOYL PEROXIDE</name></ingredientSubstance>
+      <quantity><numerator value="25" unit="mg"/><denominator value="1" unit="g"/></quantity>
+    </activeIngredient>
+  </manufacturedProduct>
+</document>
