@@ -292,6 +292,36 @@ def test_a_prescription_is_never_placed_even_when_it_would_win_the_slot(tmp_path
         assert all(p is not None for p in priced), routine["archetype"]
 
 
+def test_the_recommendation_tracks_the_concern_profile(tmp_path):
+    # Two real photos returned identical products, which looks like the engine
+    # ignoring its input; they simply shared all four concerns. Change the
+    # concerns and the treatment must change with them -- and an Rx is offered
+    # only for a concern its actives actually target.
+    derived = _derived_root_with_drug(tmp_path)  # AZELEX: azelaic acid 20%
+    analysis = json.loads(ANALYSIS.read_text())
+
+    def for_concerns(*keep):
+        data = dict(analysis, concerns=[c for c in analysis["concerns"]
+                                        if c["concern"] in keep])
+        path = tmp_path / ("an_" + "_".join(keep) + ".json")
+        path.write_text(json.dumps(data))
+        document = run(path, FIXTURES / "profile_complete.json", data_root=derived,
+                       generated_at="2026-07-14T00:00:00+00:00",
+                       eligibility_mode="hybrid")
+        treatments = {s["product_id"] for r in document["routines"] for s in _steps(r)
+                      if s["slot"] in ("treatment", "serum")}
+        return treatments, {o["name"] for o in document["prescription_options"]}
+
+    comedonal, comedonal_rx = for_concerns("acne_comedonal")
+    scarring, scarring_rx = for_concerns("acne_scarring")
+
+    assert comedonal and scarring
+    assert comedonal != scarring, "treatment must follow the concern"
+    # azelaic acid targets comedonal acne; nothing in knowledge maps it to scarring
+    assert comedonal_rx == {"AZELEX"}
+    assert scarring_rx == set(), "an Rx is never offered for a concern it does not target"
+
+
 def test_an_otc_drug_row_is_not_offered_as_a_prescription(tmp_path):
     document = run(ANALYSIS, FIXTURES / "profile_complete.json",
                    data_root=_derived_root_with_drug(tmp_path, otc_drug=True),
