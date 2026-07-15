@@ -360,6 +360,31 @@ def test_recsys_flag_adds_standalone_recommendations_artifact(
     ).hexdigest()
 
 
+def test_recsys_eligibility_mode_reaches_the_standalone_engine(
+    tmp_path, fake_sarpn_server,
+):
+    # The flag has to survive CLI -> run() -> subprocess argv. A passthrough that
+    # is accepted and silently dropped leaves the integrated path stuck on the
+    # default mode, which is how it shipped without one at all.
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_verified_catalog(catalog_path)
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
+    args += [
+        "--recsys",
+        "--recsys-catalog", str(ROOT / "recsys/data/catalog/seed_catalog.json"),
+        "--recsys-eligibility-mode", "hybrid",
+    ]
+
+    assert main(args) == 0
+
+    recommendations = json.loads((output_dir / "recommendations.json").read_text())
+    assert recommendations["engine"]["eligibility_mode"] == "hybrid"
+    assert "prescription_options" in recommendations
+
+
 def test_recsys_failure_publishes_analysis_with_unavailable_artifact(
     tmp_path, fake_sarpn_server,
 ):
