@@ -1140,7 +1140,8 @@ class AzureResponsesLabeler(OpenRouterLabeler):
         except Exception as exc:
             return [(uid, None, type(exc).__name__) for uid in uids]
         finally:
-            self._append_usage(rows, data, request_id, status, reservation_key)
+            self._append_usage(rows, data, request_id, status, reservation_key,
+                               response is not None)
 
     def _reserve_request(self, body: dict, request_id: str) -> str | None:
         """Reserve a conservative per-request ceiling before HTTP submission.
@@ -1186,18 +1187,24 @@ class AzureResponsesLabeler(OpenRouterLabeler):
                    or headers.get("request-id") or fallback)
 
     def _append_usage(self, rows, data: dict, request_id: str, status: str,
-                      reservation_key: str | None = None) -> None:
+                      reservation_key: str | None = None,
+                      had_response: bool = False) -> None:
         if not isinstance(data, dict):
             data = {}
         usage = data.get("usage") or {}
         if usage:
             input_tokens = usage.get("input_tokens", usage.get("prompt_tokens", 0))
             output_tokens = usage.get("output_tokens", usage.get("completion_tokens", 0))
+        elif had_response:
+            # An HTTP error came back (e.g. 429 rate limit or 5xx): Azure rejected
+            # the request before generating, so it is genuinely unbilled — record
+            # $0, not the ceiling (otherwise rate-limit retries inflate the ledger
+            # and can trip the budget guard mid-pass).
+            input_tokens = output_tokens = 0
         else:
-            # No usage block (timeout or error body). Azure may still have
+            # No response at all (timeout / connection drop): Azure may have
             # generated and billed the response, so record the conservative
-            # reserved ceiling rather than $0 — never under-count spend against
-            # the cumulative budget.
+            # reserved ceiling rather than $0 — never under-count real spend.
             input_tokens, output_tokens = self._ceilings.get(
                 reservation_key, (0, 0))
         record = {

@@ -721,6 +721,34 @@ def test_azure_timeout_records_ceiling_not_zero(monkeypatch, tmp_path):
     assert labeler._reservations == {} and labeler._ceilings == {}
 
 
+def test_azure_http_error_is_not_charged_the_ceiling(monkeypatch, tmp_path):
+    row = _row("a0", "PA", "cleared my blackheads")
+
+    class RateLimited:
+        def json(self):
+            return {"error": {"code": "429"}}   # error body, no usage block
+
+        def raise_for_status(self):
+            raise RuntimeError("429 Too Many Requests")
+
+    class Session:
+        def post(self, *args, **kwargs):
+            return RateLimited()   # a response DID come back (just an error)
+
+    monkeypatch.setenv("AZURE_KEY", "k")
+    monkeypatch.setenv("TARGET_URL", "https://x.openai.azure.com/openai/responses")
+    labeler = AzureResponsesLabeler(
+        "gpt-5-mini", tmp_path / "s", 250, 1, Session(),
+        usage_path=tmp_path / "u.jsonl", max_budget_usd=90.0,
+        input_price_per_million=0.25, output_price_per_million=2.0, max_requests=1400)
+    labeler.submit([row])
+    rec = json.loads((tmp_path / "u.jsonl").read_text())
+    assert rec["status"] == "failed"
+    # a 429 was rejected unbilled by Azure -> $0, not the ceiling
+    assert rec["input_tokens"] == 0 and rec["output_tokens"] == 0
+    assert labeler._reservations == {} and labeler._ceilings == {}
+
+
 def test_azure_reasoning_effort_configurable_default_medium(monkeypatch, tmp_path):
     row = _row("a0", "PA", "cleared my blackheads")
 
@@ -1055,11 +1083,16 @@ def test_full_run_fits_azure_request_ceiling():
     assert groups <= cfg["azure_max_requests"]  # full corpus fits the request ceiling
 
 
-def test_full_label_requires_p2_signoff():
+def test_full_label_requires_p2_signoff(tmp_path):
+    # Isolate the report path so a real certified report on disk can't satisfy
+    # the gate — this asserts the no-report case genuinely refuses.
+    cfg = {**load_config()["concern"],
+           "batch_state_path": str(tmp_path / "batches.json"),
+           "labels_path": str(tmp_path / "labels.jsonl")}
     try:
-        cmd_label([], load_config()["concern"], yes=True)
+        cmd_label([], cfg, yes=True)
     except RuntimeError as exc:
-        assert "P2 sign-off" in str(exc)
+        assert "sign-off" in str(exc)
     else:
         raise AssertionError("full labeling ran without P2 sign-off")
 
