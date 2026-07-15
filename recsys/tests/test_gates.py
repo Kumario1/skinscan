@@ -8,7 +8,7 @@ from recsys.knowledge import load_knowledge
 K = load_knowledge(Path(__file__).parents[1] / "data" / "knowledge")
 
 
-def product(pid="p1", category="treatment", actives=(), spf=None, price=None, **verified):
+def product(pid="p1", category="treatment", actives=(), spf=None, price=None, inci=(), **verified):
     role = "sunscreen" if category == "spf" else category
     product_format = verified.pop("format", None)
     defaults = {
@@ -29,7 +29,7 @@ def product(pid="p1", category="treatment", actives=(), spf=None, price=None, **
         product_id=pid, name=pid, brand="b", category=category,
         price_usd=price, size=None, format=product_format, spf=spf,
         spf_source="name_parse" if spf else None,
-        inci=(), inci_sha256="", actives=tuple(actives),
+        inci=tuple(inci), inci_sha256="", actives=tuple(actives),
         **defaults,
     )
 
@@ -48,6 +48,45 @@ def test_allergy_and_current_active_vetoes():
     assert "profile_allergy:niacinamide" in profile_gate_reasons(niacinamide, "serum", profile, K)
     profile = Profile(pregnancy_status="not_pregnant", current_actives=("niacinamide",))
     assert "duplicates_current_active:niacinamide" in profile_gate_reasons(niacinamide, "serum", profile, K)
+
+
+def test_allergy_vetoes_non_active_ingredient_via_full_inci():
+    # Fragrance is never a parsed active, so only a full-INCI scan can catch it.
+    fragranced = product(
+        category="moisturizer", actives=["glycerin"],
+        inci=["Water", "Glycerin", "Parfum (Fragrance)", "Limonene"],
+    )
+    profile = Profile(pregnancy_status="not_pregnant", allergies=("fragrance",))
+    assert "profile_allergy:fragrance" in profile_gate_reasons(fragranced, "moisturizer", profile, K)
+    # A product with no fragrance is not vetoed on this allergen.
+    clean = product(category="moisturizer", actives=["glycerin"], inci=["Water", "Glycerin"])
+    assert "profile_allergy:fragrance" not in profile_gate_reasons(clean, "moisturizer", profile, K)
+
+
+def test_allergy_free_text_resolves_onto_canonical_active():
+    # "salicylic acid"/"BHA" must map onto the canonical salicylic_acid token
+    # even when the product carries only the parsed active, not raw INCI.
+    bha_product = product(actives=["salicylic_acid"])
+    for declared in ("salicylic acid", "BHA"):
+        profile = Profile(pregnancy_status="not_pregnant", allergies=(declared,))
+        reasons = profile_gate_reasons(bha_product, "treatment", profile, K)
+        assert any(r.startswith("profile_allergy:") for r in reasons), declared
+
+
+def test_pregnancy_vetoes_cosmetic_retinoid_ester_from_inci():
+    # Retinyl Palmitate never resolves to a canonical retinoid active; only an
+    # INCI marker scan catches it. Actives here are deliberately non-retinoid.
+    ester = product(
+        actives=["salicylic_acid"],
+        inci=["Salicylic Acid", "Retinyl Palmitate", "Aloe Vera Leaf Extract"],
+    )
+    for status in ("pregnant", "trying", "nursing", "unknown"):
+        reasons = profile_gate_reasons(ester, "treatment", Profile(pregnancy_status=status), K)
+        assert "retinoid_pregnancy_status_excluded" in reasons, status
+    # Not excluded for a non-pregnant profile.
+    assert "retinoid_pregnancy_status_excluded" not in profile_gate_reasons(
+        ester, "treatment", Profile(pregnancy_status="not_pregnant"), K
+    )
 
 
 def test_spf_gate():
