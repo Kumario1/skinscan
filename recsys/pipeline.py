@@ -21,7 +21,13 @@ from .contracts import (
     resolve_profile,
     sha256_file,
 )
-from .explain import FRAMING_TEXT, routine_to_dict, see_doctor_note
+from .explain import (
+    FRAMING_TEXT,
+    is_prescription,
+    prescription_options,
+    routine_to_dict,
+    see_doctor_note,
+)
 from .gates import apply_profile_gates
 from .knowledge import load_knowledge
 from .scoring import score_products
@@ -82,6 +88,20 @@ def run(
     overlay, verification_warnings, verification_meta = load_verification_overlay(
         verification_root, now=verification_now
     )
+    # Drug rows ride in a catalog of their own: the signal stores are keyed by the
+    # cosmetics catalog's sha256, so folding them into that file would strand
+    # every store. Merge before the overlay so approved facts reach them too.
+    drug_path = data_root / "catalog_drug.json"
+    drug_meta = None
+    if drug_path.exists():
+        drug_products, _ = load_catalog(drug_path)
+        products = products + drug_products
+        drug_meta = {
+            "path": str(drug_path),
+            "sha256": sha256_file(drug_path),
+            "products": len(drug_products),
+            "prescription": sum(1 for p in drug_products if p.otc_drug is False),
+        }
     products = apply_verification(products, overlay)
     providers, store_meta, signal_warnings = load_providers(data_root, catalog_sha256)
     warnings = verification_warnings + signal_warnings
@@ -121,6 +141,7 @@ def run(
                 "sha256": catalog_sha256,
                 "schema": catalog_header.get("schema_version"),
             },
+            "drug_catalog": drug_meta,
             "signals": store_meta,
             "knowledge": [
                 {"name": name, "sha256": digest}
@@ -163,6 +184,17 @@ def run(
     gated, profile_vetoes, quality_flags = apply_profile_gates(
         candidates, profile, knowledge, strict=strict_eligibility
     )
+    # Listed, never placed. Surfacing prescription-strength options with a
+    # referral is D-033; ranking one into a routine would instead assert that it
+    # beats the cosmetics, and which therapy suits which concern is D-029
+    # clinician-gated. Reading the options out of the gated pool and then
+    # dropping them makes that true by construction rather than by whichever way
+    # the ranking happens to fall -- and keeps rows that carry no retail price
+    # out of every routine total.
+    rx_options = prescription_options(gated.get("treatment", []), targets, knowledge)
+    gated = {
+        slot: [p for p in items if not is_prescription(p)] for slot, items in gated.items()
+    }
 
     category_prices = {
         category: tuple(sorted(
@@ -209,6 +241,7 @@ def run(
         routine_to_dict(r, knowledge, profile) for r in valid_routines
     ]
     document["unavailable_archetypes"] = unavailable
+    document["prescription_options"] = rx_options
     document["veto_log"] = {
         "profile": [v.to_dict() for v in profile_vetoes],
         "compose": {r.archetype["id"]: r.compose_vetoes for r in routines},

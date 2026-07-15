@@ -11,6 +11,34 @@ from .contracts import SLOTS, ContractViolation
 from .inci import parse_ingredients
 
 CATALOG_SCHEMA_VERSION = "recsys-catalog-1"
+# Matched as a literal prefix rather than parsed: the engine imports no urllib
+# (see tests/test_no_network.py), and a prefix demands https into the bargain.
+LABEL_PREFIX = "https://dailymed.nlm.nih.gov/"
+
+
+def _cites_label(url: object) -> bool:
+    return isinstance(url, str) and url.startswith(LABEL_PREFIX)
+
+
+def _label_stated_actives(d: dict) -> tuple[str, ...] | None:
+    """Actives a regulatory label states in its own structured ingredient data.
+
+    A drug label publishes no INCI list, so the usual "actives must parse out of
+    the INCI" derivation cannot apply. It does something stronger: it names each
+    active, gives its exact strength, and cites the label it came from, and the
+    row is bound to that label by hash. Rows that clear all of that derive their
+    actives from drug_actives instead. Returns None for everything else, which
+    keeps the INCI rule in force for every cosmetic.
+    """
+    drug_actives = d.get("drug_actives") or []
+    if not drug_actives or not _cites_label(d.get("label_source")):
+        return None
+    for active in drug_actives:
+        if not isinstance(active, dict) or not active.get("name") or not active.get("strength"):
+            return None
+        if not _cites_label(active.get("source")):
+            return None
+    return tuple(sorted({str(active["name"]) for active in drug_actives}))
 
 
 @dataclass(frozen=True)
@@ -95,7 +123,10 @@ class CatalogProduct:
             raise ContractViolation(
                 "catalog.inci_sha256", f"product {d['product_id']!r}: stale or invalid"
             )
-        parsed_actives = tuple(parse_ingredients(",".join(inci))[0])
+        stated = _label_stated_actives(d)
+        parsed_actives = (
+            stated if stated is not None else tuple(parse_ingredients(",".join(inci))[0])
+        )
         if tuple(d.get("actives") or []) != parsed_actives:
             raise ContractViolation(
                 "catalog.actives", f"product {d['product_id']!r}: stale or invalid"

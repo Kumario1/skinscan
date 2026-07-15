@@ -5,6 +5,7 @@
       "schema": "recsys-catalog-1",
       "sha256": "177d15f160576e0b1efa2eb5198c7c94ec8985d0678319a9042c91064144d003"
     },
+    "drug_catalog": null,
     "knowledge": [
       {
         "name": "archetypes",
@@ -62,6 +63,7 @@
     "profile_source": "file",
     "source_image_sha256": "51357c8008eabcbba96fe685dc69547faf84bccf87de2df729e7b5e413320fb6"
   },
+  "prescription_options": [],
   "profile_used": {
     "acne_duration_weeks": 16,
     "age_years": 25,
