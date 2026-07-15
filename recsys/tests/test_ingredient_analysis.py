@@ -189,3 +189,41 @@ def test_build_caps_paid_calls(tmp_path):
     with pytest.raises(SystemExit, match="refusing 1 paid labels"):
         build(catalog_path, tmp_path / "data/signals/out.json", tmp_path / "data",
               tmp_path / "cache.jsonl", "test/model", max_new_labels=0)
+
+
+def _two_product_setup(tmp_path):
+    # p2 shares p1's INCI (so it passes catalog validation) but a distinct
+    # product_id, so its cache key is absent and it must be (re)labeled.
+    p2 = {**PRODUCT, "product_id": "p2"}
+    catalog_path = tmp_path / "catalog.json"
+    catalog_path.write_text(json.dumps({
+        "schema_version": "recsys-catalog-1", "source": {}, "products": [PRODUCT, p2],
+    }))
+    cache_path = tmp_path / "data" / "cache" / "ing.jsonl"
+    append_cache(cache_path, analysis_entry())          # p1 cached, p2 will fail
+    return catalog_path, cache_path
+
+
+def test_build_writes_partial_store_above_coverage_floor(tmp_path, monkeypatch):
+    catalog_path, cache_path = _two_product_setup(tmp_path)
+    out_path = tmp_path / "data" / "signals" / "out.json"
+
+    def boom(*a, **k):
+        raise RuntimeError("429 rate limited")   # p2 always fails, like the free tier
+    monkeypatch.setattr("recsys.tools.build_ingredient_analysis.label_products", boom)
+
+    # 1 of 2 cached = 50% coverage: clears a 0.5 floor -> store written from cache
+    log = build(catalog_path, out_path, tmp_path / "data", cache_path, "test/model",
+                max_new_labels=1, min_coverage=0.5)
+    assert log["unlabeled"] == 1 and log["coverage"] == 0.5
+    assert set(json.loads(out_path.read_text())["products"]) == {"p1"}
+
+
+def test_build_aborts_below_coverage_floor(tmp_path, monkeypatch):
+    catalog_path, cache_path = _two_product_setup(tmp_path)
+    monkeypatch.setattr("recsys.tools.build_ingredient_analysis.label_products",
+                        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("429")))
+    # 50% coverage is below a 0.9 floor -> genuine failure surfaces
+    with pytest.raises(RuntimeError, match="below 90% floor"):
+        build(catalog_path, tmp_path / "data/signals/out.json", tmp_path / "data",
+              cache_path, "test/model", max_new_labels=1, min_coverage=0.9)
