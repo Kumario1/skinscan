@@ -56,6 +56,38 @@ def _local(element: ET.Element, name: str) -> list[ET.Element]:
     return [node for node in element.iter() if node.tag.rsplit("}", 1)[-1] == name]
 
 
+def _direct(element: ET.Element, name: str) -> list[ET.Element]:
+    """Immediate children only: a product's own facts, not its packaging's."""
+    return [node for node in element if node.tag.rsplit("}", 1)[-1] == name]
+
+
+def _product_actives(node: ET.Element, source_url: str) -> list[VerifiedActive] | None:
+    """This product's actives, or None if the label leaves them ambiguous."""
+    seen: dict[tuple[str, str | None], VerifiedActive] = {}
+    ingredients = _direct(node, "activeIngredient") + [
+        child for child in _direct(node, "ingredient")
+        if child.get("classCode") in ACTIVE_CLASS_CODES
+    ]
+    for ingredient in ingredients:
+        names = ["".join(item.itertext()).strip().upper()
+                 for item in _local(ingredient, "name")]
+        canonical = next((ACTIVE_NAMES[name] for name in names if name in ACTIVE_NAMES), None)
+        if not canonical:
+            # An active we cannot name is either another product entirely or a
+            # combination we would misreport by dropping an ingredient.
+            return None
+        active = VerifiedActive(canonical, _strength(ingredient), source_url)
+        seen[(active.name, active.strength)] = active  # a label may state one twice
+    if not seen:
+        return None
+    actives = [seen[key] for key in sorted(seen, key=lambda key: (key[0], key[1] or ""))]
+    if len({active.name for active in actives}) != len(actives):
+        return None  # one active at two strengths inside a single product
+    if any(active.strength is None for active in actives):
+        return None  # without a strength we cannot state what the drug contains
+    return actives
+
+
 def _first_attr(root: ET.Element, element_name: str, attribute: str) -> str | None:
     for node in _local(root, element_name):
         value = node.get(attribute)
@@ -110,9 +142,6 @@ def parse_spl(
     )
     title = (" ".join("".join(title_node.itertext()).split())
              if title_node is not None else "") or "DailyMed topical drug"
-    form_text = " ".join(
-        filter(None, (node.get("displayName") for node in _local(root, "formCode")))
-    ).lower()
     route_text = " ".join(
         filter(None, (node.get("displayName") for node in _local(root, "routeCode")))
     ).lower()
@@ -130,7 +159,6 @@ def parse_spl(
                       if node.get("codeSystem") == "2.16.840.1.113883.6.1"))
     ).lower()
     document_text = " ".join("".join(root.itertext()).split()).lower()
-    form = next((item for item in TOPICAL_FORMS if item in form_text), None)
     human_otc_document = "human otc drug label" in document_label_text
     # LOINC 34391-3 is the authoritative prescription marker (34390-5 is its OTC
     # counterpart); marketingCategory is absent on many real labels.
@@ -142,69 +170,44 @@ def parse_spl(
     topical = any(word in route_text for word in ("topical", "cutaneous")) or (
         not route_text and "for external use only" in document_text
     )
-    if not set_id or not form or not topical or not human:
+    if not set_id or not topical or not human:
         return []
     # A label is OTC or prescription, never both and never neither. Anything else
     # leaves legal status unknown, and unknown must not become a catalog fact.
     if otc == human_rx_document:
         return []
 
-    seen: dict[tuple[str, str | None], VerifiedActive] = {}
-    unmodeled = False
-    active_ingredients = _local(root, "activeIngredient") + [
-        node for node in _local(root, "ingredient")
-        if node.get("classCode") in ACTIVE_CLASS_CODES
-    ]
-    for ingredient in active_ingredients:
-        names = ["".join(node.itertext()).strip().upper()
-                 for node in _local(ingredient, "name")]
-        canonical = next((ACTIVE_NAMES[name] for name in names if name in ACTIVE_NAMES), None)
-        if canonical:
-            active = VerifiedActive(canonical, _strength(ingredient), source_url)
-            seen[(active.name, active.strength)] = active  # SPLs may state one twice
-        else:
-            # An active we cannot name is either another product entirely or a
-            # combination we would misreport by silently dropping an ingredient.
-            unmodeled = True
-    if unmodeled or not seen:
-        return []
-    actives = [seen[key] for key in sorted(seen, key=lambda key: (key[0], key[1] or ""))]
-    if len({active.name for active in actives}) != len(actives):
-        # One active at two strengths: this document describes more than one
-        # product, and actives are read document-wide, so we cannot tell which
-        # strength belongs to which NDC.
-        return []
-    if any(active.strength is None for active in actives):
-        return []  # without a strength we cannot state what the drug contains
-    exact = tuple(sorted((active.name, active.strength or "") for active in actives))
-    if otc and exact not in {tuple(sorted(item)) for item in MODELED_STRENGTHS}:
-        return []
-
-    # A prescription document's <title> is the HIGHLIGHTS OF PRESCRIBING
-    # INFORMATION preamble ("These highlights do not include..."), never a
-    # product name. The label names each product on its own node; prefer that.
-    named: dict[str, str] = {}
-    for product in _local(root, "manufacturedProduct"):
-        children = list(product)
-        ndc = next((node.get("code") for node in children
-                    if node.tag.rsplit("}", 1)[-1] == "code"
-                    and node.get("codeSystem") == "2.16.840.1.113883.6.69"
-                    and node.get("code")), None)
+    # One document may describe several products -- Retin-A Micro carries four
+    # strengths, Retin-A a cream and a gel. Read each product's own facts from
+    # its own node; the packaging levels above it carry no NDC and are skipped.
+    source_hash = hashlib.sha256(xml_bytes).hexdigest()
+    modeled = {tuple(sorted(item)) for item in MODELED_STRENGTHS}
+    products = []
+    for node in _local(root, "manufacturedProduct"):
+        ndc = next((child.get("code") for child in _direct(node, "code")
+                    if child.get("codeSystem") == "2.16.840.1.113883.6.69"
+                    and child.get("code")), None)
         if not ndc:
             continue
-        named[ndc] = next(
-            (" ".join("".join(node.itertext()).split()) for node in children
-             if node.tag.rsplit("}", 1)[-1] == "name"), ""
-        )
-    if not named:
-        return []
-    source_hash = hashlib.sha256(xml_bytes).hexdigest()
-    products = []
-    for ndc in sorted(named):
+        form_text = next(
+            (child.get("displayName") or "" for child in _direct(node, "formCode")), ""
+        ).lower()
+        form = next((item for item in sorted(TOPICAL_FORMS) if item in form_text), None)
+        actives = _product_actives(node, source_url)
+        if not form or actives is None:
+            continue
+        exact = tuple(sorted((active.name, active.strength or "") for active in actives))
+        if otc and exact not in modeled:
+            continue  # OTC rows are admitted only against an exact modeled path
+        # A prescription document's <title> is the HIGHLIGHTS OF PRESCRIBING
+        # INFORMATION preamble, never a product name; the label names each
+        # product on its own node, so prefer that and keep title as a fallback.
+        name = next((" ".join("".join(child.itertext()).split())
+                     for child in _direct(node, "name")), "") or title
         active_key = "+".join(f"{item.name}-{item.strength}" for item in actives)
         products.append(Product(
             product_id=f"dailymed:{set_id}:{ndc}:{active_key}",
-            name=named[ndc] or title, brand="DailyMed SPL", category="treatment",
+            name=name, brand="DailyMed SPL", category="treatment",
             actives=sorted(active.name for active in actives),
             intended_areas=["face"], routine_roles=[],
             format=form, exposure="leave_on", drug_actives=actives,
