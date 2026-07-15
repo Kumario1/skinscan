@@ -9,7 +9,7 @@ from recsys.knowledge import load_knowledge
 from recsys.signals import (
     ConcernEfficacySignal, ScoringContext, TargetConcern, load_providers,
 )
-from recsys.tools.build_concern_efficacy import PROMPT_VERSION, build
+from recsys.tools.build_concern_efficacy import PROMPT_VERSION, _p3_bakeoff, build
 
 
 DATA = Path(__file__).parents[1] / "data"
@@ -238,6 +238,44 @@ def test_passing_p3_bakeoff_is_recorded_before_registration(tmp_path):
     assert coverage["p3_gate_passed"] is True
     assert store["p3"]["pooled"]["concern_conditioned"]["pairwise"] == 0.61
     assert registry["stores"][0]["source"]["p3"] == p3
+
+
+def test_p3_bakeoff_excludes_other_prompt_versions():
+    def evaluable(uid, prompt_version, outcome):
+        record = _record(uid, outcome)
+        record.update(uid=uid, author_id=uid, rating=5.0,
+                      prompt_version=prompt_version)
+        return record
+
+    current = [evaluable(str(i), PROMPT_VERSION,
+                         "helped" if i % 2 else "worsened") for i in range(8)]
+    stale = [evaluable(f"stale{i}", "p1", "helped") for i in range(20)]
+
+    only_current = _p3_bakeoff(current, smoothing_m=20)
+    with_stale = _p3_bakeoff(current + stale, smoothing_m=20)
+
+    assert only_current is not None
+    # Stale-prompt-version rows must never enter the bake-off population — the
+    # gate has to evaluate exactly what the store aggregation later builds from.
+    assert with_stale == only_current
+
+
+def test_build_skips_unclear_only_cells_without_zero_division(tmp_path):
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text("\n".join((
+        json.dumps(_record("u1", "unclear", product_id="p1")),
+        json.dumps(_record("h1", "helped", product_id="p2")),
+    )) + "\n")
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "concern_efficacy.v1.json"
+
+    # smoothing_m=0 turns an unclear-only (n=0) cell into a 0/0 division unless
+    # _cell guards it; the cell must also be dropped rather than emitted at n=0.
+    build(labels, out, data_root, catalog_products=2, smoothing_m=0)
+
+    store = json.loads(out.read_text())
+    assert "p1" not in store["products"]
+    assert store["products"]["p2"]["acne_comedonal"]["all"]["n"] == 1
 
 
 def test_evaluable_labels_auto_run_the_p3_gate(tmp_path):

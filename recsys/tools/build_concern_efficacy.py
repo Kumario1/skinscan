@@ -77,7 +77,7 @@ def _p3_bakeoff(records: list[dict], smoothing_m: float,
     reviews = []
     outcomes = []
     for record in records:
-        if record.get("status") != "ok":
+        if record.get("status") != "ok" or record.get("prompt_version") != PROMPT_VERSION:
             continue
         product_id = str(record.get("product_id"))
         if catalog_product_ids is not None and product_id not in catalog_product_ids:
@@ -193,13 +193,15 @@ def _cell(counts: dict[str, int], prior: float, smoothing_m: float) -> dict:
     worsened = counts.get("worsened", 0)
     unclear = counts.get("unclear", 0)
     n = helped + worsened
+    denom = n + smoothing_m
     return {
         "n": n,
         "helped": helped,
         "worsened": worsened,
         "n_unclear": unclear,
         "help_rate": round(helped / n, 6) if n else None,
-        "smoothed": round((helped + smoothing_m * prior) / (n + smoothing_m), 6),
+        "smoothed": (round((helped + smoothing_m * prior) / denom, 6)
+                     if denom else None),
     }
 
 
@@ -210,6 +212,7 @@ def build(
     *,
     catalog_products: int,
     catalog_product_ids: frozenset[str] | None = None,
+    catalog_path: Path | None = None,
     smoothing_m: float = 20,
     sub_cell_min_n: int = 5,
     p3_evaluation: dict | None = None,
@@ -251,6 +254,10 @@ def build(
         if concern not in priors:
             continue
         all_cell = _cell(counts, priors[concern], smoothing_m)
+        if all_cell["n"] == 0:
+            # Unclear-only cell carries no helped/worsened signal — skip it so
+            # the store never emits a product concern with n=0.
+            continue
         by_skin_type = {}
         for (pid, cell_concern, skin_type), skin in sorted(skin_counts.items()):
             if pid != product_id or cell_concern != concern:
@@ -295,6 +302,10 @@ def build(
         source={
             "labels_sha256": sha256_file(labels_path),
             "prompt_version": PROMPT_VERSION,
+            # concern_efficacy is catalog-bound (signals.CATALOG_BOUND_KINDS);
+            # without this provenance load_providers skips it at inference.
+            **({"catalog_sha256": sha256_file(catalog_path)}
+               if catalog_path is not None else {}),
             **({"p3": p3} if p3 is not None else {}),
         },
         coverage=coverage,
@@ -323,6 +334,7 @@ def main(argv=None) -> int:
         args.labels, args.out, args.data_root,
         catalog_products=len(catalog_product_ids),
         catalog_product_ids=catalog_product_ids,
+        catalog_path=args.catalog,
         smoothing_m=args.smoothing_m,
         sub_cell_min_n=args.sub_cell_min_n,
         p3_evaluation=(json.loads(args.p3_eval.read_text(encoding="utf-8"))

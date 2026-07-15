@@ -251,8 +251,17 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
     entries = []
     for product in product_rows:
         key = (product["product_id"], product["inci_sha256"], PROMPT_VERSION, model)
-        entry = cache[key]
-        entries.append(_entry(product, entry.get("model_id", model), entry))
+        entry = cache.get(key)
+        if entry is None:
+            continue
+        try:
+            # Lenient on the resume/read path: a cached entry that no longer
+            # validates (e.g. CONCERNS changed between runs) is dropped rather
+            # than aborting an otherwise no-op rebuild. Fresh labels stay strict
+            # via _entry on the WRITE path above.
+            entries.append(_entry(product, entry.get("model_id", model), entry))
+        except ValueError:
+            continue
 
     payload = {
         "schema_version": STORE_SCHEMA_VERSION,

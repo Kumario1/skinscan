@@ -160,6 +160,27 @@ def test_cached_build_registers_provider(tmp_path):
     assert "coconut oil" in score.evidence
 
 
+def test_resume_skips_cached_entry_with_now_invalid_concern(tmp_path):
+    data_root = tmp_path / "data"
+    catalog_path = tmp_path / "catalog.json"
+    catalog_path.write_text(json.dumps({
+        "schema_version": "recsys-catalog-1", "source": {}, "products": [PRODUCT],
+    }))
+    cache_path = data_root / "cache" / "ingredient_analysis.jsonl"
+    stale = {**analysis_entry(),
+             "concern_fit_notes": {"not_a_real_concern": "left over from an older CONCERNS set"}}
+    append_cache(cache_path, stale)
+    out_path = data_root / "signals" / "ingredient_analysis.v1.json"
+
+    # The product is fully cached (no paid calls), and a cached entry that no
+    # longer validates against CONCERNS is dropped rather than aborting the
+    # no-op rebuild.
+    build(catalog_path, out_path, data_root, cache_path, "test/model")
+
+    store = json.loads(out_path.read_text())
+    assert store["products"] == {}
+
+
 def test_build_caps_paid_calls(tmp_path):
     catalog_path = tmp_path / "catalog.json"
     catalog_path.write_text(json.dumps({
