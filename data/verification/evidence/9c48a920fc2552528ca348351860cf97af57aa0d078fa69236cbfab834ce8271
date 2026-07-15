@@ -1,0 +1,1326 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet href="https://www.accessdata.fda.gov/spl/stylesheet/spl.xsl" type="text/xsl"?>
+<document xmlns="urn:hl7-org:v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:hl7-org:v3 https://www.accessdata.fda.gov/spl/schema/spl.xsd">
+   <id root="977e8df9-820f-4b8f-bfe2-da1b72ca93c7"/>
+   <code code="34391-3" codeSystem="2.16.840.1.113883.6.1" displayName="HUMAN PRESCRIPTION DRUG LABEL"/>
+   <title>These highlights do not include all the information needed to use ADAPALENE AND BENZOYL PEROXIDE GEL safely and effectively. See full prescribing information for ADAPALENE AND BENZOYL PEROXIDE GEL.<br/> ADAPALENE AND BENZOYL PEROXIDE gel, for topical use<br/> Initial U.S. Approval: 2008<br/>
+   </title>
+   <effectiveTime value="20260615"/>
+   <setId root="66858a82-cfda-4ba9-aac7-cf65499f4b1a"/>
+   <versionNumber value="3"/>
+   <author>
+      <time/>
+      <assignedEntity>
+         <representedOrganization>
+            <id extension="116982244" root="1.3.6.1.4.1.519.1"/>
+            <name>Encube Ethicals, Inc.</name>
+            <assignedEntity>
+               <assignedOrganization>
+                  <assignedEntity>
+                     <assignedOrganization>
+                        <id extension="725076298" root="1.3.6.1.4.1.519.1"/>
+                        <name>Encube Ethicals Private Limited</name>
+                     </assignedOrganization>
+                     <performance>
+                        <actDefinition>
+                           <code code="C25391" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="analysis"/>
+                           <product>
+                              <manufacturedProduct classCode="MANU">
+                                 <manufacturedMaterialKind>
+                                    <code code="21922-052" codeSystem="2.16.840.1.113883.6.69"/>
+                                 </manufacturedMaterialKind>
+                              </manufacturedProduct>
+                           </product>
+                        </actDefinition>
+                     </performance>
+                     <performance>
+                        <actDefinition>
+                           <code code="C84732" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="label"/>
+                           <product>
+                              <manufacturedProduct classCode="MANU">
+                                 <manufacturedMaterialKind>
+                                    <code code="21922-052" codeSystem="2.16.840.1.113883.6.69"/>
+                                 </manufacturedMaterialKind>
+                              </manufacturedProduct>
+                           </product>
+                        </actDefinition>
+                     </performance>
+                     <performance>
+                        <actDefinition>
+                           <code code="C43360" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="manufacture"/>
+                           <product>
+                              <manufacturedProduct classCode="MANU">
+                                 <manufacturedMaterialKind>
+                                    <code code="21922-052" codeSystem="2.16.840.1.113883.6.69"/>
+                                 </manufacturedMaterialKind>
+                              </manufacturedProduct>
+                           </product>
+                        </actDefinition>
+                     </performance>
+                     <performance>
+                        <actDefinition>
+                           <code code="C84731" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="pack"/>
+                           <product>
+                              <manufacturedProduct classCode="MANU">
+                                 <manufacturedMaterialKind>
+                                    <code code="21922-052" codeSystem="2.16.840.1.113883.6.69"/>
+                                 </manufacturedMaterialKind>
+                              </manufacturedProduct>
+                           </product>
+                        </actDefinition>
+                     </performance>
+                  </assignedEntity>
+               </assignedOrganization>
+            </assignedEntity>
+         </representedOrganization>
+      </assignedEntity>
+   </author>
+   <component>
+      <structuredBody>
+         <component>
+            <section>
+               <id root="f5bc2d29-caa8-4edf-9d0c-eab96b5b2d50"/>
+               <code code="48780-1" codeSystem="2.16.840.1.113883.6.1" displayName="SPL PRODUCT DATA ELEMENTS SECTION"/>
+               <effectiveTime value="20260615"/>
+               <subject>
+                  <manufacturedProduct>
+                     <manufacturedProduct>
+                        <code code="21922-052" codeSystem="2.16.840.1.113883.6.69"/>
+                        <name>Adapalene and Benzoyl Peroxide Gel, 0.1%/2.5%</name>
+                        <formCode code="C42934" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="GEL"/>
+                        <asEntityWithGeneric>
+                           <genericMedicine>
+                              <name>Adapalene and Benzoyl Peroxide Gel, 0.1%/2.5%</name>
+                           </genericMedicine>
+                        </asEntityWithGeneric>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="7FLD91C86K" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>EDETATE DISODIUM</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="ACTIB">
+                           <quantity>
+                              <numerator unit="mg" value="1"/>
+                              <denominator unit="g" value="1"/>
+                           </quantity>
+                           <ingredientSubstance>
+                              <code code="1L4806J2QF" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>ADAPALENE</name>
+                              <activeMoiety>
+                                 <activeMoiety>
+                                    <code code="1L4806J2QF" codeSystem="2.16.840.1.113883.4.9"/>
+                                    <name>ADAPALENE</name>
+                                 </activeMoiety>
+                              </activeMoiety>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="ACTIB">
+                           <quantity>
+                              <numerator unit="mg" value="25"/>
+                              <denominator unit="g" value="1"/>
+                           </quantity>
+                           <ingredientSubstance>
+                              <code code="W9WZN9A0GM" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>BENZOYL PEROXIDE</name>
+                              <activeMoiety>
+                                 <activeMoiety>
+                                    <code code="W9WZN9A0GM" codeSystem="2.16.840.1.113883.4.9"/>
+                                    <name>BENZOYL PEROXIDE</name>
+                                 </activeMoiety>
+                              </activeMoiety>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="4Q93RCW27E" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CARBOMER HOMOPOLYMER TYPE C (ALLYL PENTAERYTHRITOL CROSSLINKED)</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="PDC6A3C0OX" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>GLYCERIN</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="6DC9Q167V3" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>PROPYLENE GLYCOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="F05Q2T2JA0" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>DOCUSATE SODIUM</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="JX0HIX6OAG" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>POLOXAMER 182</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="6OZP39ZG8H" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>POLYSORBATE 80</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="06XEA2VD56" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>SORBITAN MONOOLEATE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="GFD7C86Q1W" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>LIMONENE, (+)-</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="55X04QC32I" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>SODIUM HYDROXIDE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="059QF0KO0R" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>WATER</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <asContent>
+                           <quantity>
+                              <numerator unit="g" value="45"/>
+                              <denominator value="1"/>
+                           </quantity>
+                           <containerPackagedProduct>
+                              <formCode code="C43174" displayName="BOTTLE, PUMP" codeSystem="2.16.840.1.113883.3.26.1.1"/>
+                              <asContent>
+                                 <quantity>
+                                    <numerator unit="1" value="1"/>
+                                    <denominator value="1"/>
+                                 </quantity>
+                                 <containerPackagedProduct>
+                                    <code code="21922-052-50" codeSystem="2.16.840.1.113883.6.69"/>
+                                    <formCode code="C43182" displayName="CARTON" codeSystem="2.16.840.1.113883.3.26.1.1"/>
+                                 </containerPackagedProduct>
+                                 <subjectOf>
+                                    <marketingAct>
+                                       <code code="C53292" codeSystem="2.16.840.1.113883.3.26.1.1"/>
+                                       <statusCode code="active"/>
+                                       <effectiveTime>
+                                          <low value="20230814"/>
+                                       </effectiveTime>
+                                    </marketingAct>
+                                 </subjectOf>
+                              </asContent>
+                           </containerPackagedProduct>
+                           <subjectOf>
+                              <characteristic classCode="OBS">
+                                 <code code="SPLCMBPRDTP" codeSystem="2.16.840.1.113883.1.11.19255"/>
+                                 <value codeSystem="2.16.840.1.113883.3.26.1.1" code="C112160" displayName="Type 0: Not a Combination Product" xsi:type="CE"/>
+                              </characteristic>
+                           </subjectOf>
+                        </asContent>
+                     </manufacturedProduct>
+                     <subjectOf>
+                        <approval>
+                           <id extension="ANDA206164" root="2.16.840.1.113883.3.150"/>
+                           <code code="C73584" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="ANDA"/>
+                           <author>
+                              <territorialAuthority>
+                                 <territory>
+                                    <code code="USA" codeSystem="2.16.840.1.113883.5.28"/>
+                                 </territory>
+                              </territorialAuthority>
+                           </author>
+                        </approval>
+                     </subjectOf>
+                     <subjectOf>
+                        <marketingAct>
+                           <code code="C53292" codeSystem="2.16.840.1.113883.3.26.1.1"/>
+                           <statusCode code="active"/>
+                           <effectiveTime>
+                              <low value="20230814"/>
+                           </effectiveTime>
+                        </marketingAct>
+                     </subjectOf>
+                     <consumedIn>
+                        <substanceAdministration>
+                           <routeCode code="C38304" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="TOPICAL"/>
+                        </substanceAdministration>
+                     </consumedIn>
+                  </manufacturedProduct>
+               </subject>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_1">
+               <id root="ed18ec5f-6d44-4f91-bf70-99bb475078aa"/>
+               <code code="34067-9" codeSystem="2.16.840.1.113883.6.1" displayName="INDICATIONS &amp; USAGE SECTION"/>
+               <title>1 INDICATIONS AND USAGE</title>
+               <text>
+                  <paragraph>Adapalene and benzoyl peroxide gel USP, 0.1% / 2.5% is indicated for the topical treatment of acne vulgaris in patients 9 years of age and older.</paragraph>
+               </text>
+               <effectiveTime value="20260615"/>
+               <excerpt>
+                  <highlight>
+                     <text>
+                        <paragraph>Adapalene and benzoyl peroxide gel USP, 0.1% / 2.5% is a combination of adapalene, a retinoid, and benzoyl peroxide, and is indicated for the topical treatment of acne vulgaris in patients 9 years of age and older. <content styleCode="underline">
+                              <linkHtml href="#Section_1">(1)</linkHtml>
+                           </content>
+                        </paragraph>
+                     </text>
+                  </highlight>
+               </excerpt>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_2">
+               <id root="87d2678a-d790-49b9-a74c-8fbc6442ccc3"/>
+               <code code="34068-7" codeSystem="2.16.840.1.113883.6.1" displayName="DOSAGE &amp; ADMINISTRATION SECTION"/>
+               <title>2 DOSAGE AND ADMINISTRATION</title>
+               <text>
+                  <paragraph>For topical use only; adapalene and benzoyl peroxide gel 0.1% / 2.5% is not for oral, ophthalmic, or intravaginal use.</paragraph>
+                  <paragraph>Apply a thin film of adapalene and benzoyl peroxide gel 0.1% / 2.5% to affected areas of the face and/or trunk once daily after washing. Use a pea-sized amount for each area of the face (e.g., forehead, chin, each cheek). Avoid the eyes, lips and mucous membranes.</paragraph>
+               </text>
+               <effectiveTime value="20260615"/>
+               <excerpt>
+                  <highlight>
+                     <text>
+                        <paragraph>Adapalene and benzoyl peroxide gel 0.1% / 2.5% is not for oral, ophthalmic, or intravaginal use. <content styleCode="underline">
+                              <linkHtml href="#Section_2">(2)</linkHtml>
+                           </content>
+                        </paragraph>
+                        <paragraph>Apply a thin film of adapalene and benzoyl peroxide gel 0.1% / 2.5% to affected areas of the face and/or trunk once daily after washing. Use a pea-sized amount for each area of the face (e.g., forehead, chin, each cheek). Avoid the eyes, lips and mucous membranes. <content styleCode="underline">
+                              <linkHtml href="#Section_2">(2)</linkHtml>
+                           </content>
+                        </paragraph>
+                     </text>
+                  </highlight>
+               </excerpt>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_3">
+               <id root="c2ba9cd1-3706-4504-b5d8-d344a8841cd3"/>
+               <code code="43678-2" codeSystem="2.16.840.1.113883.6.1" displayName="DOSAGE FORMS &amp; STRENGTHS SECTION"/>
+               <title>
+                  <content styleCode="bold">3 DOSAGE FORMS AND STRNGTH</content>
+               </title>
+               <text>
+                  <paragraph>Each gram of adapalene and benzoyl peroxide gel USP, 0.1% / 2.5% contains 1 mg (0.1%) adapalene and 25 mg (2.5%) benzoyl peroxide in a white to very pale yellow, opaque, aqueous based gel.</paragraph>
+               </text>
+               <effectiveTime value="20260615"/>
+               <excerpt>
+                  <highlight>
+                     <text>
+                        <paragraph>Each gram of adapalene and benzoyl peroxide gel USP, 0.1% / 2.5% contains 1 mg (0.1%) adapalene and 25 mg (2.5%) benzoyl peroxide. <content styleCode="underline">
+                              <linkHtml href="#Section_3">(3)</linkHtml>
+                           </content>
+                        </paragraph>
+                     </text>
+                  </highlight>
+               </excerpt>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_4">
+               <id root="63d88391-e721-42c0-9c89-72aa42c315b3"/>
+               <code code="34070-3" codeSystem="2.16.840.1.113883.6.1" displayName="CONTRAINDICATIONS SECTION"/>
+               <title>4 CONTRAINDICATIONS</title>
+               <text>
+                  <paragraph>None</paragraph>
+               </text>
+               <effectiveTime value="20260615"/>
+               <excerpt>
+                  <highlight>
+                     <text>
+                        <paragraph>None. <content styleCode="underline">
+                              <linkHtml href="#Section_4">(4)</linkHtml>
+                           </content>
+                        </paragraph>
+                     </text>
+                  </highlight>
+               </excerpt>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_5">
+               <id root="2ef9fb60-c287-43c6-968e-f0024009479f"/>
+               <code code="43685-7" codeSystem="2.16.840.1.113883.6.1" displayName="WARNINGS AND PRECAUTIONS SECTION"/>
+               <title>
+                  <content styleCode="bold">5 WARNINGS AND PRECAUTIONS</content>
+               </title>
+               <effectiveTime value="20260615"/>
+               <excerpt>
+                  <highlight>
+                     <text>
+                        <paragraph>Ultraviolet Light and Environmental Exposure: Avoid exposure to sunlight and sunlamps. Wear sunscreen when sun exposure cannot be avoided. <content styleCode="underline">
+                              <linkHtml href="#Section_5.1">(5.1)</linkHtml>
+                           </content> Erythema, scaling, dryness, stinging/burning, irritant and allergic contact dermatitis may occur with use of adapalene and benzoyl peroxide gel 0.1% / 2.5% and may necessitate discontinuation. <content styleCode="underline">
+                              <linkHtml href="#Section_5.2">(5.2)</linkHtml>
+                           </content>
+                        </paragraph>
+                     </text>
+                  </highlight>
+               </excerpt>
+               <component>
+                  <section ID="Section_5.1">
+                     <id root="0c3ed0ec-1d48-431f-9ae0-5f3f60dc1f5f"/>
+                     <code code="42229-5" codeSystem="2.16.840.1.113883.6.1" displayName="SPL UNCLASSIFIED SECTION"/>
+                     <title>
+                        <content styleCode="bold">5.1 Ultraviolet Light and Environmental Exposure</content>
+                     </title>
+                     <text>
+                        <paragraph>Exposure to sunlight, including sunlamps, should be minimized during the use of adapalene and benzoyl peroxide gel 0.1% / 2.5%. Patients with high levels of sun exposure and those with inherent sensitivity to sun should exercise particular caution. Use of sunscreen products and protective apparel, (e.g., hat) are recommended when exposure cannot be avoided. Weather extremes, such as wind or cold, may be irritating to patients under treatment with adapalene and benzoyl peroxide gel 0.1% / 2.5%.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+               <component>
+                  <section ID="Section_5.2">
+                     <id root="1e98b09c-4459-4038-ae49-c8d569449bb6"/>
+                     <code code="42229-5" codeSystem="2.16.840.1.113883.6.1" displayName="SPL UNCLASSIFIED SECTION"/>
+                     <title>
+                        <content styleCode="bold">5.2 Local Cutaneous Reactions</content>
+                     </title>
+                     <text>
+                        <paragraph>Erythema, scaling, dryness, and stinging/burning may be experienced with use of adapalene and benzoyl peroxide gel 0.1% / 2.5%. These are most likely to occur during the first four weeks of treatment, are mostly mild to moderate in intensity, and usually lessen with continued use of the medication. Irritant and allergic contact dermatitis may occur. Depending upon the severity of these adverse reactions, patients should be instructed to use a moisturizer, reduce the frequency of the application of adapalene and benzoyl peroxide gel 0.1% / 2.5%, or discontinue use. The product should not be applied to cuts, abrasions, eczematous or sunburned skin. As with other retinoids, use of “waxing” as a depilatory method should be avoided on skin treated with adapalene and benzoyl peroxide gel 0.1% / 2.5%.<br/>
+                           <br/>Avoid concomitant use of other potentially irritating topical products (medicated or abrasive soaps and cleansers, soaps and cosmetics that have strong skin-drying effect and products with high concentrations of alcohol, astringents, spices, or limes).</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_6">
+               <id root="2acccbaa-fa0a-4aff-8b37-6783830f4190"/>
+               <code code="34084-4" codeSystem="2.16.840.1.113883.6.1" displayName="ADVERSE REACTIONS SECTION"/>
+               <title>
+                  <content styleCode="bold">6 ADVERSE REACTIONS</content>
+               </title>
+               <text/>
+               <effectiveTime value="20260615"/>
+               <excerpt>
+                  <highlight>
+                     <text>
+                        <paragraph>Most commonly reported adverse events (≥1%) in patients treated with adapalene and benzoyl peroxide gel 0.1% / 2.5% were dry skin, contact dermatitis, application site burning, application site irritation and skin irritation. <content styleCode="underline">
+                              <linkHtml href="#Section_6">(6)</linkHtml>
+                           </content>
+                        </paragraph>
+                        <paragraph>
+                           <content styleCode="bold">To report SUSPECTED ADVERSE REACTIONS, contact Encube Ethicals Private Limited, at 1-833-285-4151 or FDA at 1-800-FDA-1088 or www.fda.gov/medwatch.</content>
+                        </paragraph>
+                     </text>
+                  </highlight>
+               </excerpt>
+               <component>
+                  <section ID="Section_6.1">
+                     <id root="fc421767-3772-491e-a2c1-feaf2e5c9c22"/>
+                     <code code="42229-5" codeSystem="2.16.840.1.113883.6.1" displayName="SPL UNCLASSIFIED SECTION"/>
+                     <title>
+                        <content styleCode="bold">6.1 Clinical Trials Experience</content>
+                     </title>
+                     <text>
+                        <paragraph>Because clinical trials are conducted under widely varying conditions, adverse reaction rates observed in the clinical trials of a drug cannot be directly compared to rates in the clinical trials of another drug and may not reflect the rates observed in practice.<br/>During clinical trials, 1401 subjects were exposed to adapalene and benzoyl peroxide gel 0.1% / 2.5%. A total of 1036 subjects with acne vulgaris, 12 years and older, were treated once daily for 12 weeks to 12 months. Related adverse events reported within 12 weeks of treatment and in at least 1% of subjects treated with adapalene and benzoyl peroxide gel 0.1% / 2.5% and those reported in subjects treated with the vehicle gel are presented in <content styleCode="bold">Table 1</content>:</paragraph>
+                        <paragraph>
+                           <content styleCode="bold">Table 1. Drug Related Adverse Events Reported in Clinical Trials by At Least 1% of Patients Treated For 12 Weeks</content>
+                        </paragraph>
+                        <table width="100%">
+                           <col width="34%" align="left" valign="middle"/>
+                           <col width="33%" align="left" valign="middle"/>
+                           <col width="33%" align="left" valign="middle"/>
+                           <thead>
+                              <tr>
+                                 <th styleCode="Botrule Lrule Rrule Toprule">
+                                    <content styleCode="bold">System Organ Class/Preferred Term</content>
+                                 </th>
+                                 <th styleCode="Botrule Rrule Toprule" align="center">
+                                    <content styleCode="bold">Adapalene and Benzoyl Peroxide Gel 0.1% / 2.5%</content>
+                                    <br/>
+                                    <content styleCode="bold">N=564</content>
+                                 </th>
+                                 <th styleCode="Botrule Rrule Toprule" align="center">
+                                    <content styleCode="bold">Vehicle gel</content>
+                                    <br/>
+                                    <content styleCode="bold">N=489</content>
+                                 </th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule Toprule" valign="top">
+                                    <paragraph>Subjects with AE (s)</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule Toprule" valign="top" align="center">
+                                    <paragraph>14%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule Toprule" valign="top" align="center">
+                                    <paragraph>4%</paragraph>
+                                 </td>
+                              </tr>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule" valign="top">
+                                    <paragraph>Dry Skin</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" valign="top" align="center">
+                                    <paragraph>7%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" valign="top" align="center">
+                                    <paragraph>2%</paragraph>
+                                 </td>
+                              </tr>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule" valign="top">
+                                    <paragraph>Contact dermatitis</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" valign="top" align="center">
+                                    <paragraph>3%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" valign="top" align="center">
+                                    <paragraph>&lt;1%</paragraph>
+                                 </td>
+                              </tr>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule" valign="top">
+                                    <paragraph>Application site burning</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" valign="top" align="center">
+                                    <paragraph>2%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" valign="top" align="center">
+                                    <paragraph>&lt;1%</paragraph>
+                                 </td>
+                              </tr>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule" valign="top">
+                                    <paragraph>Application site irritation</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" valign="top" align="center">
+                                    <paragraph>1%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" valign="top" align="center">
+                                    <paragraph>&lt;1%</paragraph>
+                                 </td>
+                              </tr>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule" valign="top">
+                                    <paragraph>Skin irritation</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" valign="top" align="center">
+                                    <paragraph>1%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" valign="top" align="center">
+                                    <paragraph>0%</paragraph>
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                        <paragraph>Local tolerability evaluations, presented in <content styleCode="bold">Table 2</content>, were conducted at each study visit in clinical trials by assessment of erythema, scaling, dryness, burning, and stinging.<br/>
+                           <content styleCode="bold">Table 2. Incidence of Local Cutaneous Irritation in Controlled Clinical Trials (N=553)</content>
+                           <br/>
+                           <content styleCode="bold">Treatment Emergent Signs and Symptoms</content>
+                        </paragraph>
+                        <table width="100%">
+                           <col width="16%" align="left" valign="middle"/>
+                           <col width="14%" align="left" valign="middle"/>
+                           <col width="14%" align="left" valign="middle"/>
+                           <col width="14%" align="left" valign="middle"/>
+                           <col width="14%" align="left" valign="middle"/>
+                           <col width="14%" align="left" valign="middle"/>
+                           <col width="14%" align="left" valign="middle"/>
+                           <thead>
+                              <tr>
+                                 <th styleCode="Botrule Lrule Rrule Toprule" align="center"/>
+                                 <th colspan="3" styleCode="Botrule Rrule Toprule" align="center">
+                                    <content styleCode="bold">Maximum Severity During Treatment</content>
+                                 </th>
+                                 <th colspan="3" styleCode="Botrule Rrule Toprule" align="center">
+                                    <content styleCode="bold">End of Treatment Severity</content>
+                                    <content styleCode="bold">(12 Weeks)</content>
+                                 </th>
+                              </tr>
+                           </thead>
+                           <tbody>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule Toprule" align="center"/>
+                                 <td styleCode="Botrule Rrule Toprule" align="center">
+                                    <paragraph>
+                                       <content styleCode="bold">Mild</content>
+                                    </paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule Toprule" align="center">
+                                    <paragraph>
+                                       <content styleCode="bold">Moderate</content>
+                                    </paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule Toprule" align="center">
+                                    <paragraph>
+                                       <content styleCode="bold">Severe</content>
+                                    </paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule Toprule" align="center">
+                                    <paragraph>
+                                       <content styleCode="bold">Mild</content>
+                                    </paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule Toprule" align="center">
+                                    <paragraph>
+                                       <content styleCode="bold">Moderate</content>
+                                    </paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule Toprule" align="center">
+                                    <paragraph>
+                                       <content styleCode="bold">Severe</content>
+                                    </paragraph>
+                                 </td>
+                              </tr>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule">
+                                    <paragraph>Erythema</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>27%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>13%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>1%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>8%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>2%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>1%</paragraph>
+                                 </td>
+                              </tr>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule">
+                                    <paragraph>Scaling</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>35%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>11%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>1%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>9%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>1%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>&lt;1%</paragraph>
+                                 </td>
+                              </tr>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule">
+                                    <paragraph>Dryness</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>41%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>13%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>1%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>10%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>2%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>&lt;1%</paragraph>
+                                 </td>
+                              </tr>
+                              <tr>
+                                 <td styleCode="Botrule Lrule Rrule">
+                                    <paragraph>Stinging/burning</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>41%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>15%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>3%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>7%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>2%</paragraph>
+                                 </td>
+                                 <td styleCode="Botrule Rrule" align="center">
+                                    <paragraph>1%</paragraph>
+                                 </td>
+                              </tr>
+                           </tbody>
+                        </table>
+                        <paragraph>Analysis over the 12 week period showed that local tolerability scores for erythema, scaling, dryness, and stinging/burning peaked at Week 1 of therapy and decreased thereafter. <br/>During a pediatric clinical trial, 285 children with acne vulgaris, 9 to 11 years of age were treated with adapalene and benzoyl peroxide gel 0.1% / 2.5% or with the vehicle gel once daily for 12 weeks. Overall, the safety profile of adapalene and benzoyl peroxide gel 0.1% / 2.5% in these subjects is comparable to the safety profile observed in older subjects 12 years of age and above, both in the nature and frequency of the observed adverse events.<br/>Analysis of local tolerability evaluations shows similar incidence of treatment emergent signs and symptoms as in subjects 12 years of age and above, with local tolerability signs and symptoms peaking during the first week and decreasing over time.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+               <component>
+                  <section ID="Section_6.2">
+                     <id root="15f98053-b397-4f3c-8ded-aa01eb408f85"/>
+                     <code code="42229-5" codeSystem="2.16.840.1.113883.6.1" displayName="SPL UNCLASSIFIED SECTION"/>
+                     <title>
+                        <content styleCode="bold">6.2 Postmarketing Experience</content>
+                     </title>
+                     <text>
+                        <paragraph>The following adverse reactions have been identified during post-approval use of adapalene and benzoyl peroxide gel 0.1% / 2.5%: eyelid edema, sunburn, blister, pain of skin, pruritus, swelling face, conjunctivitis, skin discoloration, rash, eczema, throat tightness and allergic contact dermatitis. Because these reactions are reported voluntarily from a population of uncertain size, it is not always possible to reliably estimate their frequency or establish a causal relationship to drug exposure.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_7">
+               <id root="19f5f95b-0f2c-4b2e-80e8-f2fdebc6343a"/>
+               <code code="34073-7" codeSystem="2.16.840.1.113883.6.1" displayName="DRUG INTERACTIONS SECTION"/>
+               <title>
+                  <content styleCode="bold">7 DRUG INTERACTIONS</content>
+               </title>
+               <text>
+                  <paragraph>Concomitant topical acne therapy should be used with caution because a possible cumulative irritancy effect may occur, especially with the use of peeling, desquamating, or abrasive agents. No formal drug-drug interaction studies were conducted with adapalene and benzoyl peroxide gel 0.1% / 2.5%.</paragraph>
+               </text>
+               <effectiveTime value="20260615"/>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_8">
+               <id root="fed09ba2-588f-4275-8b38-baed9fffbd0a"/>
+               <code code="43684-0" codeSystem="2.16.840.1.113883.6.1" displayName="USE IN SPECIFIC POPULATIONS SECTION"/>
+               <title>
+                  <content styleCode="bold">8 USE IN SPECIFIC POPULATIONS</content>
+               </title>
+               <effectiveTime value="20260615"/>
+               <component>
+                  <section ID="Section_8.1">
+                     <id root="392aeb11-3776-4f26-bcc2-14214d5a4ab5"/>
+                     <code code="42228-7" codeSystem="2.16.840.1.113883.6.1" displayName="PREGNANCY SECTION"/>
+                     <title>
+                        <content styleCode="bold">8.1 Pregnancy</content>
+                     </title>
+                     <text>
+                        <paragraph>Pregnancy Category C. There are no well-controlled trials in pregnant women treated with adapalene and benzoyl peroxide gel 0.1% / 2.5%. Animal reproduction studies have not been conducted with the combination gel or benzoyl peroxide. Furthermore, such studies are not always predictive of human response; therefore, adapalene and benzoyl peroxide gel 0.1% / 2.5% should be used during pregnancy only if the potential benefit justifies the risk to the fetus.</paragraph>
+                        <paragraph>No teratogenic effects were observed in rats treated with oral doses of 0.15 to 5.0 mg adapalene/kg/day, up to 25 times (mg/m2/day) the maximum recommended human dose (MRHD) of 2 grams of adapalene and benzoyl peroxide gel 0.1% / 2.5%. However, teratogenic changes were observed in rats and rabbits when treated with oral doses of ≥ 25 mg adapalene/kg/day representing 123 and 246 times MRHD, respectively. Findings included cleft palate, microphthalmia, encephalocele and skeletal abnormalities in rats; and umbilical hernia, exophthalmos and kidney and skeletal abnormalities in rabbits.</paragraph>
+                        <paragraph>Dermal teratology studies conducted in rats and rabbits at doses of 0.6 to 6.0 mg adapalene/kg/day [25 to 59 times (mg/m2) the MRHD] exhibited no fetotoxicity and only minimal increases in supernumerary ribs in both species and delayed ossification in rabbits.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+               <component>
+                  <section ID="Section_8.3">
+                     <id root="74afcb2a-07dd-4d24-a66f-7d0eddc8edd6"/>
+                     <code code="34080-2" codeSystem="2.16.840.1.113883.6.1" displayName="NURSING MOTHERS SECTION"/>
+                     <title>
+                        <content styleCode="bold">8.3 Nursing Mothers</content>
+                     </title>
+                     <text>
+                        <paragraph>It is not known whether adapalene or benzoyl peroxide is excreted in human milk following use of adapalene and benzoyl peroxide gel 0.1% / 2.5%. Because many drugs are excreted in human milk, caution should be exercised when adapalene and benzoyl peroxide gel 0.1% / 2.5% is administered to a nursing woman.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+               <component>
+                  <section ID="Section_8.4">
+                     <id root="ff5c23f0-8d9c-44a9-a8a2-6561b2b8803f"/>
+                     <code code="34081-0" codeSystem="2.16.840.1.113883.6.1" displayName="PEDIATRIC USE SECTION"/>
+                     <title>
+                        <content styleCode="bold">8.4 Pediatric Use</content>
+                     </title>
+                     <text>
+                        <paragraph>Safety and effectiveness of adapalene and benzoyl peroxide gel 0.1% / 2.5% in pediatric patients under the age of 9 have not been established.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+               <component>
+                  <section ID="Section_8.5">
+                     <id root="07a364f7-304c-4639-b4d9-2e28b324b7e6"/>
+                     <code code="34082-8" codeSystem="2.16.840.1.113883.6.1" displayName="GERIATRIC USE SECTION"/>
+                     <title>
+                        <content styleCode="bold">8.5 Geriatric Use</content>
+                     </title>
+                     <text>
+                        <paragraph>Clinical studies of adapalene and benzoyl peroxide gel 0.1% / 2.5% did not include sufficient numbers of subjects aged 65 and over to determine whether they respond differently from younger subjects.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_11">
+               <id root="f4b8f0b5-4063-47b5-ae13-1cec7adc0a30"/>
+               <code code="34089-3" codeSystem="2.16.840.1.113883.6.1" displayName="DESCRIPTION SECTION"/>
+               <title>
+                  <content styleCode="bold">11 DESCRIPTION</content>
+               </title>
+               <text>
+                  <paragraph>Adapalene and benzoyl peroxide gel USP, 0.1% / 2.5% is a white to very pale yellow, opaque gel for topical use containing adapalene 0.1% and benzoyl peroxide 2.5%.</paragraph>
+                  <paragraph>Adapalene, a synthetic retinoid, is a naphthoic acid derivative with retinoid-like properties. The chemical name for adapalene is (6-[3-(1-adamantyl)-4-methoxyphenyl]-2-naphthoic acid). It has the following structural formula:</paragraph>
+                  <paragraph>Adapalene:</paragraph>
+                  <paragraph>
+                     <renderMultiMedia referencedObject="MM101"/>
+                     <br/>Molecular formula: C<sub>28</sub>H<sub>28</sub>O<sub/>
+                     <sub>3</sub>     Molecular weight: 412.5</paragraph>
+                  <paragraph>Benzoyl Peroxide is a highly lipophilic oxidizing agent that localizes in both bacterial and keratinocyte cell membranes. The chemical name for benzoyl peroxide is dibenzoyl peroxide. It has the following structural formula:</paragraph>
+                  <paragraph>Benzoyl Peroxide:</paragraph>
+                  <renderMultiMedia referencedObject="MM102"/>
+                  <paragraph>Molecular formula: C<sub>14</sub>H<sub>10</sub>O<sub>4</sub>        Molecular weight: 242.23</paragraph>
+                  <paragraph>Adapalene and benzoyl peroxide gel USP, 0.1% / 2.5% contains the following inactive ingredients: carbopol 980, d-limonene, docusate sodium solution, edetate disodium, glycerin, poloxamer 182, polysorbate 80, propylene glycol, purified water, sodium hydroxide and sorbitan monooleate.</paragraph>
+               </text>
+               <effectiveTime value="20260615"/>
+               <component>
+                  <observationMedia ID="MM101">
+                     <text>adapalene-str-1</text>
+                     <value xsi:type="ED" mediaType="image/jpeg">
+                        <reference value="adapalene-fig-01.jpg"/>
+                     </value>
+                  </observationMedia>
+               </component>
+               <component>
+                  <observationMedia ID="MM102">
+                     <text>bpo-str-fig-2</text>
+                     <value xsi:type="ED" mediaType="image/jpeg">
+                        <reference value="bpo-fig-02.jpg"/>
+                     </value>
+                  </observationMedia>
+               </component>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_12">
+               <id root="2c99eaaa-eb09-4333-b086-67e40e850f96"/>
+               <code code="34090-1" codeSystem="2.16.840.1.113883.6.1" displayName="CLINICAL PHARMACOLOGY SECTION"/>
+               <title>
+                  <content styleCode="bold">12 CLINICAL PHARMACOLOGY</content>
+               </title>
+               <effectiveTime value="20260615"/>
+               <component>
+                  <section ID="Section_12.1">
+                     <id root="e83661f3-4ea4-4b6f-8bff-95da3f8310b1"/>
+                     <code code="43679-0" codeSystem="2.16.840.1.113883.6.1" displayName="MECHANISM OF ACTION SECTION"/>
+                     <title>
+                        <content styleCode="bold">12.1 Mechanism of Action</content>
+                     </title>
+                     <text>
+                        <paragraph>
+                           <content styleCode="italics">Adapalene</content>
+                           <br/>Adapalene binds to specific retinoic acid nuclear receptors but does not bind to cytosolic receptor protein. Biochemical and pharmacological profile studies have demonstrated that adapalene is a modulator of cellular differentiation, keratinization and inflammatory processes. However, the significance of these findings with regard to the mechanism of action of adapalene for the treatment of acne is unknown.</paragraph>
+                        <paragraph>
+                           <content styleCode="italics">Benzoyl peroxide</content>
+                           <br/>
+                           <content styleCode="italics">Benzoyl </content>peroxide is an oxidizing agent with bactericidal and keratolytic effects.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+               <component>
+                  <section ID="Section_12.2">
+                     <id root="ff944114-03a3-4e07-a269-452370ef8a72"/>
+                     <code code="43681-6" codeSystem="2.16.840.1.113883.6.1" displayName="PHARMACODYNAMICS SECTION"/>
+                     <title>
+                        <content styleCode="bold">12.2 Pharmacodynamics</content>
+                     </title>
+                     <text>
+                        <paragraph>Pharmacodynamics of adapalene and benzoyl peroxide gel 0.1% / 2.5% is unknown.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+               <component>
+                  <section ID="Section_12.3">
+                     <id root="acfa139c-75f5-4dc6-8c9e-55997687f026"/>
+                     <code code="43682-4" codeSystem="2.16.840.1.113883.6.1" displayName="PHARMACOKINETICS SECTION"/>
+                     <title>
+                        <content styleCode="bold">12.3 Pharmacokinetics</content>
+                     </title>
+                     <text>
+                        <paragraph>A pharmacokinetic study was conducted in 10 adult subjects with acne vulgaris who were treated once daily for 30 days with 2 grams/day of adapalene and benzoyl peroxide gel 0.1% / 2.5% applied to 1000 cm<sup>2</sup> of acne involved skin, (face, chest, and upper back). Two subjects (20%) had quantifiable adapalene plasma concentrations above the limit of quantification (LOQ=0.1ng/mL). The highest adapalene C<sub>max</sub> and AUC<sub>0-24h</sub> was 0.21 ng/mL and 1.99 ng•h/mL, respectively. Excretion of adapalene appears to be primarily by the biliary route. Pharmacokinetics of adapalene and benzoyl peroxide gel 0.1% / 2.5% in pediatric subjects have not been evaluated.</paragraph>
+                        <paragraph>Benzoyl peroxide is absorbed by the skin where it is converted to benzoic acid and eliminated in the urine.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_13">
+               <id root="cd4d9437-9f2c-4416-ab3b-f30cda916041"/>
+               <code code="43680-8" codeSystem="2.16.840.1.113883.6.1" displayName="NONCLINICAL TOXICOLOGY SECTION"/>
+               <title>
+                  <content styleCode="bold">13 NONCLINICAL TOXICOLOGY</content>
+               </title>
+               <effectiveTime value="20260615"/>
+               <component>
+                  <section ID="Section_13.1">
+                     <id root="3c5e626f-2288-44e2-a125-89e4c8d65743"/>
+                     <code code="34083-6" codeSystem="2.16.840.1.113883.6.1" displayName="CARCINOGENESIS &amp; MUTAGENESIS &amp; IMPAIRMENT OF FERTILITY SECTION"/>
+                     <title>13.1 Carcinogenesis, Mutagenesis, Impairment of Fertility</title>
+                     <text>
+                        <paragraph>No carcinogenicity, photocarcinogenicity, genotoxicity, or fertility studies were conducted with adapalene and benzoyl peroxide gel 0.1% / 2.5%.<br/>
+                           <br/>Carcinogenicity studies with adapalene have been conducted in mice at topical doses of 0.4, 1.3, and 4.0 mg/kg/day (1.2, 3.9, and 12 mg/m2/day), and in rats at oral doses of 0.15, 0.5, and 1.5 mg/kg/day (0.9, 3.0, and 9.0 mg/m2/day). In terms of body surface area, the highest dose levels are 9.8 (mice) and 7.4 times (rats) the MRHD of 2 grams of adapalene and benzoyl peroxide gel 0.1% / 2.5%. In the rat study, an increased incidence of benign and malignant pheochromocytomas in the adrenal medulla of male rats was observed. <br/>
+                           <br/>No significant increase in tumor formation was observed in rodents topically treated with 15 to 25% benzoyl peroxide carbopol gel (6 to 10 times the concentration of benzoyl peroxide in adapalene and benzoyl peroxide gel 0.1% / 2.5%) for two years. Rats received maximum daily applications of 138 (males) and 205 (females) mg benzoyl peroxide/kg. In terms of body surface area, these levels are 27 to 40 times the MRHD. Similar results were obtained in mice topically treated with 25% benzoyl peroxide carbopol gel for 56 weeks followed by intermittent treatment with 15% benzoyl peroxide carbopol gel for the rest of the 2 year study period, and in mice topically treated with 5% benzoyl peroxide carbopol gel for two years. </paragraph>
+                        <paragraph>The role of benzoyl peroxide as a tumor promoter has been well established in several animal species. However, the significance of this finding in humans is unknown.<br/>
+                           <br/>In a photocarcinogenicity study conducted with 5% benzoyl peroxide carbopol gel, no increase in UV-induced tumor formation was observed in hairless mice topically treated for 40 weeks.<br/>
+                           <br/>No photocarcinogenicity studies were conducted with adapalene. However, animal studies have shown an increased tumorigenic risk with the use of pharmacologically similar drugs (e.g., retinoids) when exposed to UV irradiation in the laboratory or sunlight. Although the significance of these findings to humans is not clear, patients should be advised to avoid or minimize exposure to either sunlight or artificial irradiation sources.<br/>
+                           <br/>Adapalene did not exhibit mutagenic or genotoxic effects in vitro (Ames test, Chinese hamster ovary cell assay, mouse lymphoma TK assay) or in vivo (mouse micronucleus test).Bacterial mutagenicity assays (Ames test) with benzoyl peroxide has provided mixed results, mutagenic potential was observed in a few but not in a majority of investigations. Benzoyl peroxide has been shown to produce single-strand DNA breaks in human bronchial epithelial and mouse epidermal cells, it has caused DNA-protein cross-links in the human cells, and has also induced a dose-dependent increase in sister chromatid exchanges in Chinese hamster ovary cells.<br/>
+                           <br/>In rat oral studies, 20 mg adapalene/kg/day (120 mg/m2/day; 98 times the MRHD based on mg/m2/day comparison) did not affect the reproductive performance and fertility of F<sub>0</sub> males and females, or growth, development and reproductive function of F<sub>1</sub> offspring. No fertility studies were conducted with benzoyl peroxide.</paragraph>
+                     </text>
+                     <effectiveTime value="20260615"/>
+                  </section>
+               </component>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_14">
+               <id root="7c632c86-414c-4169-a6ff-d85988079b39"/>
+               <code code="34092-7" codeSystem="2.16.840.1.113883.6.1" displayName="CLINICAL STUDIES SECTION"/>
+               <title>14 CLINICAL STUDIES</title>
+               <text>
+                  <paragraph>The safety and efficacy of adapalene and benzoyl peroxide gel 0.1% / 2.5% applied once daily for the treatment of acne vulgaris were assessed in two 12 week, multicenter, controlled clinical studies of similar design, comparing adapalene and benzoyl peroxide gel 0.1% / 2.5% to the gel vehicle in acne subjects. Treatment response was defined as the percent of subjects who had a two grade improvement and rated ‘Clear’ and ‘Almost Clear’ at Week 12 based on the Investigator’s Global Assessment (IGA) and mean absolute change from baseline at Week 12 in both inflammatory and non-inflammatory lesion counts. An IGA score of ‘Clear’ corresponded to residual hyperpigmentation and erythema may be present. An IGA score of ‘Almost Clear’ corresponded to a few scattered comedones and a few small papules.<br/>
+                  </paragraph>
+                  <paragraph>In Study 1, 517 subjects were randomized to adapalene and benzoyl peroxide gel 0.1% / 2.5%, adapalene 0.1% in vehicle gel, benzoyl peroxide 2.5% in vehicle gel, or vehicle gel. The median age of these 517 subjects was 15 years old and 60% were males.<br/>At baseline, subjects had between 20 to 50 inflammatory lesions and 30 to 100 non-inflammatory lesions. The majority of subjects had a baseline IGA score of ‘Moderate’ which corresponded to more than half of the face is involved, many comedones, papules and pustules. The efficacy results at week 12 are presented in <content styleCode="bold">Table 3</content>.<br/>
+                  </paragraph>
+                  <paragraph>In Study 2, 1668 subjects were randomized to adapalene and benzoyl peroxide gel 0.1% / 2.5%, adapalene 0.1% in vehicle gel, benzoyl peroxide 2.5% in vehicle gel, or vehicle gel. The median age of subjects was 16 years old and 49% were males. At baseline, subjects had between 20 to 50 inflammatory lesions and 30 to 100 non-inflammatory lesions as well as an Investigator Global Assessment score of ‘Moderate’. The efficacy results at week 12 are presented in <content styleCode="bold">Table 3</content>.<br/>
+                  </paragraph>
+                  <paragraph>In Study 3, 285 pediatric subjects 9 to 11 years of age were randomized to adapalene and benzoyl peroxide gel 0.1% / 2.5% or vehicle gel. The median age of subjects was 11 years and 24% were males. At baseline, subjects had a minimum of 20 but not more than 100 total lesions (inflammatory and/or non-inflammatory) with an Investigator Global Assessment score of ‘Moderate’. The efficacy results at week 12 are presented in <content styleCode="bold">Table 3</content>.</paragraph>
+                  <paragraph>
+                     <content styleCode="bold">Table 3: Clinical Efficacy of Adapalene and Benzoyl Peroxide Gel 0.1% / 2.5% at Week 12</content>
+                  </paragraph>
+                  <table width="100%">
+                     <col width="20%" align="left" valign="middle"/>
+                     <col width="20%" align="left" valign="middle"/>
+                     <col width="20%" align="left" valign="middle"/>
+                     <col width="20%" align="left" valign="middle"/>
+                     <col width="20%" align="left" valign="middle"/>
+                     <thead align="center">
+                        <tr>
+                           <th colspan="5" styleCode="Botrule Lrule Rrule Toprule" align="center">
+                              <content styleCode="bold">Study 1</content>
+                           </th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule Toprule" valign="top">
+                              <paragraph/>
+                           </td>
+                           <td styleCode="Botrule Rrule Toprule" align="center">
+                              <paragraph>Adapalene<br/>and Benzoyl<br/>Peroxide Gel<br/>0.1% / 2.5%<br/>(N=149)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule Toprule" align="center">
+                              <paragraph>Adapalene<br/>0.1% in<br/>Vehicle gel<br/>(N=148)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule Toprule" align="center">
+                              <paragraph>Benzoyl<br/>Peroxide<br/>2.5% in<br/>Vehicle gel<br/>(N=149)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule Toprule" align="center">
+                              <paragraph>Vehicle<br/>gel<br/>(N=71)</paragraph>
+                           </td>
+                        </tr>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule" valign="top">
+                              <paragraph>IGA: Two Grade Improvement and Clear or Almost Clear </paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>32<br/>(21.5%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>18<br/>(12.2%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>18<br/>(12.1%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>4<br/>(5.6%)</paragraph>
+                           </td>
+                        </tr>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule" valign="top">
+                              <paragraph>Inflammatory Lesions: Mean Absolute (Percent) Change</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>16.0<br/>(52.4%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>11.4<br/>(39.9%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>10.5<br/>(35.8%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>9.5<br/>(31.8%)</paragraph>
+                           </td>
+                        </tr>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule" valign="top">
+                              <paragraph>Non-inflammatory Lesions: Mean Absolute (Percent) Change</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>23.4<br/>(45.9%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>15.2<br/>(29.6%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>13.7<br/>(32.2%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>13.2<br/>(27.8%)</paragraph>
+                           </td>
+                        </tr>
+                     </tbody>
+                  </table>
+                  <paragraph/>
+                  <table width="100%">
+                     <col width="20%" align="left" valign="middle"/>
+                     <col width="20%" align="left" valign="middle"/>
+                     <col width="20%" align="left" valign="middle"/>
+                     <col width="20%" align="left" valign="middle"/>
+                     <col width="20%" align="left" valign="middle"/>
+                     <thead align="center">
+                        <tr>
+                           <th colspan="5" styleCode="Botrule Lrule Rrule Toprule" align="center">
+                              <content styleCode="bold">Study 2</content>
+                           </th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule Toprule" valign="top">
+                              <paragraph/>
+                           </td>
+                           <td styleCode="Botrule Rrule Toprule" align="center">
+                              <paragraph>Adapalene<br/>and Benzoyl<br/>Peroxide Gel<br/>0.1% / 2.5%<br/>(N=415)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule Toprule" align="center">
+                              <paragraph>Adapalene<br/>0.1% in<br/>Vehicle gel<br/>(N=420)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule Toprule" align="center">
+                              <paragraph>Benzoyl<br/>Peroxide<br/>2.5% in<br/>Vehicle gel<br/>(N=415)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule Toprule" align="center">
+                              <paragraph>Vehicle<br/>gel<br/>(N=418)</paragraph>
+                           </td>
+                        </tr>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule" valign="top">
+                              <paragraph>IGA: Two Grade Improvement and Clear or Almost Clear </paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>  125<br/>(30.1%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 83<br/>(19.8%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>  92<br/>(22.2%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 47<br/>(11.3%)</paragraph>
+                           </td>
+                        </tr>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule" valign="top">
+                              <paragraph>Inflammatory Lesions: Mean Absolute (Percent) Change</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 15.4<br/>(53.4%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 12.3<br/>(41.7%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 13.7<br/>(47.6%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 8.7<br/>(30.2%)</paragraph>
+                           </td>
+                        </tr>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule" valign="top">
+                              <paragraph>Non-inflammatory Lesions: Mean Absolute (Percent) Change</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 24.6<br/>(48.1%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 21.0<br/>(40.8%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph>19.2<br/>(37.2%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 11.3<br/>(23.2%)</paragraph>
+                           </td>
+                        </tr>
+                     </tbody>
+                  </table>
+                  <paragraph>In both Studies 1 and 2 the treatment effect was smaller in subjects with a small number of baseline lesions than in subjects with a large number of baseline lesions.</paragraph>
+                  <table width="100%">
+                     <col width="34%" align="left" valign="middle"/>
+                     <col width="33%" align="left" valign="middle"/>
+                     <col width="33%" align="left" valign="middle"/>
+                     <thead align="center">
+                        <tr>
+                           <th colspan="3" styleCode="Botrule Lrule Rrule Toprule" align="center">
+                              <content styleCode="bold">Study 3</content>
+                           </th>
+                        </tr>
+                     </thead>
+                     <tbody>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule Toprule" valign="top">
+                              <paragraph/>
+                           </td>
+                           <td styleCode="Botrule Rrule Toprule" align="center">
+                              <paragraph>Adapalene and Benzoyl<br/>Peroxide Gel 0.1% / 2.5% <br/>N=142</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule Toprule" align="center">
+                              <paragraph>Vehicle Gel <br/>N=143</paragraph>
+                           </td>
+                        </tr>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule" valign="top">
+                              <paragraph>IGA: Two Grade<br/>Improvement and Clear<br/>or Almost Clear </paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 67 (47.2%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 22 (15.4%)</paragraph>
+                           </td>
+                        </tr>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule" valign="top">
+                              <paragraph>Inflammatory Lesions:<br/>Mean Absolute<br/>(Percent) Change</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 7.4 (36.0%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 0.7 (-13.2%)*</paragraph>
+                           </td>
+                        </tr>
+                        <tr>
+                           <td styleCode="Botrule Lrule Rrule" valign="top">
+                              <paragraph>Non-inflammatory<br/>Lesions: Mean Absolute<br/>(Percent) Change</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 20.2 (54.7%)</paragraph>
+                           </td>
+                           <td styleCode="Botrule Rrule" align="center">
+                              <paragraph> 2.9 (2.3%)</paragraph>
+                           </td>
+                        </tr>
+                     </tbody>
+                  </table>
+                  <paragraph>*That is, a mean percent increase of 13.2%</paragraph>
+               </text>
+               <effectiveTime value="20260615"/>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_17">
+               <id root="66c7564b-eb72-42de-a879-331f660915b9"/>
+               <code code="34069-5" codeSystem="2.16.840.1.113883.6.1" displayName="HOW SUPPLIED SECTION"/>
+               <title>
+                  <content styleCode="bold">16 HOW SUPPLIED/STORAGE AND HANDLING</content>
+               </title>
+               <text>
+                  <paragraph>Adapalene and benzoyl peroxide gel USP, 0.1% / 2.5% is white to very pale yellow in color and opaque in appearance, and is supplied as follows:<br/>
+                     <br/>45 gram pump   NDC 21922-052-50<br/>
+                     <br/>Storage and handling</paragraph>
+                  <list listType="unordered" styleCode="Disc">
+                     <item>Store at 20°C to 25°C (68°F to 77°F); excursions permitted to 15°C to 30°C (59°F to 86°F) [see USP Controlled Room Temperature].</item>
+                     <item>Protect from light.</item>
+                     <item>Keep out of reach of children.</item>
+                     <item>Keep away from heat.</item>
+                  </list>
+               </text>
+               <effectiveTime value="20260615"/>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_16">
+               <id root="01ec9b74-f4ce-4ee1-a942-e9c456596aeb"/>
+               <code code="34076-0" codeSystem="2.16.840.1.113883.6.1" displayName="INFORMATION FOR PATIENTS SECTION"/>
+               <title>
+                  <content styleCode="bold">17 PATIENT COUNSELING INFORMATION</content>
+               </title>
+               <text>
+                  <paragraph>Advise the patient to read the FDA-approved patient labeling (Patient Information)</paragraph>
+                  <paragraph>Information for Patients</paragraph>
+                  <list listType="unordered" styleCode="Disc">
+                     <item>Advise patients to cleanse the area to be treated with a mild or soapless cleanser; pat dry. Apply adapalene and benzoyl peroxide gel 0.1% / 2.5% as a thin layer, avoiding the eyes, lips and mucous membranes.</item>
+                     <item>Advise patients not to use more than the recommended amount and not to apply more than once daily as this will not produce faster results, but may increase irritation.</item>
+                     <item>Adapalene and benzoyl peroxide gel 0.1% / 2.5% may cause irritation such as erythema, scaling, dryness, stinging or burning.</item>
+                     <item>Advise patients to minimize exposure to sunlight, including sunlamps.</item>
+                     <item>Recommend the use of sunscreen products and protective apparel, (e.g., hat) when exposure cannot be avoided.</item>
+                     <item>Adapalene and benzoyl peroxide gel 0.1% / 2.5% may bleach hair and colored fabric.</item>
+                  </list>
+                  <paragraph>Manufactured by:<content styleCode="bold"> Encube Ethicals Private Limited</content>
+                     <br/>Plot No. C-1, Madkaim Industrial Estate, Madkaim,<br/>Post: Mardol, Ponda, Goa - 403 404, India.<br/>
+                     <br/>Distributed by: <content styleCode="bold">Encube Ethicals, Inc.</content>
+                     <br/>200 Meredith Drive, Suite 202, Durham, NC 27713 USA</paragraph>
+               </text>
+               <effectiveTime value="20260615"/>
+            </section>
+         </component>
+         <component>
+            <section ID="Unclassified_Section_6">
+               <id root="cbba5c33-1919-4399-85df-b187b8d5afbf"/>
+               <code code="42230-3" codeSystem="2.16.840.1.113883.6.1" displayName="SPL PATIENT PACKAGE INSERT SECTION"/>
+               <title>
+                  <content styleCode="bold">PATIENT INFORMATION</content>
+               </title>
+               <text>
+                  <paragraph>
+                     <content styleCode="bold">Adapalene (a dap' a leen) and Benzoyl (ben' zoe il) Peroxide Gel USP, 0.1% / 2.5%</content>
+                  </paragraph>
+                  <paragraph>
+                     <content styleCode="bold">Important:</content> For use on the skin only (topical). Do not use adapalene and benzoyl peroxide gel 0.1% / 2.5% in or on your mouth, eyes, or vagina.<br/>Read this Patient Information leaflet about adapalene and benzoyl peroxide gel 0.1% / 2.5% before you start using it and each time you get a refill. There may be new information. This leaflet does not take the place of talking with your doctor about your treatment or your medical condition. If you have any questions about adapalene and benzoyl peroxide gel 0.1% / 2.5%, talk with your doctor or pharmacist.</paragraph>
+                  <paragraph>
+                     <content styleCode="bold">What is adapalene and benzoyl peroxide gel USP, 0.1% / 2.5%?</content>
+                  </paragraph>
+                  <paragraph>Adapalene and benzoyl peroxide gel 0.1% / 2.5% is a prescription medicine for skin use only (topical) used to treat acne vulgaris in people 9 years of age and older.<br/>Acne vulgaris is a condition in which the skin has blackheads, whiteheads and pimples.<br/>It is not known if adapalene and benzoyl peroxide gel 0.1% / 2.5% is safe and effective in children younger than 9 years old.</paragraph>
+                  <paragraph>
+                     <content styleCode="bold">What should I tell my doctor before using adapalene and benzoyl peroxide gel USP, 0.1% / 2.5%?</content>
+                  </paragraph>
+                  <list listType="unordered" styleCode="Disc">
+                     <item>Before you use adapalene and benzoyl peroxide gel 0.1% / 2.5%, tell your doctor if you:<br/>have other skin problems, including cuts or sunburn</item>
+                     <item>have any other medical conditions </item>
+                     <item>are pregnant or planning to become pregnant. It is not known if adapalene and benzoyl peroxide gel 0.1% / 2.5% can harm your unborn baby. Talk to your doctor if you are pregnant or plan to become pregnant.</item>
+                     <item>are breastfeeding or plan to breastfeed. It is not known if adapalene and benzoyl peroxide gel 0.1% / 2.5% passes into your breast milk and if it can harm your baby. Talk to your doctor about the best way to feed your baby if you use adapalene and benzoyl peroxide gel 0.1% / 2.5%.</item>
+                  </list>
+                  <paragraph>
+                     <content styleCode="bold">Tell your doctor about all the medicines you take, </content>including prescription and nonprescription medicines, vitamins and herbal supplements.<br/>Especially tell your doctor if you use any other medicine for acne. Using adapalene and benzoyl peroxide gel 0.1% / 2.5% with topical medicines that contain sulfur, resorcinol or salicylic acid may cause skin irritation.<br/>Know the medicines you take. Keep a list of them to show your doctor and pharmacist when you get a new medicine.</paragraph>
+                  <paragraph>
+                     <content styleCode="bold">How should I use adapalene and benzoyl peroxide gel USP, 0.1% / 2.5%?</content>
+                  </paragraph>
+                  <list listType="unordered" styleCode="Disc">
+                     <item>Use adapalene and benzoyl peroxide gel 0.1% / 2.5% exactly as your doctor tells you to use it. Adapalene and benzoyl peroxide gel 0.1% / 2.5% is for skin use only. Do not use adapalene and benzoyl peroxide gel 0.1% / 2.5% in or on your mouth, eyes, or vagina.</item>
+                     <item>Apply adapalene and benzoyl peroxide gel 0.1% / 2.5% 1 time a day.</item>
+                     <item>Do not use more adapalene and benzoyl peroxide gel 0.1% / 2.5% than you need to cover the treatment area. Using too much adapalene and benzoyl peroxide gel 0.1% / 2.5% or using it more than 1 time a day may increase your chance of skin irritation.</item>
+                  </list>
+                  <paragraph>
+                     <content styleCode="bold">Applying adapalene and benzoyl peroxide gel USP, 0.1% / 2.5%:</content>
+                  </paragraph>
+                  <list listType="unordered" styleCode="Disc">
+                     <item>Wash the area where the gel will be applied with a mild cleanser and pat dry.</item>
+                     <item>Adapalene and benzoyl peroxide gel 0.1% / 2.5% comes in a pump. If you have been prescribed the: <br/>o Pump: Depress the pump to dispense a small amount (about the size of a pea) of adapalene and benzoyl peroxide gel 0.1% / 2.5% and spread a thin layer over the affected area.</item>
+                  </list>
+                  <paragraph>
+                     <content styleCode="bold">What should I avoid while using adapalene and benzoyl peroxide gel USP, 0.1% / 2.5%?</content>
+                  </paragraph>
+                  <list listType="unordered" styleCode="Disc">
+                     <item>You should avoid spending time in sunlight or artificial sunlight, such as tanning beds or sunlamps. Adapalene and benzoyl peroxide gel 0.1% / 2.5% can make your skin sensitive to sun and the light from tanning beds and sunlamps. You should wear sunscreen and wear a hat and clothes that cover the areas treated with adapalene and benzoyl peroxide gel 0.1% / 2.5% if you have to be in sunlight.</item>
+                     <item>You should avoid weather extremes such as wind and cold as this may cause irritation to your skin.</item>
+                     <item>You should avoid applying adapalene and benzoyl peroxide gel 0.1% / 2.5% to cuts, abrasions and sunburned skin.</item>
+                     <item>You should avoid skin products that may dry or irritate your skin such as harsh soaps, astringents, cosmetics that have strong skin drying effects and products containing high levels of alcohol.</item>
+                     <item>You should avoid the use of “waxing” as a hair removal method on skin treated with adapalene and benzoyl peroxide gel 0.1% / 2.5%.Adapalene and benzoyl peroxide gel 0.1% / 2.5% may bleach your clothes or hair. Allow adapalene and benzoyl peroxide gel 0.1% / 2.5% to dry completely before dressing to prevent bleaching of your clothes.</item>
+                  </list>
+                  <paragraph>
+                     <content styleCode="bold">What are the possible side effects of adapalene and benzoyl peroxide gel USP, 0.1% / 2.5%?</content>
+                     <br/>Adapalene and benzoyl peroxide gel 0.1% / 2.5% may cause serious side effects including:</paragraph>
+                  <paragraph>Local skin reactions. Local skin reactions are most likely to happen during the first 4 weeks of treatment and usually lessen with continued use of adapalene and benzoyl peroxide gel 0.1% / 2.5%. Signs and symptoms of local skin reaction include:</paragraph>
+                  <list listType="unordered" styleCode="Disc">
+                     <item>Redness</item>
+                     <item>Dryness</item>
+                     <item>Swelling</item>
+                     <item>Scaling</item>
+                     <item>Stinging or burning</item>
+                  </list>
+                  <paragraph>Tell your doctor right away if these side effects continue for longer than 4 weeks or get worse, you may have to stop using adapalene and benzoyl peroxide gel 0.1% / 2.5%.<br/>Tell your doctor if you have any side effect that bothers you or that does not go away.<br/>These are not all the possible side effects of adapalene and benzoyl peroxide gel 0.1% / 2.5%. For more information, ask your doctor or pharmacist.<br/>Call your doctor for medical advice about side effects. You may report side effects to FDA at 1-800-FDA-1088. You may also report side effects to Encube Ethicals Private Limited, at 1-833-285-4151.</paragraph>
+                  <paragraph>
+                     <content styleCode="bold">How should I store adapalene and benzoyl peroxide gel USP, 0.1% / 2.5%?</content>
+                  </paragraph>
+                  <list listType="unordered" styleCode="Disc">
+                     <item>Store adapalene and benzoyl peroxide gel 0.1% / 2.5% at room temperature, 68° – 77° F (20° – 25° C)</item>
+                     <item>Keep adapalene and benzoyl peroxide gel 0.1% / 2.5% inside container and out of light and away from heat. </item>
+                  </list>
+                  <paragraph>
+                     <content styleCode="bold">  Keep adapalene and benzoyl peroxide gel USP, 0.1% / 2.5% and all medicines out of the reach of children.</content>
+                     <br/>
+                     <content styleCode="bold">General information about adapalene and benzoyl peroxide gel USP, 0.1% / 2.5%</content>
+                     <br/>Medicines are sometimes prescribed for purposes other than those listed in a Patient Information Leaflet. Do not use adapalene and benzoyl peroxide gel 0.1% / 2.5% for a condition for which it was not prescribed. Do not give adapalene and benzoyl peroxide gel 0.1% / 2.5% to other people, even if they have the same symptoms you have. It may harm them.<br/>This Patient Information leaflet summarizes the most important information about adapalene and benzoyl peroxide gel 0.1% / 2.5%. If you would like more information, talk with your doctor. You can also ask your doctor or pharmacist for information about adapalene and benzoyl peroxide gel 0.1% / 2.5% that is written for health professionals.</paragraph>
+                  <paragraph>
+                     <content styleCode="bold">What are the ingredients in adapalene and benzoyl peroxide gel USP, 0.1% / 2.5%?</content>
+                     <br/>Active ingredient: adapalene and benzoyl peroxide <br/>Inactive ingredients: carbopol 980, d-limonene, docusate sodium solution, edetate disodium, glycerin, poloxamer 182, polysorbate 80, propylene glycol, purified water, sodium hydroxide and sorbitan monooleate.</paragraph>
+                  <paragraph>Manufactured by:<br/>
+                     <content styleCode="bold">Encube Ethicals Private Limited</content>
+                     <br/>Plot No. C-1, Madkaim Industrial Estate,<br/>Madkaim, Post: Mardol, Ponda,<br/>Goa - 403 404, India.<br/>Distributed by:<br/>
+                     <content styleCode="bold">Encube Ethicals, Inc.</content>
+                     <br/>200 Meredith Drive, Suite 202<br/>Durham, NC 27713 USA<br/>Issued: 04/2026</paragraph>
+               </text>
+               <effectiveTime value="20260615"/>
+            </section>
+         </component>
+         <component>
+            <section ID="Section_18">
+               <id root="45411003-27ac-44f0-9411-c9f13b9095e8"/>
+               <code code="51945-4" codeSystem="2.16.840.1.113883.6.1" displayName="PACKAGE LABEL.PRINCIPAL DISPLAY PANEL"/>
+               <title>
+                  <content styleCode="bold">PACKAGE LABEL.PRINCIPAL DISPLAY PANEL</content>
+               </title>
+               <text>
+                  <paragraph>
+                     <content styleCode="bold">Carton Label</content>
+                  </paragraph>
+                  <paragraph>NDC 21922-<content styleCode="bold"/>
+                     <content styleCode="bold">052</content>-50</paragraph>
+                  <paragraph>
+                     <content styleCode="bold">Adapalene and Benzoyl Peroxide Gel USP, 0.1%/2.5%</content>
+                  </paragraph>
+                  <paragraph>
+                     <content styleCode="bold">PUMP</content>
+                  </paragraph>
+                  <paragraph>
+                     <content styleCode="bold">FOR TOPICAL USE ONLY</content>
+                  </paragraph>
+                  <paragraph>
+                     <content styleCode="bold">Net Wt. 45g</content>
+                  </paragraph>
+                  <paragraph>
+                     <content styleCode="bold">Rx only</content>
+                  </paragraph>
+                  <renderMultiMedia referencedObject="MM103"/>
+                  <paragraph/>
+               </text>
+               <effectiveTime value="20260615"/>
+               <component>
+                  <observationMedia ID="MM103">
+                     <text>cart</text>
+                     <value xsi:type="ED" mediaType="image/jpeg">
+                        <reference value="cart.jpg"/>
+                     </value>
+                  </observationMedia>
+               </component>
+            </section>
+         </component>
+      </structuredBody>
+   </component>
+</document>
