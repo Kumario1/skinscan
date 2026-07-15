@@ -104,7 +104,9 @@ concern:                              # concern-efficacy labeling (D-023, spec 2
   labeling_model: nvidia/nemotron-3-ultra-550b-a55b:free    # strongest available free MoE; strict JSON verified before full pass
   input_price_per_million: 0.0
   output_price_per_million: 0.0
-  max_budget_usd: 15.0                 # hard ceiling; comfortably below the $100 Azure credit
+  max_budget_usd: 40.0                 # hard cumulative ceiling for calibration + labeling
+  azure_max_requests: 900              # cumulative request ceiling, including failed/retried calls
+  azure_reasoning_effort: medium       # reasoning effort for Azure labeling calls (AZURE_REASONING_EFFORT overrides)
   reviews_per_request: 250             # 202k rows fit inside the 1,000 free requests/day cap
   request_concurrency: 10
   text_truncate_chars: 1200           # review text sent to the labeler is capped here

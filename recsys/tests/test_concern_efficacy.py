@@ -9,7 +9,7 @@ from recsys.knowledge import load_knowledge
 from recsys.signals import (
     ConcernEfficacySignal, ScoringContext, TargetConcern, load_providers,
 )
-from recsys.tools.build_concern_efficacy import build
+from recsys.tools.build_concern_efficacy import PROMPT_VERSION, build
 
 
 DATA = Path(__file__).parents[1] / "data"
@@ -20,7 +20,7 @@ def _record(uid, outcome, skin_type="oily", product_id="p1", has_condition=True)
         "uid": uid,
         "product_id": product_id,
         "skin_type": skin_type,
-        "prompt_version": "p7",
+        "prompt_version": PROMPT_VERSION,
         "status": "ok",
         "labels": [{
             "concern": "acne_comedonal",
@@ -175,15 +175,15 @@ def test_loaded_concern_signal_receives_pooled_review_store(tmp_path):
         "stores": [
             {"name": "concern", "kind": "concern_efficacy", "version": "v1",
              "path": "signals/concern.json", "sha256": sha256_file(concern_path),
-             "status": "active"},
+             "source": {"catalog_sha256": "catalog-1"}, "status": "active"},
             {"name": "review", "kind": "review_stats", "version": "v1",
              "path": "signals/review.json", "sha256": sha256_file(review_path),
-             "status": "active"},
+             "source": {"catalog_sha256": "catalog-1"}, "status": "active"},
         ],
     }
     (signals / "registry.json").write_text(json.dumps(registry))
 
-    providers, _, _ = load_providers(tmp_path)
+    providers, _, _ = load_providers(tmp_path, "catalog-1")
     concern = next(p for p in providers if isinstance(p, ConcernEfficacySignal))
     product = CatalogProduct(
         product_id="p1", name="Test", brand="Test", category="treatment",
