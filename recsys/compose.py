@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 
 from .catalog import CatalogProduct
 from .contracts import SLOTS, Profile
-from .gates import duplicate_active_reasons, profile_gate_reasons
+from .gates import _reason_is_soft, duplicate_active_reasons, profile_gate_reasons
 from .knowledge import Knowledge
 from .scoring import ScoredCandidate
 from .signals import TargetConcern
@@ -91,8 +91,14 @@ def validate_routine(
     k: Knowledge,
     *,
     has_targets: bool,
+    strict: bool = True,
 ) -> list[str]:
-    """Final fail-closed validation over the complete selected regimen."""
+    """Final fail-closed validation over the complete selected regimen.
+
+    strict=True re-vetoes on any gate reason. strict=False (hybrid) only a HARD
+    safety reason makes a step ineligible; soft verification-quality reasons are
+    tolerated here exactly as they were at the gate, so the routine stays valid.
+    """
     reasons: list[str] = []
     by_slot = {step.slot: step for step in routine.steps}
     required = {"cleanser", "moisturizer", "spf"}
@@ -104,7 +110,8 @@ def validate_routine(
         reasons.append("more_than_one_product_per_role")
     for step in routine.steps:
         for reason in profile_gate_reasons(step.scored.product, step.slot, profile, k):
-            reasons.append(f"product_ineligible:{step.scored.product.product_id}:{reason}")
+            if strict or not _reason_is_soft(reason):
+                reasons.append(f"product_ineligible:{step.scored.product.product_id}:{reason}")
         active_set = set(step.scored.product.actives)
         for pair in sorted(k.active_conflicts, key=lambda value: sorted(value)):
             if pair <= active_set:

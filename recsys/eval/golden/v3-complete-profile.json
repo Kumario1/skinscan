@@ -46,6 +46,7 @@
     }
   },
   "engine": {
+    "eligibility_mode": "strict",
     "git_commit": null,
     "version": "0.1.0"
   },
@@ -90,10 +91,12 @@
           },
           "name": "Green Clean Makeup Removing Cleansing Balm",
           "notes": [],
+          "prescription": false,
           "price_usd": 36.0,
           "product_id": "P417238",
           "slot": "cleanser",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.579844,
             "signals": [
@@ -137,10 +140,12 @@
           },
           "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
+          "prescription": false,
           "price_usd": 26.0,
           "product_id": "P188306",
           "slot": "treatment",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.571717,
             "signals": [
@@ -184,10 +189,12 @@
           },
           "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
           "notes": [],
+          "prescription": false,
           "price_usd": 70.0,
           "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.599055,
             "signals": [
@@ -231,10 +238,12 @@
           },
           "name": "Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Niacinamide",
           "notes": [],
+          "prescription": false,
           "price_usd": 38.0,
           "product_id": "P456218",
           "slot": "spf",
           "usage": "AM",
+          "verification": "verified",
           "why": {
             "score": 0.685069,
             "signals": [
@@ -285,10 +294,12 @@
           },
           "name": "Green Clean Makeup Removing Cleansing Balm",
           "notes": [],
+          "prescription": false,
           "price_usd": 36.0,
           "product_id": "P417238",
           "slot": "cleanser",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.579844,
             "signals": [
@@ -332,10 +343,12 @@
           },
           "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
+          "prescription": false,
           "price_usd": 26.0,
           "product_id": "P188306",
           "slot": "treatment",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.571717,
             "signals": [
@@ -379,10 +392,12 @@
           },
           "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
           "notes": [],
+          "prescription": false,
           "price_usd": 70.0,
           "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.599055,
             "signals": [
@@ -452,10 +467,12 @@
           },
           "name": "The Rice Wash Skin-Softening Cleanser",
           "notes": [],
+          "prescription": false,
           "price_usd": 40.0,
           "product_id": "P461537",
           "slot": "cleanser",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.555665,
             "signals": [
@@ -499,10 +516,12 @@
           },
           "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
+          "prescription": false,
           "price_usd": 26.0,
           "product_id": "P188306",
           "slot": "treatment",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.571717,
             "signals": [
@@ -546,10 +565,12 @@
           },
           "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
           "notes": [],
+          "prescription": false,
           "price_usd": 70.0,
           "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.599055,
             "signals": [
@@ -593,10 +614,12 @@
           },
           "name": "Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Niacinamide",
           "notes": [],
+          "prescription": false,
           "price_usd": 38.0,
           "product_id": "P456218",
           "slot": "spf",
           "usage": "AM",
+          "verification": "verified",
           "why": {
             "score": 0.685069,
             "signals": [
@@ -648,10 +671,12 @@
           },
           "name": "The Rice Wash Skin-Softening Cleanser",
           "notes": [],
+          "prescription": false,
           "price_usd": 40.0,
           "product_id": "P461537",
           "slot": "cleanser",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.555665,
             "signals": [
@@ -695,10 +720,12 @@
           },
           "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
+          "prescription": false,
           "price_usd": 26.0,
           "product_id": "P188306",
           "slot": "treatment",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.571717,
             "signals": [
@@ -742,10 +769,12 @@
           },
           "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
           "notes": [],
+          "prescription": false,
           "price_usd": 70.0,
           "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.599055,
             "signals": [
@@ -815,10 +844,12 @@
           },
           "name": "The Rice Wash Skin-Softening Cleanser",
           "notes": [],
+          "prescription": false,
           "price_usd": 40.0,
           "product_id": "P461537",
           "slot": "cleanser",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.555665,
             "signals": [
@@ -862,10 +893,12 @@
           },
           "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
+          "prescription": false,
           "price_usd": 26.0,
           "product_id": "P188306",
           "slot": "treatment",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.571717,
             "signals": [
@@ -909,10 +942,12 @@
           },
           "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
           "notes": [],
+          "prescription": false,
           "price_usd": 70.0,
           "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.599055,
             "signals": [
@@ -956,10 +991,12 @@
           },
           "name": "Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Niacinamide",
           "notes": [],
+          "prescription": false,
           "price_usd": 38.0,
           "product_id": "P456218",
           "slot": "spf",
           "usage": "AM",
+          "verification": "verified",
           "why": {
             "score": 0.685069,
             "signals": [
@@ -1011,10 +1048,12 @@
           },
           "name": "The Rice Wash Skin-Softening Cleanser",
           "notes": [],
+          "prescription": false,
           "price_usd": 40.0,
           "product_id": "P461537",
           "slot": "cleanser",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.555665,
             "signals": [
@@ -1058,10 +1097,12 @@
           },
           "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
           "notes": [],
+          "prescription": false,
           "price_usd": 26.0,
           "product_id": "P188306",
           "slot": "treatment",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.571717,
             "signals": [
@@ -1105,10 +1146,12 @@
           },
           "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
           "notes": [],
+          "prescription": false,
           "price_usd": 70.0,
           "product_id": "P441101",
           "slot": "moisturizer",
           "usage": "AM_PM",
+          "verification": "verified",
           "why": {
             "score": 0.599055,
             "signals": [
