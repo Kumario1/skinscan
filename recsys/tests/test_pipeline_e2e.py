@@ -238,6 +238,67 @@ def test_referral_only_path(tmp_path):
     assert document["framing"]["cosmetic_only"] is True
 
 
+def _derived_root_with_drug(tmp_path, **over):
+    import hashlib
+    derived = tmp_path / "derived"
+    derived.mkdir()
+    (derived / "catalog_full.json").write_bytes(
+        (DATA / "catalog" / "seed_catalog.json").read_bytes()
+    )
+    spl = "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/x.xml"
+    row = {
+        "product_id": "dailymed:x:1:azelaic_acid-20%", "name": "AZELEX",
+        "brand": "DailyMed SPL", "category": "treatment", "price_usd": None,
+        "format": "cream", "inci": [],
+        "inci_sha256": hashlib.sha256(b"[]").hexdigest(),
+        "actives": ["azelaic_acid"], "otc_drug": False, "label_source": spl,
+        "drug_actives": [{"name": "azelaic_acid", "strength": "20%", "source": spl}],
+    }
+    row.update(over)
+    (derived / "catalog_drug.json").write_text(json.dumps(
+        {"schema_version": "recsys-catalog-1", "products": [row]}
+    ))
+    return derived
+
+
+def test_prescription_options_are_listed_for_matching_concerns(tmp_path):
+    document = run(ANALYSIS, FIXTURES / "profile_complete.json",
+                   data_root=_derived_root_with_drug(tmp_path),
+                   generated_at="2026-07-14T00:00:00+00:00", eligibility_mode="hybrid")
+    options = document["prescription_options"]
+    assert [o["name"] for o in options] == ["AZELEX"]
+    assert options[0]["actives"] == [{"name": "azelaic_acid", "strength": "20%"}]
+    assert "acne_comedonal" in options[0]["targets"]
+    assert "doctor" in options[0]["note"]
+    assert document["data_versions"]["drug_catalog"]["prescription"] == 1
+    # D-033 surfaces prescription options; it does not rank them into a routine.
+    placed = {s["product_id"] for r in document["routines"] for s in _steps(r)}
+    assert "dailymed:x:1:azelaic_acid-20%" not in placed
+
+
+def test_a_prescription_is_never_placed_even_when_it_would_win_the_slot(tmp_path):
+    # The seed catalog alone cannot fill 'treatment' for the gentle archetype, so
+    # if placement were merely a matter of ranking, an Rx would take the slot
+    # here. It must stay listed, and the routine must stay honest about the gap.
+    derived = _derived_root_with_drug(tmp_path)
+    document = run(ANALYSIS, FIXTURES / "profile_complete.json", data_root=derived,
+                   generated_at="2026-07-14T00:00:00+00:00", eligibility_mode="hybrid")
+    placed = {s["product_id"] for r in document["routines"] for s in _steps(r)}
+    assert not any(pid.startswith("dailymed:") for pid in placed)
+    assert document["prescription_options"]
+    # an unpriced row never lands in a total
+    for routine in document["routines"]:
+        priced = [s["price_usd"] for s in _steps(routine)]
+        assert all(p is not None for p in priced), routine["archetype"]
+
+
+def test_an_otc_drug_row_is_not_offered_as_a_prescription(tmp_path):
+    document = run(ANALYSIS, FIXTURES / "profile_complete.json",
+                   data_root=_derived_root_with_drug(tmp_path, otc_drug=True),
+                   generated_at="2026-07-14T00:00:00+00:00", eligibility_mode="hybrid")
+    assert document["prescription_options"] == []
+
+
 def test_full_derived_data_root_uses_full_catalog_and_static_knowledge(tmp_path):
     derived = tmp_path / "derived"
     derived.mkdir()

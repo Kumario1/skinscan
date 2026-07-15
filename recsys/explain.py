@@ -99,11 +99,9 @@ def step_to_dict(step: Step, k: Knowledge, profile: Profile) -> dict:
     if verification == "category_derived":
         notes.append("category-derived: role and usage inferred from the product "
                      "category, not individually evidence-verified")
-    # Prescription-strength treatments are recommendable but must route to a
-    # clinician — never presented as a buy-now step. A drug whose label does not
-    # call itself OTC is prescription-strength (D-033); a cosmetic carries no
-    # drug_actives, so it can never be mislabeled by the otc_drug half alone.
-    prescription = bool(product.drug_actives) and product.otc_drug is False
+    # The pipeline lists prescriptions rather than placing them, so this should
+    # stay false; it holds the line if a drug row ever reaches a step.
+    prescription = is_prescription(product)
     if prescription:
         notes.append("prescription — consult a doctor to get this prescribed")
     return {
@@ -132,6 +130,59 @@ def step_to_dict(step: Step, k: Knowledge, profile: Profile) -> dict:
             "uncertainty": _step_uncertainty(step, profile),
         },
     }
+
+
+def is_prescription(product) -> bool:
+    """A drug whose own label does not call it OTC (D-033).
+
+    Both halves matter: a cosmetic carries no drug_actives, so it can never be
+    mislabelled by otc_drug alone.
+    """
+    return bool(product.drug_actives) and product.otc_drug is False
+
+
+def prescription_options(products, targets, k: Knowledge) -> list[dict]:
+    """Prescription-strength products that fit the reported concerns.
+
+    Surfaced for a doctor conversation rather than ranked into the routine
+    (D-033: the app may surface prescription-strength options while advising the
+    user to see a doctor to obtain them). Ranking them against cosmetics would
+    need a claim about prescription-strength efficacy, and which therapies are
+    indicated for which concern is D-029 clinician-gated -- so these are listed,
+    never placed. Only products already past every safety gate reach here.
+    """
+    seen: set = set()
+    options: list[dict] = []
+    for product in products:
+        if not is_prescription(product):
+            continue
+        actives = set(product.actives)
+        targeted = sorted({
+            t.concern for t in targets
+            if actives & set(k.concern_actives.get(t.concern) or ())
+        })
+        if not targeted:
+            continue
+        strengths = tuple(sorted(
+            (str(a.get("name")), str(a.get("strength"))) for a in product.drug_actives
+        ))
+        key = (product.name.strip().lower(), strengths)
+        if key in seen:
+            continue
+        seen.add(key)
+        options.append({
+            "name": product.name,
+            "format": product.format,
+            "actives": [{"name": name, "strength": strength} for name, strength in strengths],
+            "targets": targeted,
+            "why": "Contains " + ", ".join(
+                f"{name.replace('_', ' ')} {strength}" for name, strength in strengths
+            ) + ", at a strength only a prescription can provide.",
+            "label_source": product.label_source,
+            "note": "prescription — a doctor or dermatologist can advise on and prescribe this",
+        })
+    options.sort(key=lambda item: (item["targets"], item["name"]))
+    return options
 
 
 def safety_checks(routine: ComposedRoutine, k: Knowledge) -> list[dict]:

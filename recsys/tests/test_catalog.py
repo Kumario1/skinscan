@@ -25,6 +25,47 @@ def test_parse_ingredients_real_dump_forms():
     assert flags == ["coconut_oil"]
 
 
+SPL = "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/set.xml"
+EMPTY_INCI_SHA = "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+
+
+def _drug_row(**over):
+    row = {
+        "product_id": "dailymed:set:0-1:tretinoin-0.05%",
+        "name": "Retin-A", "brand": "DailyMed SPL", "category": "treatment",
+        "price_usd": None, "inci": [], "inci_sha256": EMPTY_INCI_SHA,
+        "actives": ["tretinoin"], "otc_drug": False, "label_source": SPL,
+        "drug_actives": [{"name": "tretinoin", "strength": "0.05%", "source": SPL}],
+    }
+    row.update(over)
+    return row
+
+
+def test_drug_row_derives_actives_from_the_label_not_an_inci_list():
+    # A drug label publishes no INCI, but names each active with an exact
+    # strength and cites the label it came from -- stronger than a parsed string.
+    from recsys.catalog import CatalogProduct
+    product = CatalogProduct.from_dict(_drug_row())
+    assert product.actives == ("tretinoin",)
+    assert product.otc_drug is False and product.price_usd is None
+
+
+def test_label_exemption_does_not_leak_to_a_product_citing_another_source():
+    # Anything not citing the regulatory label falls back to the INCI rule, so
+    # actives=['tretinoin'] with an empty INCI must fail closed.
+    from recsys.catalog import CatalogProduct
+    for bad in (
+        {"label_source": "https://brand.example.com/product"},   # not the label host
+        {"label_source": "http://dailymed.nlm.nih.gov/spl.xml"},  # not https
+        {"drug_actives": [{"name": "tretinoin", "source": SPL}]},  # no strength
+        {"drug_actives": [{"name": "tretinoin", "strength": "0.05%",
+                           "source": "https://brand.example.com/x"}]},  # unsourced active
+        {"drug_actives": []},                                      # asserted, not stated
+    ):
+        with pytest.raises(ContractViolation):
+            CatalogProduct.from_dict(_drug_row(**bad))
+
+
 def test_seed_catalog_valid_and_covering():
     products, header = load_catalog(DATA / "catalog" / "seed_catalog.json")
     assert header["source"]["dataset"] == "kaggle-sephora"
