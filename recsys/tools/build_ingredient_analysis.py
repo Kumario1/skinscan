@@ -210,7 +210,7 @@ def label_product(product: dict, model: str, session=None, sleep=time.sleep,
 
 def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
           model: str, max_new_labels: int = 100, concurrency: int = 1,
-          products_per_request: int = 10) -> dict:
+          products_per_request: int = 10, min_coverage: float = 0.95) -> dict:
     products, _header = load_catalog(catalog_path)
     product_rows = [product.to_dict() for product in products]
     cache = read_cache(cache_path)
@@ -242,11 +242,24 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
                 append_cache(cache_path, entry)
                 cache[(product["product_id"], product["inci_sha256"],
                        PROMPT_VERSION, model)] = entry
+    # Free-tier rate limits fail whole batches transiently; the same products
+    # succeed on a later resume. Write the store from whatever is cached once
+    # coverage clears the floor, and only abort when coverage is genuinely low
+    # (a real, non-transient problem) rather than on any single failure.
+    covered = sum(
+        (product["product_id"], product["inci_sha256"], PROMPT_VERSION, model) in cache
+        for product in product_rows
+    )
+    coverage = covered / max(1, len(product_rows))
     if failures:
-        raise RuntimeError(
-            f"ingredient analysis failed for {len(failures)} products; rerun resumes cache: "
-            + ", ".join(product_id for product_id, _error in failures[:10])
-        )
+        head = ", ".join(product_id for product_id, _error in failures[:10])
+        if coverage < min_coverage:
+            raise RuntimeError(
+                f"ingredient analysis coverage {coverage:.1%} below {min_coverage:.0%} "
+                f"floor ({len(failures)} unlabeled, e.g. {head}); rerun resumes cache"
+            )
+        print(f"warning: {len(failures)} products still unlabeled at {coverage:.1%} "
+              f"coverage; writing store from cache, rerun resumes: {head}")
 
     entries = []
     for product in product_rows:
@@ -281,7 +294,8 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
                 "prompt_version": PROMPT_VERSION},
         coverage={"products": len(entries), "catalog_products": len(product_rows)},
     )
-    log = {"products_covered": len(entries), "cache_entries": len(cache)}
+    log = {"products_covered": len(entries), "cache_entries": len(cache),
+           "coverage": round(coverage, 4), "unlabeled": len(failures)}
     print(log)
     return log
 
@@ -297,11 +311,15 @@ def main(argv=None) -> int:
                         help="paid-call guard; raise explicitly for larger runs")
     parser.add_argument("--concurrency", type=int, default=1)
     parser.add_argument("--products-per-request", type=int, default=10)
+    parser.add_argument("--min-coverage", type=float, default=0.95,
+                        help="write the store once this fraction of the catalog is "
+                             "cached, even if some products remain rate-limited")
     args = parser.parse_args(argv)
     cache_path = args.cache or args.data_root / "cache" / "ingredient_analysis_cache.jsonl"
 
     build(args.catalog, args.out, args.data_root, cache_path, args.model,
-          args.max_new_labels, args.concurrency, args.products_per_request)
+          args.max_new_labels, args.concurrency, args.products_per_request,
+          args.min_coverage)
     return 0
 
 
