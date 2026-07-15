@@ -16,7 +16,7 @@ from pathlib import Path
 from ..contracts import sha256_file
 from .common import STORE_SCHEMA_VERSION, register_store, write_json
 
-PROMPT_VERSION = "p9"
+PROMPT_VERSION = "p10"
 BUILDER = "recsys.tools.build_concern_efficacy@1"
 ACNE_CONCERNS = frozenset((
     "acne_comedonal", "acne_inflammatory", "acne_cystic", "acne_general",

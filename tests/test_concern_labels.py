@@ -327,6 +327,95 @@ def test_literal_policy_does_not_spread_prevention_to_existing_subtypes():
     ]
 
 
+def test_literal_policy_treats_post_discontinuation_breakout_as_helped():
+    actual = enforce_literal_policy(
+        "No breakouts whatsoever while I used it. A week after I finished the "
+        "bottle my face has broken out badly.",
+        [_label("acne_general", "worsened", True)],
+    )
+    assert actual == [_label("acne_general", "helped", True)]
+
+
+def test_literal_policy_marks_purging_unclear_unless_worse():
+    purging = enforce_literal_policy(
+        "A decent amount of pimples popped up after, probably skin purging.",
+        [_label("acne_inflammatory", "worsened", True)],
+    )
+    rejected = enforce_literal_policy(
+        "It caused the worst cystic acne of my life. I thought my skin was "
+        "purging but that stage never ended.",
+        [_label("acne_cystic", "worsened", True)],
+    )
+    assert purging == [_label("acne_inflammatory", "unclear", True)]
+    assert rejected == [_label("acne_cystic", "worsened", True)]
+
+
+def test_literal_policy_marks_multi_product_set_credit_unclear():
+    actual = enforce_literal_policy(
+        "I used to flare up with breakouts but these two items are perfect "
+        "for me.",
+        [_label("acne_general", "helped", True)],
+    )
+    assert actual == [_label("acne_general", "unclear", True)]
+
+
+def test_literal_policy_keeps_goal_statements_out_of_helped():
+    actual = enforce_literal_policy(
+        "I bought this with an emphasis on clearing up the blackheads on my "
+        "nose.",
+        [_label("acne_comedonal", "helped", True)],
+    )
+    assert actual == [_label("acne_comedonal", "unclear", True)]
+
+
+def test_literal_policy_hypothetical_worry_is_not_a_condition():
+    actual = enforce_literal_policy(
+        "I was concerned this rich cream might break me out.",
+        [_label("acne_general", "unclear", True)],
+    )
+    assert actual == [_label("acne_general", "unclear", False)]
+
+
+def test_literal_policy_as_sometimes_i_do_admits_condition():
+    actual = enforce_literal_policy(
+        "It didn't break me out or irritate me (as sometimes I do from new "
+        "products).",
+        [_label("acne_general", "helped", False)],
+    )
+    assert actual == [_label("acne_general", "helped", True)]
+
+
+def test_literal_policy_spreads_caused_breakout_to_enumerated_lesions():
+    actual = enforce_literal_policy(
+        "This caused crazy break outs. I have red bumps across my forehead as "
+        "well as multiple white head zits.",
+        [_label("acne_general", "worsened", True),
+         _label("acne_inflammatory", "worsened", True)],
+    )
+    assert actual == [
+        _label("acne_comedonal", "worsened", True),
+        _label("acne_inflammatory", "worsened", True),
+        _label("acne_general", "worsened", True),
+    ]
+
+
+def test_literal_policy_recognizes_bare_scars_pigmentation_and_drier():
+    pigment = enforce_literal_policy(
+        "My pigmentation from old breakouts did not diminish at all.",
+        [_label("acne_general", "unclear", True)],
+    )
+    assert _label("hyperpigmentation", "unclear", True) in pigment
+    scares = enforce_literal_policy(
+        "I have to admit my acne scares are fading fast.", [],
+    )
+    assert scares == [_label("hyperpigmentation", "helped", True)]
+    drier = enforce_literal_policy(
+        "Now that I have drier skin I was wary. Great results and NO flaking.",
+        [_label("dryness", "unclear", False)],
+    )
+    assert drier == [_label("dryness", "unclear", True)]
+
+
 def test_literal_policy_does_not_propagate_acne_outcome_to_pimples():
     actual = enforce_literal_policy(
         "This cleared my acne. I still have pimples.",
@@ -522,6 +611,14 @@ def test_azure_reasoning_effort_configurable_default_medium(monkeypatch, tmp_pat
                                     usage_path=tmp_path / "u1.jsonl")
     labeler.submit([row])
     assert session.request["json"]["reasoning"] == {"effort": "medium"}
+    assert session.request["json"]["max_output_tokens"] == 120 + 16_000
+
+    monkeypatch.setenv("AZURE_REASONING_EFFORT", "minimal")
+    session = Session()
+    labeler = AzureResponsesLabeler("gpt-5-mini", tmp_path / "s0", 250, 1, session,
+                                    usage_path=tmp_path / "u0.jsonl")
+    labeler.submit([row])
+    assert session.request["json"]["max_output_tokens"] == 120
 
     monkeypatch.setenv("AZURE_REASONING_EFFORT", "high")
     session = Session()
