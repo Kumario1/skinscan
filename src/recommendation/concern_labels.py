@@ -34,7 +34,7 @@ CONCERNS = [
 ACNE_CONCERNS = CONCERNS[:4]
 VALID_OUTCOMES = {"helped", "worsened", "unclear"}
 COMPACT_OUTCOMES = ["helped", "worsened", "unclear"]
-PROMPT_VERSION = "p10"
+PROMPT_VERSION = "p11"
 
 USECOLS = ["author_id", "rating", "is_recommended", "skin_tone", "skin_type",
            "product_id", "review_text", "review_title"]
@@ -81,7 +81,12 @@ def _batch_schema(uids: list[str]) -> dict:
 
 
 def _compact_batch_schema(row_count: int) -> dict:
-    """Three-character labels reduce paid output tokens; cache stays canonical."""
+    """Three-character labels reduce paid output tokens; cache stays canonical.
+
+    Each result carries its input index ``i`` so attribution survives any model
+    reordering — positional zipping silently mislabels reviews if the model
+    emits rows out of order (or drops one and pads another).
+    """
     codes = [
         f"{concern}{outcome}{condition}"
         for concern in range(len(CONCERNS))
@@ -92,9 +97,17 @@ def _compact_batch_schema(row_count: int) -> dict:
         "type": "object",
         "properties": {"r": {
             "type": "array",
-            "items": {"type": "array", "items": {
-                "type": "string", "enum": codes,
-            }},
+            "items": {
+                "type": "object",
+                "properties": {
+                    "i": {"type": "integer", "enum": list(range(row_count))},
+                    "c": {"type": "array", "items": {
+                        "type": "string", "enum": codes,
+                    }},
+                },
+                "required": ["i", "c"],
+                "additionalProperties": False,
+            },
             "minItems": row_count,
             "maxItems": row_count,
         }},
@@ -270,14 +283,19 @@ def _concern_sentences(text: str, concern: str) -> list[str]:
     matches = [sentence.strip() for sentence in re.split(r"[.!?]+", text)
                if pattern.search(sentence)]
     if concern == "dryness":
-        matches = [sentence for sentence in matches
-                   if not (re.search(r"\b(?:once dry|let it dry|dr(?:y|ies) down|dry finish)\b",
-                                     sentence, re.I)
-                           and not re.search(r"\b(?:skin|face|cheeks?|jawline|patches|dryness|drying)\b",
-                                             sentence, re.I))
-                   and not (re.search(r"\b(?:plastic|tube|bottle|container)\b", sentence, re.I)
-                            and not re.search(r"\b(?:skin|face|cheeks?|jawline|patches|dryness)\b",
-                                              sentence, re.I))]
+        # A skin/dryness signal always qualifies. Otherwise drop sentences where
+        # "dry"/"drying" only describes the product's set/finish or its packaging
+        # ("quick drying formula", "dries down", "dry finish", plastic tube).
+        skin_word = re.compile(
+            r"\b(?:skin|face|cheeks?|jawline|forehead|nose|chin|lips?|hands?|"
+            r"patches|areas?|complexion|dryness|drier|dehydrat\w*|flak\w*)\b", re.I)
+        texture = re.compile(
+            r"\b(?:quick|fast|air)[\s-]*dry\w*|\bdry\w*\s+(?:formula|time|finish|down)\b|"
+            r"\bdr(?:y|ies)\s+(?:down|quickly|fast)\b|\b(?:once dry|let it dry)\b", re.I)
+        container = re.compile(r"\b(?:plastic|tube|bottle|container)\b", re.I)
+        matches = [s for s in matches
+                   if skin_word.search(s)
+                   or (not texture.search(s) and not container.search(s))]
     return matches
 
 
@@ -291,10 +309,15 @@ def _direct_worsening(concern: str, joined: str, full_text: str | None = None) -
     if re.search(r"\b(?:no|not|non)\s+drying\b", joined, re.I):
         return False
     # Worsening reported after the reviewer stopped/finished the product is
-    # absence-of-product evidence, not product-caused worsening.
-    if re.search(r"\b(?:since|after|once)\b[^.!?]{0,30}"
-                 r"\b(?:finish\w*|stopp\w*|ran out|run out|used (?:it |them )?(?:all )?up)\b",
-                 joined, re.I):
+    # absence-of-product evidence, not product-caused worsening — unless the
+    # same text also explicitly attributes worsening to the product itself.
+    if (re.search(r"\b(?:since|after|once)\b[^.!?]{0,30}"
+                  r"\b(?:finish\w*|stopp\w*|ran out|run out|used (?:it |them )?(?:all )?up)\b",
+                  joined, re.I)
+            and not re.search(
+                r"\b(?:this|it|the product|the cream|the serum|the mask|the moisturizer)\b"
+                r"[^.!?]{0,40}\b(?:caus\w*|clog\w*|gave me|broke me out|made)\b",
+                joined, re.I)):
         return False
     term = _CONCERN_TERMS[concern]
     source = joined
@@ -413,7 +436,13 @@ def _explicit_outcome(concern: str, sentences: list[str], full_text: str | None 
     if concern == "dryness" and re.search(r"\bhydrat\w* enough for dry skin\b", joined, re.I):
         helped = False
         unclear_signal = True
-    if _NO_EFFECT.search(joined) and not prevention and (not helped or concern == "acne_comedonal") and not re.search(
+    strong_no_effect = re.search(
+        r"\b(?:no effect|no difference|no improvement|didn['’]?t see|did not see|"
+        r"doesn['’]?t do|does not do|not doing anything|nothing)\b", joined, re.I)
+    # A genuine benefit is only overridden for comedonal by a STRONG no-effect
+    # phrase; bare modals (may/might/could) must not downgrade "helped".
+    comedonal_override = concern == "acne_comedonal" and bool(strong_no_effect)
+    if _NO_EFFECT.search(joined) and not prevention and (not helped or comedonal_override) and not re.search(
             r"\b(?:this|it|the product)\b[^.!?]{0,45}"
             r"(?:help\w*|clear\w*|reduc\w*|fad\w*|got(?:ten)? rid)\w*\b",
             joined, re.I,
@@ -620,8 +649,14 @@ def enforce_literal_policy(text: str, labels: list[dict]) -> list[dict]:
         for concern in ("acne_comedonal", "acne_inflammatory", "acne_cystic"):
             label = by_concern.get(concern)
             joined = " ".join(sentences[concern])
+            # Only spread to lesions described as part of an active outbreak
+            # ("all over / across my ...") — not an incidental "on my nose" — and
+            # never to a habitual/pre-existing lesion the reviewer always has.
             if (label is not None and label["outcome"] == "unclear"
-                    and re.search(r"\b(?:all over|across|on)\s+my\b", joined, re.I)
+                    and re.search(r"\b(?:all over|across)\s+my\b", joined, re.I)
+                    and not re.search(r"\b(?:always|usually|normally|typically|"
+                                      r"still|used to)\b[^.!?]{0,20}\b(?:get|have|had)\b",
+                                      joined, re.I)
                     and not _absent_condition(concern, joined)):
                 label["outcome"] = "worsened"
 
@@ -1010,6 +1045,7 @@ class AzureResponsesLabeler(OpenRouterLabeler):
         self.timeout = int(timeout or os.environ.get("AZURE_TIMEOUT_SECONDS") or 600)
         self._usage_lock = threading.RLock()
         self._reservations: dict[str, float] = {}
+        self._ceilings: dict[str, tuple[int, int]] = {}
 
     @staticmethod
     def _output_text(data: dict) -> str:
@@ -1033,8 +1069,10 @@ class AzureResponsesLabeler(OpenRouterLabeler):
             + ", ".join(f"{i}={value}" for i, value in enumerate(CONCERNS))
             + ". Outcome codes: "
             + ", ".join(f"{i}={value}" for i, value in enumerate(COMPACT_OUTCOMES))
-            + ". Return r with exactly one inner label-code array per input, "
-            "in the same order as the input lines. Use [] when no concern is mentioned."
+            + ". Return r as an array of objects, exactly one per input line: "
+            "each is {\"i\": that input line's i, \"c\": its label-code array}. "
+            "Include every input index exactly once. Use \"c\": [] when no "
+            "concern is mentioned."
         )
         max_output_tokens = 120 * len(rows)
         if self.reasoning_effort != "minimal":
@@ -1058,8 +1096,12 @@ class AzureResponsesLabeler(OpenRouterLabeler):
             body["reasoning"] = {"effort": self.reasoning_effort}
         response = None
         data = {}
-        request_id = uuid4().hex
-        reservation_error = self._reserve_request(body, request_id)
+        # The reservation is keyed by a stable local id; the ledger row later
+        # adopts Azure's response id, so keep the reservation key separate or the
+        # in-flight hold leaks and eventually trips the budget ceiling falsely.
+        reservation_key = uuid4().hex
+        request_id = reservation_key
+        reservation_error = self._reserve_request(body, reservation_key)
         if reservation_error is not None:
             return [(uid, None, reservation_error) for uid in uids]
         status = "failed"
@@ -1079,18 +1121,26 @@ class AzureResponsesLabeler(OpenRouterLabeler):
             encoded_rows = parsed["r"]
             if len(encoded_rows) != len(uids):
                 raise ValueError("Azure response row count did not match input")
+            by_index: dict[int, list] = {}
+            for item in encoded_rows:
+                index = item["i"]
+                if index in by_index:
+                    raise ValueError("Azure response repeated a row index")
+                by_index[index] = item["c"]
+            if set(by_index) != set(range(len(uids))):
+                raise ValueError("Azure response index set did not match input")
             decoded_rows = [[{
                 "concern": CONCERNS[int(code[0])],
                 "outcome": COMPACT_OUTCOMES[int(code[1])],
                 "reviewer_has_condition": code[2] == "1",
-            } for code in codes] for codes in encoded_rows]
+            } for code in by_index[index]] for index in range(len(uids))]
             status = "succeeded"
             return [(uid, json.dumps({"labels": decoded_rows[index]}), None)
                     for index, uid in enumerate(uids)]
         except Exception as exc:
             return [(uid, None, type(exc).__name__) for uid in uids]
         finally:
-            self._append_usage(rows, data, request_id, status)
+            self._append_usage(rows, data, request_id, status, reservation_key)
 
     def _reserve_request(self, body: dict, request_id: str) -> str | None:
         """Reserve a conservative per-request ceiling before HTTP submission.
@@ -1126,6 +1176,7 @@ class AzureResponsesLabeler(OpenRouterLabeler):
                     + reserved_cost > self.max_budget_usd):
                 return "budget_ceiling"
             self._reservations[request_id] = reserved_cost
+            self._ceilings[request_id] = (input_ceiling, output_ceiling)
         return None
 
     @staticmethod
@@ -1134,12 +1185,21 @@ class AzureResponsesLabeler(OpenRouterLabeler):
         return str(data.get("id") or headers.get("x-request-id")
                    or headers.get("request-id") or fallback)
 
-    def _append_usage(self, rows, data: dict, request_id: str, status: str) -> None:
+    def _append_usage(self, rows, data: dict, request_id: str, status: str,
+                      reservation_key: str | None = None) -> None:
         if not isinstance(data, dict):
             data = {}
         usage = data.get("usage") or {}
-        input_tokens = usage.get("input_tokens", usage.get("prompt_tokens", 0))
-        output_tokens = usage.get("output_tokens", usage.get("completion_tokens", 0))
+        if usage:
+            input_tokens = usage.get("input_tokens", usage.get("prompt_tokens", 0))
+            output_tokens = usage.get("output_tokens", usage.get("completion_tokens", 0))
+        else:
+            # No usage block (timeout or error body). Azure may still have
+            # generated and billed the response, so record the conservative
+            # reserved ceiling rather than $0 — never under-count spend against
+            # the cumulative budget.
+            input_tokens, output_tokens = self._ceilings.get(
+                reservation_key, (0, 0))
         record = {
             "provider": self.provider,
             "model": self.model,
@@ -1154,7 +1214,8 @@ class AzureResponsesLabeler(OpenRouterLabeler):
         self.usage_path.parent.mkdir(parents=True, exist_ok=True)
         with self._usage_lock, self.usage_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(record, sort_keys=True) + "\n")
-            self._reservations.pop(request_id, None)
+            self._reservations.pop(reservation_key, None)
+            self._ceilings.pop(reservation_key, None)
 
 
 def _azure_settings() -> tuple[str, str, str] | None:
@@ -1507,10 +1568,14 @@ def _require_calibration_report(ccfg) -> dict:
         audited_rows_pass = int(audited_rows) >= 50
     except (TypeError, ValueError):
         agreement_pass = audited_rows_pass = False
-    if not (yield_pass and agreement_pass and audited_rows_pass):
+    # The sign-off must certify the CURRENT policy/prompt version; a stale report
+    # from an earlier version cannot approve a changed labeler (cf. the P3 gate).
+    version_pass = report.get("prompt_version") == PROMPT_VERSION
+    if not (yield_pass and agreement_pass and audited_rows_pass and version_pass):
         raise RuntimeError(
             "P2 sign-off calibration report failed: requires yield PASS, "
-            "measured agreement >=0.85, and audited rows >=50"
+            "measured agreement >=0.85, audited rows >=50, and a report whose "
+            f"prompt_version matches {PROMPT_VERSION!r}"
         )
     return report
 

@@ -416,6 +416,58 @@ def test_literal_policy_recognizes_bare_scars_pigmentation_and_drier():
     assert drier == [_label("dryness", "unclear", True)]
 
 
+def test_literal_policy_bare_modal_does_not_downgrade_comedonal_helped():
+    # "may buy again" is a repurchase modal, not a no-effect signal; a genuine
+    # comedonal benefit must survive it (previously the comedonal special-case
+    # let any _NO_EFFECT word downgrade even a real "helped").
+    helped = enforce_literal_policy(
+        "Blackheads are much smaller, may buy again.",
+        [_label("acne_comedonal", "helped", True)],
+    )
+    assert helped == [_label("acne_comedonal", "helped", True)]
+
+
+def test_literal_policy_lesion_spread_ignores_habitual_mentions():
+    # An incidental/habitual "blackhead on my nose" must NOT inherit worsening
+    # from a co-occurring product-caused breakout.
+    incidental = enforce_literal_policy(
+        "This caused breakouts! I always get a blackhead on my nose.",
+        [_label("acne_general", "worsened", True),
+         _label("acne_comedonal", "unclear", True)],
+    )
+    assert _label("acne_comedonal", "unclear", True) in incidental
+    # A lesion enumerated across the active outbreak still inherits worsening.
+    enumerated = enforce_literal_policy(
+        "Caused crazy break outs. I have red bumps all over my forehead as "
+        "well as whiteheads.",
+        [_label("acne_general", "worsened", True),
+         _label("acne_comedonal", "unclear", True)],
+    )
+    assert _label("acne_comedonal", "worsened", True) in enumerated
+
+
+def test_literal_policy_ignores_product_texture_drying():
+    assert enforce_literal_policy(
+        "This quick drying formula is lightweight and never greasy.", [],
+    ) == []
+    # a real skin-dryness mention is still captured
+    assert enforce_literal_policy(
+        "This quick-drying formula still left my skin dry.", [],
+    ) == [_label("dryness", "worsened", True)]
+
+
+def test_literal_policy_discontinuation_does_not_mask_explicit_product_cause():
+    # The "since I finished my antibiotics" discontinuation clause must not
+    # suppress worsening the reviewer explicitly attributes to this product.
+    actual = enforce_literal_policy(
+        "Since I finished my antibiotics my acne flared, but this cream also "
+        "clogged my pores.",
+        [_label("acne_comedonal", "worsened", True)],
+    )
+    by = {l["concern"]: l["outcome"] for l in actual}
+    assert by.get("acne_comedonal") == "worsened"
+
+
 def test_literal_policy_does_not_propagate_acne_outcome_to_pimples():
     actual = enforce_literal_policy(
         "This cleared my acne. I still have pimples.",
@@ -534,7 +586,7 @@ def test_azure_responses_grouped_results_are_spooled(monkeypatch, tmp_path):
             pass
 
         def json(self):
-            results = [["001"] for _row_value in rows]
+            results = [{"i": i, "c": ["001"]} for i, _row_value in enumerate(rows)]
             return {
                 "output_text": json.dumps({"r": results}),
                 "usage": {"input_tokens": 100, "output_tokens": 40},
@@ -575,7 +627,9 @@ def test_azure_responses_grouped_results_are_spooled(monkeypatch, tmp_path):
     assert "r" in body["text"]["format"]["schema"]["properties"]
     result_schema = body["text"]["format"]["schema"]["properties"]["r"]
     assert result_schema["minItems"] == result_schema["maxItems"] == 2
-    assert "001" in result_schema["items"]["items"]["enum"]
+    item_props = result_schema["items"]["properties"]
+    assert item_props["i"]["enum"] == [0, 1]
+    assert "001" in item_props["c"]["items"]["enum"]
     assert [json.loads(line) for line in body["input"].splitlines()] == [
         {"i": 0, "text": rows[0]["text"]},
         {"i": 1, "text": rows[1]["text"]},
@@ -586,6 +640,87 @@ def test_azure_responses_grouped_results_are_spooled(monkeypatch, tmp_path):
     assert json.loads((tmp_path / "usage.jsonl").read_text())["output_tokens"] == 40
 
 
+def test_azure_decodes_by_index_and_survives_reordering(monkeypatch, tmp_path):
+    rows = [_row("a0", "PA", "cleared my blackheads"),
+            _row("a1", "PA", "this broke me out")]
+
+    class Response:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            # returned out of input order: index 1 first, then index 0
+            return {"output_text": json.dumps({"r": [
+                {"i": 1, "c": ["301"]},   # acne_general worsened
+                {"i": 0, "c": ["001"]},   # acne_comedonal helped
+            ]}), "usage": {"input_tokens": 10, "output_tokens": 8}}
+
+    class Session:
+        def post(self, *args, **kwargs):
+            return Response()
+
+    monkeypatch.setenv("AZURE_KEY", "k")
+    monkeypatch.setenv("TARGET_URL", "https://x.openai.azure.com/openai/responses")
+    labeler = AzureResponsesLabeler("gpt-5-mini", tmp_path / "s", 250, 1, Session(),
+                                    usage_path=tmp_path / "u.jsonl")
+    bid = labeler.submit(rows)
+    by_uid = {uid: json.loads(payload)["labels"][0]["concern"]
+              for uid, payload, err in labeler.fetch(bid) if err is None}
+    # each uid gets ITS OWN label despite the model's reordering
+    assert by_uid[rows[0]["uid"]] == "acne_comedonal"
+    assert by_uid[rows[1]["uid"]] == "acne_general"
+
+
+def test_azure_rejects_mismatched_index_set(monkeypatch, tmp_path):
+    rows = [_row("a0", "PA", "cleared my blackheads"),
+            _row("a1", "PA", "this broke me out")]
+
+    class Response:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            # duplicate index 0, missing index 1
+            return {"output_text": json.dumps({"r": [
+                {"i": 0, "c": ["001"]}, {"i": 0, "c": ["301"]},
+            ]}), "usage": {"input_tokens": 10, "output_tokens": 8}}
+
+    class Session:
+        def post(self, *args, **kwargs):
+            return Response()
+
+    monkeypatch.setenv("AZURE_KEY", "k")
+    monkeypatch.setenv("TARGET_URL", "https://x.openai.azure.com/openai/responses")
+    labeler = AzureResponsesLabeler("gpt-5-mini", tmp_path / "s", 250, 1, Session(),
+                                    usage_path=tmp_path / "u.jsonl")
+    bid = labeler.submit(rows)
+    # a corrupt index set must NOT be cached as labels — every row errors
+    assert all(err is not None for _uid, _payload, err in labeler.fetch(bid))
+
+
+def test_azure_timeout_records_ceiling_not_zero(monkeypatch, tmp_path):
+    row = _row("a0", "PA", "cleared my blackheads")
+
+    class Boom:
+        def post(self, *args, **kwargs):
+            raise RuntimeError("timed out")   # no response body, no usage
+
+    monkeypatch.setenv("AZURE_KEY", "k")
+    monkeypatch.setenv("TARGET_URL", "https://x.openai.azure.com/openai/responses")
+    labeler = AzureResponsesLabeler(
+        "gpt-5-mini", tmp_path / "s", 250, 1, Boom(),
+        usage_path=tmp_path / "u.jsonl", max_budget_usd=90.0,
+        input_price_per_million=0.25, output_price_per_million=2.0,
+        max_requests=1400)
+    labeler.submit([row])
+    rec = json.loads((tmp_path / "u.jsonl").read_text())
+    assert rec["status"] == "failed"
+    # a usage-less failure is charged the conservative ceiling, never $0
+    assert rec["output_tokens"] > 0 and rec["input_tokens"] > 0
+    # and the in-flight reservation was released (no leak)
+    assert labeler._reservations == {} and labeler._ceilings == {}
+
+
 def test_azure_reasoning_effort_configurable_default_medium(monkeypatch, tmp_path):
     row = _row("a0", "PA", "cleared my blackheads")
 
@@ -594,7 +729,7 @@ def test_azure_reasoning_effort_configurable_default_medium(monkeypatch, tmp_pat
             pass
 
         def json(self):
-            return {"output_text": json.dumps({"r": [["001"]]}),
+            return {"output_text": json.dumps({"r": [{"i": 0, "c": ["001"]}]}),
                     "usage": {"input_tokens": 10, "output_tokens": 4}}
 
     class Session:
@@ -827,6 +962,7 @@ def _azure_gate_cfg(tmp_path, usage_path, **overrides):
         "gate_p2_yield": "PASS",
         "measured_agreement": 0.90,
         "audited_rows": 50,
+        "prompt_version": PROMPT_VERSION,
     }))
     return cfg
 
@@ -928,6 +1064,22 @@ def test_full_label_requires_p2_signoff():
         raise AssertionError("full labeling ran without P2 sign-off")
 
 
+def test_full_label_rejects_stale_prompt_version_signoff(monkeypatch, tmp_path):
+    # A passing report from an earlier prompt version must not certify a run of
+    # the current policy version.
+    cfg = {**load_config()["concern"],
+           "labels_path": str(tmp_path / "labels.jsonl"),
+           "batch_state_path": str(tmp_path / "batches.json")}
+    (tmp_path / "calibration_report.json").write_text(json.dumps({
+        "yield": 0.40, "gate_p2_yield": "PASS",
+        "measured_agreement": 0.94, "audited_rows": 50,
+        "prompt_version": "p0-stale",
+    }))
+    monkeypatch.setattr(concern_labels, "_labeler", lambda _cfg: StubLabeler({}))
+    with pytest.raises(RuntimeError, match="prompt_version"):
+        cmd_label([], cfg, yes=True, p2_approved=False)
+
+
 def test_full_label_requires_persisted_calibration_report(monkeypatch, tmp_path):
     cfg = {**load_config()["concern"],
            "labels_path": str(tmp_path / "labels.jsonl"),
@@ -938,6 +1090,7 @@ def test_full_label_requires_persisted_calibration_report(monkeypatch, tmp_path)
         "gate_p2_yield": "PASS",
         "measured_agreement": 0.90,
         "audited_rows": 50,
+        "prompt_version": PROMPT_VERSION,
     }))
     monkeypatch.setattr(concern_labels, "_labeler", lambda _cfg: StubLabeler({}))
 
