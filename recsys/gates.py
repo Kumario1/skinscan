@@ -26,6 +26,29 @@ class Veto:
         return {"product_id": self.product_id, "slot": self.slot, "reason": self.reason}
 
 
+# Verification-QUALITY reasons: the product's usage facts (role/area/exposure/
+# cadence) or drug/label proof are not individually evidence-verified. In hybrid
+# eligibility these do NOT veto — the product is still slotted by its catalog
+# category and its facts derived from safe defaults; they instead lower ranking
+# and are surfaced as a "category-derived, not individually verified" label.
+# Everything NOT listed here is a HARD safety veto (ingredient/profile/price)
+# and always excludes the product — a new reason defaults to hard.
+SOFT_REASON_PREFIXES = frozenset({
+    "intended_area_not_verified",
+    "role_not_verified",
+    "exposure_not_verified",
+    "cadence_unverified",
+    "cadence_not_daily",
+    "treatment_active_unverified",
+    "treatment_label_unverified",
+    "spf_broad_spectrum_unverified",
+})
+
+
+def _reason_is_soft(reason: str) -> bool:
+    return reason.split(":", 1)[0] in SOFT_REASON_PREFIXES
+
+
 def profile_gate_reasons(
     product: CatalogProduct, slot: str, profile: Profile, knowledge: Knowledge
 ) -> list[str]:
@@ -96,18 +119,35 @@ def apply_profile_gates(
     candidates_by_slot: dict[str, list[CatalogProduct]],
     profile: Profile,
     knowledge: Knowledge,
-) -> tuple[dict[str, list[CatalogProduct]], list[Veto]]:
+    strict: bool = True,
+) -> tuple[dict[str, list[CatalogProduct]], list[Veto], dict[tuple[str, str], list[str]]]:
+    """Split each product's gate reasons into hard vetoes and soft
+    verification-quality flags.
+
+    strict=True (default): any reason vetoes — the fail-closed, evidence-only
+    posture (only individually-verified products enter routines).
+    strict=False (hybrid): only HARD safety reasons veto; SOFT verification
+    reasons are returned as quality flags so the product is still eligible
+    (slotted by catalog category) but ranked below verified products and labeled
+    accordingly. Ingredient/profile/price safety is identical in both modes.
+    """
     kept: dict[str, list[CatalogProduct]] = {}
     vetoes: list[Veto] = []
+    quality_flags: dict[tuple[str, str], list[str]] = {}
     for slot, products in candidates_by_slot.items():
         kept[slot] = []
         for product in products:
             reasons = profile_gate_reasons(product, slot, profile, knowledge)
-            if reasons:
-                vetoes.extend(Veto(product.product_id, slot, r) for r in reasons)
+            soft = [r for r in reasons if _reason_is_soft(r)]
+            hard = [r for r in reasons if not _reason_is_soft(r)]
+            blocking = reasons if strict else hard
+            if blocking:
+                vetoes.extend(Veto(product.product_id, slot, r) for r in blocking)
             else:
                 kept[slot].append(product)
-    return kept, vetoes
+                if soft:
+                    quality_flags[(product.product_id, slot)] = soft
+    return kept, vetoes, quality_flags
 
 
 def duplicate_active_reasons(

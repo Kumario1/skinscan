@@ -10,6 +10,7 @@ from .catalog import CatalogProduct
 from .signals import ScoringContext, SignalScore
 
 NEUTRAL_VALUE = 0.5
+VERIFIED_BONUS = 0.05  # ranking nudge for evidence-verified products (sort-only)
 
 
 @dataclass(frozen=True)
@@ -47,4 +48,11 @@ def score_products(
             total_weight += weight
         final = round(acc / total_weight, 6) if total_weight else 0.0
         scored.append(ScoredCandidate(product, final, tuple(signals), tuple(uncertainty)))
-    return sorted(scored, key=lambda s: (-s.final, s.product.product_id))
+    # Evidence-verified products (usage facts proven from a source) get a modest
+    # ranking nudge over category-derived ones — applied only in the sort so the
+    # stored `final` stays exactly the weighted mean. In strict mode every kept
+    # product is verified, so the nudge is uniform and changes nothing.
+    def rank_key(s: ScoredCandidate) -> tuple:
+        nudge = VERIFIED_BONUS if s.product.routine_roles else 0.0
+        return (-(s.final + nudge), s.product.product_id)
+    return sorted(scored, key=rank_key)

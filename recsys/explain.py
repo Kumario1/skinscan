@@ -92,6 +92,18 @@ def _step_uncertainty(step: Step, profile: Profile) -> list[str]:
 
 def step_to_dict(step: Step, k: Knowledge, profile: Profile) -> dict:
     product = step.scored.product
+    # A product whose usage facts came from the evidence overlay is "verified";
+    # one placed by catalog category + safe defaults is "category_derived".
+    verification = "verified" if product.routine_roles else "category_derived"
+    notes = list(step.notes)
+    if verification == "category_derived":
+        notes.append("category-derived: role and usage inferred from the product "
+                     "category, not individually evidence-verified")
+    # Prescription-strength treatments are recommendable but must route to a
+    # clinician — never presented as a buy-now step.
+    prescription = bool(getattr(product, "prescription", False))
+    if prescription:
+        notes.append("prescription — consult a doctor to get this prescribed")
     return {
         "slot": step.slot,
         "product_id": product.product_id,
@@ -99,13 +111,15 @@ def step_to_dict(step: Step, k: Knowledge, profile: Profile) -> dict:
         "brand": product.brand,
         "price_usd": product.price_usd,
         "usage": step.usage,
+        "verification": verification,
+        "prescription": prescription,
         "directions": {
             "cadence": product.cadence,
             "cadence_source": product.cadence_source,
             "amount": product.amount,
             "amount_source": product.amount_source,
         },
-        "notes": list(step.notes),
+        "notes": notes,
         "why": {
             "summary": _step_summary(step, k),
             "score": step.scored.final,

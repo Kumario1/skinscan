@@ -54,6 +54,7 @@ def run(
     catalog_path: str | Path | None = None,
     data_root: str | Path | None = None,
     generated_at: str | None = None,
+    eligibility_mode: str = "strict",
 ) -> dict:
     data_root = Path(data_root) if data_root else DEFAULT_DATA_ROOT
     if catalog_path:
@@ -90,7 +91,8 @@ def run(
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at
         or _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
-        "engine": {"version": ENGINE_VERSION, "git_commit": _git_commit()},
+        "engine": {"version": ENGINE_VERSION, "git_commit": _git_commit(),
+                   "eligibility_mode": eligibility_mode},
         "inputs": {
             "analysis_sha256": analysis.analysis_sha256,
             "source_image_sha256": analysis.source_image_sha256,
@@ -156,8 +158,11 @@ def run(
         document["veto_log"] = {"profile": [], "compose": {}}
         return document
 
-    candidates = generate_candidates(products, targets, knowledge)
-    gated, profile_vetoes = apply_profile_gates(candidates, profile, knowledge)
+    strict_eligibility = eligibility_mode != "hybrid"
+    candidates = generate_candidates(products, targets, knowledge, strict=strict_eligibility)
+    gated, profile_vetoes, quality_flags = apply_profile_gates(
+        candidates, profile, knowledge, strict=strict_eligibility
+    )
 
     category_prices = {
         category: tuple(sorted(
@@ -186,7 +191,8 @@ def run(
     unavailable = []
     for routine in routines:
         reasons = validate_routine(
-            routine, profile, knowledge, has_targets=bool(targets)
+            routine, profile, knowledge, has_targets=bool(targets),
+            strict=(eligibility_mode != "hybrid"),
         )
         if reasons:
             unavailable.append({

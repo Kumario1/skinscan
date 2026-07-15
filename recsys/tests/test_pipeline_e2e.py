@@ -145,6 +145,47 @@ def test_pregnancy_unknown_excludes_retinoids():
     assert "retinoid_pregnancy_status_excluded" in reasons
 
 
+def _hybrid():
+    return run(ANALYSIS, FIXTURES / "profile_complete.json",
+               generated_at="2026-07-14T00:00:00+00:00", eligibility_mode="hybrid")
+
+
+def test_hybrid_widens_catalog_beyond_verified_only():
+    strict = run(ANALYSIS, FIXTURES / "profile_complete.json",
+                 generated_at="2026-07-14T00:00:00+00:00")  # default strict
+    hybrid = _hybrid()
+    strict_products = {s["product_id"] for r in strict["routines"] for s in _steps(r)}
+    hybrid_products = {s["product_id"] for r in hybrid["routines"] for s in _steps(r)}
+    # hybrid draws on more of the catalog than the evidence-verified-only pool
+    assert len(hybrid_products) > len(strict_products)
+    assert hybrid["engine"]["eligibility_mode"] == "hybrid"
+
+
+def test_hybrid_labels_verified_vs_category_derived():
+    hybrid = _hybrid()
+    seen = set()
+    for routine in hybrid["routines"]:
+        for step in _steps(routine):
+            assert step["verification"] in ("verified", "category_derived")
+            seen.add(step["verification"])
+            if step["verification"] == "category_derived":
+                assert any("category-derived" in n for n in step["notes"])
+            assert step["prescription"] is False  # no Rx products in the seed catalog
+    # the seed catalog has both verified and (in hybrid) category-derived products
+    assert "category_derived" in seen
+
+
+def test_hybrid_keeps_hard_ingredient_safety():
+    # retinoid-during-pregnancy exclusion is a HARD gate — it must hold in hybrid.
+    document = run(ANALYSIS, FIXTURES / "profile_unknown.json",
+                   generated_at="2026-07-14T00:00:00+00:00", eligibility_mode="hybrid")
+    catalog = _catalog_ids()
+    for routine in document["routines"]:
+        for step in _steps(routine):
+            actives = set(catalog[step["product_id"]]["actives"])
+            assert not (actives & K.retinoids), step["product_id"]
+
+
 def test_allergy_removes_products(tmp_path):
     profile = json.loads((FIXTURES / "profile_complete.json").read_text())
     profile["allergies"] = ["niacinamide"]

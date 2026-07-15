@@ -17,6 +17,9 @@ def main(argv: list[str] | None = None) -> int:
     rec.add_argument("--data-root", default=None, help=f"recsys data dir (default: {DEFAULT_DATA_ROOT})")
     rec.add_argument("--out", default="recommendations.json", help="output path")
     rec.add_argument("--generated-at", default=None, help="pin the timestamp (deterministic runs)")
+    rec.add_argument("--eligibility-mode", default="strict", choices=("strict", "hybrid"),
+                     help="strict: only evidence-verified products (default); "
+                          "hybrid: whole catalog by category, verified products ranked/labeled higher")
     args = parser.parse_args(argv)
 
     document = run(
@@ -25,6 +28,7 @@ def main(argv: list[str] | None = None) -> int:
         catalog_path=args.catalog,
         data_root=args.data_root,
         generated_at=args.generated_at,
+        eligibility_mode=args.eligibility_mode,
     )
     out = emit(document, args.out)
     routines = document.get("routines") or []
