@@ -127,9 +127,9 @@ def test_active_dosed_against_its_moiety_is_read_not_dropped():
     ]
 
 
-def test_document_holding_two_strengths_of_one_active_is_excluded():
-    # Actives are read document-wide, so a label covering 0.05% and 0.1% gives no
-    # way to say which strength belongs to which NDC. Reject rather than guess.
+def test_one_product_stating_an_active_at_two_strengths_is_excluded():
+    # A single product cannot be both 0.05% and 0.1% tretinoin. Reject rather
+    # than pick one. (Two *products* at two strengths is normal -- see below.)
     second = """<ingredient classCode="ACTIB">
       <quantity><numerator value="1" unit="mg" /><denominator value="1" unit="g" /></quantity>
       <ingredientSubstance><name>TRETINOIN</name></ingredientSubstance>
@@ -138,6 +138,28 @@ def test_document_holding_two_strengths_of_one_active_is_excluded():
         _rx_spl(extra=second), source_url="https://dailymed.nlm.nih.gov/rx.xml",
         retrieved_at="2026-07-15T00:00:00Z", current=True,
     ) == []
+
+
+def test_document_with_several_products_imports_each_at_its_own_strength():
+    # Retin-A Micro states four strengths in one document and Retin-A a cream
+    # plus a gel, each on its own product node with its own NDC and form.
+    second = """</manufacturedProduct>
+  <manufacturedProduct>
+    <code codeSystem="2.16.840.1.113883.6.69" code="00000-0003" />
+    <name>Retin-A</name>
+    <formCode displayName="Gel" />
+    <ingredient classCode="ACTIB">
+      <quantity><numerator value="1" unit="mg" /><denominator value="1" unit="g" /></quantity>
+      <ingredientSubstance><name>TRETINOIN</name></ingredientSubstance>
+    </ingredient>"""
+    products = parse_spl(
+        _rx_spl(extra=second), source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    )
+    assert [(p.format, p.drug_actives[0].strength) for p in products] == [
+        ("cream", "0.05%"), ("gel", "0.1%")
+    ]
+    assert len({p.product_id for p in products}) == 2
 
 
 def test_active_without_a_parseable_strength_is_excluded():
