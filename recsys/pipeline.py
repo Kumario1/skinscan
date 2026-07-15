@@ -68,6 +68,7 @@ def run(
     analysis = load_analysis(analysis_path)
     profile = resolve_profile(profile_path, analysis)
     products, catalog_header = load_catalog(catalog_path)
+    catalog_sha256 = sha256_file(catalog_path)
     verification_now = (
         _dt.datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
         if generated_at else _dt.datetime.now(_dt.timezone.utc)
@@ -81,7 +82,7 @@ def run(
         verification_root, now=verification_now
     )
     products = apply_verification(products, overlay)
-    providers, store_meta, signal_warnings = load_providers(data_root)
+    providers, store_meta, signal_warnings = load_providers(data_root, catalog_sha256)
     warnings = verification_warnings + signal_warnings
 
     targets = select_targets(analysis)
@@ -99,18 +100,23 @@ def run(
         "profile_used": {
             "skin_type": profile.skin_type,
             "tone_bucket": profile.tone_bucket,
+            "tone_source": profile.tone_source,
             "pregnancy_status": profile.pregnancy_status,
             "age_years": profile.age_years,
             "allergies": list(profile.allergies),
             "sensitivity_conditions": list(profile.sensitivity_conditions),
             "current_actives": list(profile.current_actives),
             "current_medications": list(profile.current_medications),
+            "treatment_history": list(profile.treatment_history),
+            "acne_duration_weeks": profile.acne_duration_weeks,
+            "painful_or_deep_lesions": profile.painful_or_deep_lesions,
+            "prior_scarring": profile.prior_scarring,
             "max_price_usd": profile.max_price_usd,
         },
         "data_versions": {
             "catalog": {
                 "path": str(catalog_path),
-                "sha256": sha256_file(catalog_path),
+                "sha256": catalog_sha256,
                 "schema": catalog_header.get("schema_version"),
             },
             "signals": store_meta,

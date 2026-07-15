@@ -10,6 +10,10 @@
       "category_percentile": 0.9574,
       "loves": 133163
     },
+    "P188306": {
+      "category_percentile": 0.6059,
+      "loves": 17157
+    },
     "P248407": {
       "category_percentile": 0.9945,
       "loves": 300432
@@ -102,6 +106,10 @@
       "category_percentile": 1.0,
       "loves": 411372
     },
+    "P427536": {
+      "category_percentile": 0.983,
+      "loves": 245976
+    },
     "P429242": {
       "category_percentile": 0.9691,
       "loves": 74272
@@ -178,6 +186,10 @@
       "category_percentile": 0.9866,
       "loves": 252846
     },
+    "P461537": {
+      "category_percentile": 0.9787,
+      "loves": 190401
+    },
     "P466123": {
       "category_percentile": 0.9947,
       "loves": 389213
@@ -193,6 +205,18 @@
     "P469515": {
       "category_percentile": 0.5423,
       "loves": 13705
+    },
+    "P469517": {
+      "category_percentile": 0.6667,
+      "loves": 16079
+    },
+    "P469520": {
+      "category_percentile": 0.7447,
+      "loves": 27344
+    },
+    "P476733": {
+      "category_percentile": 0.7423,
+      "loves": 22699
     },
     "P479348": {
       "category_percentile": 0.6944,

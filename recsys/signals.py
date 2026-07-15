@@ -22,6 +22,9 @@ from .knowledge import Knowledge
 
 REGISTRY_SCHEMA_VERSION = "recsys-registry-1"
 MIN_SKIN_TYPE_CELL = 20
+CATALOG_BOUND_KINDS = frozenset({
+    "concern_efficacy", "ingredient_analysis", "popularity", "review_stats",
+})
 
 
 @dataclass(frozen=True)
@@ -291,9 +294,15 @@ STORE_PROVIDERS: dict[str, type] = {
 }
 
 
-def load_providers(data_root: str | Path) -> tuple[list, list[dict], list[str]]:
+def load_providers(
+    data_root: str | Path,
+    catalog_sha256: str | None = None,
+    *,
+    allow_unbound: bool = False,
+) -> tuple[list, list[dict], list[str]]:
     """Instantiate built-in providers plus every active registry store whose
-    sha256 matches the file on disk. Returns (providers, store_meta, warnings)."""
+    sha256 matches the file on disk and whose catalog provenance matches the
+    active catalog. Returns (providers, store_meta, warnings)."""
     data_root = Path(data_root)
     providers: list = [ConcernFitSignal(), PriceValueSignal()]
     meta: list[dict] = []
@@ -317,6 +326,30 @@ def load_providers(data_root: str | Path) -> tuple[list, list[dict], list[str]]:
         if cls is None:
             warnings.append(f"unknown signal kind {kind!r} — skipped")
             continue
+        source = entry.get("source") or {}
+        bound_catalog_sha256 = source.get("catalog_sha256")
+        if kind in CATALOG_BOUND_KINDS:
+            if bound_catalog_sha256 is None:
+                if not allow_unbound:
+                    warnings.append(
+                        f"store {entry.get('name')!r} has no catalog_sha256 provenance — skipped"
+                    )
+                    continue
+                warnings.append(
+                    f"store {entry.get('name')!r} loaded without catalog_sha256 provenance "
+                    "because allow_unbound=True"
+                )
+            elif catalog_sha256 is None:
+                warnings.append(
+                    f"catalog_sha256 is required to load store {entry.get('name')!r} — skipped"
+                )
+                continue
+            elif bound_catalog_sha256 != catalog_sha256:
+                warnings.append(
+                    f"catalog_sha256 mismatch for store {entry.get('name')!r}: "
+                    f"expected {catalog_sha256}, got {bound_catalog_sha256} — skipped"
+                )
+                continue
         store_path = data_root / entry["path"]
         actual = sha256_file(store_path)
         if actual != entry.get("sha256"):
@@ -337,6 +370,13 @@ def load_providers(data_root: str | Path) -> tuple[list, list[dict], list[str]]:
             providers.append(cls(store, entry, pooled_store=pooled_store))
         else:
             providers.append(cls(store, entry))
-        meta.append({"name": entry.get("name"), "version": entry.get("version"),
-                     "sha256": entry.get("sha256")})
+        bound_catalog_sha256 = (entry.get("source") or {}).get("catalog_sha256")
+        store_meta = {
+            "name": entry.get("name"),
+            "version": entry.get("version"),
+            "sha256": entry.get("sha256"),
+        }
+        if bound_catalog_sha256 is not None:
+            store_meta["catalog_sha256"] = bound_catalog_sha256
+        meta.append(store_meta)
     return providers, meta, warnings

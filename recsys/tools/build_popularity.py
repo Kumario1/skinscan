@@ -69,7 +69,10 @@ def build(raw_dir: Path, catalog_path: Path, out_path: Path, data_root: Path) ->
     register_store(
         data_root, name="popularity", kind="popularity", version="v1",
         store_path=out_path, builder=BUILDER,
-        source={"product_info_sha256": sha256_file(csv_path)},
+        source={
+            "catalog_sha256": sha256_file(catalog_path),
+            "product_info_sha256": sha256_file(csv_path),
+        },
         coverage={"products": len(products), "catalog_products": len(wanted)},
     )
     log = {"products_covered": len(products)}
