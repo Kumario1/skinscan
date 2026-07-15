@@ -150,6 +150,25 @@ def test_active_without_a_parseable_strength_is_excluded():
     ) == []
 
 
+def test_product_is_named_from_the_label_not_the_highlights_preamble():
+    # A prescription document's <title> is the HIGHLIGHTS OF PRESCRIBING
+    # INFORMATION boilerplate, so titling the row from it names every Rx product
+    # "These highlights do not include...".
+    spl = _rx_spl().replace(
+        b'<formCode displayName="Cream" />',
+        b'<name>Retin-A</name><formCode displayName="Cream" />',
+    ).replace(
+        b"<title>Tretinoin Cream USP 0.05%</title>",
+        b"<title>These highlights do not include all the information needed"
+        b" to use RETIN-A safely and effectively.</title>",
+    )
+    products = parse_spl(
+        spl, source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    )
+    assert products[0].name == "Retin-A"
+
+
 def test_cutaneous_route_counts_as_topical():
     # Tazorac and Azelex state the route as CUTANEOUS; matching "topical" alone
     # silently dropped them.

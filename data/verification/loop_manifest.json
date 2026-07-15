@@ -44,7 +44,7 @@
     }
   },
   "last_rebuild": {
-    "at": "2026-07-15T17:29:07.569601Z",
+    "at": "2026-07-15T17:33:22.410573Z",
     "complete": false,
     "eligible_by_role": {
       "cleanser": 4,
@@ -89,7 +89,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "treatment",
-      "updated_at": "2026-07-15T17:29:07.569355Z"
+      "updated_at": "2026-07-15T17:33:22.410292Z"
     },
     "P248407": {
       "batch": "004",
@@ -140,7 +140,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "cleanser",
-      "updated_at": "2026-07-15T17:29:07.569583Z"
+      "updated_at": "2026-07-15T17:33:22.410552Z"
     },
     "P418218": {
       "batch": "004",
@@ -148,7 +148,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "moisturizer",
-      "updated_at": "2026-07-15T17:29:07.569586Z"
+      "updated_at": "2026-07-15T17:33:22.410555Z"
     },
     "P427411": {
       "batch": "003",
@@ -189,7 +189,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "cleanser",
-      "updated_at": "2026-07-15T17:29:07.569589Z"
+      "updated_at": "2026-07-15T17:33:22.410558Z"
     },
     "P429242": {
       "batch": "005",
@@ -224,7 +224,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "moisturizer",
-      "updated_at": "2026-07-15T17:29:07.569590Z"
+      "updated_at": "2026-07-15T17:33:22.410560Z"
     },
     "P443833": {
       "batch": "005",
@@ -254,7 +254,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "sunscreen",
-      "updated_at": "2026-07-15T17:29:07.569592Z"
+      "updated_at": "2026-07-15T17:33:22.410562Z"
     },
     "P456392": {
       "batch": "004",
@@ -272,7 +272,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "cleanser",
-      "updated_at": "2026-07-15T17:29:07.569593Z"
+      "updated_at": "2026-07-15T17:33:22.410564Z"
     },
     "P467976": {
       "batch": "005",
@@ -297,7 +297,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "moisturizer",
-      "updated_at": "2026-07-15T17:29:07.569595Z"
+      "updated_at": "2026-07-15T17:33:22.410565Z"
     },
     "P469520": {
       "batch": "002",
@@ -305,7 +305,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "cleanser",
-      "updated_at": "2026-07-15T17:29:07.569596Z"
+      "updated_at": "2026-07-15T17:33:22.410567Z"
     },
     "P470259": {
       "batch": "004",
@@ -323,7 +323,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "sunscreen",
-      "updated_at": "2026-07-15T17:29:07.569598Z"
+      "updated_at": "2026-07-15T17:33:22.410569Z"
     },
     "P482535": {
       "batch": "005",
