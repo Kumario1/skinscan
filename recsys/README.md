@@ -82,7 +82,27 @@ python -m recsys.tools.import_verification \
   --source data/verification/approved-combined.json \
   --source-evidence data/verification/evidence \
   --out-root recsys/data/verification
+
+# Prescription/OTC drug rows, from labels the verification loop already fetched.
+# Its own catalog on purpose: the signal stores are keyed by catalog_full.json's
+# sha256, so merging drug rows into that file would strand every store.
+python -m recsys.tools.import_drug_catalog \
+  --source data/processed/catalog_drug.json \
+  --out recsys/data/derived/catalog_drug.json
 ```
+
+A drug label publishes no INCI list, so drug rows are the one exception to
+"actives must parse out of the INCI". They earn it: the label names each active,
+states its exact strength, and cites itself as the source, and the row is bound
+to the label bytes by hash — checked in `catalog.py`, and enforced per active.
+Anything short of that falls back to the INCI rule.
+
+Prescriptions are **listed, never placed**. `prescription_options` surfaces the
+ones that fit the reported concerns so a user can raise them with a doctor
+(D-033); ranking one into a routine would assert it beats the cosmetics, and
+which therapy suits which concern stays D-029 clinician-gated. They are read out
+of the gated pool and then dropped from it, so no routine total can quietly
+include a product that has no retail price.
 
 When Azure is configured, the labeler requires `TARGET_URL` (or
 `AZURE_OPENAI_ENDPOINT`), `AZURE_KEY` (or `AZURE_OPENAI_API_KEY`), the exact
