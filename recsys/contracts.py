@@ -89,9 +89,16 @@ def load_analysis(path: str | Path) -> AnalysisInput:
             raise ContractViolation(f"concerns[{i}].concern", f"duplicate {name!r}")
         seen_concerns.add(name)
         severity = c.get("severity")
-        if not isinstance(severity, int) or not 0 <= severity <= 4:
+        if not isinstance(severity, int) or isinstance(severity, bool) or not 0 <= severity <= 4:
             raise ContractViolation(f"concerns[{i}].severity", f"expected int 0..4, got {severity!r}")
-        confidence = float(c.get("confidence") or 0.0)
+        confidence_raw = c.get("confidence")
+        if confidence_raw is not None and (
+            not isinstance(confidence_raw, (int, float)) or isinstance(confidence_raw, bool)
+        ):
+            raise ContractViolation(
+                f"concerns[{i}].confidence", f"expected a number or null, got {confidence_raw!r}"
+            )
+        confidence = float(confidence_raw or 0.0)
         if not math.isfinite(confidence) or not 0 <= confidence <= 1:
             raise ContractViolation(
                 f"concerns[{i}].confidence", f"expected finite 0..1, got {confidence!r}"
