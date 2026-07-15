@@ -78,6 +78,8 @@ def _strength(ingredient: ET.Element) -> str | None:
     d_unit = (denominator.get("unit") or "").lower()
     if n_unit == "mg" and d_unit in {"g", "ml"} and d:
         value = n / d / 10
+    elif n_unit in {"ug", "mcg"} and d_unit in {"g", "ml"} and d:
+        value = n / d / 10_000  # potent retinoids dose in micrograms (Aklief: 50 ug/g)
     elif n_unit == "g" and d_unit == "g" and d:
         value = n / d * 100
     else:
@@ -135,7 +137,9 @@ def parse_spl(
     human_rx_document = "human prescription drug label" in document_label_text
     human = "human" in species_text or human_otc_document or human_rx_document
     otc = "otc" in marketing_text or human_otc_document
-    topical = "topical" in route_text or (
+    # DailyMed states the topical route as TOPICAL or CUTANEOUS (Tazorac, Azelex
+    # use the latter); matching "topical" alone silently drops those labels.
+    topical = any(word in route_text for word in ("topical", "cutaneous")) or (
         not route_text and "for external use only" in document_text
     )
     if not set_id or not form or not topical or not human:
