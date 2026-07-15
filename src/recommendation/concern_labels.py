@@ -972,7 +972,7 @@ class AzureResponsesLabeler(OpenRouterLabeler):
                  concurrency=10, session=None, usage_path=None,
                  max_budget_usd=None, input_price_per_million=None,
                  output_price_per_million=None, max_requests=None,
-                 reasoning_effort=None):
+                 reasoning_effort=None, timeout=None):
         import requests
         key = os.environ.get("AZURE_KEY") or os.environ.get("AZURE_OPENAI_API_KEY")
         url = os.environ.get("TARGET_URL") or os.environ.get("AZURE_OPENAI_ENDPOINT")
@@ -1006,6 +1006,8 @@ class AzureResponsesLabeler(OpenRouterLabeler):
         self.reasoning_effort = (reasoning_effort
                                  or os.environ.get("AZURE_REASONING_EFFORT")
                                  or "medium")
+        # Larger batches with reasoning can run for minutes; 180s truncated them.
+        self.timeout = int(timeout or os.environ.get("AZURE_TIMEOUT_SECONDS") or 600)
         self._usage_lock = threading.RLock()
         self._reservations: dict[str, float] = {}
 
@@ -1063,7 +1065,7 @@ class AzureResponsesLabeler(OpenRouterLabeler):
         status = "failed"
         try:
             response = self.session.post(
-                self.url, headers=self.headers, json=body, timeout=180,
+                self.url, headers=self.headers, json=body, timeout=self.timeout,
             )
             try:
                 data = response.json()
@@ -1313,6 +1315,7 @@ def _labeler(ccfg):
             output_price_per_million=float(output_price),
             max_requests=_azure_max_requests(ccfg),
             reasoning_effort=ccfg.get("azure_reasoning_effort"),
+            timeout=ccfg.get("azure_timeout_seconds"),
         )
     return OpenRouterLabeler(
         ccfg["labeling_model"], ccfg["batch_spool_dir"],
