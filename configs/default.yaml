@@ -109,7 +109,7 @@ concern:                              # concern-efficacy labeling (D-023, spec 2
   azure_reasoning_effort: medium       # reasoning effort for Azure labeling calls (AZURE_REASONING_EFFORT overrides)
   azure_timeout_seconds: 600           # per-request HTTP timeout; large reasoning batches run for minutes
   reviews_per_request: 175             # proven-reliable Azure batch; amortizes reasoning tokens (~1153 reqs for 202k rows)
-  request_concurrency: 6               # TPM-safe: ~84k of the 100k tokens/min deployment limit
+  request_concurrency: 4               # ~21k input tokens burst per request; 4x stays under the 100k TPM limit (6x tripped 429s)
   text_truncate_chars: 1200           # review text sent to the labeler is capped here
   batch_chunk_size: 1000              # rows checkpointed per local batch
   calibration_sample_size: 2000       # gate P2 sample
