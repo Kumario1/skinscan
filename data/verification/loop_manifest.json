@@ -12,7 +12,7 @@
       "result": "pass"
     }
   ],
-  "batch_seq": 5,
+  "batch_seq": 6,
   "batches": {
     "002": {
       "approved_at": "2026-07-14T18:15:15.692272Z",
@@ -41,10 +41,18 @@
     "005": {
       "brief": "data/verification/batches/005/RESEARCH_BRIEF.md",
       "created_at": "2026-07-14T18:28:58.949143Z"
+    },
+    "006": {
+      "approved_at": "2026-07-15T18:54:26.877618Z",
+      "approved_file": "data/verification/batches/006/approved.json",
+      "brief": "data/verification/batches/006/RESEARCH_BRIEF.md",
+      "created_at": "2026-07-15T18:25:27.690159Z",
+      "review_file": "data/verification/batches/006/REVIEW.md",
+      "reviewer_id": "claude-fable-5"
     }
   },
   "last_rebuild": {
-    "at": "2026-07-15T17:45:13.083451Z",
+    "at": "2026-07-15T18:54:27.253860Z",
     "complete": false,
     "eligible_by_role": {
       "cleanser": 4,
@@ -65,8 +73,7 @@
       }
     },
     "missing_treatment_paths": [
-      "azelaic_acid_10",
-      "adapalene_0_1_benzoyl_peroxide_2_5"
+      "azelaic_acid_10"
     ],
     "unmatched": []
   },
@@ -89,7 +96,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "treatment",
-      "updated_at": "2026-07-15T17:45:13.083180Z"
+      "updated_at": "2026-07-15T18:54:27.253677Z"
     },
     "P248407": {
       "batch": "004",
@@ -113,6 +120,16 @@
       "state": "researching",
       "target": "moisturizer",
       "updated_at": "2026-07-14T18:28:58.948933Z"
+    },
+    "P399623": {
+      "batch": "006",
+      "name": "Luminous Dewy Skin Mist",
+      "reasons": [
+        "Tatcha's own product page could not be retrieved: the site answers automated HTTPS requests with HTTP 429 local_rate_limited (bot management). Same basis as P482320 - requeue for a human-fetched snapshot. Note: the page's own wording is 'hydrator', not 'moisturizer'."
+      ],
+      "state": "rejected",
+      "target": "moisturizer",
+      "updated_at": "2026-07-15T18:54:02.610485Z"
     },
     "P409800": {
       "batch": "004",
@@ -140,7 +157,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "cleanser",
-      "updated_at": "2026-07-15T17:45:13.083433Z"
+      "updated_at": "2026-07-15T18:54:27.253839Z"
     },
     "P418218": {
       "batch": "004",
@@ -148,7 +165,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "moisturizer",
-      "updated_at": "2026-07-15T17:45:13.083437Z"
+      "updated_at": "2026-07-15T18:54:27.253843Z"
     },
     "P427411": {
       "batch": "003",
@@ -189,7 +206,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "cleanser",
-      "updated_at": "2026-07-15T17:45:13.083439Z"
+      "updated_at": "2026-07-15T18:54:27.253845Z"
     },
     "P429242": {
       "batch": "005",
@@ -224,7 +241,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "moisturizer",
-      "updated_at": "2026-07-15T17:45:13.083441Z"
+      "updated_at": "2026-07-15T18:54:27.253847Z"
     },
     "P443833": {
       "batch": "005",
@@ -254,7 +271,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "sunscreen",
-      "updated_at": "2026-07-15T17:45:13.083443Z"
+      "updated_at": "2026-07-15T18:54:27.253848Z"
     },
     "P456392": {
       "batch": "004",
@@ -272,7 +289,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "cleanser",
-      "updated_at": "2026-07-15T17:45:13.083444Z"
+      "updated_at": "2026-07-15T18:54:27.253850Z"
     },
     "P467976": {
       "batch": "005",
@@ -297,7 +314,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "moisturizer",
-      "updated_at": "2026-07-15T17:45:13.083445Z"
+      "updated_at": "2026-07-15T18:54:27.253851Z"
     },
     "P469520": {
       "batch": "002",
@@ -305,7 +322,7 @@
       "reasons": [],
       "state": "eligible",
       "target": "cleanser",
-      "updated_at": "2026-07-15T17:45:13.083447Z"
+      "updated_at": "2026-07-15T18:54:27.253853Z"
     },
     "P470259": {
       "batch": "004",
@@ -323,7 +340,17 @@
       "reasons": [],
       "state": "eligible",
       "target": "sunscreen",
-      "updated_at": "2026-07-15T17:45:13.083448Z"
+      "updated_at": "2026-07-15T18:54:27.253854Z"
+    },
+    "P482320": {
+      "batch": "006",
+      "name": "Mini Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Niacinamide",
+      "reasons": [
+        "Supergoop's own product page could not be retrieved: the site answers automated HTTPS requests with HTTP 429 local_rate_limited (bot management). Verification requires hash-verifiable bytes from the manufacturer's own page, and working around a site's bot protection is not an acceptable way to obtain them. Requeue for a human-fetched snapshot."
+      ],
+      "state": "rejected",
+      "target": "sunscreen",
+      "updated_at": "2026-07-15T18:54:02.565012Z"
     },
     "P482535": {
       "batch": "005",
@@ -341,6 +368,16 @@
       "target": "azelaic_acid_10",
       "updated_at": "2026-07-14T18:28:58.948909Z"
     },
+    "P484080": {
+      "batch": "006",
+      "name": "Mini Faded Serum for Dark Spots & Discoloration",
+      "reasons": [
+        "Manufacturer's own page (mytopicals.com canonical, evidence sha256 853c3ca4...) names azelaic acid only as a benefit line and states no per-active strength; the only percentages on the page are '100% odorless formula' and user-survey figures. The azelaic_acid_10 path requires exactly azelaic acid 10%, so this cosmetic serum cannot fill it."
+      ],
+      "state": "rejected",
+      "target": "azelaic_acid_10",
+      "updated_at": "2026-07-15T18:54:02.518873Z"
+    },
     "P7880": {
       "batch": "003",
       "name": "Soy Hydrating Gentle Face Cleanser",
@@ -350,6 +387,14 @@
       "state": "rejected",
       "target": "cleanser",
       "updated_at": "2026-07-14T18:21:56.304631Z"
+    },
+    "dailymed:66858a82-cfda-4ba9-aac7-cf65499f4b1a:21922-052:adapalene-0.1%+benzoyl_peroxide-2.5%": {
+      "batch": "006",
+      "name": "Adapalene and Benzoyl Peroxide Gel, 0.1%/2.5%",
+      "reasons": [],
+      "state": "eligible",
+      "target": "adapalene_0_1_benzoyl_peroxide_2_5",
+      "updated_at": "2026-07-15T18:54:27.253856Z"
     }
   },
   "schema_version": "1"

@@ -6,8 +6,7 @@
     "sunscreen": 2
   },
   "missing_treatment_paths": [
-    "azelaic_acid_10",
-    "adapalene_0_1_benzoyl_peroxide_2_5"
+    "azelaic_acid_10"
   ],
   "schema_version": "1",
   "shortfalls": {
@@ -17,7 +16,7 @@
   },
   "support_minimum": 25,
   "treatment_paths": {
-    "adapalene_0_1_benzoyl_peroxide_2_5": 0,
+    "adapalene_0_1_benzoyl_peroxide_2_5": 1,
     "azelaic_acid_10": 0,
     "benzoyl_peroxide_2_5": 1
   }
