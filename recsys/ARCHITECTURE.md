@@ -230,10 +230,18 @@ evidence}], uncertainty[]}` — every number reproducible from the named store.
 ## Verifying it
 
 ```bash
+# the whole chain, one command: photo -> SA-RPN -> analysis.json -> recsys
+python -m src.pipeline.e2e --image <photo.jpg> --out runs/e2e/<name> \
+  --recsys --recsys-data-root recsys/data/derived --recsys-eligibility-mode hybrid
+
 python tools/verify_e2e.py                          # hybrid, full catalog
 python tools/verify_e2e.py --mode strict --data-root recsys/data
 python tools/render_routine_html.py <recommendations.json>   # readable page
 ```
+
+Without `--recsys-eligibility-mode` the integrated path uses recsys's default
+(`strict`), which on the full catalog gives 3 of 5 archetypes and no
+prescription options — correct, but not what you usually want to look at.
 
 `verify_e2e.py` checks 18 stages against the *real* catalog and a real photo's
 analysis — the wiring fixtures cannot see — and re-runs the CLI in three
@@ -268,13 +276,19 @@ field.
 | + Hybrid eligibility | **done** (2026-07-15, beyond the original plan) — see "How it got here" |
 | + Prescriptions | **done** (2026-07-15) — 34 Rx products catalogued and listed |
 
-Known gaps, honestly: `azelaic_acid_10` remains an unfillable therapy path
-(cosmetics do not declare per-active strengths, so no product can prove 10%);
-strict mode on the full catalog yields no routines because only 13 of 1,634
-products are evidence-verified — that thinness is exactly why hybrid exists; and
-`recsys/data/verification/approved.json` is out of sync with the loop's truth
-(re-importing drops a stale fact from the seed catalog's only verified
-treatment — tracked separately, do not "fix" it by re-pinning).
+Known gaps, honestly:
+
+- `azelaic_acid_10` is an unfillable therapy path. Cosmetics do not declare
+  per-active strengths, so no product can prove 10% — verified against the brand
+  page, not assumed.
+- Strict on the full catalog yields **3 of 5 archetypes** (`budget` and
+  `gentle_sensitive` go unavailable: `required_role_missing:treatment`), because
+  only 13 of 1,634 products are evidence-verified. That thinness is exactly why
+  hybrid exists.
+- `recsys/data/verification/approved.json` is out of sync with the loop's truth.
+  Re-importing it drops a *stale* fact from the seed catalog's only verified
+  treatment and collapses every routine to zero. Tracked separately — do not
+  "fix" it by re-pinning the overlay.
 
 ## Original phase plan (for reference)
 

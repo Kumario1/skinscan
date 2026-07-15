@@ -430,6 +430,7 @@ def run_pipeline(
     recsys_enabled: bool = False,
     recsys_data_root: Path | None = None,
     recsys_catalog: Path | None = None,
+    recsys_eligibility_mode: str | None = None,
 ) -> PipelineResult:
     if profile is None:
         profile = UserProfile(
@@ -608,6 +609,8 @@ def run_pipeline(
                     command += ["--data-root", str(recsys_data_root)]
                 if recsys_catalog is not None:
                     command += ["--catalog", str(recsys_catalog)]
+                if recsys_eligibility_mode is not None:
+                    command += ["--eligibility-mode", recsys_eligibility_mode]
                 completed = subprocess.run(
                     command,
                     cwd=Path(__file__).resolve().parents[2],
@@ -651,6 +654,10 @@ def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
                         help="also write standalone recsys recommendations.json")
     parser.add_argument("--recsys-data-root", type=Path, default=None)
     parser.add_argument("--recsys-catalog", type=Path, default=None)
+    parser.add_argument("--recsys-eligibility-mode", default=None,
+                        choices=("strict", "hybrid"),
+                        help="passed through to recsys; hybrid opens the whole "
+                             "catalog by category and lists prescription options")
     parser.add_argument("--face-landmarker", type=Path, default=Path(paths["face_landmarker"]))
     parser.add_argument("--tile-size", type=int, default=sa_rpn["tile_size"])
     parser.add_argument("--overlap", type=int, default=sa_rpn["tile_overlap"])
@@ -741,6 +748,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             recsys_enabled=args.recsys,
             recsys_data_root=args.recsys_data_root,
             recsys_catalog=args.recsys_catalog,
+            recsys_eligibility_mode=args.recsys_eligibility_mode,
         )
     except Exception as exc:
         print(f"analysis failed: {exc}", file=sys.stderr)
