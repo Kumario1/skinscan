@@ -28,6 +28,7 @@ from src.recommendation.concern_labels import (
     run_labeling,
     _labeler,
 )
+import src.recommendation.concern_labels as concern_labels
 
 
 def _patterns():
@@ -50,6 +51,13 @@ def test_review_uid_stable_and_distinct():
     b = review_uid("123", "P1", "great product " * 50)
     assert a == b and len(a) == 32
     assert review_uid("124", "P1", "great product") != a
+
+
+def test_review_uid_uses_text_after_first_300_chars():
+    prefix = "x" * 300
+    assert review_uid("123", "P1", prefix + " first") != review_uid(
+        "123", "P1", prefix + " second"
+    )
 
 
 def test_load_review_rows_prefilters_joins_and_truncates():
@@ -132,6 +140,36 @@ def test_run_labeling_writes_cache_and_skips_on_rerun():
         s2 = run_labeling([r1, r2], stub, cache, state, chunk_size=10,
                           poll_seconds=0)
         assert s2["submitted"] == 0 and s2["cached_before"] == 2
+
+
+def test_cache_lookup_is_bound_to_provider_model_and_prompt():
+    class BoundStubLabeler(StubLabeler):
+        provider = "test-provider"
+        model = "model-a"
+        prompt_version = "prompt-a"
+
+    row = _row("a1", "PA", "cleared my blackheads")
+    with tempfile.TemporaryDirectory() as td:
+        cache, state = Path(td) / "labels.jsonl", Path(td) / "state.json"
+        first = BoundStubLabeler({row["uid"]: LABEL_OK})
+        run_labeling([row], first, cache, state, chunk_size=10, poll_seconds=0)
+        record = load_cache(cache, prompt_version="prompt-a",
+                            provider="test-provider", model="model-a")[row["uid"]]
+        assert record["provider"] == "test-provider"
+        assert record["model"] == "model-a"
+        assert record["prompt_version"] == "prompt-a"
+
+        changed = BoundStubLabeler({row["uid"]: LABEL_OK})
+        changed.model = "model-b"
+        summary = run_labeling([row], changed, cache, state,
+                               chunk_size=10, poll_seconds=0)
+        assert summary["submitted"] == 1
+
+        changed_prompt = BoundStubLabeler({row["uid"]: LABEL_OK})
+        changed_prompt.prompt_version = "prompt-b"
+        summary = run_labeling([row], changed_prompt, cache, state,
+                               chunk_size=10, poll_seconds=0)
+        assert summary["submitted"] == 1
 
 
 def test_malformed_reply_cached_as_parse_error_not_rebilled():
@@ -289,6 +327,18 @@ def test_literal_policy_does_not_spread_prevention_to_existing_subtypes():
     ]
 
 
+def test_literal_policy_does_not_propagate_acne_outcome_to_pimples():
+    actual = enforce_literal_policy(
+        "This cleared my acne. I still have pimples.",
+        [_label("acne_inflammatory", "helped", True),
+         _label("acne_general", "helped", True)],
+    )
+    assert actual == [
+        _label("acne_inflammatory", "unclear", True),
+        _label("acne_general", "helped", True),
+    ]
+
+
 def test_literal_policy_does_not_infer_acne_from_acne_scarring():
     actual = enforce_literal_policy(
         "My dark spots come from acne scarring and this faded them.",
@@ -395,8 +445,7 @@ def test_azure_responses_grouped_results_are_spooled(monkeypatch, tmp_path):
             pass
 
         def json(self):
-            results = [{"i": index, "l": [{"c": 0, "o": 0, "h": True}]}
-                       for index, _row_value in enumerate(rows)]
+            results = [["001"] for _row_value in rows]
             return {
                 "output_text": json.dumps({"r": results}),
                 "usage": {"input_tokens": 100, "output_tokens": 40},
@@ -435,15 +484,92 @@ def test_azure_responses_grouped_results_are_spooled(monkeypatch, tmp_path):
     assert body["model"] == "cheap-deployment"
     assert body["text"]["format"]["type"] == "json_schema"
     assert "r" in body["text"]["format"]["schema"]["properties"]
-    item_properties = body["text"]["format"]["schema"]["properties"]["r"]["items"]["properties"]
-    assert item_properties["i"] == {"type": "integer", "enum": [0, 1]}
+    result_schema = body["text"]["format"]["schema"]["properties"]["r"]
+    assert result_schema["minItems"] == result_schema["maxItems"] == 2
+    assert "001" in result_schema["items"]["items"]["enum"]
     assert [json.loads(line) for line in body["input"].splitlines()] == [
         {"i": 0, "text": rows[0]["text"]},
         {"i": 1, "text": rows[1]["text"]},
     ]
     assert "0=acne_comedonal" in body["instructions"]
     assert "0=helped" in body["instructions"]
+    assert "three-digit COH" in body["instructions"]
     assert json.loads((tmp_path / "usage.jsonl").read_text())["output_tokens"] == 40
+
+
+def test_azure_reasoning_effort_configurable_default_medium(monkeypatch, tmp_path):
+    row = _row("a0", "PA", "cleared my blackheads")
+
+    class Response:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"output_text": json.dumps({"r": [["001"]]}),
+                    "usage": {"input_tokens": 10, "output_tokens": 4}}
+
+    class Session:
+        def post(self, *args, **kwargs):
+            self.request = kwargs
+            return Response()
+
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    monkeypatch.delenv("AZURE_REASONING_EFFORT", raising=False)
+
+    session = Session()
+    labeler = AzureResponsesLabeler("gpt-5-mini", tmp_path / "s1", 250, 1, session,
+                                    usage_path=tmp_path / "u1.jsonl")
+    labeler.submit([row])
+    assert session.request["json"]["reasoning"] == {"effort": "medium"}
+
+    monkeypatch.setenv("AZURE_REASONING_EFFORT", "high")
+    session = Session()
+    labeler = AzureResponsesLabeler("gpt-5-mini", tmp_path / "s2", 250, 1, session,
+                                    usage_path=tmp_path / "u2.jsonl")
+    labeler.submit([row])
+    assert session.request["json"]["reasoning"] == {"effort": "high"}
+
+    monkeypatch.delenv("AZURE_REASONING_EFFORT", raising=False)
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-5-mini")
+    monkeypatch.setenv("AZURE_INPUT_PRICE_PER_MILLION", "0.25")
+    monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "2")
+    cfg = {**load_config()["concern"], "batch_spool_dir": str(tmp_path / "s3")}
+    assert _labeler(cfg).reasoning_effort == cfg["azure_reasoning_effort"] == "medium"
+
+
+def test_azure_records_failed_request_usage_with_identity(monkeypatch, tmp_path):
+    row = _row("a0", "PA", "cleared my blackheads")
+
+    class Response:
+        def json(self):
+            return {"id": "azure-request-1", "usage": {
+                "input_tokens": 100, "output_tokens": 40,
+            }}
+
+        def raise_for_status(self):
+            raise RuntimeError("provider rejected request")
+
+    class Session:
+        def post(self, *args, **kwargs):
+            return Response()
+
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    labeler = AzureResponsesLabeler(
+        "deployment-a", tmp_path / "spool", 250, 1, Session(),
+        usage_path=tmp_path / "usage.jsonl",
+    )
+
+    labeler.submit([row])
+
+    record = json.loads((tmp_path / "usage.jsonl").read_text())
+    assert record["provider"] == "azure"
+    assert record["model"] == "deployment-a"
+    assert record["prompt_version"] == PROMPT_VERSION
+    assert record["request_id"] == "azure-request-1"
+    assert record["status"] == "failed"
+    assert record["input_tokens"] == 100 and record["output_tokens"] == 40
 
 
 def test_labeler_selects_complete_azure_configuration(monkeypatch, tmp_path):
@@ -451,8 +577,69 @@ def test_labeler_selects_complete_azure_configuration(monkeypatch, tmp_path):
     monkeypatch.setenv("AZURE_KEY", "test-key")
     monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
     monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "cheap-deployment")
+    monkeypatch.setenv("AZURE_INPUT_PRICE_PER_MILLION", "0.25")
+    monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "2")
 
-    assert isinstance(_labeler(cfg), AzureResponsesLabeler)
+    labeler = _labeler(cfg)
+    assert isinstance(labeler, AzureResponsesLabeler)
+    assert labeler.max_budget_usd == cfg["max_budget_usd"]
+
+
+def test_azure_labeler_reserves_budget_before_http(monkeypatch, tmp_path):
+    row = _row("a0", "PA", "cleared my blackheads")
+
+    class Session:
+        calls = 0
+
+        def post(self, *args, **kwargs):
+            self.calls += 1
+            raise AssertionError("HTTP must not run after reservation refusal")
+
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    session = Session()
+    labeler = AzureResponsesLabeler(
+        "deployment-a", tmp_path / "spool", 250, 1, session,
+        usage_path=tmp_path / "usage.jsonl",
+        max_budget_usd=0.000001,
+        input_price_per_million=1,
+        output_price_per_million=1,
+        max_requests=10,
+    )
+
+    batch_id = labeler.submit([row])
+
+    assert session.calls == 0
+    assert labeler.fetch(batch_id)[0][2] == "budget_ceiling"
+    assert not (tmp_path / "usage.jsonl").exists()
+
+
+def test_azure_labeler_reserves_request_count_before_http(monkeypatch, tmp_path):
+    row = _row("a0", "PA", "cleared my blackheads")
+
+    class Session:
+        calls = 0
+
+        def post(self, *args, **kwargs):
+            self.calls += 1
+            raise AssertionError("HTTP must not run after request-limit refusal")
+
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    session = Session()
+    labeler = AzureResponsesLabeler(
+        "deployment-a", tmp_path / "spool", 250, 1, session,
+        usage_path=tmp_path / "usage.jsonl",
+        max_budget_usd=10,
+        input_price_per_million=1,
+        output_price_per_million=1,
+        max_requests=0,
+    )
+
+    batch_id = labeler.submit([row])
+
+    assert session.calls == 0
+    assert labeler.fetch(batch_id)[0][2] == "request_ceiling"
 
 
 def test_labeler_refuses_partial_azure_configuration(monkeypatch, tmp_path):
@@ -515,11 +702,94 @@ def test_azure_cost_preflight_uses_calibration_usage_with_margin(monkeypatch, tm
     assert cost == pytest.approx((100 + 450) / 1e6 + 25 / 1e6 * 2)
 
 
+def _azure_gate_cfg(tmp_path, usage_path, **overrides):
+    cfg = {**load_config()["concern"],
+           "labels_path": str(tmp_path / "labels.jsonl"),
+           "batch_state_path": str(tmp_path / "batches.json"),
+           "azure_usage_path": str(usage_path),
+           "max_budget_usd": 100.0}
+    cfg.update(overrides)
+    (tmp_path / "calibration_report.json").write_text(json.dumps({
+        "yield": 0.40,
+        "gate_p2_yield": "PASS",
+        "measured_agreement": 0.90,
+        "audited_rows": 50,
+    }))
+    return cfg
+
+
+def test_azure_preflight_debits_matching_cumulative_usage(monkeypatch, tmp_path):
+    usage = tmp_path / "usage.jsonl"
+    usage.write_text("\n".join(json.dumps(record) for record in [
+        {"provider": "azure", "model": "deployment-a",
+         "prompt_version": "p7", "request_id": "1",
+         "status": "failed", "rows": 1, "input_tokens": 1000,
+         "output_tokens": 100},
+        {"provider": "azure", "model": "other-deployment",
+         "prompt_version": PROMPT_VERSION, "request_id": "2",
+         "status": "succeeded", "rows": 1, "input_tokens": 9000,
+         "output_tokens": 9000},
+    ]) + "\n")
+    cfg = _azure_gate_cfg(tmp_path, usage, max_budget_usd=0.001)
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "deployment-a")
+    monkeypatch.setenv("AZURE_INPUT_PRICE_PER_MILLION", "1")
+    monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "1")
+
+    with pytest.raises(RuntimeError, match="cumulative"):
+        cmd_label([], cfg, yes=True, p2_approved=False)
+
+
+def test_azure_preflight_enforces_cumulative_request_limit(monkeypatch, tmp_path):
+    usage = tmp_path / "usage.jsonl"
+    usage.write_text("\n".join(json.dumps(record) for record in [
+        {"provider": "azure", "model": "deployment-a",
+         "prompt_version": PROMPT_VERSION, "request_id": "1",
+         "status": "failed", "rows": 1},
+        {"provider": "azure", "model": "deployment-a",
+         "prompt_version": PROMPT_VERSION, "request_id": "2",
+         "status": "succeeded", "rows": 1},
+    ]) + "\n")
+    cfg = _azure_gate_cfg(tmp_path, usage, azure_max_requests=1)
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "deployment-a")
+    monkeypatch.setenv("AZURE_INPUT_PRICE_PER_MILLION", "1")
+    monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "1")
+
+    with pytest.raises(RuntimeError, match="request"):
+        cmd_label([], cfg, yes=True, p2_approved=False)
+
+
+def test_azure_label_summary_reports_cumulative_budget_and_requests(monkeypatch, tmp_path):
+    usage = tmp_path / "usage.jsonl"
+    usage.write_text(json.dumps({
+        "provider": "azure", "model": "deployment-a",
+        "prompt_version": PROMPT_VERSION, "request_id": "1",
+        "status": "succeeded", "rows": 1,
+        "input_tokens": 100, "output_tokens": 40,
+    }) + "\n")
+    cfg = _azure_gate_cfg(tmp_path, usage, azure_max_requests=10)
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "deployment-a")
+    monkeypatch.setenv("AZURE_INPUT_PRICE_PER_MILLION", "1")
+    monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "1")
+    monkeypatch.setattr(concern_labels, "_labeler", lambda _cfg: StubLabeler({}))
+
+    summary = cmd_label([], cfg, yes=True, p2_approved=False)
+
+    assert summary["azure_request_count"] == 1
+    assert summary["azure_max_request_count"] == 10
+    assert summary["azure_historical_cost_usd"] == pytest.approx(0.00014)
+
+
 def test_full_run_is_pinned_to_zero_cost_endpoint():
     cfg = load_config()["concern"]
     rows = [{"text": "x" * 1200}] * 202_000
     assert estimate_cost(rows, cfg) == 0
-    assert cfg["max_budget_usd"] <= 20
+    assert cfg["max_budget_usd"] <= 40   # user-approved hard Azure ceiling
     assert cfg["labeling_model"].endswith(":free")
 
 
@@ -537,6 +807,86 @@ def test_full_label_requires_p2_signoff():
         assert "P2 sign-off" in str(exc)
     else:
         raise AssertionError("full labeling ran without P2 sign-off")
+
+
+def test_full_label_requires_persisted_calibration_report(monkeypatch, tmp_path):
+    cfg = {**load_config()["concern"],
+           "labels_path": str(tmp_path / "labels.jsonl"),
+           "batch_state_path": str(tmp_path / "batches.json")}
+    report_path = tmp_path / "calibration_report.json"
+    report_path.write_text(json.dumps({
+        "yield": 0.40,
+        "gate_p2_yield": "PASS",
+        "measured_agreement": 0.90,
+        "audited_rows": 50,
+    }))
+    monkeypatch.setattr(concern_labels, "_labeler", lambda _cfg: StubLabeler({}))
+
+    summary = cmd_label([], cfg, yes=True, p2_approved=False)
+
+    assert summary["submitted"] == 0
+
+
+def test_p2_boolean_cannot_bypass_calibration_report(tmp_path):
+    cfg = {**load_config()["concern"],
+           "labels_path": str(tmp_path / "labels.jsonl"),
+           "batch_state_path": str(tmp_path / "batches.json")}
+    (tmp_path / "calibration_report.json").write_text(json.dumps({
+        "yield": 0.40,
+        "gate_p2_yield": "PASS",
+        "measured_agreement": 0.84,
+        "audited_rows": 50,
+    }))
+
+    with pytest.raises(RuntimeError, match="agreement"):
+        cmd_label([], cfg, yes=True, p2_approved=True)
+
+
+def test_calibration_audit_is_sample_bound_and_recomputed(tmp_path):
+    sample = tmp_path / "calibration_sample.csv"
+    sample.write_text("uid,text,labels\n" + "\n".join(
+        f'u{i},text {i},"[]"' for i in range(50)
+    ) + "\n")
+    audits = [{"uid": f"u{i}", "exact_match": i < 44} for i in range(50)]
+    audit = tmp_path / "audit.json"
+    audit.write_text(json.dumps({
+        "schema_version": "concern-calibration-audit-1",
+        "reviewer_model": "gpt-5.6-luna",
+        "reasoning_effort": "xhigh",
+        "policy_prompt_version": PROMPT_VERSION,
+        "sample_sha256": __import__("hashlib").sha256(sample.read_bytes()).hexdigest(),
+        "audited_rows": 50,
+        "exact_matches": 44,
+        "measured_agreement": 0.88,
+        "audits": audits,
+    }))
+
+    result = concern_labels._validated_calibration_audit(
+        audit, sample, [f"u{i}" for i in range(50)],
+    )
+
+    assert result["audited_rows"] == 50
+    assert result["exact_matches"] == 44
+    assert result["measured_agreement"] == 0.88
+    assert result["reviewer_model"] == "gpt-5.6-luna"
+
+
+def test_calibration_audit_rejects_declared_agreement_mismatch(tmp_path):
+    sample = tmp_path / "calibration_sample.csv"
+    sample.write_text("uid,text,labels\nu0,text,[]\n")
+    audit = tmp_path / "audit.json"
+    audit.write_text(json.dumps({
+        "schema_version": "concern-calibration-audit-1",
+        "policy_prompt_version": PROMPT_VERSION,
+        "sample_sha256": __import__("hashlib").sha256(sample.read_bytes()).hexdigest(),
+        "audited_rows": 1,
+        "exact_matches": 1,
+        "measured_agreement": 0.0,
+        "audits": [{"uid": "u0", "exact_match": True}],
+    }))
+
+    with pytest.raises(RuntimeError, match="agreement"):
+        concern_labels._validated_calibration_audit(audit, sample, ["u0"])
 
 
 if __name__ == "__main__":

@@ -64,10 +64,14 @@ python -m recsys.tools.build_ingredient_analysis \
   --out recsys/data/signals/ingredient_analysis.v1.json --data-root recsys/data
 
 # Phase 2 uses semantic model labels plus the versioned literal-policy layer.
-# p7 passed the independent 50-row exact-set gate at 44/50 (88%).
+# Calibration writes a 50-row audit sample. Record the independently measured
+# exact-set agreement only after reviewing that artifact; the full pass requires
+# yield >=30%, agreement >=85%, and at least 50 audited rows in the report.
 python -m src.recommendation.concern_labels probe
-python -m src.recommendation.concern_labels calibrate
-python -m src.recommendation.concern_labels label --yes --p2-approved
+python -m src.recommendation.concern_labels calibrate --n 50
+python -m src.recommendation.concern_labels calibrate --n 50 \
+  --audit-file runs/concern/calibration_audit.json
+python -m src.recommendation.concern_labels label --yes
 python -m recsys.tools.build_concern_efficacy \
   --labels data/processed/review_concern_labels.jsonl \
   --catalog recsys/data/catalog/seed_catalog.json \
@@ -84,8 +88,10 @@ When Azure is configured, the labeler requires `TARGET_URL` (or
 `AZURE_OPENAI_ENDPOINT`), `AZURE_KEY` (or `AZURE_OPENAI_API_KEY`), the exact
 `AZURE_OPENAI_DEPLOYMENT`, and explicit `AZURE_INPUT_PRICE_PER_MILLION` /
 `AZURE_OUTPUT_PRICE_PER_MILLION` values. The full pass refuses partial Azure
-configuration, writes an ignored token ledger, and enforces the configured
-$15 preflight ceiling before submitting work.
+configuration, writes an ignored token ledger, and enforces both the configured
+$40 cumulative ceiling and 900-request ceiling. Each in-flight request reserves
+its conservative maximum cost before submission, so retries and concurrency
+cannot bypass those limits.
 
 Full-catalog twins go to `recsys/data/derived/` (gitignored). Build signal
 stores under `derived/signals/` with `--data-root recsys/data/derived`, then run

@@ -18,6 +18,7 @@ import os
 import re
 import threading
 import time
+from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -33,7 +34,7 @@ CONCERNS = [
 ACNE_CONCERNS = CONCERNS[:4]
 VALID_OUTCOMES = {"helped", "worsened", "unclear"}
 COMPACT_OUTCOMES = ["helped", "worsened", "unclear"]
-PROMPT_VERSION = "p7"
+PROMPT_VERSION = "p9"
 
 USECOLS = ["author_id", "rating", "is_recommended", "skin_tone", "skin_type",
            "product_id", "review_text", "review_title"]
@@ -80,28 +81,23 @@ def _batch_schema(uids: list[str]) -> dict:
 
 
 def _compact_batch_schema(row_count: int) -> dict:
-    """Short Azure wire keys reduce paid output tokens; cache stays canonical."""
+    """Three-character labels reduce paid output tokens; cache stays canonical."""
+    codes = [
+        f"{concern}{outcome}{condition}"
+        for concern in range(len(CONCERNS))
+        for outcome in range(len(COMPACT_OUTCOMES))
+        for condition in (0, 1)
+    ]
     return {
         "type": "object",
-        "properties": {"r": {"type": "array", "items": {
-            "type": "object",
-            "properties": {
-                "i": {"type": "integer", "enum": list(range(row_count))},
-                "l": {"type": "array", "items": {
-                    "type": "object",
-                    "properties": {
-                        "c": {"type": "integer", "enum": list(range(len(CONCERNS)))},
-                        "o": {"type": "integer",
-                              "enum": list(range(len(COMPACT_OUTCOMES)))},
-                        "h": {"type": "boolean"},
-                    },
-                    "required": ["c", "o", "h"],
-                    "additionalProperties": False,
-                }},
-            },
-            "required": ["i", "l"],
-            "additionalProperties": False,
-        }}},
+        "properties": {"r": {
+            "type": "array",
+            "items": {"type": "array", "items": {
+                "type": "string", "enum": codes,
+            }},
+            "minItems": row_count,
+            "maxItems": row_count,
+        }},
         "required": ["r"],
         "additionalProperties": False,
     }
@@ -187,9 +183,9 @@ Literal rules and examples:
 LITERAL_PATTERNS = {
     "acne_comedonal": re.compile(
         r"\b(?:blackheads?|whiteheads?|comedones?|(?:clogg\w*|unclog\w*|"
-        r"clear(?:ed|s|ing)?)(?:\s+\w+){0,4}\s+pores?|"
+        r"clog\w*|unclog\w*|plug\w*|clear(?:ed|s|ing)?)(?:\s+\w+){0,4}\s+pores?|"
         r"pores?\s+(?:look(?:ed)?\s+)?"
-        r"(?:clogg\w*|plugg\w*))\b", re.I,
+        r"(?:clog\w*|plug\w*))\b", re.I,
     ),
     "acne_inflammatory": re.compile(r"\b(?:pimples?|zits?|pustules?|papules?)\b", re.I),
     "acne_cystic": re.compile(
@@ -197,10 +193,10 @@ LITERAL_PATTERNS = {
     ),
     "acne_general": re.compile(
         r"\b(?:(?<!cystic )(?<!hormonal )acne(?!\s+(?:scars?|scarring|marks?))|"
-        r"br(?:eak|ake)\s?outs?|blemishes?)\b", re.I,
+        r"br(?:eak|ake)\s?outs?|break(?:ing)?\s+out|broke[n]?\s+out|break me out|blemishes?)\b", re.I,
     ),
     "hyperpigmentation": re.compile(
-        r"\b(?:dark spots?|acne (?:scars?|marks?)|discoloration|melasma|"
+        r"\b(?:dark spots?|acne (?:scars?|scarring|marks?)|discoloration|melasma|"
         r"sun spots?|hyper[- ]?pigmentation)\b", re.I,
     ),
     "dryness": re.compile(
@@ -219,13 +215,53 @@ _WORSENED = re.compile(
 )
 _PRODUCT_PREVENTION = re.compile(
     r"\b(?:did not|didn['’]t|does not|doesn['’]t|has not|hasn['’]t|"
-    r"have not|haven['’]t|never)\b[^.!?]{0,45}"
-    r"\b(?:break\s?outs?|br(?:eak|oke) me out|clog\w* pores?)\b|"
-    r"\bwithout (?:any )?(?:break\s?outs?|clogg\w* pores?)\b", re.I,
+    r"have not|haven['’]t|never)\b[^.!?,]{0,45}"
+    r"\b(?:break\s?outs?|break(?:ing)?\s+out|br(?:eak|oke) me out|"
+    r"clog\w* pores?|plug\w* pores?)\b|"
+    r"\b(?:no|without (?:any )?)\s+(?:break\s?outs?|break(?:ing)?\s+out|"
+    r"clogg?\w* pores?|plugg?\w* pores?)\b", re.I,
 )
-_ABSENT_CONDITION = re.compile(
-    r"\bi (?:do not|don't|dont|did not|didn't|never) (?:really )?"
-    r"(?:get|have)[^.!?]{0,25}\b", re.I,
+_PREVENTION_INTENT = re.compile(
+    r"\b(?:avoid\w*|so|to)\b[^.!?]{0,45}\b(?:don['’]?t|do not|"
+    r"doesn['’]?t|does not|won['’]?t|will not)\b[^.!?]{0,35}"
+    r"\b(?:break\s?outs?|break(?:ing)?\s+out|break me out|clog\w* pores?)\b|"
+    r"\bavoid\w*\b[^.!?]{0,35}\b(?:break\s?outs?|"
+    r"break(?:ing)?\s+out|clog\w* pores?)\b", re.I,
+)
+_NON_WORSENING = re.compile(
+    r"\b(?:didn['’]?t|did not|doesn['’]?t|does not|hasn['’]?t|has not|"
+    r"haven['’]?t|have not|never)\b[^.!?]{0,45}\b(?:make|made|cause|caused|"
+    r"give|gave)\b[^.!?]{0,30}\b(?:acne|break\s?outs?|break(?:ing)?\s+out|"
+    r"blemishes?|pimples?|zits?)\b[^.!?]{0,20}\b(?:worse|out)\b", re.I,
+)
+def _absent_condition(concern: str, joined: str) -> bool:
+    """Reviewer states they do not have this concern (term-bound per concern)."""
+    term = _CONCERN_TERMS[concern]
+    return bool(re.search(
+        rf"\b(?:i|my skin|my face)\s+(?:do not|don['’]?t|dont|did not|didn['’]?t|"
+        rf"never|have not|haven['’]?t)\b[^.!?,]{{0,35}}{term}|"
+        rf"\b(?:no|without)\s+{term}", joined, re.I,
+    ))
+_NO_EFFECT = re.compile(
+    r"\b(?:no effect|no difference|no improvement|didn['’]?t see|did not see|"
+    r"doesn['’]?t do|does not do|not doing|not the one|not worth|"
+    r"not sure|unsure|unclear|don't know|do not know|no idea|might|may|could|"
+    r"hoped|hoping|wanted to)\b|"
+    r"\b(?:doesn['’]?t|does not|didn['’]?t|did not|not)\b[^.!?]{0,40}"
+    r"\b(?:moisturiz\w*|hydrat\w*|penetrat\w*|work\w*)\b", re.I,
+)
+_CONCERN_TERMS = {
+    "acne_comedonal": r"(?:blackheads?|whiteheads?|comedones?|pores?|(?:clog|unclog|plug)\w*\s+pores?)",
+    "acne_inflammatory": r"(?:pimples?|zits?|pustules?|papules?)",
+    "acne_cystic": r"(?:cystic acne|hormonal acne|hormonal breakouts?|deep painful bumps?)",
+    "acne_general": r"(?:(?<!cystic )(?<!hormonal )acne|break(?:ing)?\s+out|broke[n]?\s+out|break\s?outs?|break me out|blemishes?)",
+    "hyperpigmentation": r"(?:dark spots?|acne (?:scars?|scarring|marks?)|discoloration|melasma|sun spots?|hyper[- ]?pigmentation)",
+    "dryness": r"(?:dry(?:ness|ing)?|dry patches?|flak\w*|dehydrat\w*)",
+}
+_EFFECT_WORDS = r"(?:clear\w*|decreas\w*|reduc\w*|smaller|shrink\w*|calm\w*|unclog\w*|fad\w*|improv\w*|help\w*|sav\w*|works? great|works? wonders|effective|got(?:ten)? rid|lighten\w*|dry up)"
+_PERSONAL_HISTORY = re.compile(
+    r"\b(?:i(?:['’]ve| have)\s+been|(?:often|usually|sometimes)\s+i\s+do|"
+    r"i\s+(?:have|had|get|got|experience|suffer\w*))\b[^.!?]{0,100}", re.I,
 )
 
 
@@ -238,58 +274,221 @@ def _concern_sentences(text: str, concern: str) -> list[str]:
                    if not (re.search(r"\b(?:once dry|let it dry|dr(?:y|ies) down|dry finish)\b",
                                      sentence, re.I)
                            and not re.search(r"\b(?:skin|face|cheeks?|jawline|patches|dryness|drying)\b",
-                                             sentence, re.I))]
+                                             sentence, re.I))
+                   and not (re.search(r"\b(?:plastic|tube|bottle|container)\b", sentence, re.I)
+                            and not re.search(r"\b(?:skin|face|cheeks?|jawline|patches|dryness)\b",
+                                              sentence, re.I))]
     return matches
 
 
-def _explicit_outcome(concern: str, sentences: list[str]) -> str | None:
+def _term_effect(concern: str, joined: str, effect: str) -> bool:
+    term = _CONCERN_TERMS[concern]
+    return bool(re.search(rf"(?:{effect})[^.!?]{{0,55}}{term}|{term}[^.!?]{{0,55}}(?:{effect})",
+                          joined, re.I))
+
+
+def _direct_worsening(concern: str, joined: str, full_text: str | None = None) -> bool:
+    if re.search(r"\b(?:no|not|non)\s+drying\b", joined, re.I):
+        return False
+    term = _CONCERN_TERMS[concern]
+    source = joined
+    if concern == "acne_inflammatory" and full_text:
+        source += " " + full_text
+    product_cause = re.search(
+        rf"\b(?:this|it|the product|the mask|the moisturizer|the serum|the oil|the cream|"
+        rf"the lotion)\b[^.!?]{{0,55}}\b(?:caus\w*|gave me|made my)\b"
+        rf"[^.!?]{{0,45}}{term}", source, re.I,
+    )
+    explicit_cause = re.search(
+        rf"\b(?:caus\w*|gave me|broke me out|breaking me out|broken out|began breaking out|"
+        rf"woke up to)\b(?![^.!?]{{0,20}}\b(?:zero|no)\b)[^.!?]{{0,45}}{term}|"
+        rf"\bmade my\b[^.!?]{{0,35}}{term}(?:[^.!?]{{0,20}}\bworse\b)?", source, re.I,
+    )
+    if re.search(r"\b(?:doesn['’]?t|does not|didn['’]?t|did not|never)\b(?!\s+want\b)"
+                 r"[^.!?,]{0,30}\b(?:cause|clog)\w*\b|"
+                 r"\b(?:doesn['’]?t|does not|didn['’]?t|did not|never)\b(?!\s+want\b)"
+                 r"[^.!?,]{0,20}\bmake\b[^.!?]{0,20}\bbreak", source, re.I):
+        return False
+    if concern == "acne_comedonal" and re.search(r"\bpores?\s+(?:got\s+)?clog\w*\b", source, re.I):
+        return True
+    if concern == "acne_inflammatory" and (
+            (explicit_cause and re.search(_CONCERN_TERMS[concern], joined, re.I))
+            or (re.search(r"\bcaus\w*\b(?![^.!?]{0,20}\b(?:zero|no)\b)"
+                          r"[^.!?]{0,35}\b(?:break\s?outs?|break(?:ing)?\s+out)\b",
+                          source, re.I)
+                and re.search(_CONCERN_TERMS[concern], source, re.I))):
+        return True
+    if concern == "dryness":
+        return bool(product_cause or re.search(
+            r"\b(?:it|this|the mask|the product)\b[^.!?]{0,35}\b(?:dried|drying|left|made|caused)\b"
+            r"[^.!?]{0,30}\b(?:skin|face|patches|dry|flak\w*|itch\w*)\b|"
+            r"\b(?:left|made)\b[^.!?]{0,35}\b(?:my )?(?:skin|face|patches)\b[^.!?]{0,20}"
+            r"\b(?:dry|itch\w*|flak\w*)\b|\bdried (?:my )?(?:skin|it) out\b|\btoo drying\b",
+            source, re.I,
+        ))
+    return bool(product_cause or explicit_cause)
+
+
+def _specific_help(concern: str, joined: str, full_text: str | None = None) -> bool:
+    if concern == "dryness":
+        return bool(re.search(
+            r"\b(?:adds?|provides?|gives?)\b[^.!?]{0,30}\b(?:hydration|moistur\w*)\b|"
+            r"\b(?:moistur\w*|hydrat\w*)\b[^.!?]{0,35}\b(?:dry|flak\w*|dehydrat\w*)\b|"
+            r"\b(?:got rid of|cleared|removed)\b[^.!?]{0,30}\b(?:my )?(?:dry patches?|dryness|flak\w*)\b|"
+            r"\bprevent\w*\b[^.!?]{0,35}\b(?:dry|flak\w*|dehydrat\w*)\b|"
+            r"\b(?:helps?|helped)\b[^.!?]{0,35}\b(?:the )?dryness\b|"
+            r"\b(?:no more|without)\b[^.!?]{0,20}\b(?:flak\w*|dry patches?)\b|"
+            r"\b(?:love|great|good)\b[^.!?]{0,25}\b(?:my )?dry patches?\b|"
+            r"\b(?:got|put|applied)\b[^.!?]{0,25}\bdry areas?\b",
+            joined, re.I,
+        ))
+    if concern == "hyperpigmentation":
+        return bool(_term_effect(
+            concern, joined, r"(?:fad\w*|lighten\w*|got(?:ten)? rid of|improv\w*|clear\w*)",
+        ) or re.search(r"\bno more\s+(?:acne )?scars?\b",
+                       joined + (" " + full_text if full_text else ""), re.I))
+    if concern == "acne_general":
+        source = joined + (" " + full_text if full_text else "")
+        return bool(
+            _term_effect(concern, joined, _EFFECT_WORDS)
+            or re.search(r"\b(?:saved me|stops?)\b[^.!?]{0,35}\b(?:break\w*|acne|blemish)", joined, re.I)
+            or (re.search(r"\b(?:acne[- ]prone|acne skin|had acne)\b", source, re.I)
+                and re.search(r"\b(?:skin|face)\b[^.!?]{0,45}\bclear\w*\b|"
+                              r"\bacne\b[^.!?]{0,35}\b(?:not so bad|difference)\b",
+                              source, re.I))
+        )
+    if concern == "acne_inflammatory":
+        return _term_effect(
+            concern, joined,
+            r"(?:clear\w*|decreas\w*|reduc\w*|smaller|shrink\w*|dry up|help\w*)",
+        )
+    return _term_effect(concern, joined, _EFFECT_WORDS)
+
+
+def _explicit_outcome(concern: str, sentences: list[str], full_text: str | None = None) -> str | None:
     joined = " ".join(sentences)
     if not joined:
         return None
-    if re.search(r"\b(?:this(?: product)?|it|the product)\s+"
-                 r"(?:caused?|gave me|made my)\b", joined, re.I):
+    prevention = (_PRODUCT_PREVENTION.search(joined)
+                  and not _PREVENTION_INTENT.search(joined)
+                  and not re.search(r"\bdidn['’]?t want\b", joined, re.I))
+    non_worsening = _NON_WORSENING.search(joined) and not _PREVENTION_INTENT.search(joined)
+    helped = _specific_help(concern, joined, full_text)
+    worsened = _direct_worsening(concern, joined, full_text)
+
+    if concern == "acne_general" and re.search(
+            r"\b(?:when|if)\b[^.!?]{0,45}\b(?:too much|too strong|new to)\b", joined, re.I):
+        worsened = False
+    if concern == "acne_general" and re.search(
+            r"\b(?:acne[- ]prone|acne skin|had acne|acne)\b", joined, re.I):
+        source = joined + (" " + full_text if full_text else "")
+        helped = helped or bool(re.search(
+            r"\b(?:skin|face)\b[^.!?]{0,45}\bclear\w*\b|"
+            r"\bacne\b[^.!?]{0,35}\b(?:not so bad|difference)\b", source, re.I,
+        ))
+        if re.search(r"\b(?:have\s+since|since)\s+clear\w*\s+it\s+up\b", joined, re.I):
+            helped = bool(re.search(
+                r"\b(?:this|it|the product)\b[^.!?]{0,45}"
+                rf"(?:{_EFFECT_WORDS})[^.!?]{{0,45}}{_CONCERN_TERMS[concern]}",
+                joined, re.I,
+            ))
+    unclear_signal = False
+    if re.search(r"\b(?:hoped|hoping|wanted to|thought)\b", joined, re.I) and not re.search(
+            r"\b(?:helped|cleared|faded|got(?:ten)? rid|caused|broke me out)\b", joined, re.I):
+        helped = False
+        unclear_signal = True
+    if concern == "dryness" and re.search(r"\bhydrat\w* enough for dry skin\b", joined, re.I):
+        helped = False
+        unclear_signal = True
+    if _NO_EFFECT.search(joined) and not prevention and (not helped or concern == "acne_comedonal") and not re.search(
+            r"\b(?:this|it|the product)\b[^.!?]{0,45}"
+            r"(?:help\w*|clear\w*|reduc\w*|fad\w*|got(?:ten)? rid)\w*\b",
+            joined, re.I,
+    ):
+        helped = False
+        unclear_signal = True
+    if re.search(r"\b(?:caus\w*|gave me)\b[^.!?]{0,20}\b(?:zero|no)\b", joined, re.I):
+        worsened = False
+    if helped and re.search(
+            r"\b(?:when i first started|used too much|too strong|if you['’]?re new)\b",
+            joined, re.I,
+    ):
+        worsened = False
+    if worsened:
         return "worsened"
-    if _PRODUCT_PREVENTION.search(joined):
+    if prevention or non_worsening:
         return "helped"
-    if re.search(r"\bstops?\b[^.!?]{0,30}\b(?:acne|break\s?outs?|blemishes?)\b",
-                 joined, re.I):
-        return "helped"
-    if _WORSENED.search(joined):
-        return "worsened"
-    if _HELPED.search(joined):
+    if helped:
         return "helped"
     if concern == "acne_cystic" and re.search(r"\bproduct is amazing\b", joined, re.I):
         return "helped"
-    return None
+    # No literal signal at all -> None: the model's semantic label stands.
+    return "unclear" if unclear_signal else None
 
 
 def _personal_condition(concern: str, sentences: list[str], outcome: str | None) -> bool | None:
     joined = " ".join(sentences)
     if not joined:
         return None
-    term = LITERAL_PATTERNS[concern].pattern
-    if re.search(rf"\bmy\b[^.!?]{{0,45}}(?:{term})", joined, re.I):
-        return True
-    if re.search(rf"\bi\s+(?:have|had|get|got|do|am|was|suffer\w*|experience\w*|"
-                 rf"undergo\w*)\b[^.!?]{{0,150}}(?:{term})", joined, re.I):
-        return True
-    if _ABSENT_CONDITION.search(joined):
+    term = _CONCERN_TERMS[concern]
+    advice = re.sub(
+        r"\b(?:avoid|do not use|don't use)\b[^.!?]{0,45}"
+        r"(?:popped )?(?:pimples?|zits?)", "", joined, flags=re.I,
+    )
+    absent = _absent_condition(concern, joined)
+    personal_direct = bool(
+        re.search(r"\bmy\s+(?:face|skin)\b[^.!?]{0,30}"
+                  r"(?:has|had|got|gets?|became|break\w*|is|was)\b[^.!?]{0,30}"
+                  rf"(?:{term})", joined, re.I)
+        or re.search(rf"\bmy\b[^.!?]{{0,30}}(?:{term})", joined, re.I)
+        or (concern == "acne_inflammatory"
+            and re.search(r"\b(?:a|some|occasional|the occasional)\s+"
+                          r"(?:pimples?|zits?)\b", joined, re.I))
+    )
+    positive_personal = bool(
+        (_PERSONAL_HISTORY.search(joined) and not absent)
+        or personal_direct
+        or re.search(rf"\bi\s+(?:do|did|get|got|have|had|am|['’]ve been)\b"
+                     rf"[^.!?]{{0,65}}(?:{term})", joined, re.I)
+    )
+    if absent and not personal_direct:
         return False
-    if concern == "dryness" and re.search(r"\bmy skin (?:feels?|is|was)\b[^.!?]{0,25}\bdry\b",
-                                           joined, re.I):
+    if _PREVENTION_INTENT.search(joined):
+        return False
+    if (_PRODUCT_PREVENTION.search(joined)
+            and not positive_personal
+            and not re.search(r"\bdidn['’]?t want\b", joined, re.I)):
+        return False
+    if advice != joined and not personal_direct:
+        return False
+    if concern == "dryness":
+        condition_text = re.sub(
+            r"\b(?:not|non|without|no)\s+(?:overly\s+|over\s+)?dry\w*\b|\bdry finish\b|\bmask is dry\b",
+            "", joined, flags=re.I,
+        )
+        if not re.search(r"\b(?:dry|dry skin|dry patches?|dryness|dehydrat\w*|drier skin|flak\w*)\b",
+                         condition_text, re.I):
+            return False
+    if re.search(rf"\bmy\b[^.!?]{{0,55}}(?:{term})", advice, re.I):
         return True
-    if concern == "acne_general" and re.search(r"\bmy skin\b[^.!?]{0,25}\bacne[- ]prone\b",
-                                                joined, re.I):
+    if re.search(rf"\b(?:i(?:['’]m|['’]ve| am| have| had| was| get| got| do| did)|"
+                 rf"as someone with|someone with)\b[^.!?]{{0,150}}(?:{term})", advice, re.I):
+        return True
+    if concern == "dryness" and re.search(
+            r"\b(?:dryness|dry skin|dry patches?)\b\s+from\s+[^.!?]*\bproducts?\b", joined, re.I):
+        return True
+    if concern == "acne_general" and re.search(r"\bmy skin\b[^.!?]{0,35}\bacne[- ]prone\b",
+                                                advice, re.I):
         return True
     if concern == "acne_general" and re.search(r"\bi have\b[^.!?]{0,35}\bacne[- ]prone skin\b",
-                                                joined, re.I):
+                                                advice, re.I):
         return True
-    if outcome == "worsened" and re.search(r"\b(?:me|my|i)\b", joined, re.I):
+    if outcome == "worsened" and re.search(r"\b(?:me|my|i)\b", advice, re.I):
         return True
-    if _PRODUCT_PREVENTION.search(joined):
-        return False
-    if (re.search(r"\bmy (?:face|skin|chin|nose|cheeks?|jawline)\b", joined, re.I)
-            and LITERAL_PATTERNS[concern].search(joined)):
+    if (positive_personal and not _PREVENTION_INTENT.search(joined)):
+        return True
+    if (re.search(r"\bmy (?:face|skin|chin|nose|cheeks?|jawline)\b", advice, re.I)
+            and re.search(term, advice, re.I)):
         return True
     if (concern != "dryness" and not re.search(r"\b(?:i|my|me)\b", joined, re.I)
             and re.search(r"\b(?:amazing|good|effective) for\b|\b(?:reduc|calm|stop)\w*\b",
@@ -314,21 +513,14 @@ def enforce_literal_policy(text: str, labels: list[dict]) -> list[dict]:
     for concern in CONCERNS:
         if not sentences[concern]:
             continue
-        explicit = _explicit_outcome(concern, sentences[concern])
+        explicit = _explicit_outcome(concern, sentences[concern], text)
         personal = _personal_condition(concern, sentences[concern], explicit)
-        if (personal is False and _ABSENT_CONDITION.search(" ".join(sentences[concern]))
+        if (personal is False and _absent_condition(concern, " ".join(sentences[concern]))
                 and not _PRODUCT_PREVENTION.search(" ".join(sentences[concern]))):
             explicit = None
         label = by_concern.get(concern)
         if label is None:
             outcome = explicit
-            if outcome is None and concern in ACNE_CONCERNS:
-                sibling_outcomes = {
-                    item["outcome"] for key, item in by_concern.items()
-                    if key in ACNE_CONCERNS and item["outcome"] != "unclear"
-                }
-                if len(sibling_outcomes) == 1 and personal is not False:
-                    outcome = sibling_outcomes.pop()
             by_concern[concern] = {
                 "concern": concern,
                 "outcome": outcome or "unclear",
@@ -342,6 +534,11 @@ def enforce_literal_policy(text: str, labels: list[dict]) -> list[dict]:
             label["outcome"] = "unclear"
         if personal is not None:
             label["reviewer_has_condition"] = personal
+
+        if (concern == "acne_inflammatory" and explicit is None
+                and re.search(r"\b(?:still|continue\w*|remain\w*)\b[^.!?]{0,30}"
+                             r"\bpimples?\b", " ".join(sentences[concern]), re.I)):
+            label["outcome"] = "unclear"
 
         if (concern == "dryness"
                 and re.search(r"\bif\b[^.!?]{0,60}\btoo drying\b", " ".join(sentences[concern]), re.I)):
@@ -407,7 +604,7 @@ def compile_prefilter(prefilter_cfg: dict) -> dict[str, re.Pattern]:
 
 def review_uid(author_id: str, product_id: str, text: str) -> str:
     """Stable review identity: md5 (NOT builtin hash) of author|product|text."""
-    key = f"{author_id}|{product_id}|{text[:300]}"
+    key = f"{author_id}|{product_id}|{text}"
     return hashlib.md5(key.encode("utf-8")).hexdigest()
 
 
@@ -454,8 +651,18 @@ def load_review_rows(reviews_dir, catalog_ids: set, patterns: dict,
     return rows
 
 
-def load_cache(path, prompt_version: str = PROMPT_VERSION) -> dict[str, dict]:
-    """uid -> cached record. Missing file -> empty (first run)."""
+def _labeler_identity(labeler) -> tuple[str, str, str]:
+    provider = getattr(labeler, "provider", None)
+    if provider is None:
+        provider = labeler.__class__.__name__.lower()
+    model = getattr(labeler, "model", labeler.__class__.__name__)
+    prompt_version = getattr(labeler, "prompt_version", PROMPT_VERSION)
+    return str(provider), str(model), str(prompt_version)
+
+
+def load_cache(path, prompt_version: str = PROMPT_VERSION, provider: str | None = None,
+               model: str | None = None) -> dict[str, dict]:
+    """uid -> cached record for the requested prompt/provider/model identity."""
     path = Path(path)
     if not path.exists():
         return {}
@@ -464,8 +671,13 @@ def load_cache(path, prompt_version: str = PROMPT_VERSION) -> dict[str, dict]:
         for line in f:
             if line.strip():
                 rec = json.loads(line)
-                if rec.get("prompt_version") == prompt_version:
-                    out[rec["uid"]] = rec
+                if rec.get("prompt_version") != prompt_version:
+                    continue
+                if provider is not None and rec.get("provider") != provider:
+                    continue
+                if model is not None and rec.get("model") != model:
+                    continue
+                out[rec["uid"]] = rec
     return out
 
 
@@ -492,12 +704,14 @@ def _save_state(path, state) -> None:
     tmp.replace(path)
 
 
-def _record(row: dict, status: str, labels: list) -> dict:
+def _record(row: dict, status: str, labels: list, provider: str, model: str,
+            prompt_version: str) -> dict:
     return {"uid": row["uid"], "author_id": row["author_id"],
             "product_id": row["product_id"], "skin_type": row["skin_type"],
             "skin_tone": row["skin_tone"], "rating": row["rating"],
             "is_recommended": row["is_recommended"],
-            "prompt_version": PROMPT_VERSION,
+            "provider": provider, "model": model,
+            "prompt_version": prompt_version,
             "status": status, "labels": labels}
 
 
@@ -518,11 +732,15 @@ def run_labeling(rows, labeler, cache_path, state_path, chunk_size,
     - unparseable/refused replies are cached (billed once, never retried);
       API-level failures (errored/expired) are NOT cached -> retried next run.
     """
-    cache = load_cache(cache_path)
+    provider, model, prompt_version = _labeler_identity(labeler)
+    cache = load_cache(cache_path, prompt_version, provider, model)
     by_uid = {r["uid"]: r for r in rows}
     state = _load_state(state_path)
+    state.setdefault("batches", {})
     summary = {"cached_before": 0, "submitted": 0, "ok": 0,
-               "parse_error": 0, "refusal": 0, "failed": 0}
+               "parse_error": 0, "refusal": 0, "failed": 0,
+               "provider": provider, "model": model,
+               "prompt_version": prompt_version}
 
     def drain(batch_id):
         while labeler.status(batch_id) != "ended":
@@ -533,26 +751,39 @@ def run_labeling(rows, labeler, cache_path, state_path, chunk_size,
             if row is None or uid in cache:
                 continue
             if failure == "refusal":
-                new.append(_record(row, "refusal", []))
+                new.append(_record(row, "refusal", [], provider, model,
+                                   prompt_version))
                 summary["refusal"] += 1
             elif failure is not None:
                 summary["failed"] += 1     # not cached -> retryable
             else:
                 try:
                     labels = enforce_literal_policy(row["text"], _parse_labels(text))
-                    new.append(_record(row, "ok", labels))
+                    new.append(_record(row, "ok", labels, provider, model,
+                                       prompt_version))
                     summary["ok"] += 1
                 except (ValueError, KeyError, TypeError, AttributeError):
-                    new.append(_record(row, "parse_error", []))
+                    new.append(_record(row, "parse_error", [], provider, model,
+                                       prompt_version))
                     summary["parse_error"] += 1
         append_cache(cache_path, new)
         cache.update({r["uid"]: r for r in new})
         state["batches"][batch_id] = {"fetched": True}
+        state["batches"][batch_id].update(
+            {"provider": provider, "model": model,
+             "prompt_version": prompt_version}
+        )
         _save_state(state_path, state)
 
     # 1) drain leftovers from a crashed run
     for bid, meta in list(state["batches"].items()):
         if not meta.get("fetched"):
+            if any(meta.get(key) is not None and meta[key] != value
+                   for key, value in (("provider", provider), ("model", model),
+                                      ("prompt_version", prompt_version))):
+                raise RuntimeError(
+                    f"pending batch {bid} belongs to a different labeler identity"
+                )
             drain(bid)
 
     # 2) submit what is still unlabeled, then drain each batch
@@ -563,7 +794,10 @@ def run_labeling(rows, labeler, cache_path, state_path, chunk_size,
         chunk = todo[i:i + chunk_size]
         bid = labeler.submit(chunk)
         summary["submitted"] += len(chunk)
-        state["batches"][bid] = {"fetched": False}
+        state["batches"][bid] = {
+            "fetched": False, "provider": provider, "model": model,
+            "prompt_version": prompt_version,
+        }
         _save_state(state_path, state)
         pending.append(bid)
     for bid in pending:
@@ -583,6 +817,8 @@ class OpenRouterLabeler:
         if not key:
             raise RuntimeError("OPENROUTER_API_KEY or OPENROUTER_KEY is required")
         self.model = model
+        self.provider = "openrouter"
+        self.prompt_version = PROMPT_VERSION
         self.spool_dir = Path(spool_dir)
         self.spool_dir.mkdir(parents=True, exist_ok=True)
         self.group_size = reviews_per_request
@@ -630,7 +866,7 @@ class OpenRouterLabeler:
 
     def submit(self, rows) -> str:
         digest = hashlib.md5(
-            (PROMPT_VERSION + "|" + self.model + "|"
+            (self.provider + "|" + self.prompt_version + "|" + self.model + "|"
              + "|".join(r["uid"] for r in rows)).encode()
         ).hexdigest()
         batch_id = f"openrouter_{digest}"
@@ -668,7 +904,10 @@ class AzureResponsesLabeler(OpenRouterLabeler):
     """Azure Responses API transport reusing the durable local spool."""
 
     def __init__(self, deployment: str, spool_dir, reviews_per_request=250,
-                 concurrency=10, session=None, usage_path=None):
+                 concurrency=10, session=None, usage_path=None,
+                 max_budget_usd=None, input_price_per_million=None,
+                 output_price_per_million=None, max_requests=None,
+                 reasoning_effort=None):
         import requests
         key = os.environ.get("AZURE_KEY") or os.environ.get("AZURE_OPENAI_API_KEY")
         url = os.environ.get("TARGET_URL") or os.environ.get("AZURE_OPENAI_ENDPOINT")
@@ -678,6 +917,8 @@ class AzureResponsesLabeler(OpenRouterLabeler):
                 "AZURE_KEY/AZURE_OPENAI_API_KEY, and AZURE_OPENAI_DEPLOYMENT"
             )
         self.model = deployment
+        self.provider = "azure"
+        self.prompt_version = PROMPT_VERSION
         self.url = url
         self.spool_dir = Path(spool_dir)
         self.spool_dir.mkdir(parents=True, exist_ok=True)
@@ -686,7 +927,22 @@ class AzureResponsesLabeler(OpenRouterLabeler):
         self.session = session or requests
         self.headers = {"api-key": key, "Content-Type": "application/json"}
         self.usage_path = Path(usage_path or self.spool_dir.parent / "azure_usage.jsonl")
-        self._usage_lock = threading.Lock()
+        self.max_budget_usd = (float(max_budget_usd)
+                               if max_budget_usd is not None else None)
+        self.input_price_per_million = (
+            float(input_price_per_million)
+            if input_price_per_million is not None else None
+        )
+        self.output_price_per_million = (
+            float(output_price_per_million)
+            if output_price_per_million is not None else None
+        )
+        self.max_requests = int(max_requests) if max_requests is not None else None
+        self.reasoning_effort = (reasoning_effort
+                                 or os.environ.get("AZURE_REASONING_EFFORT")
+                                 or "medium")
+        self._usage_lock = threading.RLock()
+        self._reservations: dict[str, float] = {}
 
     @staticmethod
     def _output_text(data: dict) -> str:
@@ -704,11 +960,14 @@ class AzureResponsesLabeler(OpenRouterLabeler):
                             for index, row in enumerate(rows))
         compact_instructions = (
             SYSTEM_PROMPT
-            + "\n\nFor this request, use the compact integer encoding in the schema: "
+            + "\n\nFor this request, encode each label as a three-digit COH string: "
+            "C is concern, O is outcome, and H is reviewer_has_condition "
+            "(0=false, 1=true). Concern codes: "
             + ", ".join(f"{i}={value}" for i, value in enumerate(CONCERNS))
-            + ". Outcomes: "
+            + ". Outcome codes: "
             + ", ".join(f"{i}={value}" for i, value in enumerate(COMPACT_OUTCOMES))
-            + ". Copy each input i to output i exactly once."
+            + ". Return r with exactly one inner label-code array per input, "
+            "in the same order as the input lines. Use [] when no concern is mentioned."
         )
         body = {
             "model": self.model,
@@ -724,42 +983,106 @@ class AzureResponsesLabeler(OpenRouterLabeler):
             }},
         }
         if self.model.startswith(("gpt-5", "o1", "o3", "o4")):
-            body["reasoning"] = {"effort": "minimal"}
+            body["reasoning"] = {"effort": self.reasoning_effort}
+        response = None
+        data = {}
+        request_id = uuid4().hex
+        reservation_error = self._reserve_request(body, request_id)
+        if reservation_error is not None:
+            return [(uid, None, reservation_error) for uid in uids]
+        status = "failed"
         try:
             response = self.session.post(
                 self.url, headers=self.headers, json=body, timeout=180,
             )
+            try:
+                data = response.json()
+            except Exception:
+                data = {}
+            if not isinstance(data, dict):
+                data = {}
+            request_id = self._request_id(data, response, request_id)
             response.raise_for_status()
-            data = response.json()
-            usage = data.get("usage") or {}
-            if usage:
-                record = {
-                    "model": self.model,
-                    "prompt_version": PROMPT_VERSION,
-                    "rows": len(rows),
-                    "input_tokens": usage.get("input_tokens", 0),
-                    "output_tokens": usage.get("output_tokens", 0),
-                    "total_tokens": usage.get("total_tokens", 0),
-                }
-                self.usage_path.parent.mkdir(parents=True, exist_ok=True)
-                with self._usage_lock, self.usage_path.open("a", encoding="utf-8") as handle:
-                    handle.write(json.dumps(record, sort_keys=True) + "\n")
             parsed = json.loads(self._output_text(data))
-            by_index = {
-                item["i"]: [{
-                    "concern": CONCERNS[label["c"]],
-                    "outcome": COMPACT_OUTCOMES[label["o"]],
-                    "reviewer_has_condition": label["h"],
-                } for label in item["l"]]
-                for item in parsed["r"]
-            }
-            if len(by_index) != len(parsed["r"]):
-                raise ValueError("Azure response repeated a row index")
-            return [(uid, json.dumps({"labels": by_index[index]}), None)
-                    if index in by_index else (uid, None, "missing_result")
+            encoded_rows = parsed["r"]
+            if len(encoded_rows) != len(uids):
+                raise ValueError("Azure response row count did not match input")
+            decoded_rows = [[{
+                "concern": CONCERNS[int(code[0])],
+                "outcome": COMPACT_OUTCOMES[int(code[1])],
+                "reviewer_has_condition": code[2] == "1",
+            } for code in codes] for codes in encoded_rows]
+            status = "succeeded"
+            return [(uid, json.dumps({"labels": decoded_rows[index]}), None)
                     for index, uid in enumerate(uids)]
         except Exception as exc:
             return [(uid, None, type(exc).__name__) for uid in uids]
+        finally:
+            self._append_usage(rows, data, request_id, status)
+
+    def _reserve_request(self, body: dict, request_id: str) -> str | None:
+        """Reserve a conservative per-request ceiling before HTTP submission.
+
+        UTF-8 byte length is a safe upper bound on input token count, while
+        max_output_tokens is the provider-enforced output ceiling. In-flight
+        reservations prevent concurrent calls from collectively crossing the
+        configured cumulative limits.
+        """
+        if self.max_budget_usd is None and self.max_requests is None:
+            return None
+        input_ceiling = len(json.dumps(
+            body, separators=(",", ":"), ensure_ascii=False,
+        ).encode("utf-8"))
+        output_ceiling = int(body.get("max_output_tokens") or 0)
+        input_price = self.input_price_per_million or 0.0
+        output_price = self.output_price_per_million or 0.0
+        reserved_cost = (
+            input_ceiling * input_price + output_ceiling * output_price
+        ) / 1e6
+        with self._usage_lock:
+            usage = azure_usage_summary(self.usage_path, self.model, None)
+            if (self.max_requests is not None
+                    and usage["requests"] + len(self._reservations) + 1
+                    > self.max_requests):
+                return "request_ceiling"
+            actual_cost = (
+                usage["input_tokens"] * input_price
+                + usage["output_tokens"] * output_price
+            ) / 1e6
+            if (self.max_budget_usd is not None
+                    and actual_cost + sum(self._reservations.values())
+                    + reserved_cost > self.max_budget_usd):
+                return "budget_ceiling"
+            self._reservations[request_id] = reserved_cost
+        return None
+
+    @staticmethod
+    def _request_id(data: dict, response, fallback: str) -> str:
+        headers = getattr(response, "headers", {}) or {}
+        return str(data.get("id") or headers.get("x-request-id")
+                   or headers.get("request-id") or fallback)
+
+    def _append_usage(self, rows, data: dict, request_id: str, status: str) -> None:
+        if not isinstance(data, dict):
+            data = {}
+        usage = data.get("usage") or {}
+        input_tokens = usage.get("input_tokens", usage.get("prompt_tokens", 0))
+        output_tokens = usage.get("output_tokens", usage.get("completion_tokens", 0))
+        record = {
+            "provider": self.provider,
+            "model": self.model,
+            "prompt_version": self.prompt_version,
+            "request_id": request_id,
+            "status": status,
+            "rows": len(rows),
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": usage.get("total_tokens", input_tokens + output_tokens),
+        }
+        self.usage_path.parent.mkdir(parents=True, exist_ok=True)
+        with self._usage_lock, self.usage_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, sort_keys=True) + "\n")
+            self._reservations.pop(request_id, None)
 
 
 def _azure_settings() -> tuple[str, str, str] | None:
@@ -785,7 +1108,10 @@ def _calibrated_output_tokens_per_row(ccfg: dict, deployment: str) -> float:
         if not line.strip():
             continue
         record = json.loads(line)
-        if (record.get("model") != deployment
+        if record.get("status") == "failed":
+            continue
+        if (record.get("provider", "azure") != "azure"
+                or record.get("model") != deployment
                 or record.get("prompt_version") != PROMPT_VERSION):
             continue
         rows += int(record.get("rows") or 0)
@@ -793,6 +1119,86 @@ def _calibrated_output_tokens_per_row(ccfg: dict, deployment: str) -> float:
     if rows < 50:
         return 120.0
     return output_tokens / rows * 1.25
+
+
+def azure_usage_summary(path, deployment: str,
+                        prompt_version: str | None = PROMPT_VERSION) -> dict:
+    """Summarize Azure attempts for a deployment, optionally across prompts."""
+    summary = {"provider": "azure", "model": deployment,
+               "prompt_version": prompt_version, "requests": 0,
+               "input_tokens": 0, "output_tokens": 0, "total_tokens": 0}
+    path = Path(path or "")
+    if not path.is_file():
+        return summary
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        record = json.loads(line)
+        if (record.get("provider", "azure") != "azure"
+                or record.get("model") != deployment
+                or (prompt_version is not None
+                    and record.get("prompt_version") != prompt_version)):
+            continue
+        summary["requests"] += 1
+        summary["input_tokens"] += int(record.get("input_tokens") or 0)
+        summary["output_tokens"] += int(record.get("output_tokens") or 0)
+        summary["total_tokens"] += int(record.get("total_tokens") or 0)
+    return summary
+
+
+def _azure_max_requests(ccfg: dict) -> int:
+    configured = os.environ.get("AZURE_MAX_REQUESTS") or os.environ.get(
+        "AZURE_MAX_REQUEST_COUNT")
+    if configured is None:
+        configured = ccfg.get(
+            "azure_max_requests",
+            ccfg.get("max_request_count", ccfg.get("max_requests", 900)),
+        )
+    return int(configured)
+
+
+def azure_preflight(rows, ccfg: dict) -> dict | None:
+    azure = _azure_settings()
+    if azure is None:
+        return None
+    _key, _url, deployment = azure
+    estimated = estimate_cost(rows, ccfg)
+    usage = azure_usage_summary(ccfg.get("azure_usage_path"), deployment, None)
+    input_price = float(os.environ["AZURE_INPUT_PRICE_PER_MILLION"])
+    output_price = float(os.environ["AZURE_OUTPUT_PRICE_PER_MILLION"])
+    actual = (usage["input_tokens"] / 1e6 * input_price
+              + usage["output_tokens"] / 1e6 * output_price)
+    planned_requests = ((len(rows) + ccfg["reviews_per_request"] - 1)
+                        // ccfg["reviews_per_request"])
+    max_requests = _azure_max_requests(ccfg)
+    result = {
+        "provider": "azure", "deployment": deployment,
+        "prompt_version": PROMPT_VERSION,
+        "historical_requests": usage["requests"],
+        "planned_requests": planned_requests,
+        "request_count": usage["requests"] + planned_requests,
+        "max_request_count": max_requests,
+        "historical_input_tokens": usage["input_tokens"],
+        "historical_output_tokens": usage["output_tokens"],
+        "historical_cost_usd": actual,
+        "estimated_cost_usd": estimated,
+        "projected_cost_usd": actual + estimated,
+        "max_budget_usd": float(ccfg["max_budget_usd"]),
+    }
+    if result["projected_cost_usd"] > result["max_budget_usd"]:
+        raise RuntimeError(
+            "Azure cumulative budget preflight failed: "
+            f"${result['historical_cost_usd']:.4f} actual + "
+            f"${result['estimated_cost_usd']:.4f} planned = "
+            f"${result['projected_cost_usd']:.4f} > "
+            f"${result['max_budget_usd']:.4f} budget"
+        )
+    if result["request_count"] > max_requests:
+        raise RuntimeError(
+            "Azure cumulative request preflight failed: "
+            f"{result['request_count']} requests > {max_requests} max requests"
+        )
+    return result
 
 
 def estimate_cost(rows, ccfg) -> float:
@@ -821,14 +1227,33 @@ def _labeler(ccfg):
     azure = _azure_settings()
     if azure is not None:
         _key, _url, deployment = azure
+        input_price = os.environ.get("AZURE_INPUT_PRICE_PER_MILLION")
+        output_price = os.environ.get("AZURE_OUTPUT_PRICE_PER_MILLION")
+        if input_price is None or output_price is None:
+            raise RuntimeError(
+                "Azure labeling requires AZURE_INPUT_PRICE_PER_MILLION and "
+                "AZURE_OUTPUT_PRICE_PER_MILLION for runtime budget enforcement"
+            )
         return AzureResponsesLabeler(
             deployment, ccfg["batch_spool_dir"], ccfg["reviews_per_request"],
             ccfg["request_concurrency"],
             usage_path=ccfg.get("azure_usage_path"),
+            max_budget_usd=ccfg["max_budget_usd"],
+            input_price_per_million=float(input_price),
+            output_price_per_million=float(output_price),
+            max_requests=_azure_max_requests(ccfg),
+            reasoning_effort=ccfg.get("azure_reasoning_effort"),
         )
     return OpenRouterLabeler(
         ccfg["labeling_model"], ccfg["batch_spool_dir"],
         ccfg["reviews_per_request"], ccfg["request_concurrency"])
+
+
+def _configured_labeler_identity(ccfg) -> tuple[str, str, str]:
+    azure = _azure_settings()
+    if azure is not None:
+        return "azure", azure[2], PROMPT_VERSION
+    return "openrouter", ccfg["labeling_model"], PROMPT_VERSION
 
 
 def _match_counts(rows, patterns):
@@ -860,53 +1285,191 @@ def cmd_probe(rows, patterns) -> bool:
     return passed
 
 
-def cmd_calibrate(rows, ccfg, n) -> dict:
+def _validated_calibration_audit(audit_path, sample_path,
+                                 expected_uids: list[str]) -> dict:
+    audit_path = Path(audit_path)
+    sample_path = Path(sample_path)
+    try:
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        raise RuntimeError("calibration audit artifact is missing or invalid") from exc
+    if audit.get("schema_version") != "concern-calibration-audit-1":
+        raise RuntimeError("calibration audit has an unsupported schema_version")
+    if audit.get("policy_prompt_version") != PROMPT_VERSION:
+        raise RuntimeError("calibration audit prompt version does not match")
+    sample_sha256 = hashlib.sha256(sample_path.read_bytes()).hexdigest()
+    if audit.get("sample_sha256") != sample_sha256:
+        raise RuntimeError("calibration audit sample_sha256 does not match")
+    entries = audit.get("audits")
+    if not isinstance(entries, list):
+        raise RuntimeError("calibration audit must contain an audits list")
+    uids = [entry.get("uid") for entry in entries if isinstance(entry, dict)]
+    if (len(uids) != len(entries) or len(set(uids)) != len(uids)
+            or set(uids) != set(expected_uids)):
+        raise RuntimeError("calibration audit UIDs do not match the sample")
+    if any(not isinstance(entry.get("exact_match"), bool) for entry in entries):
+        raise RuntimeError("calibration audit exact_match values must be booleans")
+    audited_rows = len(entries)
+    exact_matches = sum(entry["exact_match"] for entry in entries)
+    measured_agreement = exact_matches / audited_rows if audited_rows else 0.0
+    try:
+        declared_rows = int(audit.get("audited_rows"))
+        declared_matches = int(audit.get("exact_matches"))
+        declared_agreement = float(audit.get("measured_agreement"))
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError("calibration audit summary is incomplete") from exc
+    if declared_rows != audited_rows or declared_matches != exact_matches:
+        raise RuntimeError("calibration audit summary counts do not match its rows")
+    if abs(declared_agreement - measured_agreement) > 1e-9:
+        raise RuntimeError("calibration audit measured agreement is inconsistent")
+    reviewer_model = audit.get("reviewer_model")
+    reasoning_effort = audit.get("reasoning_effort")
+    if not reviewer_model or not reasoning_effort:
+        raise RuntimeError("calibration audit reviewer identity is missing")
+    return {
+        "path": str(audit_path),
+        "sha256": hashlib.sha256(audit_path.read_bytes()).hexdigest(),
+        "sample_sha256": sample_sha256,
+        "reviewer_model": reviewer_model,
+        "reasoning_effort": reasoning_effort,
+        "audited_rows": audited_rows,
+        "exact_matches": exact_matches,
+        "measured_agreement": measured_agreement,
+    }
+
+
+def cmd_calibrate(rows, ccfg, n, audited_rows=0, agreement=None,
+                  audit_path=None) -> dict:
+    if audit_path is None and (audited_rows or agreement is not None):
+        raise RuntimeError(
+            "raw audit counts cannot approve P2; pass --audit-file with a "
+            "sample-bound audit artifact"
+        )
     sample = sorted(rows, key=lambda r: r["uid"])[:n]   # deterministic
     labeler = _labeler(ccfg)
     summary = run_labeling(sample, labeler, ccfg["labels_path"],
                            ccfg["batch_state_path"], ccfg["batch_chunk_size"])
-    cache = load_cache(ccfg["labels_path"])
+    provider, model, prompt_version = _labeler_identity(labeler)
+    cache = load_cache(ccfg["labels_path"], prompt_version, provider, model)
     sample_recs = [cache[r["uid"]] for r in sample if r["uid"] in cache]
     ok = [r for r in sample_recs if r["status"] == "ok"]
     outcome_bearing = [r for r in ok if any(
         l["outcome"] in ("helped", "worsened") for l in r["labels"])]
     yield_rate = len(outcome_bearing) / max(len(sample), 1)
+    yield_pass = yield_rate >= 0.30
+    report_path = _calibration_report_path(ccfg)
+    out_dir = report_path.parent
+    out_dir.mkdir(parents=True, exist_ok=True)
+    by_uid = {r["uid"]: r for r in sample}
+    audited_records = sample_recs[:50]
+    hand = pd.DataFrame([{"uid": r["uid"], "text": by_uid[r["uid"]]["text"],
+                          "labels": json.dumps(r["labels"])}
+                         for r in audited_records])
+    sample_path = out_dir / "calibration_sample.csv"
+    hand.to_csv(sample_path, index=False)
+    audit = (_validated_calibration_audit(
+        audit_path, sample_path, [record["uid"] for record in audited_records],
+    ) if audit_path is not None else None)
+    if audit is not None:
+        audited_rows = audit["audited_rows"]
+        agreement = audit["measured_agreement"]
+    agreement_pass = agreement is not None and agreement >= 0.85
+    audited_rows_pass = audited_rows >= 50
     report = {"sample_size": len(sample), "labeled_ok": len(ok),
               "outcome_bearing": len(outcome_bearing),
               "yield": round(yield_rate, 4), "run_summary": summary,
-              "gate_p2_yield": "PASS" if yield_rate >= 0.30 else "FAIL"}
-    out_dir = Path(ccfg["batch_state_path"]).parent
-    out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "calibration_report.json").write_text(json.dumps(report, indent=2))
-    by_uid = {r["uid"]: r for r in sample}
-    hand = pd.DataFrame([{"uid": r["uid"], "text": by_uid[r["uid"]]["text"],
-                          "labels": json.dumps(r["labels"])}
-                         for r in sample_recs[:50]])
-    hand.to_csv(out_dir / "calibration_sample.csv", index=False)
+              "provider": provider, "model": model,
+              "prompt_version": prompt_version,
+              "yield_pass": yield_pass,
+              "gate_p2_yield": "PASS" if yield_pass else "FAIL",
+              "audited_rows": audited_rows,
+              "audited_rows_pass": audited_rows_pass,
+              "measured_agreement": agreement,
+              "agreement_pass": agreement_pass,
+              "gate_p2": "PASS" if yield_pass and agreement_pass
+              and audited_rows_pass else "FAIL"}
+    if audit is not None:
+        report["audit"] = audit
+    report_path.write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))
-    print("hand-check 50 rows in runs/concern/calibration_sample.csv "
-          "(gate P2 agreement >= 85% is the maintainer's call)")
+    print("audit runs/concern/calibration_sample.csv independently, then rerun "
+          "calibrate with --audit-file")
+    return report
+
+
+def _calibration_report_path(ccfg) -> Path:
+    return Path(ccfg.get("calibration_report_path")
+                or Path(ccfg["batch_state_path"]).parent / "calibration_report.json")
+
+
+def _require_calibration_report(ccfg) -> dict:
+    path = _calibration_report_path(ccfg)
+    try:
+        report = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        raise RuntimeError(
+            "full labeling requires a persisted P2 calibration report/sign-off"
+        ) from exc
+    try:
+        measured_yield = float(report.get("yield", 0))
+    except (TypeError, ValueError):
+        measured_yield = 0
+    if "yield" in report:
+        yield_pass = measured_yield >= 0.30 and report.get(
+            "yield_pass", report.get("gate_p2_yield", report.get("yield_gate", "PASS"))
+        ) not in (False, "FAIL")
+    else:
+        yield_pass = (
+            report.get("yield_pass") is True
+            or report.get("yield_pass") == "PASS"
+            or report.get("gate_p2_yield") == "PASS"
+            or report.get("yield_gate") == "PASS"
+        )
+    agreement = report.get("measured_agreement", report.get("agreement"))
+    audited_rows = report.get(
+        "audited_rows", report.get("audited_row_count", report.get("audit_rows", 0))
+    )
+    try:
+        agreement_pass = float(agreement) >= 0.85
+        audited_rows_pass = int(audited_rows) >= 50
+    except (TypeError, ValueError):
+        agreement_pass = audited_rows_pass = False
+    if not (yield_pass and agreement_pass and audited_rows_pass):
+        raise RuntimeError(
+            "P2 sign-off calibration report failed: requires yield PASS, "
+            "measured agreement >=0.85, and audited rows >=50"
+        )
     return report
 
 
 def cmd_label(rows, ccfg, yes: bool, p2_approved=False) -> dict | None:
-    cache = load_cache(ccfg["labels_path"])
+    provider, model, prompt_version = _configured_labeler_identity(ccfg)
+    cache = load_cache(ccfg["labels_path"], prompt_version, provider, model)
     todo = [r for r in rows if r["uid"] not in cache]
     est_usd = estimate_cost(todo, ccfg)
+    preflight = azure_preflight(todo, ccfg)
     print(f"to label: {len(todo)} of {len(rows)} "
           f"(est cost ${est_usd:.2f} on {ccfg['labeling_model']})")
+    if preflight is not None:
+        print(json.dumps({"azure_preflight": preflight}, indent=2))
     if not yes:
         print("dry run — pass --yes to submit")
         return None
-    if not p2_approved:
-        raise RuntimeError("full labeling requires maintainer P2 sign-off; "
-                           "rerun with --p2-approved after the 50-row check")
+    _require_calibration_report(ccfg)
     if est_usd > ccfg["max_budget_usd"]:
         raise RuntimeError(f"estimated ${est_usd:.2f} exceeds "
                            f"${ccfg['max_budget_usd']:.2f} budget ceiling")
     labeler = _labeler(ccfg)
     summary = run_labeling(rows, labeler, ccfg["labels_path"],
                            ccfg["batch_state_path"], ccfg["batch_chunk_size"])
+    if preflight is not None:
+        summary.update({
+            "azure_historical_cost_usd": preflight["historical_cost_usd"],
+            "azure_estimated_cost_usd": preflight["estimated_cost_usd"],
+            "azure_projected_cost_usd": preflight["projected_cost_usd"],
+            "azure_request_count": preflight["request_count"],
+            "azure_max_request_count": preflight["max_request_count"],
+        })
     print(json.dumps(summary, indent=2))
     print("next: .venv/bin/python -m src.recommendation.concern_stats")
     return summary
@@ -921,6 +1484,9 @@ def main(argv=None):
         sp.add_argument("--catalog")
         if name == "calibrate":
             sp.add_argument("--n", type=int)
+            sp.add_argument("--audited-rows", type=int, default=0)
+            sp.add_argument("--agreement", type=float)
+            sp.add_argument("--audit-file", type=Path)
         if name == "label":
             sp.add_argument("--yes", action="store_true")
             sp.add_argument("--p2-approved", action="store_true")
@@ -935,7 +1501,8 @@ def main(argv=None):
     if args.cmd == "probe":
         cmd_probe(rows, patterns)
     elif args.cmd == "calibrate":
-        cmd_calibrate(rows, ccfg, args.n or ccfg["calibration_sample_size"])
+        cmd_calibrate(rows, ccfg, args.n or ccfg["calibration_sample_size"],
+                      args.audited_rows, args.agreement, args.audit_file)
     else:
         cmd_label(rows, ccfg, args.yes, args.p2_approved)
 
