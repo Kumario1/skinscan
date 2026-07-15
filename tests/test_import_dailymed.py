@@ -150,6 +150,29 @@ def test_active_without_a_parseable_strength_is_excluded():
     ) == []
 
 
+def test_cutaneous_route_counts_as_topical():
+    # Tazorac and Azelex state the route as CUTANEOUS; matching "topical" alone
+    # silently dropped them.
+    cutaneous = _rx_spl().replace(b'displayName="TOPICAL"', b'displayName="CUTANEOUS"')
+    products = parse_spl(
+        cutaneous, source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    )
+    assert len(products) == 1
+
+
+def test_microgram_dosed_active_is_parsed():
+    # Aklief doses trifarotene at 50 ug/g; only mg and g units were handled.
+    micrograms = _rx_spl().replace(
+        b'<numerator value="0.5" unit="mg" />', b'<numerator value="50" unit="ug" />'
+    )
+    products = parse_spl(
+        micrograms, source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    )
+    assert products[0].drug_actives[0].strength == "0.005%"
+
+
 def test_label_that_is_neither_otc_nor_prescription_is_excluded():
     # Unknown legal status must never become a catalog fact.
     assert parse_spl(
