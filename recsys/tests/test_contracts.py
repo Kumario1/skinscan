@@ -58,6 +58,36 @@ def test_rejects_invalid_confidence(tmp_path, confidence):
         load_analysis(bad)
 
 
+@pytest.mark.parametrize("confidence", ["high", [0.9]])
+def test_rejects_non_numeric_confidence(tmp_path, confidence):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["concerns"][0]["confidence"] = confidence
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps(data))
+    with pytest.raises(ContractViolation, match="confidence"):
+        load_analysis(bad)
+
+
+def test_rejects_boolean_severity(tmp_path):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["concerns"][0]["severity"] = True
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps(data))
+    with pytest.raises(ContractViolation, match="severity"):
+        load_analysis(bad)
+
+
+def test_accepts_valid_numeric_confidence_and_integer_severity(tmp_path):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["concerns"][0]["severity"] = 3
+    data["concerns"][0]["confidence"] = 0.75
+    good = tmp_path / "good.json"
+    good.write_text(json.dumps(data))
+    analysis = load_analysis(good)
+    assert analysis.concerns[0].severity == 3
+    assert analysis.concerns[0].confidence == 0.75
+
+
 def test_profile_precedence_file_wins():
     analysis = load_analysis(FIXTURES / "analysis_v3_sample.json")
     profile = resolve_profile(FIXTURES / "profile_complete.json", analysis)
