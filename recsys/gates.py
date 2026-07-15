@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 from .catalog import CatalogProduct
 from .contracts import Profile
+from .inci import allergy_matches, contains_retinoid
 from .knowledge import Knowledge
 
 
@@ -52,12 +53,13 @@ def profile_gate_reasons(
     )
     for condition in sorted(set(product.contraindications) & profile_contraindications):
         reasons.append(f"product_contraindication:{condition}")
-    if actives & knowledge.retinoids and (
-        profile.pregnancy_status in knowledge.pregnancy_excluded_statuses
+    if profile.pregnancy_status in knowledge.pregnancy_excluded_statuses and (
+        actives & knowledge.retinoids or contains_retinoid(product.inci)
     ):
         reasons.append("retinoid_pregnancy_status_excluded")
-    for allergy in sorted(actives & set(profile.allergies)):
-        reasons.append(f"profile_allergy:{allergy}")
+    for allergy in sorted(set(profile.allergies)):
+        if allergy_matches(allergy, product.inci, product.actives):
+            reasons.append(f"profile_allergy:{allergy.strip().lower()}")
     for duplicate in sorted(actives & set(profile.current_actives)):
         reasons.append(f"duplicates_current_active:{duplicate}")
     if slot in ("cleanser", "moisturizer", "spf"):

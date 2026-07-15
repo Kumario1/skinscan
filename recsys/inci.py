@@ -106,6 +106,90 @@ def _lookup(cand: str, table: dict[str, str], ids: set[str]) -> Optional[str]:
     return hit
 
 
+# Allergen aliases that must NOT go in CANONICAL_ACTIVES (that table drives
+# catalog INCI parsing, where bare "BHA" usually means the antioxidant
+# butylated hydroxyanisole, not beta hydroxy acid). In a user's declared-allergy
+# context "BHA" unambiguously means salicylic acid, so resolve it here only.
+ALLERGY_SYNONYMS: dict[str, str] = {
+    "bha": "salicylic_acid",
+}
+
+# Retinoid stems for a fail-closed pregnancy scan over raw INCI. Cosmetic esters
+# ("Retinyl Palmitate", "Hydroxypinacolone Retinoate", "Retinyl Retinoate") never
+# resolve to a canonical active, so the actives set can't be trusted here.
+RETINOID_MARKERS: tuple[str, ...] = (
+    "retinol", "retinal", "retinaldehyde", "retinoate", "retinyl", "retinoic",
+    "tretinoin", "isotretinoin", "adapalene", "tazarotene",
+)
+
+_WORD_RE = re.compile(r"[a-z0-9]+")
+
+
+def _words(s: str) -> list[str]:
+    """Lowercase word/number tokens, e.g. 'Salicylic Acid 0.5%' -> ['salicylic',
+    'acid', '0', '5']."""
+    return _WORD_RE.findall(s.lower())
+
+
+def _contains_subsequence(haystack: list[str], needle: list[str]) -> bool:
+    """True if `needle` appears as a contiguous run of tokens in `haystack`.
+    For a single-token needle this is plain membership; multi-token needles
+    ('salicylic acid') must appear adjacent, avoiding stray substring hits."""
+    n = len(needle)
+    if n == 0 or n > len(haystack):
+        return False
+    return any(haystack[i:i + n] == needle for i in range(len(haystack) - n + 1))
+
+
+def resolve_allergy_actives(allergy: str) -> set[str]:
+    """Canonical active ids a declared allergy maps onto, via the INCI synonym
+    table and the allergy-only alias table (so 'salicylic acid'/'BHA'/'ascorbic
+    acid' land on salicylic_acid/salicylic_acid/vitamin_c)."""
+    ids: set[str] = set()
+    for cand in normalize_token(allergy):
+        hit = _lookup(cand, CANONICAL_ACTIVES, CANONICAL_IDS)
+        if hit:
+            ids.add(hit)
+        alias = ALLERGY_SYNONYMS.get(cand)
+        if alias:
+            ids.add(alias)
+    return ids
+
+
+def allergy_matches(allergy: str, inci: tuple[str, ...], actives: tuple[str, ...]) -> bool:
+    """Fail-closed allergen check for one declared allergy. Vetoes when the
+    allergy (1) resolves through the synonym tables onto a parsed active, (2)
+    appears as a token run inside any raw INCI ingredient (catches fragrance,
+    parfum, limonene, lanolin, preservatives, extracts — none of which are
+    canonical actives), or (3) appears as a token run inside a parsed active id
+    (so 'salicylic acid' matches 'salicylic_acid' even with no INCI)."""
+    needle = _words(allergy)
+    if not needle:
+        return False
+    active_set = set(actives)
+    if resolve_allergy_actives(allergy) & active_set:
+        return True
+    for ingredient in inci:
+        if _contains_subsequence(_words(ingredient), needle):
+            return True
+    for active in active_set:
+        if _contains_subsequence(_words(active), needle):
+            return True
+    return False
+
+
+def contains_retinoid(inci: tuple[str, ...]) -> bool:
+    """Fail-closed retinoid scan over raw INCI: any ingredient carrying a known
+    retinoid stem (including cosmetic esters that never parse to a canonical
+    active). Substring match on purpose — 'retinal' inside 'retinaldehyde' and
+    'retinoate' inside 'hydroxypinacolone retinoate' must both fire."""
+    for ingredient in inci:
+        low = ingredient.lower()
+        if any(marker in low for marker in RETINOID_MARKERS):
+            return True
+    return False
+
+
 def parse_ingredients(raw: str) -> tuple[list[str], list[str]]:
     """Split an INCI string on commas and pull out the actives and comedogenic
     flags we recognize. Unrecognized tokens are silently dropped. Returns
