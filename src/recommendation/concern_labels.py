@@ -34,7 +34,7 @@ CONCERNS = [
 ACNE_CONCERNS = CONCERNS[:4]
 VALID_OUTCOMES = {"helped", "worsened", "unclear"}
 COMPACT_OUTCOMES = ["helped", "worsened", "unclear"]
-PROMPT_VERSION = "p9"
+PROMPT_VERSION = "p10"
 
 USECOLS = ["author_id", "rating", "is_recommended", "skin_tone", "skin_type",
            "product_id", "review_text", "review_title"]
@@ -182,7 +182,7 @@ Literal rules and examples:
 
 LITERAL_PATTERNS = {
     "acne_comedonal": re.compile(
-        r"\b(?:blackheads?|whiteheads?|comedones?|(?:clogg\w*|unclog\w*|"
+        r"\b(?:black\s?heads?|white\s?heads?|comedones?|(?:clogg\w*|unclog\w*|"
         r"clog\w*|unclog\w*|plug\w*|clear(?:ed|s|ing)?)(?:\s+\w+){0,4}\s+pores?|"
         r"pores?\s+(?:look(?:ed)?\s+)?"
         r"(?:clog\w*|plug\w*))\b", re.I,
@@ -192,15 +192,15 @@ LITERAL_PATTERNS = {
         r"\b(?:cystic acne|hormonal acne|hormonal breakouts?|deep painful bumps?)\b", re.I,
     ),
     "acne_general": re.compile(
-        r"\b(?:(?<!cystic )(?<!hormonal )acne(?!\s+(?:scars?|scarring|marks?))|"
+        r"\b(?:(?<!cystic )(?<!hormonal )acne(?!\s+(?:scar(?:s|ring)?|scares?|marks?))|"
         r"br(?:eak|ake)\s?outs?|break(?:ing)?\s+out|broke[n]?\s+out|break me out|blemishes?)\b", re.I,
     ),
     "hyperpigmentation": re.compile(
-        r"\b(?:dark spots?|acne (?:scars?|scarring|marks?)|discoloration|melasma|"
-        r"sun spots?|hyper[- ]?pigmentation)\b", re.I,
+        r"\b(?:dark spots?|acne (?:scar(?:s|ring)?|scares?|marks?)|scar(?:s|ring)?|"
+        r"discoloration|melasma|sun spots?|(?:hyper[- ]?)?pigmentation)\b", re.I,
     ),
     "dryness": re.compile(
-        r"\b(?:dry|drying|dryness|flak\w*|dry patches?|dehydrat\w*)\b", re.I,
+        r"\b(?:dry|drying|dryness|drier|flak\w*|dry patches?|dehydrat\w*)\b", re.I,
     ),
 }
 
@@ -251,12 +251,12 @@ _NO_EFFECT = re.compile(
     r"\b(?:moisturiz\w*|hydrat\w*|penetrat\w*|work\w*)\b", re.I,
 )
 _CONCERN_TERMS = {
-    "acne_comedonal": r"(?:blackheads?|whiteheads?|comedones?|pores?|(?:clog|unclog|plug)\w*\s+pores?)",
+    "acne_comedonal": r"(?:black\s?heads?|white\s?heads?|comedones?|pores?|(?:clog|unclog|plug)\w*\s+pores?)",
     "acne_inflammatory": r"(?:pimples?|zits?|pustules?|papules?)",
     "acne_cystic": r"(?:cystic acne|hormonal acne|hormonal breakouts?|deep painful bumps?)",
     "acne_general": r"(?:(?<!cystic )(?<!hormonal )acne|break(?:ing)?\s+out|broke[n]?\s+out|break\s?outs?|break me out|blemishes?)",
-    "hyperpigmentation": r"(?:dark spots?|acne (?:scars?|scarring|marks?)|discoloration|melasma|sun spots?|hyper[- ]?pigmentation)",
-    "dryness": r"(?:dry(?:ness|ing)?|dry patches?|flak\w*|dehydrat\w*)",
+    "hyperpigmentation": r"(?:dark spots?|acne (?:scar(?:s|ring)?|scares?|marks?)|scar(?:s|ring)?|discoloration|melasma|sun spots?|(?:hyper[- ]?)?pigmentation)",
+    "dryness": r"(?:dry(?:ness|ing)?|drier|dry patches?|flak\w*|dehydrat\w*)",
 }
 _EFFECT_WORDS = r"(?:clear\w*|decreas\w*|reduc\w*|smaller|shrink\w*|calm\w*|unclog\w*|fad\w*|improv\w*|help\w*|sav\w*|works? great|works? wonders|effective|got(?:ten)? rid|lighten\w*|dry up)"
 _PERSONAL_HISTORY = re.compile(
@@ -289,6 +289,12 @@ def _term_effect(concern: str, joined: str, effect: str) -> bool:
 
 def _direct_worsening(concern: str, joined: str, full_text: str | None = None) -> bool:
     if re.search(r"\b(?:no|not|non)\s+drying\b", joined, re.I):
+        return False
+    # Worsening reported after the reviewer stopped/finished the product is
+    # absence-of-product evidence, not product-caused worsening.
+    if re.search(r"\b(?:since|after|once)\b[^.!?]{0,30}"
+                 r"\b(?:finish\w*|stopp\w*|ran out|run out|used (?:it |them )?(?:all )?up)\b",
+                 joined, re.I):
         return False
     term = _CONCERN_TERMS[concern]
     source = joined
@@ -393,6 +399,13 @@ def _explicit_outcome(concern: str, sentences: list[str], full_text: str | None 
                 joined, re.I,
             ))
     unclear_signal = False
+    if helped and re.search(
+            rf"\b(?:emphasis on|interested in|monitor\w* for|in hopes of|goal of)\b"
+            rf"[^.!?]{{0,45}}(?:{_EFFECT_WORDS})", joined, re.I):
+        # Effect words inside the reviewer's stated goal/intent are a wish,
+        # not a reported result.
+        helped = False
+        unclear_signal = True
     if re.search(r"\b(?:hoped|hoping|wanted to|thought)\b", joined, re.I) and not re.search(
             r"\b(?:helped|cleared|faded|got(?:ten)? rid|caused|broke me out)\b", joined, re.I):
         helped = False
@@ -435,6 +448,11 @@ def _personal_condition(concern: str, sentences: list[str], outcome: str | None)
         r"\b(?:avoid|do not use|don't use)\b[^.!?]{0,45}"
         r"(?:popped )?(?:pimples?|zits?)", "", joined, flags=re.I,
     )
+    if re.search(r"\bas\s+(?:sometimes|often|usually)\s+i\s+(?:do|would|get)\b",
+                 joined, re.I):
+        # "didn't break me out (as sometimes I do from new products)" admits a
+        # prior personal condition despite the surrounding prevention claim.
+        return True
     absent = _absent_condition(concern, joined)
     personal_direct = bool(
         re.search(r"\bmy\s+(?:face|skin)\b[^.!?]{0,30}"
@@ -451,7 +469,23 @@ def _personal_condition(concern: str, sentences: list[str], outcome: str | None)
         or re.search(rf"\bi\s+(?:do|did|get|got|have|had|am|['’]ve been)\b"
                      rf"[^.!?]{{0,65}}(?:{term})", joined, re.I)
     )
-    if absent and not personal_direct:
+    _gap = (r"(?:(?!\b(?:no|not|never|zero|without|don['’]?t|didn['’]?t|"
+            r"doesn['’]?t|haven['’]?t|hasn['’]?t)\b)[^.!?]){0,150}")
+    owns = bool(
+        re.search(rf"\b(?:i(?:['’]m|['’]ve| am| have| had| was| get| got| do| did)|"
+                  rf"as someone with|someone with)\b{_gap}(?:{term})",
+                  advice, re.I)
+        or re.search(rf"\bmy\b{_gap}(?:{term})", advice, re.I)
+    )
+    if absent and not personal_direct and not owns:
+        return False
+    if (not positive_personal
+            and re.search(rf"\b(?:might|may|could|worried|concerned|afraid|scared)\b"
+                          rf"[^.!?]{{0,45}}{term}", joined, re.I)
+            and not re.search(rf"(?:{term})[^.!?]{{0,55}}\b(?:worse|worsened)\b",
+                              joined, re.I)):
+        # A hypothetical worry ("might break me out") is not a personal
+        # condition unless other personal evidence exists.
         return False
     if _PREVENTION_INTENT.search(joined):
         return False
@@ -578,6 +612,37 @@ def enforce_literal_policy(text: str, labels: list[dict]) -> list[dict]:
             and by_concern.get("acne_general", {}).get("outcome") == "worsened"
             and not direct_general_worsening):
         by_concern["acne_general"]["outcome"] = "unclear"
+
+    if direct_general_worsening:
+        # Subtype lesions enumerated as part of a product-caused breakout
+        # ("red spots across my forehead ... as well as whiteheads") inherit
+        # the worsening; a bare mention elsewhere stays unclear.
+        for concern in ("acne_comedonal", "acne_inflammatory", "acne_cystic"):
+            label = by_concern.get(concern)
+            joined = " ".join(sentences[concern])
+            if (label is not None and label["outcome"] == "unclear"
+                    and re.search(r"\b(?:all over|across|on)\s+my\b", joined, re.I)
+                    and not _absent_condition(concern, joined)):
+                label["outcome"] = "worsened"
+
+    for concern, label in by_concern.items():
+        joined = " ".join(sentences[concern])
+        term = _CONCERN_TERMS[concern]
+        if (label["outcome"] == "worsened" and concern in ACNE_CONCERNS
+                and re.search(r"\bpurg\w*\b", text, re.I)
+                and not re.search(r"\bwors(?:e|t)\b", joined, re.I)):
+            # Purging is unclear unless the reviewer says it got worse/worst.
+            label["outcome"] = "unclear"
+        if (label["outcome"] == "helped"
+                and re.search(r"\b(?:these|those|both)\s+(?:two\s+|2\s+)?"
+                              r"(?:items|products)\b", text, re.I)
+                and not re.search(
+                    rf"\b(?:this|it)\b[^.!?]{{0,45}}(?:{_EFFECT_WORDS}|"
+                    rf"didn['’]?t|did not|never)[^.!?]{{0,45}}{term}",
+                    text, re.I)):
+            # Benefit credited to a set of products is not attributable to
+            # this product alone.
+            label["outcome"] = "unclear"
 
     if ("dryness" in by_concern
             and re.search(r"\b(?:purchased|started|used) this,[^.]{0,250}\band\b", text, re.I)
@@ -969,11 +1034,16 @@ class AzureResponsesLabeler(OpenRouterLabeler):
             + ". Return r with exactly one inner label-code array per input, "
             "in the same order as the input lines. Use [] when no concern is mentioned."
         )
+        max_output_tokens = 120 * len(rows)
+        if self.reasoning_effort != "minimal":
+            # Responses API reasoning tokens count against max_output_tokens;
+            # without headroom the answer is truncated and the batch fails.
+            max_output_tokens += 16_000
         body = {
             "model": self.model,
             "instructions": compact_instructions,
             "input": reviews,
-            "max_output_tokens": 120 * len(rows),
+            "max_output_tokens": max_output_tokens,
             "store": False,
             "text": {"format": {
                 "type": "json_schema",
