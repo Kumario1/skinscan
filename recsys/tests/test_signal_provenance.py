@@ -115,6 +115,36 @@ def test_popularity_builder_records_catalog_sha(tmp_path):
     assert registry["stores"][0]["source"]["catalog_sha256"] == sha256_file(catalog)
 
 
+def test_concern_efficacy_builder_records_catalog_sha(tmp_path):
+    from recsys.signals import ConcernEfficacySignal
+    from recsys.tools.build_concern_efficacy import PROMPT_VERSION
+    from recsys.tools.build_concern_efficacy import build as build_concern
+
+    catalog = tmp_path / "catalog.json"
+    catalog.write_text(json.dumps({"products": [{"product_id": "p1"}]}))
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text(json.dumps({
+        "uid": "1", "product_id": "p1", "skin_type": "oily",
+        "prompt_version": PROMPT_VERSION, "status": "ok",
+        "labels": [{"concern": "acne_comedonal", "outcome": "helped",
+                    "reviewer_has_condition": True}],
+    }) + "\n")
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "concern_efficacy.v1.json"
+
+    build_concern(labels, out, data_root, catalog_products=1,
+                  catalog_product_ids=frozenset({"p1"}), catalog_path=catalog)
+
+    registry = json.loads((data_root / "signals" / "registry.json").read_text())
+    assert registry["stores"][0]["source"]["catalog_sha256"] == sha256_file(catalog)
+
+    # And without that provenance load_providers would skip the catalog-bound
+    # concern store; with it, the signal is present at inference.
+    providers, _meta, warnings = load_providers(data_root, sha256_file(catalog))
+    assert any(isinstance(provider, ConcernEfficacySignal) for provider in providers)
+    assert not any("concern_efficacy" in warning for warning in warnings)
+
+
 def test_pipeline_binds_runtime_stores_to_selected_catalog(tmp_path):
     catalog = tmp_path / "catalog_full.json"
     catalog.write_bytes((DATA / "catalog" / "seed_catalog.json").read_bytes())

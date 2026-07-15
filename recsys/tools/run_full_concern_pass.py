@@ -22,6 +22,25 @@ from src.config import load_config
 from src.recommendation import concern_labels as cl
 
 
+def select_corpus(rows, cache, limit):
+    """Uid-sorted corpus to hand run_labeling, plus the rows it will newly label.
+
+    run_labeling must always see the FULL cached population so it can drain
+    leftover batches from a crashed run without discarding already-paid rows
+    (an incomplete by_uid silently drops them). --limit therefore caps only how
+    many NEW (uncached) rows are labeled: the corpus is every cached uid plus
+    the first N uncached uids. Both modes are uid-sorted so full-mode and
+    --limit-mode chunk batches identically.
+    """
+    ordered = sorted(rows, key=lambda r: r["uid"])
+    uncached = [r for r in ordered if r["uid"] not in cache]
+    if limit is None:
+        return ordered, uncached
+    labeled_new = {r["uid"] for r in uncached[:limit]}
+    corpus = [r for r in ordered if r["uid"] in cache or r["uid"] in labeled_new]
+    return corpus, uncached[:limit]
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--limit", type=int, default=None,
@@ -48,10 +67,7 @@ def main(argv=None) -> int:
 
     provider, model, prompt_version = cl._configured_labeler_identity(ccfg)
     cache = cl.load_cache(ccfg["labels_path"], prompt_version, provider, model)
-    todo = [r for r in rows if r["uid"] not in cache]
-    todo.sort(key=lambda r: r["uid"])          # deterministic order for resumability
-    if args.limit is not None:
-        todo = todo[:args.limit]
+    corpus, todo = select_corpus(rows, cache, args.limit)
 
     usage = cl.azure_usage_summary(ccfg.get("azure_usage_path"), model, None)
     in_price = float(os.environ["AZURE_INPUT_PRICE_PER_MILLION"])
@@ -60,13 +76,13 @@ def main(argv=None) -> int:
              + usage["output_tokens"] / 1e6 * out_price)
     print(f"provider={provider} model={model} prompt={prompt_version}")
     print(f"corpus={len(rows)} cached={len(rows) - len([r for r in rows if r['uid'] not in cache])} "
-          f"todo={len(todo)}")
+          f"todo={len(todo)} labeling_corpus={len(corpus)}")
     print(f"cumulative Azure spend so far: ${spent:.4f} of ${ccfg['max_budget_usd']:.2f} ceiling")
     print(f"batch={ccfg['reviews_per_request']} concurrency={ccfg['request_concurrency']} "
           f"reasoning={ccfg.get('azure_reasoning_effort')}")
 
     labeler = cl._labeler(ccfg)   # installs the hard budget + request reservation guard
-    summary = cl.run_labeling(rows if args.limit is None else todo, labeler,
+    summary = cl.run_labeling(corpus, labeler,
                               ccfg["labels_path"], ccfg["batch_state_path"],
                               ccfg["batch_chunk_size"])
 
