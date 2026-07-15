@@ -180,23 +180,31 @@ def parse_spl(
     if otc and exact not in {tuple(sorted(item)) for item in MODELED_STRENGTHS}:
         return []
 
-    ndcs = sorted({
-        node.get("code")
-        for product in _local(root, "manufacturedProduct")
-        for node in list(product)
-        if node.tag.rsplit("}", 1)[-1] == "code"
-        and node.get("codeSystem") == "2.16.840.1.113883.6.69"
-        and node.get("code")
-    })
-    if not ndcs:
+    # A prescription document's <title> is the HIGHLIGHTS OF PRESCRIBING
+    # INFORMATION preamble ("These highlights do not include..."), never a
+    # product name. The label names each product on its own node; prefer that.
+    named: dict[str, str] = {}
+    for product in _local(root, "manufacturedProduct"):
+        children = list(product)
+        ndc = next((node.get("code") for node in children
+                    if node.tag.rsplit("}", 1)[-1] == "code"
+                    and node.get("codeSystem") == "2.16.840.1.113883.6.69"
+                    and node.get("code")), None)
+        if not ndc:
+            continue
+        named[ndc] = next(
+            (" ".join("".join(node.itertext()).split()) for node in children
+             if node.tag.rsplit("}", 1)[-1] == "name"), ""
+        )
+    if not named:
         return []
     source_hash = hashlib.sha256(xml_bytes).hexdigest()
     products = []
-    for ndc in ndcs:
+    for ndc in sorted(named):
         active_key = "+".join(f"{item.name}-{item.strength}" for item in actives)
         products.append(Product(
             product_id=f"dailymed:{set_id}:{ndc}:{active_key}",
-            name=title, brand="DailyMed SPL", category="treatment",
+            name=named[ndc] or title, brand="DailyMed SPL", category="treatment",
             actives=sorted(active.name for active in actives),
             intended_areas=["face"], routine_roles=[],
             format=form, exposure="leave_on", drug_actives=actives,
