@@ -1,0 +1,148 @@
+import hashlib
+import json
+from pathlib import Path
+
+from recsys.contracts import sha256_file
+from recsys.pipeline import run
+from recsys.signals import IngredientAnalysisSignal, ReviewQualitySignal, load_providers
+from recsys.tools.build_popularity import build as build_popularity
+from recsys.tools.build_review_stats import build as build_review_stats
+
+
+DATA = Path(__file__).parents[1] / "data"
+FIXTURES = Path(__file__).parent / "fixtures"
+
+
+def _registered_store(tmp_path, *, source=None, name="review_stats", kind="review_stats"):
+    signals = tmp_path / "signals"
+    signals.mkdir()
+    store_path = signals / "review.json"
+    store_path.write_text(json.dumps({"products": {}}))
+    registry = {
+        "schema_version": "recsys-registry-1",
+        "stores": [{
+            "name": name,
+            "kind": kind,
+            "version": "v1",
+            "path": "signals/review.json",
+            "sha256": hashlib.sha256(store_path.read_bytes()).hexdigest(),
+            "status": "active",
+        }],
+    }
+    if source is not None:
+        registry["stores"][0]["source"] = source
+    (signals / "registry.json").write_text(json.dumps(registry))
+
+
+def test_catalog_bound_store_loads_for_matching_catalog(tmp_path):
+    _registered_store(tmp_path, source={"catalog_sha256": "catalog-1"})
+
+    providers, _meta, warnings = load_providers(tmp_path, "catalog-1")
+
+    assert any(isinstance(provider, ReviewQualitySignal) for provider in providers)
+    assert warnings == []
+
+
+def test_catalog_mismatch_skips_store_with_warning(tmp_path):
+    _registered_store(tmp_path, source={"catalog_sha256": "catalog-old"})
+
+    providers, _meta, warnings = load_providers(tmp_path, "catalog-new")
+
+    assert not any(isinstance(provider, ReviewQualitySignal) for provider in providers)
+    assert any("catalog_sha256 mismatch" in warning for warning in warnings)
+
+
+def test_mismatched_ingredient_store_skips_with_warning(tmp_path):
+    _registered_store(
+        tmp_path,
+        name="ingredient_analysis",
+        kind="ingredient_analysis",
+        source={"catalog_sha256": "catalog-old"},
+    )
+
+    providers, _meta, warnings = load_providers(tmp_path, "catalog-new")
+
+    assert not any(isinstance(provider, IngredientAnalysisSignal) for provider in providers)
+    assert any("catalog_sha256 mismatch" in warning for warning in warnings)
+
+
+def test_unbound_store_requires_explicit_legacy_opt_in(tmp_path):
+    _registered_store(tmp_path)
+
+    providers, _meta, warnings = load_providers(tmp_path, "catalog-1")
+    assert not any(isinstance(provider, ReviewQualitySignal) for provider in providers)
+    assert any("no catalog_sha256 provenance" in warning for warning in warnings)
+
+    providers, _meta, warnings = load_providers(
+        tmp_path, "catalog-1", allow_unbound=True
+    )
+    assert any(isinstance(provider, ReviewQualitySignal) for provider in providers)
+    assert any("allow_unbound=True" in warning for warning in warnings)
+
+
+def test_review_stats_builder_records_catalog_sha(tmp_path):
+    catalog = tmp_path / "catalog.json"
+    catalog.write_text(json.dumps({"products": [{"product_id": "p1"}]}))
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    (raw / "reviews_1.csv").write_text(
+        "rating,product_id,skin_type\n5,p1,oily\n"
+    )
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "review.json"
+
+    build_review_stats(raw, catalog, out, data_root)
+
+    registry = json.loads((data_root / "signals" / "registry.json").read_text())
+    assert registry["stores"][0]["source"]["catalog_sha256"] == sha256_file(catalog)
+
+
+def test_popularity_builder_records_catalog_sha(tmp_path):
+    catalog = tmp_path / "catalog.json"
+    catalog.write_text(json.dumps({"products": [{"product_id": "p1"}]}))
+    raw = tmp_path / "raw"
+    raw.mkdir()
+    (raw / "product_info.csv").write_text(
+        "primary_category,secondary_category,tertiary_category,product_id,loves_count\n"
+        "Skincare,Cleansers,Face Wash & Cleansers,p1,10\n"
+    )
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "popularity.json"
+
+    build_popularity(raw, catalog, out, data_root)
+
+    registry = json.loads((data_root / "signals" / "registry.json").read_text())
+    assert registry["stores"][0]["source"]["catalog_sha256"] == sha256_file(catalog)
+
+
+def test_pipeline_binds_runtime_stores_to_selected_catalog(tmp_path):
+    catalog = tmp_path / "catalog_full.json"
+    catalog.write_bytes((DATA / "catalog" / "seed_catalog.json").read_bytes())
+    catalog_sha = sha256_file(catalog)
+    signals = tmp_path / "signals"
+    signals.mkdir()
+    store = signals / "review.json"
+    store.write_text(json.dumps({"products": {}}))
+    (signals / "registry.json").write_text(json.dumps({
+        "schema_version": "recsys-registry-1",
+        "stores": [{
+            "name": "review_stats",
+            "kind": "review_stats",
+            "version": "v1",
+            "path": "signals/review.json",
+            "sha256": hashlib.sha256(store.read_bytes()).hexdigest(),
+            "source": {"catalog_sha256": catalog_sha},
+            "status": "active",
+        }],
+    }))
+
+    document = run(
+        FIXTURES / "analysis_v3_sample.json",
+        FIXTURES / "profile_complete.json",
+        data_root=tmp_path,
+        generated_at="2026-07-14T00:00:00+00:00",
+    )
+
+    assert [entry["name"] for entry in document["data_versions"]["signals"]] == [
+        "review_stats"
+    ]

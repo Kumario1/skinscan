@@ -21,18 +21,21 @@
     ],
     "signals": [
       {
+        "catalog_sha256": "177d15f160576e0b1efa2eb5198c7c94ec8985d0678319a9042c91064144d003",
         "name": "ingredient_analysis",
-        "sha256": "ed0802c0d6706d818661832eb0227d539f0ea312aa08ffc49cbcfd53525dae75",
+        "sha256": "3202339938ca13cc954be53e0417a32d53bd4aa410d0529b368e3c5303f05de3",
         "version": "v1"
       },
       {
+        "catalog_sha256": "177d15f160576e0b1efa2eb5198c7c94ec8985d0678319a9042c91064144d003",
         "name": "popularity",
-        "sha256": "f57d82cb26fc15489ca3d671fb6d4cf697f27194f87891d13f0c5ca21158cc0c",
+        "sha256": "062b5c4a50ced80e6cf6fab698c2ecc48a9e7d80b7b8f0c59a966b52751e3e38",
         "version": "v1"
       },
       {
+        "catalog_sha256": "177d15f160576e0b1efa2eb5198c7c94ec8985d0678319a9042c91064144d003",
         "name": "review_stats",
-        "sha256": "e658bffc19641772563be45157d65652ef49134f235151903db96eb8c5e81454",
+        "sha256": "d679ac3a1039659b7679e15ca4bd3e2e45c389a103da24d480d98edb4c19bd7b",
         "version": "v1"
       }
     ],
@@ -59,15 +62,20 @@
     "source_image_sha256": "51357c8008eabcbba96fe685dc69547faf84bccf87de2df729e7b5e413320fb6"
   },
   "profile_used": {
+    "acne_duration_weeks": 16,
     "age_years": 25,
     "allergies": [],
     "current_actives": [],
     "current_medications": [],
     "max_price_usd": null,
+    "painful_or_deep_lesions": false,
     "pregnancy_status": "not_pregnant",
+    "prior_scarring": false,
     "sensitivity_conditions": [],
     "skin_type": "oily",
-    "tone_bucket": "medium"
+    "tone_bucket": "medium",
+    "tone_source": "self_report",
+    "treatment_history": []
   },
   "routines": [
     {
@@ -134,7 +142,7 @@
           "slot": "treatment",
           "usage": "AM_PM",
           "why": {
-            "score": 0.413287,
+            "score": 0.571717,
             "signals": [
               {
                 "evidence": "benzoyl peroxide targets inflamed breakouts",
@@ -147,27 +155,23 @@
                 "value": 0.545455
               },
               {
-                "evidence": "no data",
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
                 "name": "ingredient_analysis",
-                "value": 0.5
+                "value": 1.0
               },
               {
-                "evidence": "no data",
+                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.5
+                "value": 0.6059
               },
               {
-                "evidence": "no data",
+                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.5
+                "value": 0.81175
               }
             ],
             "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": [
-              "no_ingredient_analysis_data",
-              "no_popularity_data",
-              "no_review_quality_data"
-            ]
+            "uncertainty": []
           }
         },
         {
@@ -333,7 +337,7 @@
           "slot": "treatment",
           "usage": "AM_PM",
           "why": {
-            "score": 0.413287,
+            "score": 0.571717,
             "signals": [
               {
                 "evidence": "benzoyl peroxide targets inflamed breakouts",
@@ -346,27 +350,23 @@
                 "value": 0.545455
               },
               {
-                "evidence": "no data",
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
                 "name": "ingredient_analysis",
-                "value": 0.5
+                "value": 1.0
               },
               {
-                "evidence": "no data",
+                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.5
+                "value": 0.6059
               },
               {
-                "evidence": "no data",
+                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.5
+                "value": 0.81175
               }
             ],
             "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": [
-              "no_ingredient_analysis_data",
-              "no_popularity_data",
-              "no_review_quality_data"
-            ]
+            "uncertainty": []
           }
         },
         {
@@ -443,21 +443,21 @@
     {
       "am": [
         {
-          "brand": "Paula's Choice",
+          "brand": "Tatcha",
           "directions": {
             "amount": null,
             "amount_source": null,
             "cadence": "am_pm",
-            "cadence_source": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html"
+            "cadence_source": "https://tatcha.com/products/rice-wash-soft-cream-cleanser"
           },
-          "name": "RESIST Perfectly Balanced Foaming Cleanser",
+          "name": "The Rice Wash Skin-Softening Cleanser",
           "notes": [],
-          "price_usd": 22.0,
-          "product_id": "P469520",
+          "price_usd": 40.0,
+          "product_id": "P461537",
           "slot": "cleanser",
           "usage": "AM_PM",
           "why": {
-            "score": 0.330769,
+            "score": 0.555665,
             "signals": [
               {
                 "evidence": "no concern-targeting actives",
@@ -465,32 +465,28 @@
                 "value": 0.0
               },
               {
-                "evidence": "$22.00 \u2014 cheaper than 46% of cleanser options in this catalog",
+                "evidence": "$40.00 \u2014 cheaper than 0% of cleanser options in this catalog",
                 "name": "price_value",
-                "value": 0.461538
+                "value": 0.0
               },
               {
-                "evidence": "no data",
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
                 "name": "ingredient_analysis",
-                "value": 0.5
+                "value": 1.0
               },
               {
-                "evidence": "no data",
+                "evidence": "more loved than 98% of cleanser products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.5
+                "value": 0.9787
               },
               {
-                "evidence": "no data",
+                "evidence": "4.5\u2605 from 294 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.5
+                "value": 0.879775
               }
             ],
             "summary": "A daily cleanser to start each routine.",
-            "uncertainty": [
-              "no_ingredient_analysis_data",
-              "no_popularity_data",
-              "no_review_quality_data"
-            ]
+            "uncertainty": []
           }
         },
         {
@@ -508,7 +504,7 @@
           "slot": "treatment",
           "usage": "AM_PM",
           "why": {
-            "score": 0.413287,
+            "score": 0.571717,
             "signals": [
               {
                 "evidence": "benzoyl peroxide targets inflamed breakouts",
@@ -521,27 +517,23 @@
                 "value": 0.545455
               },
               {
-                "evidence": "no data",
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
                 "name": "ingredient_analysis",
-                "value": 0.5
+                "value": 1.0
               },
               {
-                "evidence": "no data",
+                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.5
+                "value": 0.6059
               },
               {
-                "evidence": "no data",
+                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.5
+                "value": 0.81175
               }
             ],
             "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": [
-              "no_ingredient_analysis_data",
-              "no_popularity_data",
-              "no_review_quality_data"
-            ]
+            "uncertainty": []
           }
         },
         {
@@ -647,21 +639,21 @@
       "per_label": [],
       "pm": [
         {
-          "brand": "Paula's Choice",
+          "brand": "Tatcha",
           "directions": {
             "amount": null,
             "amount_source": null,
             "cadence": "am_pm",
-            "cadence_source": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html"
+            "cadence_source": "https://tatcha.com/products/rice-wash-soft-cream-cleanser"
           },
-          "name": "RESIST Perfectly Balanced Foaming Cleanser",
+          "name": "The Rice Wash Skin-Softening Cleanser",
           "notes": [],
-          "price_usd": 22.0,
-          "product_id": "P469520",
+          "price_usd": 40.0,
+          "product_id": "P461537",
           "slot": "cleanser",
           "usage": "AM_PM",
           "why": {
-            "score": 0.330769,
+            "score": 0.555665,
             "signals": [
               {
                 "evidence": "no concern-targeting actives",
@@ -669,32 +661,28 @@
                 "value": 0.0
               },
               {
-                "evidence": "$22.00 \u2014 cheaper than 46% of cleanser options in this catalog",
+                "evidence": "$40.00 \u2014 cheaper than 0% of cleanser options in this catalog",
                 "name": "price_value",
-                "value": 0.461538
+                "value": 0.0
               },
               {
-                "evidence": "no data",
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
                 "name": "ingredient_analysis",
-                "value": 0.5
+                "value": 1.0
               },
               {
-                "evidence": "no data",
+                "evidence": "more loved than 98% of cleanser products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.5
+                "value": 0.9787
               },
               {
-                "evidence": "no data",
+                "evidence": "4.5\u2605 from 294 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.5
+                "value": 0.879775
               }
             ],
             "summary": "A daily cleanser to start each routine.",
-            "uncertainty": [
-              "no_ingredient_analysis_data",
-              "no_popularity_data",
-              "no_review_quality_data"
-            ]
+            "uncertainty": []
           }
         },
         {
@@ -712,7 +700,7 @@
           "slot": "treatment",
           "usage": "AM_PM",
           "why": {
-            "score": 0.413287,
+            "score": 0.571717,
             "signals": [
               {
                 "evidence": "benzoyl peroxide targets inflamed breakouts",
@@ -725,27 +713,23 @@
                 "value": 0.545455
               },
               {
-                "evidence": "no data",
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
                 "name": "ingredient_analysis",
-                "value": 0.5
+                "value": 1.0
               },
               {
-                "evidence": "no data",
+                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.5
+                "value": 0.6059
               },
               {
-                "evidence": "no data",
+                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.5
+                "value": 0.81175
               }
             ],
             "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": [
-              "no_ingredient_analysis_data",
-              "no_popularity_data",
-              "no_review_quality_data"
-            ]
+            "uncertainty": []
           }
         },
         {
@@ -817,26 +801,26 @@
       ],
       "slot_count": 4,
       "title": "Minimal 3-step",
-      "total_price_usd": 156.0
+      "total_price_usd": 174.0
     },
     {
       "am": [
         {
-          "brand": "Paula's Choice",
+          "brand": "Tatcha",
           "directions": {
             "amount": null,
             "amount_source": null,
             "cadence": "am_pm",
-            "cadence_source": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html"
+            "cadence_source": "https://tatcha.com/products/rice-wash-soft-cream-cleanser"
           },
-          "name": "RESIST Perfectly Balanced Foaming Cleanser",
+          "name": "The Rice Wash Skin-Softening Cleanser",
           "notes": [],
-          "price_usd": 22.0,
-          "product_id": "P469520",
+          "price_usd": 40.0,
+          "product_id": "P461537",
           "slot": "cleanser",
           "usage": "AM_PM",
           "why": {
-            "score": 0.330769,
+            "score": 0.555665,
             "signals": [
               {
                 "evidence": "no concern-targeting actives",
@@ -844,32 +828,28 @@
                 "value": 0.0
               },
               {
-                "evidence": "$22.00 \u2014 cheaper than 46% of cleanser options in this catalog",
+                "evidence": "$40.00 \u2014 cheaper than 0% of cleanser options in this catalog",
                 "name": "price_value",
-                "value": 0.461538
+                "value": 0.0
               },
               {
-                "evidence": "no data",
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
                 "name": "ingredient_analysis",
-                "value": 0.5
+                "value": 1.0
               },
               {
-                "evidence": "no data",
+                "evidence": "more loved than 98% of cleanser products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.5
+                "value": 0.9787
               },
               {
-                "evidence": "no data",
+                "evidence": "4.5\u2605 from 294 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.5
+                "value": 0.879775
               }
             ],
             "summary": "A daily cleanser to start each routine.",
-            "uncertainty": [
-              "no_ingredient_analysis_data",
-              "no_popularity_data",
-              "no_review_quality_data"
-            ]
+            "uncertainty": []
           }
         },
         {
@@ -887,7 +867,7 @@
           "slot": "treatment",
           "usage": "AM_PM",
           "why": {
-            "score": 0.413287,
+            "score": 0.571717,
             "signals": [
               {
                 "evidence": "benzoyl peroxide targets inflamed breakouts",
@@ -900,27 +880,23 @@
                 "value": 0.545455
               },
               {
-                "evidence": "no data",
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
                 "name": "ingredient_analysis",
-                "value": 0.5
+                "value": 1.0
               },
               {
-                "evidence": "no data",
+                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.5
+                "value": 0.6059
               },
               {
-                "evidence": "no data",
+                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.5
+                "value": 0.81175
               }
             ],
             "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": [
-              "no_ingredient_analysis_data",
-              "no_popularity_data",
-              "no_review_quality_data"
-            ]
+            "uncertainty": []
           }
         },
         {
@@ -1026,21 +1002,21 @@
       "per_label": [],
       "pm": [
         {
-          "brand": "Paula's Choice",
+          "brand": "Tatcha",
           "directions": {
             "amount": null,
             "amount_source": null,
             "cadence": "am_pm",
-            "cadence_source": "https://www.paulaschoice.com/resist-perfectly-balanced-foaming-cleanser/783.html"
+            "cadence_source": "https://tatcha.com/products/rice-wash-soft-cream-cleanser"
           },
-          "name": "RESIST Perfectly Balanced Foaming Cleanser",
+          "name": "The Rice Wash Skin-Softening Cleanser",
           "notes": [],
-          "price_usd": 22.0,
-          "product_id": "P469520",
+          "price_usd": 40.0,
+          "product_id": "P461537",
           "slot": "cleanser",
           "usage": "AM_PM",
           "why": {
-            "score": 0.330769,
+            "score": 0.555665,
             "signals": [
               {
                 "evidence": "no concern-targeting actives",
@@ -1048,32 +1024,28 @@
                 "value": 0.0
               },
               {
-                "evidence": "$22.00 \u2014 cheaper than 46% of cleanser options in this catalog",
+                "evidence": "$40.00 \u2014 cheaper than 0% of cleanser options in this catalog",
                 "name": "price_value",
-                "value": 0.461538
+                "value": 0.0
               },
               {
-                "evidence": "no data",
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
                 "name": "ingredient_analysis",
-                "value": 0.5
+                "value": 1.0
               },
               {
-                "evidence": "no data",
+                "evidence": "more loved than 98% of cleanser products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.5
+                "value": 0.9787
               },
               {
-                "evidence": "no data",
+                "evidence": "4.5\u2605 from 294 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.5
+                "value": 0.879775
               }
             ],
             "summary": "A daily cleanser to start each routine.",
-            "uncertainty": [
-              "no_ingredient_analysis_data",
-              "no_popularity_data",
-              "no_review_quality_data"
-            ]
+            "uncertainty": []
           }
         },
         {
@@ -1091,7 +1063,7 @@
           "slot": "treatment",
           "usage": "AM_PM",
           "why": {
-            "score": 0.413287,
+            "score": 0.571717,
             "signals": [
               {
                 "evidence": "benzoyl peroxide targets inflamed breakouts",
@@ -1104,27 +1076,23 @@
                 "value": 0.545455
               },
               {
-                "evidence": "no data",
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
                 "name": "ingredient_analysis",
-                "value": 0.5
+                "value": 1.0
               },
               {
-                "evidence": "no data",
+                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.5
+                "value": 0.6059
               },
               {
-                "evidence": "no data",
+                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
                 "name": "review_quality",
-                "value": 0.5
+                "value": 0.81175
               }
             ],
             "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": [
-              "no_ingredient_analysis_data",
-              "no_popularity_data",
-              "no_review_quality_data"
-            ]
+            "uncertainty": []
           }
         },
         {
@@ -1196,7 +1164,7 @@
       ],
       "slot_count": 4,
       "title": "Comprehensive",
-      "total_price_usd": 156.0
+      "total_price_usd": 174.0
     }
   ],
   "schema_version": "recsys-1",

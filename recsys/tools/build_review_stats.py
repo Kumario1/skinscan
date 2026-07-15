@@ -90,7 +90,10 @@ def build(raw_dir: Path, catalog_path: Path, out_path: Path, data_root: Path,
     register_store(
         data_root, name="review_stats", kind="review_stats", version="v1",
         store_path=out_path, builder=BUILDER,
-        source={"reviews_csv_sha256s": [sha256_file(p) for p in review_csvs]},
+        source={
+            "catalog_sha256": sha256_file(catalog_path),
+            "reviews_csv_sha256s": [sha256_file(p) for p in review_csvs],
+        },
         coverage={"products": len(products), "catalog_products": len(wanted)},
     )
     log = {"reviews": global_n, "products_covered": len(products), "global_mean": global_mean}

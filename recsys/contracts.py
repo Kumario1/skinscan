@@ -24,6 +24,7 @@ TRIAGE_LEVELS = ("routine", "routine_plus_review", "derm_first", "abstain")
 REFERRAL_ONLY_TRIAGE = ("derm_first", "abstain")
 SKIN_TYPES = ("combination", "dry", "normal", "oily", "unknown")
 TONE_BUCKETS = ("light", "medium", "deep", "unknown")
+TONE_SOURCES = ("self_report", "photo", "unknown")
 PREGNANCY_STATUSES = (
     "pregnant", "trying", "nursing", "not_pregnant", "not_applicable", "unknown",
 )
@@ -134,37 +135,91 @@ def load_analysis(path: str | Path) -> AnalysisInput:
 class Profile:
     skin_type: str = "unknown"
     tone_bucket: str = "unknown"
+    tone_source: str = "unknown"
     pregnancy_status: str = "unknown"
     age_years: int | None = None
     allergies: tuple[str, ...] = ()
     sensitivity_conditions: tuple[str, ...] = ()
     current_actives: tuple[str, ...] = ()
     current_medications: tuple[str, ...] = ()
+    treatment_history: tuple[str, ...] = ()
+    acne_duration_weeks: int | None = None
+    painful_or_deep_lesions: bool | None = None
+    prior_scarring: bool | None = None
     max_price_usd: float | None = None
     source: str = "unknown"  # "file" | "analysis.input_profile" | "unknown"
     profile_sha256: str | None = None
 
 
+def _profile_list(data: dict, field_name: str) -> tuple[str, ...]:
+    value = data.get(field_name)
+    if value is None:
+        return ()
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ContractViolation(f"profile.{field_name}", "expected a list of strings")
+    return tuple(value)
+
+
+def _profile_optional_int(data: dict, field_name: str, *, maximum: int | None = None) -> int | None:
+    value = data.get(field_name)
+    if value is None:
+        return None
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ContractViolation(f"profile.{field_name}", "expected an integer or null")
+    if value < 0 or (maximum is not None and value > maximum):
+        limit = f"0..{maximum}" if maximum is not None else "non-negative"
+        raise ContractViolation(f"profile.{field_name}", f"expected {limit} integer or null")
+    return value
+
+
+def _profile_optional_bool(data: dict, field_name: str) -> bool | None:
+    value = data.get(field_name)
+    if value is None:
+        return None
+    if not isinstance(value, bool):
+        raise ContractViolation(f"profile.{field_name}", "expected boolean or null")
+    return value
+
+
 def _profile_from_dict(data: dict, source: str, sha256: str | None) -> Profile:
+    if not isinstance(data, dict):
+        raise ContractViolation("profile", "expected an object")
     skin_type = data.get("skin_type") or "unknown"
     if skin_type not in SKIN_TYPES:
         raise ContractViolation("profile.skin_type", f"unknown {skin_type!r}")
     tone = data.get("tone_bucket") or "unknown"
     if tone not in TONE_BUCKETS:
         raise ContractViolation("profile.tone_bucket", f"unknown {tone!r}")
+    tone_source = data.get("tone_source") or "unknown"
+    if tone_source not in TONE_SOURCES:
+        raise ContractViolation("profile.tone_source", f"unknown {tone_source!r}")
     pregnancy = data.get("pregnancy_status") or "unknown"
     if pregnancy not in PREGNANCY_STATUSES:
         raise ContractViolation("profile.pregnancy_status", f"unknown {pregnancy!r}")
     price = data.get("max_price_usd")
+    if price is not None and (
+        not isinstance(price, (int, float))
+        or isinstance(price, bool)
+        or not math.isfinite(price)
+        or price < 0
+    ):
+        raise ContractViolation(
+            "profile.max_price_usd", "expected a finite non-negative number or null"
+        )
     return Profile(
         skin_type=skin_type,
         tone_bucket=tone,
+        tone_source=tone_source,
         pregnancy_status=pregnancy,
-        age_years=data.get("age_years"),
-        allergies=tuple(data.get("allergies") or []),
-        sensitivity_conditions=tuple(data.get("sensitivity_conditions") or []),
-        current_actives=tuple(data.get("current_actives") or []),
-        current_medications=tuple(data.get("current_medications") or []),
+        age_years=_profile_optional_int(data, "age_years", maximum=130),
+        allergies=_profile_list(data, "allergies"),
+        sensitivity_conditions=_profile_list(data, "sensitivity_conditions"),
+        current_actives=_profile_list(data, "current_actives"),
+        current_medications=_profile_list(data, "current_medications"),
+        treatment_history=_profile_list(data, "treatment_history"),
+        acne_duration_weeks=_profile_optional_int(data, "acne_duration_weeks"),
+        painful_or_deep_lesions=_profile_optional_bool(data, "painful_or_deep_lesions"),
+        prior_scarring=_profile_optional_bool(data, "prior_scarring"),
         max_price_usd=float(price) if price is not None else None,
         source=source,
         profile_sha256=sha256,

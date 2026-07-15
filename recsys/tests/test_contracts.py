@@ -63,6 +63,11 @@ def test_profile_precedence_file_wins():
     profile = resolve_profile(FIXTURES / "profile_complete.json", analysis)
     assert profile.skin_type == "oily"
     assert profile.pregnancy_status == "not_pregnant"
+    assert profile.tone_source == "self_report"
+    assert profile.treatment_history == ()
+    assert profile.acne_duration_weeks == 16
+    assert profile.painful_or_deep_lesions is False
+    assert profile.prior_scarring is False
     assert profile.source == "file"
     assert profile.profile_sha256
 
@@ -73,3 +78,27 @@ def test_profile_falls_back_to_analysis_input_profile():
     assert profile.source == "analysis.input_profile"
     assert profile.skin_type == "unknown"
     assert profile.pregnancy_status == "unknown"
+    assert profile.tone_source == "unknown"
+    assert profile.treatment_history == ()
+    assert profile.acne_duration_weeks is None
+    assert profile.painful_or_deep_lesions is None
+    assert profile.prior_scarring is None
+
+
+@pytest.mark.parametrize("field,value", [
+    ("tone_source", "estimated"),
+    ("treatment_history", "retinol"),
+    ("acne_duration_weeks", -1),
+    ("acne_duration_weeks", True),
+    ("painful_or_deep_lesions", "no"),
+    ("prior_scarring", 1),
+])
+def test_rejects_invalid_profile_intake_values(tmp_path, field, value):
+    data = json.loads((FIXTURES / "profile_complete.json").read_text())
+    data[field] = value
+    path = tmp_path / "profile.json"
+    path.write_text(json.dumps(data))
+    analysis = load_analysis(FIXTURES / "analysis_v3_sample.json")
+
+    with pytest.raises(ContractViolation, match=field):
+        resolve_profile(path, analysis)

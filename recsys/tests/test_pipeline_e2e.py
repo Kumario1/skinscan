@@ -70,6 +70,15 @@ def test_triage_and_framing_passthrough(document):
     assert triage["see_doctor_note"]
 
 
+def test_profile_used_contains_complete_profile_intake(document):
+    profile = document["profile_used"]
+    assert profile["tone_source"] == "self_report"
+    assert profile["treatment_history"] == []
+    assert profile["acne_duration_weeks"] == 16
+    assert profile["painful_or_deep_lesions"] is False
+    assert profile["prior_scarring"] is False
+
+
 def test_every_step_has_evidence_backed_why(document):
     for routine in document["routines"]:
         seen = set()
@@ -89,7 +98,9 @@ def test_data_versions_match_disk(document):
     names = set()
     for store in document["data_versions"]["signals"]:
         names.add(store["name"])
+        assert store["catalog_sha256"] == catalog_entry["sha256"]
     assert names == {"ingredient_analysis", "review_stats", "popularity"}
+    assert not any("catalog_sha256" in warning for warning in document["warnings"])
 
 
 def test_budget_archetype_fails_closed_when_verified_products_exceed_cap(document):
