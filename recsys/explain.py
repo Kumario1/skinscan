@@ -100,8 +100,10 @@ def step_to_dict(step: Step, k: Knowledge, profile: Profile) -> dict:
         notes.append("category-derived: role and usage inferred from the product "
                      "category, not individually evidence-verified")
     # Prescription-strength treatments are recommendable but must route to a
-    # clinician — never presented as a buy-now step.
-    prescription = bool(getattr(product, "prescription", False))
+    # clinician — never presented as a buy-now step. A drug whose label does not
+    # call itself OTC is prescription-strength (D-033); a cosmetic carries no
+    # drug_actives, so it can never be mislabeled by the otc_drug half alone.
+    prescription = bool(product.drug_actives) and product.otc_drug is False
     if prescription:
         notes.append("prescription — consult a doctor to get this prescribed")
     return {

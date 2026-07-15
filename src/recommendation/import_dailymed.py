@@ -1,4 +1,11 @@
-"""Deterministic DailyMed SPL adapter for exact modeled topical therapies."""
+"""Deterministic DailyMed SPL adapter for topical acne drugs.
+
+OTC labels are admitted only when they fill an exact modeled therapy path.
+Prescription labels are admitted on the acne-active allow-list alone: D-033 lets
+the app surface prescription-strength options with a see-a-doctor note, and
+these rows carry label facts only -- which therapy paths exist stays D-029
+clinician-gated, so an Rx row is never eligible for a routine on its own.
+"""
 from __future__ import annotations
 
 import argparse
@@ -22,6 +29,21 @@ ACTIVE_NAMES = {
     "AZELAIC ACID": "azelaic_acid",
     "BENZOYL PEROXIDE": "benzoyl_peroxide",
     "ADAPALENE": "adapalene",
+    # Prescription acne actives. Salt forms map to the moiety the label doses;
+    # an active missing from this table makes the whole SPL fail closed below.
+    "TRETINOIN": "tretinoin",
+    "TAZAROTENE": "tazarotene",
+    "TRIFAROTENE": "trifarotene",
+    "CLINDAMYCIN": "clindamycin",
+    "CLINDAMYCIN PHOSPHATE": "clindamycin",
+    "DAPSONE": "dapsone",
+    "MINOCYCLINE": "minocycline",
+    "MINOCYCLINE HYDROCHLORIDE": "minocycline",
+    "ERYTHROMYCIN": "erythromycin",
+    "CLASCOTERONE": "clascoterone",
+    "SULFACETAMIDE SODIUM": "sulfacetamide_sodium",
+    "SODIUM SULFACETAMIDE": "sulfacetamide_sodium",
+    "SULFUR": "sulfur",
 }
 TOPICAL_FORMS = {"gel", "cream", "lotion", "foam", "solution"}
 
@@ -104,15 +126,23 @@ def parse_spl(
     document_text = " ".join("".join(root.itertext()).split()).lower()
     form = next((item for item in TOPICAL_FORMS if item in form_text), None)
     human_otc_document = "human otc drug label" in document_label_text
-    human = "human" in species_text or human_otc_document
+    # LOINC 34391-3 is the authoritative prescription marker (34390-5 is its OTC
+    # counterpart); marketingCategory is absent on many real labels.
+    human_rx_document = "human prescription drug label" in document_label_text
+    human = "human" in species_text or human_otc_document or human_rx_document
     otc = "otc" in marketing_text or human_otc_document
     topical = "topical" in route_text or (
         not route_text and "for external use only" in document_text
     )
-    if not set_id or not form or not topical or not otc or not human:
+    if not set_id or not form or not topical or not human:
+        return []
+    # A label is OTC or prescription, never both and never neither. Anything else
+    # leaves legal status unknown, and unknown must not become a catalog fact.
+    if otc == human_rx_document:
         return []
 
-    actives: list[VerifiedActive] = []
+    seen: dict[tuple[str, str | None], VerifiedActive] = {}
+    unmodeled = False
     active_ingredients = _local(root, "activeIngredient") + [
         node for node in _local(root, "ingredient")
         if node.get("classCode") == "ACTIB"
@@ -122,9 +152,17 @@ def parse_spl(
                  for node in _local(ingredient, "name")]
         canonical = next((ACTIVE_NAMES[name] for name in names if name in ACTIVE_NAMES), None)
         if canonical:
-            actives.append(VerifiedActive(canonical, _strength(ingredient), source_url))
+            active = VerifiedActive(canonical, _strength(ingredient), source_url)
+            seen[(active.name, active.strength)] = active  # SPLs may state one twice
+        else:
+            # An active we cannot name is either another product entirely or a
+            # combination we would misreport by silently dropping an ingredient.
+            unmodeled = True
+    if unmodeled or not seen:
+        return []
+    actives = [seen[key] for key in sorted(seen, key=lambda key: (key[0], key[1] or ""))]
     exact = tuple(sorted((active.name, active.strength or "") for active in actives))
-    if exact not in {tuple(sorted(item)) for item in MODELED_STRENGTHS}:
+    if otc and exact not in {tuple(sorted(item)) for item in MODELED_STRENGTHS}:
         return []
 
     ndcs = sorted({
@@ -147,7 +185,7 @@ def parse_spl(
             actives=sorted(active.name for active in actives),
             intended_areas=["face"], routine_roles=[],
             format=form, exposure="leave_on", drug_actives=actives,
-            otc_drug=True, label_source=source_url, label_verified_at=retrieved_at,
+            otc_drug=otc, label_source=source_url, label_verified_at=retrieved_at,
             evidence_roles=[], evidence_grade="pending_review",
             cadence="per_label", cadence_source=source_url,
             source_set_id=set_id, ndc_product_code=ndc, label_version=version,

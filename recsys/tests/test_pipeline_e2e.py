@@ -1,12 +1,17 @@
 """End-to-end: verified products yield valid routines or explicit unavailability."""
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
-from recsys.contracts import sha256_file
+from recsys.catalog import load_catalog
+from recsys.compose import Step
+from recsys.contracts import load_analysis, resolve_profile, sha256_file
+from recsys.explain import step_to_dict
 from recsys.knowledge import load_knowledge
 from recsys.pipeline import run
+from recsys.scoring import ScoredCandidate
 
 FIXTURES = Path(__file__).parent / "fixtures"
 DATA = Path(__file__).parents[1] / "data"
@@ -184,6 +189,26 @@ def test_hybrid_keeps_hard_ingredient_safety():
         for step in _steps(routine):
             actives = set(catalog[step["product_id"]]["actives"])
             assert not (actives & K.retinoids), step["product_id"]
+
+
+def test_prescription_derives_from_label_facts_not_a_phantom_attribute():
+    products, _ = load_catalog(DATA / "catalog" / "seed_catalog.json")
+    profile = resolve_profile(FIXTURES / "profile_complete.json", load_analysis(ANALYSIS))
+    base = next(p for p in products if p.category == "treatment")
+
+    def flag(**facts):
+        step = Step(slot="treatment", usage="PM", scored=ScoredCandidate(
+            product=replace(base, **facts), final=1.0, signals=()))
+        return step_to_dict(step, K, profile)
+
+    rx = flag(drug_actives=({"name": "tretinoin", "strength": "0.05%"},), otc_drug=False)
+    assert rx["prescription"] is True
+    assert any("consult a doctor" in note for note in rx["notes"])
+    # An OTC drug is a drug, but it is not a prescription.
+    assert flag(drug_actives=({"name": "benzoyl_peroxide", "strength": "2.5%"},),
+                otc_drug=True)["prescription"] is False
+    # A cosmetic carries no drug actives; otc_drug=False alone must not flag it.
+    assert flag(drug_actives=(), otc_drug=False)["prescription"] is False
 
 
 def test_allergy_removes_products(tmp_path):

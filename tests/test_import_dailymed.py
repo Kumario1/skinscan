@@ -6,6 +6,30 @@ from src.recommendation.import_dailymed import import_current_set_ids, parse_spl
 
 FIXTURE = Path(__file__).parent / "fixtures" / "dailymed_adapalene_bpo.xml"
 
+RX_SPL = """<?xml version="1.0" encoding="UTF-8"?>
+<document xmlns="urn:hl7-org:v3">
+  <code code="{doc_code}" codeSystem="2.16.840.1.113883.6.1" displayName="{doc_name}" />
+  <setId root="rx-set-id" />
+  <versionNumber value="2" />
+  <effectiveTime value="20260301" />
+  <title>Tretinoin Cream USP 0.05%</title>
+  <manufacturedProduct>
+    <code codeSystem="2.16.840.1.113883.6.69" code="00000-0002" />
+    <formCode displayName="Cream" />
+    <routeCode displayName="TOPICAL" />
+    <subject><speciesCode displayName="Human" /></subject>
+    <ingredient classCode="ACTIB">
+      <quantity><numerator value="0.5" unit="mg" /><denominator value="1" unit="g" /></quantity>
+      <ingredientSubstance><name>TRETINOIN</name></ingredientSubstance>
+    </ingredient>
+    {extra}
+  </manufacturedProduct>
+</document>"""
+
+
+def _rx_spl(*, extra="", doc_code="34391-3", doc_name="HUMAN PRESCRIPTION DRUG LABEL"):
+    return RX_SPL.format(doc_code=doc_code, doc_name=doc_name, extra=extra).encode()
+
 
 def test_current_exact_topical_spl_becomes_quarantined_v2_candidate():
     products = parse_spl(
@@ -53,6 +77,55 @@ def test_current_dailymed_document_level_human_otc_metadata_is_supported():
     assert products[0].format == "lotion"
     assert products[0].otc_drug is True
     assert products[0].name == "Acne Clearing Treatment"
+
+
+def test_prescription_label_is_imported_and_recorded_as_not_otc():
+    # D-033: prescription-strength options may be surfaced with a referral, so the
+    # Rx label imports -- and otc_drug must record what the label actually says.
+    products = parse_spl(
+        _rx_spl(), source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    )
+    assert len(products) == 1
+    product = products[0]
+    assert product.otc_drug is False
+    assert [(item.name, item.strength) for item in product.drug_actives] == [
+        ("tretinoin", "0.05%")
+    ]
+    assert product.format == "cream"
+    assert product.evidence_grade == "pending_review"
+
+
+def test_unmodeled_active_fails_closed_instead_of_misreporting_a_combination():
+    # Tretinoin + an active we cannot name: importing it would silently drop an
+    # ingredient and describe a combination product as tretinoin-only.
+    extra = """<ingredient classCode="ACTIB">
+      <quantity><numerator value="40" unit="mg" /><denominator value="1" unit="g" /></quantity>
+      <ingredientSubstance><name>HYDROQUINONE</name></ingredientSubstance>
+    </ingredient>"""
+    assert parse_spl(
+        _rx_spl(extra=extra), source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    ) == []
+
+
+def test_label_that_is_neither_otc_nor_prescription_is_excluded():
+    # Unknown legal status must never become a catalog fact.
+    assert parse_spl(
+        _rx_spl(doc_code="99999-9", doc_name="SOME OTHER DOCUMENT"),
+        source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    ) == []
+
+
+def test_prescription_label_skips_the_otc_modeled_path_gate():
+    # tretinoin 0.05% fills no modeled path; it still catalogs as an Rx fact row,
+    # because which therapy paths exist stays D-029 clinician-gated elsewhere.
+    products = parse_spl(
+        _rx_spl(), source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    )
+    assert products and products[0].routine_roles == []
 
 
 def test_archived_or_non_exact_label_is_excluded():
