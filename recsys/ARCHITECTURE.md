@@ -259,10 +259,25 @@ plausible answer with no error:
   **skipped with only a warning**, so the ranker scores blind on neutral 0.5.
   Always check `data_versions.signals` is populated and `warnings` is empty.
 
-Reproducibility is exact end to end: the SA-RPN detector returns byte-identical
-detections for the same photo (202/202, verified across runs), and the engine is
-byte-identical across processes once `--generated-at` pins the only clock-derived
-field.
+**Reproducibility, precisely.** Verified on two different photos, four runs of
+one and two of the other:
+
+- The **detector** is byte-identical for the same photo — 4 runs, one digest
+  (202 detections; the second photo likewise, at 240).
+- The **engine** is byte-identical across processes once `--generated-at` pins
+  the clock.
+- A **full e2e replay** (photo → analysis → recsys) differs in exactly two
+  fields: `generated_at`, and `inputs.analysis_sha256` — because `analysis.json`
+  embeds its own timestamp, so hashing it faithfully yields a new digest each
+  run. Products, prices, routines and prescription options are identical. That
+  is a correct provenance chain, not drift; a bit-exact e2e replay needs the
+  analysis timestamp pinned too.
+
+Severity reaches the ranking and is directional: on a photo where
+`acne_inflammatory` fell from severity 4 to 3, every product targeting it scored
+lower while a cleanser targeting only the *other* concerns scored **higher**
+(0.7143 → 0.7692). Same-concern photos can still yield the same winners — that
+is the weighting working, not ignoring the input.
 
 ## Phase status (2026-07-15)
 
