@@ -811,7 +811,7 @@ def test_azure_timeout_configurable_default_600(monkeypatch, tmp_path):
     monkeypatch.setenv("AZURE_INPUT_PRICE_PER_MILLION", "0.25")
     monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "2")
     cfg = {**load_config()["concern"], "batch_spool_dir": str(tmp_path / "g")}
-    assert _labeler(cfg).timeout == cfg["azure_timeout_seconds"] == 600
+    assert _labeler(cfg).timeout == cfg["azure_timeout_seconds"] == 900
 
 
 def test_azure_records_failed_request_usage_with_identity(monkeypatch, tmp_path):
