@@ -109,6 +109,47 @@ def test_unmodeled_active_fails_closed_instead_of_misreporting_a_combination():
     ) == []
 
 
+def test_active_dosed_against_its_moiety_is_read_not_dropped():
+    # Most clindamycin labels state strength against the active moiety (ACTIM)
+    # rather than the basis (ACTIB); reading ACTIB alone dropped them silently.
+    moiety = """<ingredient classCode="ACTIM">
+      <quantity><numerator value="10" unit="mg" /><denominator value="1" unit="g" /></quantity>
+      <ingredientSubstance><name>CLINDAMYCIN PHOSPHATE</name>
+        <activeMoiety><name>CLINDAMYCIN</name></activeMoiety></ingredientSubstance>
+    </ingredient>"""
+    products = parse_spl(
+        _rx_spl(extra=moiety), source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    )
+    assert len(products) == 1
+    assert ("clindamycin", "1%") in [
+        (item.name, item.strength) for item in products[0].drug_actives
+    ]
+
+
+def test_document_holding_two_strengths_of_one_active_is_excluded():
+    # Actives are read document-wide, so a label covering 0.05% and 0.1% gives no
+    # way to say which strength belongs to which NDC. Reject rather than guess.
+    second = """<ingredient classCode="ACTIB">
+      <quantity><numerator value="1" unit="mg" /><denominator value="1" unit="g" /></quantity>
+      <ingredientSubstance><name>TRETINOIN</name></ingredientSubstance>
+    </ingredient>"""
+    assert parse_spl(
+        _rx_spl(extra=second), source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    ) == []
+
+
+def test_active_without_a_parseable_strength_is_excluded():
+    unstated = RX_SPL.format(
+        doc_code="34391-3", doc_name="HUMAN PRESCRIPTION DRUG LABEL", extra=""
+    ).replace('<numerator value="0.5" unit="mg" />', '<numerator value="0.5" unit="iu" />')
+    assert parse_spl(
+        unstated.encode(), source_url="https://dailymed.nlm.nih.gov/rx.xml",
+        retrieved_at="2026-07-15T00:00:00Z", current=True,
+    ) == []
+
+
 def test_label_that_is_neither_otc_nor_prescription_is_excluded():
     # Unknown legal status must never become a catalog fact.
     assert parse_spl(

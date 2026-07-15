@@ -46,6 +46,10 @@ ACTIVE_NAMES = {
     "SULFUR": "sulfur",
 }
 TOPICAL_FORMS = {"gel", "cream", "lotion", "foam", "solution"}
+# SPL states an active's strength against its basis (ACTIB), its active moiety
+# (ACTIM), or a reference substance (ACTIR). Reading ACTIB alone silently drops
+# every label that doses by moiety -- most clindamycin products, for one.
+ACTIVE_CLASS_CODES = {"ACTIB", "ACTIM", "ACTIR"}
 
 
 def _local(element: ET.Element, name: str) -> list[ET.Element]:
@@ -145,7 +149,7 @@ def parse_spl(
     unmodeled = False
     active_ingredients = _local(root, "activeIngredient") + [
         node for node in _local(root, "ingredient")
-        if node.get("classCode") == "ACTIB"
+        if node.get("classCode") in ACTIVE_CLASS_CODES
     ]
     for ingredient in active_ingredients:
         names = ["".join(node.itertext()).strip().upper()
@@ -161,6 +165,13 @@ def parse_spl(
     if unmodeled or not seen:
         return []
     actives = [seen[key] for key in sorted(seen, key=lambda key: (key[0], key[1] or ""))]
+    if len({active.name for active in actives}) != len(actives):
+        # One active at two strengths: this document describes more than one
+        # product, and actives are read document-wide, so we cannot tell which
+        # strength belongs to which NDC.
+        return []
+    if any(active.strength is None for active in actives):
+        return []  # without a strength we cannot state what the drug contains
     exact = tuple(sorted((active.name, active.strength or "") for active in actives))
     if otc and exact not in {tuple(sorted(item)) for item in MODELED_STRENGTHS}:
         return []
