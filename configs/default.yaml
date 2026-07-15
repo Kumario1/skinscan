@@ -107,9 +107,9 @@ concern:                              # concern-efficacy labeling (D-023, spec 2
   max_budget_usd: 90.0                 # hard cumulative ceiling for calibration + labeling (Azure credit ~$100)
   azure_max_requests: 1400             # cumulative request ceiling, including failed/retried calls (~1153 planned + retry headroom)
   azure_reasoning_effort: medium       # reasoning effort for Azure labeling calls (AZURE_REASONING_EFFORT overrides)
-  azure_timeout_seconds: 600           # per-request HTTP timeout; large reasoning batches run for minutes
+  azure_timeout_seconds: 900           # per-request HTTP timeout; leaves room for TPM-queued reasoning batches
   reviews_per_request: 175             # proven-reliable Azure batch; amortizes reasoning tokens (~1153 reqs for 202k rows)
-  request_concurrency: 4               # ~21k input tokens burst per request; 4x stays under the 100k TPM limit (6x tripped 429s)
+  request_concurrency: 3               # sustained ~43k tok/min, safely under the 100k TPM rolling window (4x oscillated into timeouts)
   text_truncate_chars: 1200           # review text sent to the labeler is capped here
   batch_chunk_size: 1000              # rows checkpointed per local batch
   calibration_sample_size: 2000       # gate P2 sample
