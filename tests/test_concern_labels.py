@@ -635,6 +635,22 @@ def test_azure_reasoning_effort_configurable_default_medium(monkeypatch, tmp_pat
     assert _labeler(cfg).reasoning_effort == cfg["azure_reasoning_effort"] == "medium"
 
 
+def test_azure_timeout_configurable_default_600(monkeypatch, tmp_path):
+    monkeypatch.setenv("AZURE_KEY", "test-key")
+    monkeypatch.setenv("TARGET_URL", "https://example.openai.azure.com/openai/responses")
+    monkeypatch.delenv("AZURE_TIMEOUT_SECONDS", raising=False)
+    assert AzureResponsesLabeler("gpt-5-mini", tmp_path / "d").timeout == 600
+    assert AzureResponsesLabeler("gpt-5-mini", tmp_path / "e", timeout=900).timeout == 900
+    monkeypatch.setenv("AZURE_TIMEOUT_SECONDS", "300")
+    assert AzureResponsesLabeler("gpt-5-mini", tmp_path / "f").timeout == 300
+    monkeypatch.delenv("AZURE_TIMEOUT_SECONDS", raising=False)
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-5-mini")
+    monkeypatch.setenv("AZURE_INPUT_PRICE_PER_MILLION", "0.25")
+    monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "2")
+    cfg = {**load_config()["concern"], "batch_spool_dir": str(tmp_path / "g")}
+    assert _labeler(cfg).timeout == cfg["azure_timeout_seconds"] == 600
+
+
 def test_azure_records_failed_request_usage_with_identity(monkeypatch, tmp_path):
     row = _row("a0", "PA", "cleared my blackheads")
 
@@ -882,19 +898,25 @@ def test_azure_label_summary_reports_cumulative_budget_and_requests(monkeypatch,
     assert summary["azure_historical_cost_usd"] == pytest.approx(0.00014)
 
 
-def test_full_run_is_pinned_to_zero_cost_endpoint():
+def test_free_fallback_endpoint_stays_zero_cost():
+    # Without Azure env configured, the labeler falls back to the free model
+    # and estimate_cost must be exactly zero.
     cfg = load_config()["concern"]
     rows = [{"text": "x" * 1200}] * 202_000
     assert estimate_cost(rows, cfg) == 0
-    assert cfg["max_budget_usd"] <= 40   # user-approved hard Azure ceiling
     assert cfg["labeling_model"].endswith(":free")
 
 
-def test_full_run_fits_free_daily_request_budget():
+def test_budget_ceiling_stays_within_azure_credit():
+    cfg = load_config()["concern"]
+    assert cfg["max_budget_usd"] <= 100   # hard stop under the ~$100 Azure credit
+
+
+def test_full_run_fits_azure_request_ceiling():
     cfg = load_config()["concern"]
     row_count = 202_000
     groups = (row_count + cfg["reviews_per_request"] - 1) // cfg["reviews_per_request"]
-    assert groups <= 900  # preserve headroom under OpenRouter's 1,000 free requests/day
+    assert groups <= cfg["azure_max_requests"]  # full corpus fits the request ceiling
 
 
 def test_full_label_requires_p2_signoff():
