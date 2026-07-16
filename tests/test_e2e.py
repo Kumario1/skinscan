@@ -676,7 +676,13 @@ def test_routine_payload_reports_target_coverage(tmp_path, fake_sarpn_server):
     assert analysis["recommendation_status"] == "unavailable"
     assert analysis["recommendation_reason"] == "required_roles_unfilled"
     assert analysis["recommendation_summary"]["selected_roles"] == []
-    assert "treatment" in analysis["recommendation_summary"]["missing_roles"]
+    # No eligible treatment product now defers therapy (primary cleared) rather
+    # than reporting a missing treatment role; support roles stay missing.
+    assert analysis["recommendation_summary"]["missing_roles"] == [
+        "cleanser", "moisturizer", "sunscreen",
+    ]
+    assert "no_eligible_treatment_product" in analysis["therapy_plan"]["deferred_reasons"]
+    assert analysis["decision"]["therapy_disposition"] == "defer"
     assert not (output_dir / "routine.json").exists()
 
 

@@ -301,6 +301,17 @@ def recommend(
 
     if therapy_plan.primary is not None and "treatment" not in selected_context:
         decision = replace(decision, therapy_disposition="defer")
+        # A deferred disposition must not carry a primary therapy: downstream
+        # consumers (recsys contracts) reject the contradictory pair.
+        therapy_plan = replace(
+            therapy_plan,
+            course_weeks=None,
+            review_at_weeks=None,
+            primary=None,
+            alternatives=[],
+            deferred_reasons=[*therapy_plan.deferred_reasons,
+                              "no_eligible_treatment_product"],
+        )
 
     # Alternatives must be valid replacements alongside every other selected
     # role. Keep the chosen product first so composition is stable.
