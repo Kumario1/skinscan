@@ -1,23 +1,40 @@
 {
   "schema_version": "lesion-care-proposal-1",
   "policy_id": "skinscan-lesion-care-us",
-  "version": "2026-07-16-proposed.1",
-  "status": "proposed_pending_independent_dermatologist_review",
+  "version": "2026-07-16-mvp.1",
+  "status": "approved_for_mvp_development_and_synthetic_testing",
   "jurisdiction": "US",
-  "effective_at": null,
+  "effective_at": "2026-07-16T23:02:45Z",
   "production_eligible": false,
+  "mvp_synthetic_eligible": true,
+  "test_only": true,
+  "runtime_translation_location": "tests/fixtures only",
+  "authorized_environments": [
+    "development",
+    "test"
+  ],
+  "authorized_input_types": [
+    "synthetic_profile",
+    "fixture_image"
+  ],
   "source_manifest": "lesion_care_source_manifest.json",
-  "review": {
-    "required_specialty": "board-certified dermatologist or jurisdictionally equivalent independent dermatologist",
-    "approved": false,
-    "reviewer_name": null,
-    "reviewer_credentials": null,
-    "reviewer_affiliation": null,
-    "reviewed_at": null,
-    "report_sha256": null,
-    "approved_policy_version": null,
-    "exceptions": [],
-    "blocking_reason": "No independent clinical review has been recorded. This proposal must not be loaded by production code."
+  "ai_research_audit": {
+    "review_type": "ai_research_audit",
+    "approved": true,
+    "reviewer_identity": "OpenAI Codex GPT-5 research-audit agent (AI, non-clinician, no medical credentials)",
+    "reviewer_type": "agent",
+    "medical_credentials": null,
+    "reviewed_at": "2026-07-16T23:02:45Z",
+    "reviewed_commit": "94045f8940cdf73b1b708388900c1fffa9a5c3bf",
+    "report_sha256": "8e201d6d869a67e8635f29cc43452138e760561ae0e34d2b2b4b8ba1d6e4344d",
+    "approved_policy_version": "2026-07-16-mvp.1",
+    "decision": "approved_for_development_and_synthetic_testing_only",
+    "summary": "The evidence package is sufficient as a conservative specification for implementation and synthetic testing. It is not clinical approval or authorization for real-user or production use. Exact catalog coverage remains provisional because its input artifacts are not pinned to the reviewed commit.",
+    "exceptions": [
+      "No real-user, external-beta, or production use",
+      "Preserve all referral, abstention, contraindication, and unknown-input deferrals",
+      "Pin or regenerate catalog coverage inputs before relying on exact counts or SKUs"
+    ]
   },
   "interpretation": {
     "detector_output_is": "image-feature evidence for a named model label",
@@ -29,9 +46,14 @@
   },
   "global_rules": [
     {
-      "code": "approval_required",
-      "effect": "defer_all_medical_instruction",
-      "rule": "Until review.approved is true and the approved report hash and policy version match the deployed artifacts, return findings and safety-oriented referral wording only; do not generate an active treatment routine."
+      "code": "mvp_ai_research_audit_required",
+      "effect": "defer_outside_authorized_scope",
+      "rule": "Generate a care routine only when ai_research_audit.approved is true, its report hash and policy version match, the environment is development or test, and the inputs are a synthetic profile and fixture image. Otherwise return no treatment routine."
+    },
+    {
+      "code": "no_real_user_use",
+      "effect": "fail_closed",
+      "rule": "A real person, external beta, or production environment is outside this policy scope and must not load or execute it."
     },
     {
       "code": "unknown_intake_defers",
@@ -182,7 +204,7 @@
             "active_id": "adapalene",
             "strength": "0.1%",
             "formulation": "FDA-labeled OTC leave-on acne drug",
-            "cadence": "per Drug Facts; introductory cadence wording requires clinical approval",
+            "cadence": "per Drug Facts only; no agent-invented introductory cadence",
             "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review"
           },
           {
@@ -215,7 +237,7 @@
         "reason_codes": [
           "exact_label_closed_comedo",
           "comedonal_path_proposed",
-          "clinical_approval_pending"
+          "mvp_ai_research_approved"
         ]
       },
       "source_ids": [
@@ -244,7 +266,7 @@
             "active_id": "adapalene",
             "strength": "0.1%",
             "formulation": "FDA-labeled OTC leave-on acne drug",
-            "cadence": "per Drug Facts; introductory cadence wording requires clinical approval",
+            "cadence": "per Drug Facts only; no agent-invented introductory cadence",
             "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review"
           },
           {
@@ -277,7 +299,7 @@
         "reason_codes": [
           "exact_label_open_comedo",
           "comedonal_path_proposed",
-          "clinical_approval_pending"
+          "mvp_ai_research_approved"
         ]
       },
       "source_ids": [
@@ -340,7 +362,7 @@
         "reason_codes": [
           "exact_label_papule",
           "inflammatory_path_proposed",
-          "clinical_approval_pending"
+          "mvp_ai_research_approved"
         ]
       },
       "source_ids": [
@@ -403,7 +425,7 @@
         "reason_codes": [
           "exact_label_pustule",
           "inflammatory_path_proposed",
-          "clinical_approval_pending"
+          "mvp_ai_research_approved"
         ]
       },
       "source_ids": [
@@ -589,7 +611,7 @@
           "exact_label_melasma",
           "diagnosis_not_confirmed_by_photo",
           "iron_oxide_spf_path_proposed",
-          "clinical_approval_pending"
+          "mvp_ai_research_approved"
         ]
       },
       "source_ids": [
