@@ -56,7 +56,7 @@ def test_imports_approved_assertion_with_evidence(tmp_path):
 
     stats = build(source, src_evidence, out_root)
 
-    assert stats == {"products": 1, "evidence_snapshots": 1}
+    assert stats == {"products": 1, "dropped_facts": [], "evidence_snapshots": 1}
     value = _approved(out_root)
     assert value["schema_version"] == SCHEMA_VERSION
     assert [row["product_id"] for row in value["products"]] == ["p1"]
@@ -78,7 +78,7 @@ def test_drops_assertions_that_are_not_approved(tmp_path):
 
     stats = build(source, src_evidence, out_root)
 
-    assert stats == {"products": 1, "evidence_snapshots": 1}
+    assert stats == {"products": 1, "dropped_facts": [], "evidence_snapshots": 1}
     [row] = _approved(out_root)["products"]
     assert [a["status"] for a in row["assertions"]] == ["approved"]
     assert [a["source_sha256"] for a in row["assertions"]] == [approved_digest]
@@ -96,7 +96,7 @@ def test_omits_products_with_no_approved_assertions(tmp_path):
 
     stats = build(source, src_evidence, out_root)
 
-    assert stats == {"products": 0, "evidence_snapshots": 0}
+    assert stats == {"products": 0, "dropped_facts": [], "evidence_snapshots": 0}
     assert _approved(out_root)["products"] == []
 
 
@@ -126,7 +126,7 @@ def test_rejects_assertion_with_no_digest(tmp_path):
     src_evidence.mkdir(parents=True)
     source = _source(tmp_path, [{"product_id": "p1", "assertions": [_assertion(None)]}])
 
-    with pytest.raises(SystemExit, match="missing evidence"):
+    with pytest.raises(SystemExit, match="source_sha256"):
         build(source, src_evidence, tmp_path / "out")
 
 
@@ -164,7 +164,7 @@ def test_empty_source_yields_an_empty_overlay(tmp_path, products):
 
     stats = build(source, src_evidence, out_root)
 
-    assert stats == {"products": 0, "evidence_snapshots": 0}
+    assert stats == {"products": 0, "dropped_facts": [], "evidence_snapshots": 0}
     value = _approved(out_root)
     assert value == {"schema_version": SCHEMA_VERSION, "products": []}
 
@@ -194,7 +194,7 @@ def test_evidence_shared_by_two_products_is_copied_once(tmp_path):
 
     stats = build(source, src_evidence, out_root)
 
-    assert stats == {"products": 2, "evidence_snapshots": 1}
+    assert stats == {"products": 2, "dropped_facts": [], "evidence_snapshots": 1}
     assert [p.name for p in (out_root / "evidence").iterdir()] == [digest]
 
 
@@ -260,10 +260,13 @@ def test_allow_fact_loss_records_the_loss_deliberately(tmp_path):
     out_root = tmp_path / "out"
     narrowed = _committed_with_intended_areas(tmp_path, src_evidence, digest, out_root)
 
-    build(narrowed, src_evidence, out_root, allow_fact_loss=True)
+    stats = build(narrowed, src_evidence, out_root, allow_fact_loss=True)
 
     [row] = _approved(out_root)["products"]
     assert "intended_areas" not in row["assertions"][0]["facts"]
+    # The flag's promise is that the loss is recorded, not merely permitted: it
+    # must come back in the stats a caller sees, naming the product and fact.
+    assert any("intended_areas" in loss for loss in stats["dropped_facts"])
 
 
 def test_a_first_import_has_no_overlay_to_regress_against(tmp_path):

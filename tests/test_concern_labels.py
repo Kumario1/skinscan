@@ -726,6 +726,8 @@ def test_azure_http_error_is_not_charged_the_ceiling(monkeypatch, tmp_path):
     row = _row("a0", "PA", "cleared my blackheads")
 
     class RateLimited:
+        status_code = 429   # only the status code proves Azure rejected it unbilled
+
         def json(self):
             return {"error": {"code": "429"}}   # error body, no usage block
 
@@ -1016,7 +1018,7 @@ def test_azure_preflight_debits_matching_cumulative_usage(monkeypatch, tmp_path)
     monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "1")
 
     with pytest.raises(RuntimeError, match="cumulative"):
-        cmd_label([], cfg, yes=True, p2_approved=False)
+        cmd_label([], cfg, yes=True)
 
 
 def test_azure_preflight_enforces_cumulative_request_limit(monkeypatch, tmp_path):
@@ -1037,7 +1039,7 @@ def test_azure_preflight_enforces_cumulative_request_limit(monkeypatch, tmp_path
     monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "1")
 
     with pytest.raises(RuntimeError, match="request"):
-        cmd_label([], cfg, yes=True, p2_approved=False)
+        cmd_label([], cfg, yes=True)
 
 
 def test_azure_label_summary_reports_cumulative_budget_and_requests(monkeypatch, tmp_path):
@@ -1056,7 +1058,7 @@ def test_azure_label_summary_reports_cumulative_budget_and_requests(monkeypatch,
     monkeypatch.setenv("AZURE_OUTPUT_PRICE_PER_MILLION", "1")
     monkeypatch.setattr(concern_labels, "_labeler", lambda _cfg: StubLabeler({}))
 
-    summary = cmd_label([], cfg, yes=True, p2_approved=False)
+    summary = cmd_label([], cfg, yes=True)
 
     assert summary["azure_request_count"] == 1
     assert summary["azure_max_request_count"] == 10
@@ -1111,7 +1113,7 @@ def test_full_label_rejects_stale_prompt_version_signoff(monkeypatch, tmp_path):
     }))
     monkeypatch.setattr(concern_labels, "_labeler", lambda _cfg: StubLabeler({}))
     with pytest.raises(RuntimeError, match="prompt_version"):
-        cmd_label([], cfg, yes=True, p2_approved=False)
+        cmd_label([], cfg, yes=True)
 
 
 def test_full_label_requires_persisted_calibration_report(monkeypatch, tmp_path):
@@ -1128,12 +1130,12 @@ def test_full_label_requires_persisted_calibration_report(monkeypatch, tmp_path)
     }))
     monkeypatch.setattr(concern_labels, "_labeler", lambda _cfg: StubLabeler({}))
 
-    summary = cmd_label([], cfg, yes=True, p2_approved=False)
+    summary = cmd_label([], cfg, yes=True)
 
     assert summary["submitted"] == 0
 
 
-def test_p2_boolean_cannot_bypass_calibration_report(tmp_path):
+def test_yes_flag_cannot_bypass_calibration_report(tmp_path):
     cfg = {**load_config()["concern"],
            "labels_path": str(tmp_path / "labels.jsonl"),
            "batch_state_path": str(tmp_path / "batches.json")}
@@ -1145,7 +1147,7 @@ def test_p2_boolean_cannot_bypass_calibration_report(tmp_path):
     }))
 
     with pytest.raises(RuntimeError, match="agreement"):
-        cmd_label([], cfg, yes=True, p2_approved=True)
+        cmd_label([], cfg, yes=True)
 
 
 def test_calibration_audit_is_sample_bound_and_recomputed(tmp_path):
