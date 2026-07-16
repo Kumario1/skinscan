@@ -25,10 +25,25 @@ PRODUCT_EXPOSURES = {
     "unknown", "rinse_off", "short_contact", "leave_on", "mask", "scrub", "peel",
 }
 PRODUCT_AREAS = {"face", "neck", "body", "eye", "lip", "unknown"}
+# Areas that positively place a product somewhere other than the face. "unknown"
+# and an empty list are absence of evidence, not evidence of another area.
+NON_FACE_AREAS = PRODUCT_AREAS - {"face", "unknown"}
 TRIAGE_LEVELS = {"routine", "routine_plus_review", "derm_first", "abstain"}
 THERAPY_DISPOSITIONS = {"active_treatment", "supportive_only", "maintenance", "defer"}
 EVIDENCE_QUALITIES = {"high", "medium", "low", "unknown"}
 SLOTS = {"am", "pm"}
+
+
+def excludes_face(intended_areas) -> bool:
+    """True only when a product names its areas and the face is not among them.
+
+    An OTC drug label states a target ("cover the entire affected area") but
+    almost never names the face, so requiring an explicit "face" vetoes every
+    label-verified product and leaves the fact satisfiable only by inventing it.
+    Veto on a positive claim to another area instead; unknown/empty stays open.
+    """
+    areas = set(intended_areas)
+    return "face" not in areas and bool(areas & NON_FACE_AREAS)
 
 
 def _closed(field_name: str, value: str, allowed: set[str]) -> None:

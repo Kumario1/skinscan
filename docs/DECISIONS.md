@@ -670,3 +670,36 @@ source URLs, `label_source`, `label_verified_at`, cadence, and exposure.
 `otc_drug` remains a recorded fact so presentation can distinguish OTC from
 prescription products. Therapy policy itself (which paths exist) remains
 D-029 clinician-gated.
+
+## D-034 — Intended area vetoes only a stated non-face area (2026-07-15)
+
+**LOCKED.** Owner decision. Eligibility previously required `intended_areas` to
+include `"face"` — a fact OTC drug labels do not carry. P188306's SPL states its
+target as "cover the entire affected area" and names the face nowhere, so the
+gate was unsatisfiable from the very evidence the loop is built to trust, and
+every path to passing it ran through inventing the fact: `import_dailymed`
+stamped `intended_areas=["face"]` on every base row, and the recsys overlay
+carried a hand-written assertion, never present in `approved-combined.json`,
+sourced from Clinique's Swiss "Anti-Blemish Solutions" page — a salicylic-acid
+reformulation that is not the US benzoyl peroxide 2.5% product at all. A gate
+that can only be satisfied by fabricating its input is not fail-closed; it just
+moves the failure somewhere quieter.
+
+Consequence: `intended_area_not_face` (src) and `intended_area_not_verified:face`
+(recsys) now fire only when a product names its areas and the face is not among
+them — a neck or body product still loses a facial role, and a co-stated face
+still passes. Unknown and empty stay open: absence of evidence is not evidence
+of another area. This is not a licence to assert `"face"` without a source — the
+loop must still reject a product whose area genuinely is elsewhere, and
+`import_verification` now refuses to drop a fact the committed overlay asserts
+unless `--allow-fact-loss` says so. D-029's clinician gates are untouched.
+
+Because the gate no longer needs the fiction, `import_dailymed` no longer
+invents it: drug base rows now carry `intended_areas: []` (unstated), matching
+the "storage normalization, never verification" rule the v2 migration already
+follows, and the 35 rows already frozen into `data/verification/dailymed-pool.json`
+were healed in place — the pool is append-only and never re-parses its SPLs, so
+a fabricated fact there would otherwise outlive the code that wrote it. This
+changes no eligibility (verified by rebuild: identical states, reasons, and
+`eligible_by_role`); it only stops the catalog asserting an area no label
+states, which a reader downstream cannot tell from a verified one.

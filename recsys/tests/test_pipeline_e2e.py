@@ -345,4 +345,4 @@ def test_full_derived_data_root_uses_full_catalog_and_static_knowledge(tmp_path)
 
     assert document["status"] == "partial"
     assert document["data_versions"]["catalog"]["path"] == str(derived / "catalog_full.json")
-    assert document["data_versions"]["verification"]["products"] == 13
+    assert document["data_versions"]["verification"]["products"] == 14

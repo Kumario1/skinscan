@@ -19,6 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import numpy as np
 import pandas as pd
 
 from src.config import load_config
@@ -370,3 +371,132 @@ if __name__ == "__main__":
     test_stats_ranker_evidence_matches_ranker_evidence()
     test_deterministic_split_is_stable()
     print("ok")
+
+
+# --- D-015 anti-skew: inference must rebuild the TRAINING columns -------------
+
+class _CapturingModel:
+    """Stands in for the fitted HGB; records the frame inference hands it."""
+
+    def __init__(self):
+        self.frames = []
+
+    def predict_proba(self, X):
+        self.frames.append(X)
+        return np.array([[0.4, 0.6]])
+
+
+def _bundle(model, trained_vocab):
+    return {
+        "model": model,
+        "brand_vocab": ["BrandX"],
+        "active_vocab": list(trained_vocab),
+        "feature_columns": (
+            [f"active__{a}" for a in trained_vocab]
+            + ["f_category", "f_brand", "f_price", "f_skin_type", "f_tone_bucket"]
+        ),
+        "base_rate": 0.5,
+    }
+
+
+def test_inference_rebuilds_the_trained_active_columns_after_vocab_drift(monkeypatch):
+    """D-015: "the joblib bundle carries feature_columns / brand_vocab /
+    active_vocab so inference reconstructs the exact training columns."
+
+    If the catalog's canonical active vocabulary changes after a model is
+    trained, inference must still build the columns the model was fit on. A
+    column left NaN is read by HGB as *missing*, not as the 0/1 it saw in
+    training, so every score silently shifts.
+    """
+    trained_vocab = ["salicylic_acid", "ceramides", "retired_active"]
+    model = _CapturingModel()
+    ranker = R.Ranker(_bundle(model, trained_vocab), {}, 5)
+
+    # the catalog vocabulary drifts after training: one active retired, one added
+    monkeypatch.setattr(R, "ACTIVE_VOCAB", ["salicylic_acid", "ceramides", "brand_new_active"])
+
+    ranker.score(TRAIN_CATALOG[0], UserProfile(skin_type="oily", tone_bucket="medium"))
+
+    [frame] = model.frames
+    for active in trained_vocab:
+        column = f"active__{active}"
+        assert not frame[column].isna().any(), (
+            f"{column} was in the training frame but reached the model as NaN"
+        )
+    assert frame["active__salicylic_acid"].iloc[0] == 1
+    assert frame["active__retired_active"].iloc[0] == 0
+
+
+def test_inference_ignores_actives_the_model_was_never_trained_on(monkeypatch):
+    """A newly-added catalog active must not leak a column the model never saw."""
+    model = _CapturingModel()
+    ranker = R.Ranker(_bundle(model, ["salicylic_acid", "ceramides"]), {}, 5)
+    monkeypatch.setattr(R, "ACTIVE_VOCAB", ["salicylic_acid", "ceramides", "brand_new_active"])
+
+    product = Product("PC", "New", "BrandX", "treatment",
+                      actives=["salicylic_acid", "brand_new_active"], price_usd=20.0)
+    ranker.score(product, UserProfile(skin_type="oily", tone_bucket="medium"))
+
+    [frame] = model.frames
+    assert "active__brand_new_active" not in frame.columns
+
+
+# --- artifacts stay valid JSON; the posterior matches the measured harness ----
+
+def _strict_loads(text):
+    """json.loads accepts bare NaN as a Python extension; a real JSON consumer
+    does not. Reject it so the test means what it says."""
+    def reject(constant):
+        raise ValueError(f"not valid JSON: bare {constant}")
+    return json.loads(text, parse_constant=reject)
+
+
+def test_stats_artifacts_never_contain_a_bare_nan(tmp_path):
+    """_nan_to_none's own docstring: "json.dump emits a bare NaN token (invalid
+    JSON) for empty-bucket cells". Every artifact writer must be safe, not just
+    the ones whose caller remembered to sanitize."""
+    path = tmp_path / "review_stats.json"
+    R._write_json(path, {"cells": {"PA": {"__all__": {
+        "n": 3, "mean_rating": float("nan"), "pct_recommend": 1.0}}}})
+
+    text = path.read_text()
+    assert "NaN" not in text
+    assert _strict_loads(text)["cells"]["PA"]["__all__"]["mean_rating"] is None
+
+
+def test_cell_with_no_rating_evidence_falls_back_to_the_prior():
+    """A product whose train reviews carry no rating has no rating evidence, so
+    it must score exactly the prior -- not NaN, which would make the engine's
+    sort order depend on input order."""
+    stats = {"global_mean_rating": 4.0, "cells": {
+        "PA": {"__all__": {"n": 3, "mean_rating": None, "pct_recommend": 1.0}},
+        "PB": {"__all__": {"n": 3, "mean_rating": float("nan"), "pct_recommend": 1.0}},
+    }}
+    ranker = R.StatsRanker(stats, 20, 5, popularity_weight=0.0)
+    for pid in ("PA", "PB"):
+        score = ranker.score(Product(pid, pid, "B", "treatment"), None)
+        assert score == 4.0, f"{pid} scored {score}"
+
+
+def test_posterior_weights_the_mean_by_the_reviews_it_covers():
+    """_cell_stats' mean skips missing ratings, so the posterior must weight it
+    by the count it is actually over -- the same sum/count the D-022
+    bayesian_baseline harness measured."""
+    stats = {"global_mean_rating": 4.0, "cells": {
+        "PA": {"__all__": {"n": 10, "rating_n": 5, "mean_rating": 5.0,
+                           "pct_recommend": 1.0}},
+    }}
+    ranker = R.StatsRanker(stats, 20, 5, popularity_weight=0.0)
+    expected = (5 * 5.0 + 20 * 4.0) / (5 + 20)   # what bayesian_baseline computes
+    assert abs(ranker.score(Product("PA", "A", "B", "treatment"), None) - expected) < 1e-9
+
+
+def test_cell_stats_records_the_count_the_mean_is_over():
+    frame = pd.DataFrame({
+        "rating": [5.0, 5.0, float("nan"), float("nan"), float("nan")],
+        "label": [1, 1, 1, 1, 1],
+    })
+    cell = R._cell_stats(frame)
+    assert cell["n"] == 5, "n still reports every review, as the evidence cell shows users"
+    assert cell["rating_n"] == 2
+    assert cell["mean_rating"] == 5.0

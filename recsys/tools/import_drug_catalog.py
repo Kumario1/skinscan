@@ -52,7 +52,6 @@ def to_row(product: dict) -> dict:
         "exposure": product.get("exposure"),
         "routine_roles": product.get("routine_roles") or [],
         "evidence_grade": product.get("evidence_grade"),
-        "discontinued": bool(product.get("discontinued", False)),
     }
 
 

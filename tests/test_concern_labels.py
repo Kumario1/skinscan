@@ -18,6 +18,7 @@ from src.recommendation.concern_labels import (
     CONCERNS,
     OpenRouterLabeler,
     PROMPT_VERSION,
+    VALID_OUTCOMES,
     cmd_label,
     compile_prefilter,
     estimate_cost,
@@ -1199,3 +1200,81 @@ if __name__ == "__main__":
         if name.startswith("test_"):
             fn()
     print("ok")
+
+
+# --- structural invariants of the rules-veto layer -----------------------------
+# These hold for ANY review text, independent of how the rules are tuned.
+
+_POLICY_CORPUS = [
+    "My pimples and breakouts got much smaller after this serum. "
+    "It also decreased the blackheads on my nose.",
+    "This broke me out all over my forehead, red spots as well as whiteheads.",
+    "I am purging right now, lots of cysts, but I will keep going.",
+    "These two products cleared my acne completely.",
+    "I use this after my acne treatments and my skin feels dry.",
+    "My acne is the same, no different than before.",
+    "I plan to buy this for my daughter who has acne.",
+    "Great for preventing breakouts before they start.",
+    "Moisturizers typically break me out but this one is fine.",
+    "Still getting pimples after six weeks of use.",
+    "Purchased this, and my skin feels dry within a week.",
+    "This moisturizer works great and helps with the dryness.",
+    "I always get blackheads on my nose, that has not changed.",
+    "",
+    "   ",
+    "No skin words here at all, just a comment about the packaging.",
+    "Café crème — accents, emoji 🙂, and ünicode should not break the rules.",
+    "acne " * 500,
+]
+
+
+def _every_model_label(outcome):
+    return [_label(concern, outcome, True) for concern in CONCERNS]
+
+
+@pytest.mark.parametrize("text", _POLICY_CORPUS, ids=lambda v: None)
+@pytest.mark.parametrize("outcome", sorted(VALID_OUTCOMES) + [None], ids=lambda v: None)
+def test_literal_policy_output_is_always_well_formed(text, outcome):
+    labels = [] if outcome is None else _every_model_label(outcome)
+    actual = enforce_literal_policy(text, [dict(item) for item in labels])
+
+    assert [item["concern"] for item in actual] == [
+        concern for concern in CONCERNS if concern in {i["concern"] for i in actual}
+    ], "labels must come back in CONCERNS order"
+    for item in actual:
+        assert item["concern"] in CONCERNS
+        assert item["outcome"] in VALID_OUTCOMES
+        assert isinstance(item["reviewer_has_condition"], bool)
+
+
+@pytest.mark.parametrize("text", _POLICY_CORPUS, ids=lambda v: None)
+@pytest.mark.parametrize("outcome", sorted(VALID_OUTCOMES), ids=lambda v: None)
+def test_literal_policy_is_deterministic_and_a_fixed_point(text, outcome):
+    """A veto layer must settle: re-applying it to its own verdict changes nothing.
+    Otherwise the labels depend on how many times the rules happened to run."""
+    labels = _every_model_label(outcome)
+    first = enforce_literal_policy(text, [dict(item) for item in labels])
+
+    assert enforce_literal_policy(text, [dict(item) for item in labels]) == first
+    assert enforce_literal_policy(text, [dict(item) for item in first]) == first
+
+
+def test_literal_policy_does_not_mutate_the_caller_s_labels():
+    labels = _every_model_label("helped")
+    before = [dict(item) for item in labels]
+    enforce_literal_policy("This broke me out all over my forehead.", labels)
+    assert labels == before
+
+
+def test_literal_policy_drops_labels_for_concerns_the_text_never_mentions():
+    actual = enforce_literal_policy(
+        "The pump broke and shipping was slow.", _every_model_label("helped"))
+    assert actual == []
+
+
+def test_literal_policy_ignores_labels_for_unknown_concerns():
+    actual = enforce_literal_policy(
+        "My blackheads decreased.",
+        [_label("not_a_real_concern", "helped", True), _label("acne_comedonal", "helped", True)],
+    )
+    assert [item["concern"] for item in actual] == ["acne_comedonal"]

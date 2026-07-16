@@ -68,7 +68,10 @@ FRESHNESS_DAYS = {"regulatory_label": 180, "default": 90}
 ACTIVE_STATES = {"researching", "proposed", "approved"}
 
 REASON_HINTS = {
-    "intended_area_not_face": 'facts.intended_areas must include "face"',
+    "intended_area_not_face": (
+        "facts.intended_areas names a non-face area; if the product really is "
+        'not for the face, reject it -- never assert "face" without a source'
+    ),
     "routine_role_not_verified": "facts.routine_roles must include the target role",
     "format_unknown": "facts.format (e.g. gel, lotion, cream, cleanser)",
     "exposure_unknown": 'facts.exposure ("leave_on" or "rinse_off")',

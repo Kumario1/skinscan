@@ -22,7 +22,7 @@ _ALLOWED_FACT_KEYS = frozenset({
     "comedogenic_claim", "irritant_features", "contraindications", "evidence_roles",
     "evidence_grade", "cadence", "cadence_source", "amount", "amount_source",
     "source_set_id", "ndc_product_code", "label_version", "label_effective_date",
-    "source_hash", "discontinued",
+    "source_hash",
 })
 _ASSERTION_KEYS = frozenset({
     "status", "reviewer_id", "reviewer_type", "approved_at", "source_url",
@@ -52,7 +52,7 @@ _FACT_NULLABLE_STRING_FIELDS = frozenset({
     "label_source", "label_verified_at", "cadence_source", "amount", "amount_source",
     "source_set_id", "ndc_product_code", "label_version", "label_effective_date",
 })
-_FACT_BOOL_FIELDS = frozenset({"otc_drug", "broad_spectrum", "discontinued"})
+_FACT_BOOL_FIELDS = frozenset({"otc_drug", "broad_spectrum"})
 _FACT_SEQUENCE_FIELDS = _FACT_LIST_FIELDS | {"drug_actives"}
 
 
@@ -98,7 +98,7 @@ def _validate_fact(key: str, value: object, product_id: str) -> None:
             raise ContractViolation(field, f"expected a string or null for {product_id}")
         return
     if key in _FACT_BOOL_FIELDS:
-        if key != "discontinued" and value is None:
+        if value is None:
             return
         if not isinstance(value, bool):
             raise ContractViolation(field, f"expected a boolean for {product_id}")
@@ -195,16 +195,21 @@ def load_verification_overlay(
     now = now or dt.datetime.now(dt.timezone.utc)
     overlay: dict[str, dict] = {}
     warnings: list[str] = []
+    # Group across rows first: one product_id may legitimately appear in more
+    # than one row (separate review batches), and approved_at -- not row order --
+    # decides which facts win.
+    approved: dict[str, list] = {}
     for product in value.get("products") or []:
         product_id = product.get("product_id")
         if not product_id:
             raise ContractViolation("verification.product_id", "missing")
-        assertions = []
         for assertion in product.get("assertions") or []:
             if not isinstance(assertion, dict):
                 raise ContractViolation("verification.assertion", f"expected an object for {product_id}")
             if assertion.get("status") == "approved":
-                assertions.append((assertion, _validate_approved_assertion(assertion, product_id)))
+                approved.setdefault(product_id, []).append(
+                    (assertion, _validate_approved_assertion(assertion, product_id)))
+    for product_id, assertions in approved.items():
         assertions.sort(key=lambda item: _timestamp(item[0]["approved_at"]))
         for assertion, facts in assertions:
             source = assertion.get("source_url")

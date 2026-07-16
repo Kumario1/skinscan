@@ -9,8 +9,9 @@ Assertions are approved by the proven loop in
 researching → proposed → approved → eligible | quarantined | rejected):
 
 - `approved.json` — imported approved fact assertions keyed by `product_id`
-  (initially: verified `spf` + `broad_spectrum`; discontinued/reformulated
-  flags; later: media/editorial claims).
+  (initially: verified `spf` + `broad_spectrum`; later: media/editorial claims).
+  Not discontinued flags: the loop rejects a discontinued SKU at research time
+  and drops it, so no assertion can ever carry one.
 - `evidence/<sha256>` — exact retrieved source bytes per assertion.
 - Per-fact freshness windows with stale-flip; the importer never self-approves.
 
