@@ -2,13 +2,18 @@ from pathlib import Path
 
 from recsys.catalog import CatalogProduct
 from recsys.contracts import Profile
-from recsys.gates import duplicate_active_reasons, profile_gate_reasons
+from recsys.gates import (
+    apply_profile_gates,
+    duplicate_active_reasons,
+    profile_gate_reasons,
+)
 from recsys.knowledge import load_knowledge
 
 K = load_knowledge(Path(__file__).parents[1] / "data" / "knowledge")
 
 
-def product(pid="p1", category="treatment", actives=(), spf=None, price=None, inci=(), **verified):
+def product(pid="p1", category="treatment", actives=(), spf=None, price=None,
+            inci=("Water",), **verified):
     role = "sunscreen" if category == "spf" else category
     product_format = verified.pop("format", None)
     defaults = {
@@ -86,6 +91,39 @@ def test_pregnancy_vetoes_cosmetic_retinoid_ester_from_inci():
     # Not excluded for a non-pregnant profile.
     assert "retinoid_pregnancy_status_excluded" not in profile_gate_reasons(
         ester, "treatment", Profile(pregnancy_status="not_pregnant"), K
+    )
+
+
+def test_unparseable_ingredients_veto_hard_even_in_hybrid():
+    # Shape of a real catalog row: "+Retinol Vitamin C Moisturizer" that carries
+    # no INCI and no parsed actives. Every ingredient gate reads one of those two
+    # fields, so the pregnancy exclusion has nothing to match and passes
+    # vacuously. Hybrid relaxes only verification-quality reasons, so the veto
+    # has to hold there -- ranking is not a safety mechanism.
+    profile = Profile(pregnancy_status="pregnant")
+    blank = product(pid="P448932", category="moisturizer", actives=(), inci=())
+    reasons = profile_gate_reasons(blank, "moisturizer", profile, K)
+    assert "ingredients_unknown" in reasons
+    assert "retinoid_pregnancy_status_excluded" not in reasons
+    kept, vetoes = apply_profile_gates(
+        {"moisturizer": [blank]}, profile, K, strict=False
+    )
+    assert kept["moisturizer"] == []
+    assert "ingredients_unknown" in {v.reason for v in vetoes}
+
+
+def test_known_ingredients_without_parsed_actives_are_not_unknown():
+    # A plain moisturizer parses to no actives; its ingredients are still known.
+    profile = Profile(pregnancy_status="not_pregnant")
+    plain = product(category="moisturizer", actives=(),
+                    inci=["Water", "Glycerin", "Cetearyl Alcohol"])
+    assert "ingredients_unknown" not in profile_gate_reasons(
+        plain, "moisturizer", profile, K
+    )
+    # A drug label publishes no INCI but names its actives -- also known.
+    drug = product(actives=("azelaic_acid",), inci=())
+    assert "ingredients_unknown" not in profile_gate_reasons(
+        drug, "treatment", profile, K
     )
 
 

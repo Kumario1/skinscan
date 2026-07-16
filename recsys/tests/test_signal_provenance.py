@@ -2,9 +2,11 @@ import hashlib
 import json
 from pathlib import Path
 
-from recsys.contracts import sha256_file
+import pytest
+
+from recsys.contracts import ContractViolation, sha256_file
 from recsys.pipeline import run
-from recsys.signals import IngredientAnalysisSignal, ReviewQualitySignal, load_providers
+from recsys.signals import ReviewQualitySignal, load_providers
 from recsys.tools.build_popularity import build as build_popularity
 from recsys.tools.build_review_stats import build as build_review_stats
 
@@ -43,41 +45,38 @@ def test_catalog_bound_store_loads_for_matching_catalog(tmp_path):
     assert warnings == []
 
 
-def test_catalog_mismatch_skips_store_with_warning(tmp_path):
-    _registered_store(tmp_path, source={"catalog_sha256": "catalog-old"})
-
-    providers, _meta, warnings = load_providers(tmp_path, "catalog-new")
-
-    assert not any(isinstance(provider, ReviewQualitySignal) for provider in providers)
-    assert any("catalog_sha256 mismatch" in warning for warning in warnings)
-
-
-def test_mismatched_ingredient_store_skips_with_warning(tmp_path):
+@pytest.mark.parametrize("name, kind", [
+    ("review_stats", "review_stats"),
+    ("ingredient_analysis", "ingredient_analysis"),
+])
+def test_catalog_mismatch_refuses_to_load_the_store(tmp_path, name, kind):
+    """A store keyed by another catalog's product ids has nothing to say about
+    the products being scored. Loading must fail loudly: dropping the store
+    instead leaves every product at neutral 0.5 in a document that still reads
+    like a real recommendation."""
     _registered_store(
-        tmp_path,
-        name="ingredient_analysis",
-        kind="ingredient_analysis",
-        source={"catalog_sha256": "catalog-old"},
+        tmp_path, name=name, kind=kind, source={"catalog_sha256": "catalog-old"}
     )
 
-    providers, _meta, warnings = load_providers(tmp_path, "catalog-new")
-
-    assert not any(isinstance(provider, IngredientAnalysisSignal) for provider in providers)
-    assert any("catalog_sha256 mismatch" in warning for warning in warnings)
+    with pytest.raises(ContractViolation):
+        load_providers(tmp_path, "catalog-new")
 
 
-def test_unbound_store_requires_explicit_legacy_opt_in(tmp_path):
+def test_bound_store_refuses_to_load_for_an_unnamed_catalog(tmp_path):
+    """A caller that never names its catalog cannot have its stores checked."""
+    _registered_store(tmp_path, source={"catalog_sha256": "catalog-1"})
+
+    with pytest.raises(ContractViolation):
+        load_providers(tmp_path)
+
+
+def test_store_without_catalog_provenance_is_skipped(tmp_path):
     _registered_store(tmp_path)
 
     providers, _meta, warnings = load_providers(tmp_path, "catalog-1")
+
     assert not any(isinstance(provider, ReviewQualitySignal) for provider in providers)
     assert any("no catalog_sha256 provenance" in warning for warning in warnings)
-
-    providers, _meta, warnings = load_providers(
-        tmp_path, "catalog-1", allow_unbound=True
-    )
-    assert any(isinstance(provider, ReviewQualitySignal) for provider in providers)
-    assert any("allow_unbound=True" in warning for warning in warnings)
 
 
 def test_review_stats_builder_records_catalog_sha(tmp_path):

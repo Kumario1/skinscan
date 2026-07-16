@@ -22,9 +22,6 @@ from .knowledge import Knowledge
 
 REGISTRY_SCHEMA_VERSION = "recsys-registry-1"
 MIN_SKIN_TYPE_CELL = 20
-CATALOG_BOUND_KINDS = frozenset({
-    "concern_efficacy", "ingredient_analysis", "popularity", "review_stats",
-})
 
 
 @dataclass(frozen=True)
@@ -263,32 +260,9 @@ class ConcernEfficacySignal:
         return SignalScore(self.name, round(value, 6), evidence, {"matches": matches})
 
 
-class MediaSignal:
-    """Verified editorial/media evidence, isolated from safety decisions."""
-
-    name = "media"
-
-    def __init__(self, store: dict, meta: dict):
-        self.products = store.get("products") or {}
-        self.version = meta.get("version", "v?")
-
-    def score(self, product: CatalogProduct, slot: str, ctx: ScoringContext):
-        entry = self.products.get(product.product_id)
-        if not entry:
-            return None
-        value = entry.get("value")
-        evidence = entry.get("evidence")
-        if not isinstance(value, (int, float)) or not 0 <= value <= 1 or not evidence:
-            raise ContractViolation("media", f"invalid entry for {product.product_id}")
-        details = {key: value for key, value in entry.items()
-                   if key not in {"value", "evidence"}}
-        return SignalScore(self.name, float(value), str(evidence), details)
-
-
 STORE_PROVIDERS: dict[str, type] = {
     "concern_efficacy": ConcernEfficacySignal,
     "ingredient_analysis": IngredientAnalysisSignal,
-    "media": MediaSignal,
     "review_stats": ReviewQualitySignal,
     "popularity": PopularitySignal,
 }
@@ -297,12 +271,13 @@ STORE_PROVIDERS: dict[str, type] = {
 def load_providers(
     data_root: str | Path,
     catalog_sha256: str | None = None,
-    *,
-    allow_unbound: bool = False,
 ) -> tuple[list, list[dict], list[str]]:
     """Instantiate built-in providers plus every active registry store whose
     sha256 matches the file on disk and whose catalog provenance matches the
-    active catalog. Returns (providers, store_meta, warnings)."""
+    active catalog. A store built against a different catalog is a hard error,
+    not a skip: its product ids would not be the ones being scored, and a
+    silently dropped store leaves every product at neutral 0.5 in a document
+    that still looks complete. Returns (providers, store_meta, warnings)."""
     data_root = Path(data_root)
     providers: list = [ConcernFitSignal(), PriceValueSignal()]
     meta: list[dict] = []
@@ -328,28 +303,23 @@ def load_providers(
             continue
         source = entry.get("source") or {}
         bound_catalog_sha256 = source.get("catalog_sha256")
-        if kind in CATALOG_BOUND_KINDS:
-            if bound_catalog_sha256 is None:
-                if not allow_unbound:
-                    warnings.append(
-                        f"store {entry.get('name')!r} has no catalog_sha256 provenance — skipped"
-                    )
-                    continue
-                warnings.append(
-                    f"store {entry.get('name')!r} loaded without catalog_sha256 provenance "
-                    "because allow_unbound=True"
-                )
-            elif catalog_sha256 is None:
-                warnings.append(
-                    f"catalog_sha256 is required to load store {entry.get('name')!r} — skipped"
-                )
-                continue
-            elif bound_catalog_sha256 != catalog_sha256:
-                warnings.append(
-                    f"catalog_sha256 mismatch for store {entry.get('name')!r}: "
-                    f"expected {catalog_sha256}, got {bound_catalog_sha256} — skipped"
-                )
-                continue
+        if bound_catalog_sha256 is None:
+            warnings.append(
+                f"store {entry.get('name')!r} has no catalog_sha256 provenance — skipped"
+            )
+            continue
+        if catalog_sha256 is None:
+            raise ContractViolation(
+                "registry.catalog_sha256",
+                f"catalog_sha256 is required to load store {entry.get('name')!r}, "
+                f"which is bound to catalog {bound_catalog_sha256}",
+            )
+        if bound_catalog_sha256 != catalog_sha256:
+            raise ContractViolation(
+                "registry.catalog_sha256",
+                f"store {entry.get('name')!r} was built against a different catalog "
+                f"(expected {catalog_sha256}, got {bound_catalog_sha256})",
+            )
         store_path = data_root / entry["path"]
         actual = sha256_file(store_path)
         if actual != entry.get("sha256"):
