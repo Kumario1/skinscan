@@ -5,9 +5,11 @@ import argparse
 import hashlib
 import json
 import shutil
+import sys
 from pathlib import Path
 
-from ..verification import SCHEMA_VERSION
+from ..contracts import ContractViolation
+from ..verification import SCHEMA_VERSION, _validate_approved_assertion
 from .common import write_json
 
 
@@ -61,6 +63,16 @@ def build(
         if not row.get("product_id"):
             raise SystemExit(f"missing product_id for row with {len(assertions)} approved assertions")
         for assertion in assertions:
+            # Validate D-032 provenance here, at the boundary. The loader
+            # validates too, but by then the malformed assertion is a committed
+            # artifact and every `recsys recommend` dies three steps from the
+            # cause; the importer is where the fix is still one command away.
+            try:
+                _validate_approved_assertion(assertion, row["product_id"])
+            except ContractViolation as violation:
+                raise SystemExit(
+                    f"refusing to import {row['product_id']}: {violation}"
+                ) from violation
             digest = assertion.get("source_sha256")
             snapshot = source_evidence / str(digest)
             if not digest or not snapshot.exists():
@@ -77,6 +89,12 @@ def build(
             + "\nRe-assert each fact against a source that states it, or pass"
             " --allow-fact-loss to record the loss deliberately."
         )
+    if losses:
+        # The refusal message promises the flag "records the loss deliberately";
+        # a loss that leaves no trace but a git diff is not recorded.
+        print("dropping facts the committed overlay asserts:", file=sys.stderr)
+        for loss in losses:
+            print(f"  {loss}", file=sys.stderr)
     evidence_out = out_root / "evidence"
     evidence_out.mkdir(parents=True, exist_ok=True)
     for digest in sorted(digests):
@@ -85,7 +103,11 @@ def build(
         "schema_version": SCHEMA_VERSION,
         "products": sorted(products, key=lambda row: row["product_id"]),
     })
-    return {"products": len(products), "evidence_snapshots": len(digests)}
+    return {
+        "products": len(products),
+        "evidence_snapshots": len(digests),
+        "dropped_facts": losses,
+    }
 
 
 def main(argv=None) -> int:

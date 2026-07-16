@@ -343,9 +343,12 @@ def test_recsys_flag_adds_standalone_recommendations_artifact(
     _write_image(image_path)
     _write_verified_catalog(catalog_path)
     args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
+    # The data root, not a bare --recsys-catalog: the signal stores are keyed to
+    # the catalog's sha256, and a catalog passed alone leaves them mismatched and
+    # silently skipped. This test used to normalize exactly that invocation.
     args += [
         "--recsys",
-        "--recsys-catalog", str(ROOT / "recsys/data/catalog/seed_catalog.json"),
+        "--recsys-data-root", str(ROOT / "recsys/data"),
     ]
 
     assert main(args) == 0
@@ -353,6 +356,7 @@ def test_recsys_flag_adds_standalone_recommendations_artifact(
     recommendations = json.loads((output_dir / "recommendations.json").read_text())
     assert recommendations["schema_version"] == "recsys-1"
     assert recommendations["status"] == "partial"
+    assert recommendations["data_versions"]["signals"], "signal stores must have loaded"
     assert len(recommendations["routines"]) == 3
     import hashlib
     assert recommendations["inputs"]["analysis_sha256"] == hashlib.sha256(
@@ -374,7 +378,7 @@ def test_recsys_eligibility_mode_reaches_the_standalone_engine(
     args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
     args += [
         "--recsys",
-        "--recsys-catalog", str(ROOT / "recsys/data/catalog/seed_catalog.json"),
+        "--recsys-data-root", str(ROOT / "recsys/data"),
         "--recsys-eligibility-mode", "hybrid",
     ]
 
@@ -397,20 +401,54 @@ def test_recsys_failure_publishes_analysis_with_unavailable_artifact(
     prior = '{"marker": "prior-published-output"}\n'
     (output_dir / "analysis.json").write_text(prior)
     args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
-    args += ["--recsys", "--recsys-catalog", str(tmp_path / "missing.json")]
+    args += [
+        "--recsys",
+        "--recsys-data-root", str(ROOT / "recsys/data"),
+        "--recsys-catalog", str(tmp_path / "missing.json"),
+    ]
 
     assert main(args) == 0
 
     analysis = json.loads((output_dir / "analysis.json").read_text())
     recommendations = json.loads((output_dir / "recommendations.json").read_text())
     assert analysis["image_id"] == "face.jpg"
-    assert recommendations == {
-        "schema_version": "recsys-1",
-        "status": "unavailable",
-        "reason": "standalone recommendation process exited with status 1",
-        "routines": [],
-    }
+    assert recommendations["schema_version"] == "recsys-1"
+    assert recommendations["status"] == "unavailable"
+    assert recommendations["routines"] == []
+    # The reason carries the child's stderr tail: "exited with status 1" alone
+    # hid a FileNotFoundError traceback the operator needed. Exact-equality here
+    # is what used to enshrine that loss.
+    assert recommendations["reason"].startswith(
+        "standalone recommendation process exited with status 1"
+    )
+    assert "missing.json" in recommendations["reason"]
     assert prior not in (output_dir / "analysis.json").read_text()
+
+
+def test_recsys_catalog_without_data_root_is_refused_not_silently_blind(
+    tmp_path, fake_sarpn_server,
+):
+    """A catalog passed alone leaves every signal store keyed to a different
+    catalog: skipped with a warning, ranker scoring neutral 0.5, and a 'partial'
+    document indistinguishable from a healthy run. The guard refuses the
+    invocation outright -- the same fail-closed treatment the neither-configured
+    case gets, and the worse of the two, because this one never failed at all."""
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path)
+    _write_verified_catalog(catalog_path)
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
+    args += [
+        "--recsys",
+        "--recsys-catalog", str(ROOT / "recsys/data/catalog/seed_catalog.json"),
+    ]
+
+    assert main(args) == 0
+
+    recommendations = json.loads((output_dir / "recommendations.json").read_text())
+    assert recommendations["status"] == "unavailable"
+    assert "signal stores are keyed to a catalog" in recommendations["reason"]
 
 
 def test_recsys_without_explicit_catalog_is_unavailable(

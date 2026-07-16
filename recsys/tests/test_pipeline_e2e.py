@@ -166,7 +166,7 @@ def test_pregnancy_unknown_excludes_retinoids():
     for routine in document["routines"]:
         for step in _steps(routine):
             actives = set(catalog[step["product_id"]]["actives"])
-            assert not (actives & K.retinoids), step["product_id"]
+            assert not (actives & KNOWN_RETINOIDS), step["product_id"]
     reasons = {v["reason"] for v in document["veto_log"]["profile"]}
     assert "retinoid_pregnancy_status_excluded" in reasons
 
@@ -209,7 +209,7 @@ def test_hybrid_keeps_hard_ingredient_safety():
     for routine in document["routines"]:
         for step in _steps(routine):
             actives = set(catalog[step["product_id"]]["actives"])
-            assert not (actives & K.retinoids), step["product_id"]
+            assert not (actives & KNOWN_RETINOIDS), step["product_id"]
 
 
 def test_prescription_derives_from_label_facts_not_a_phantom_attribute():

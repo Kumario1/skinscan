@@ -148,8 +148,9 @@ def _validate_fact(key: str, value: object, product_id: str) -> None:
                     "name must be a non-empty string",
                 )
             for item in ("strength", "source"):
-                if active[item] is not None and (
-                    not isinstance(active[item], str) or not active[item].strip()
+                value = active.get(item)
+                if value is not None and (
+                    not isinstance(value, str) or not value.strip()
                 ):
                     raise ContractViolation(
                         active_field,
@@ -252,14 +253,37 @@ def apply_verification(
         if not facts:
             verified.append(product)
             continue
-        verified_actives = {active["name"] for active in facts.get("drug_actives", [])}
+        # A drug row's otc_drug came from its own FDA label; an overlay fact
+        # flipping it to True would pull the product out of prescription_options
+        # and into the ranked pool -- "listed, never placed" undone by one
+        # boolean an agent misread off a marketing category. Refuse it outright.
+        if product.drug_actives and "otc_drug" in facts:
+            raise ContractViolation(
+                "verification.otc_drug",
+                f"refusing to override the label's own OTC status for {product.product_id}",
+            )
+        # Actives are minted through the same door the catalog enforces: each
+        # active named, dosed, and cited to the label, or nothing merges. The
+        # old bare-name union let {"name": "tretinoin"} with no strength and no
+        # source add tretinoin to a cosmetic -- true of no committed assertion,
+        # but a door that only the catalog file locked.
+        verified_actives = _label_stated_actives({
+            "drug_actives": facts.get("drug_actives", []),
+            "label_source": facts.get("label_source", product.label_source),
+        })
+        if facts.get("drug_actives") and verified_actives is None:
+            raise ContractViolation(
+                "verification.drug_actives",
+                f"drug_actives for {product.product_id} do not clear the label"
+                " contract (name, strength, and a DailyMed citation per active)",
+            )
         fields = set(product.__dataclass_fields__)
         updates = {
             key: tuple(value) if key in _FACT_SEQUENCE_FIELDS else value
             for key, value in facts.items()
             if key in fields
         }
-        updates["actives"] = tuple(sorted(set(product.actives) | verified_actives))
+        updates["actives"] = tuple(sorted(set(product.actives) | set(verified_actives or ())))
         if "spf" in facts:
             updates["spf_source"] = "verified"
         verified.append(replace(product, **updates))

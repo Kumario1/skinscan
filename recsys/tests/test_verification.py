@@ -122,7 +122,7 @@ def test_verified_facts_override_name_parse_and_stale_facts_do_not(tmp_path):
                     "format": "lotion",
                     "exposure": "leave_on",
                     "otc_drug": True,
-                    "label_source": "https://example.test/label",
+                    "label_source": "https://dailymed.nlm.nih.gov/dailymed/spl/p1",
                     "label_verified_at": "2026-07-14",
                     "cadence_source": "https://example.test/label",
                     "amount": "thin_layer",
@@ -131,7 +131,7 @@ def test_verified_facts_override_name_parse_and_stale_facts_do_not(tmp_path):
                     "drug_actives": [{
                         "name": "benzoyl_peroxide",
                         "strength": "2.5%",
-                        "source": "https://example.test/label",
+                        "source": "https://dailymed.nlm.nih.gov/dailymed/spl/p1",
                     }],
                 },
             }],
@@ -154,10 +154,10 @@ def test_verified_facts_override_name_parse_and_stale_facts_do_not(tmp_path):
     assert verified.drug_actives == ({
         "name": "benzoyl_peroxide",
         "strength": "2.5%",
-        "source": "https://example.test/label",
+        "source": "https://dailymed.nlm.nih.gov/dailymed/spl/p1",
     },)
     assert verified.otc_drug is True
-    assert verified.label_source == "https://example.test/label"
+    assert verified.label_source == "https://dailymed.nlm.nih.gov/dailymed/spl/p1"
     assert verified.label_verified_at == "2026-07-14"
     assert verified.cadence_source == "https://example.test/label"
     assert verified.amount == "thin_layer"
@@ -242,4 +242,30 @@ def test_approved_assertion_rejects_invalid_fact_shapes(tmp_path, facts, field):
     root = _write_approved_overlay(tmp_path, facts)
 
     with pytest.raises(ContractViolation, match=field):
+        load_verification_overlay(root, now=datetime(2026, 7, 15, tzinfo=timezone.utc))
+
+
+def test_a_tampered_evidence_snapshot_stops_its_facts_from_applying(tmp_path):
+    """The hash binding is checked at application time, every run -- not once at
+    import. A reviewer deleted the four checking lines and 169 tests stayed
+    green, which is how a refactor ships facts sourced from bytes nobody
+    approved. These two tests are the tension that was missing."""
+    root = _multi_row_overlay(tmp_path, [
+        ("p1", b"approved label bytes", "2026-07-14T00:00:00Z", {"spf": 50}),
+    ])
+    digest = hashlib.sha256(b"approved label bytes").hexdigest()
+    (root / "evidence" / digest).write_bytes(b"edited after approval")
+
+    with pytest.raises(ContractViolation, match="hash mismatch"):
+        load_verification_overlay(root, now=datetime(2026, 7, 15, tzinfo=timezone.utc))
+
+
+def test_a_deleted_evidence_snapshot_stops_its_facts_from_applying(tmp_path):
+    root = _multi_row_overlay(tmp_path, [
+        ("p1", b"approved label bytes", "2026-07-14T00:00:00Z", {"spf": 50}),
+    ])
+    digest = hashlib.sha256(b"approved label bytes").hexdigest()
+    (root / "evidence" / digest).unlink()
+
+    with pytest.raises(ContractViolation, match="missing snapshot"):
         load_verification_overlay(root, now=datetime(2026, 7, 15, tzinfo=timezone.utc))

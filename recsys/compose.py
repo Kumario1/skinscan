@@ -64,6 +64,27 @@ def _sessions(usage: str) -> frozenset[str]:
     return frozenset((usage,))
 
 
+_UNSCHEDULED_CADENCES = ("daily", "once_daily", "per_label")
+
+
+def _occupied_sessions(product: CatalogProduct, usage: str) -> frozenset[str]:
+    """The sessions a step may actually be used in, as opposed to the one the
+    routine prints.
+
+    `usage` is the engine's instruction; a label whose cadence leaves the
+    session open ("daily", "per_label") is the authority the user will follow
+    instead. The engine may still *print* PM for such a product -- the retinoid
+    pin is an instruction and stays -- but it cannot guarantee compliance
+    against the label's own directions, so for conflict purposes the product
+    occupies both sessions no matter where it was placed. This is what keeps a
+    per-label adapalene out of any routine containing benzoyl peroxide even
+    though its printed session is PM and the peroxide's is AM.
+    """
+    if product.cadence in _UNSCHEDULED_CADENCES:
+        return frozenset(("AM", "PM"))
+    return _sessions(usage)
+
+
 def preferred_usage(product: CatalogProduct, slot: str, k: Knowledge) -> tuple[str, bool]:
     """(usage, pinned). Pinned sessions may never flip."""
     if slot == "spf":
@@ -161,9 +182,17 @@ def session_rule_findings(routine: ComposedRoutine, k: Knowledge) -> list[dict]:
                 f"retinoid_not_pm_only:{product_id}:{step.usage}"
             )
 
+    # The conflict rule reads occupancy, not the printed session: an
+    # unscheduled-cadence product may be used in either session whatever the
+    # routine says, so it can never be "split away" from a conflicting active.
+    # The two pin rules above deliberately keep reading the instruction --
+    # widening them to occupancy would veto every per-label retinoid outright.
     for index, first in enumerate(steps):
         for second in steps[index + 1:]:
-            if not (_sessions(first.usage) & _sessions(second.usage)):
+            if not (
+                _occupied_sessions(first.scored.product, first.usage)
+                & _occupied_sessions(second.scored.product, second.usage)
+            ):
                 continue  # split across AM/PM: the rule is honoured, not broken
             conflict = _conflict_between(first.scored.product, second.scored.product, k)
             if conflict:
@@ -251,7 +280,9 @@ def try_place(product: CatalogProduct, slot: str, steps: list[Step], k: Knowledg
     for option in options:
         clash = None
         for step in steps:
-            if _sessions(option) & _sessions(step.usage):
+            if _occupied_sessions(product, option) & _occupied_sessions(
+                step.scored.product, step.usage
+            ):
                 pair = _conflict_between(product, step.scored.product, k)
                 if pair:
                     clash = pair
