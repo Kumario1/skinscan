@@ -124,15 +124,37 @@ def verify(analysis_path: Path, data_root: Path, mode: str, runs: int) -> dict:
     check("gates: hard vetoes fire with reason codes", bool(vetoes),
           f"{len(vetoes)} vetoes: {reasons[:3]}")
 
-    # Either routines, or an explicit reason per archetype. Never silently empty:
-    # strict on the full catalog legitimately yields nothing, because only the
-    # evidence-verified products are eligible and there are few of them.
+    # Composition, judged by which of two regimes the care decision put us in.
+    # DEFERRED: no clinician-reviewed therapy policy, so treatment is withheld
+    # (D-029). A support-only routine is correct and treatment archetypes are
+    # legitimately absent -- but the reason must be recorded, not silent, and no
+    # treatment step may sneak in. NOT DEFERRED: every archetype must be built or
+    # listed in unavailable_archetypes with a reason. This is exactly the check
+    # that would have caught a real silent collapse; a global deferral must not
+    # be able to mask one.
     routines = document["routines"]
     unavailable = document.get("unavailable_archetypes") or []
-    check("compose: routines built, or unavailability explained per archetype",
-          bool(routines) or (bool(unavailable) and all(u["reasons"] for u in unavailable)),
-          f"{len(routines)}/{len(knowledge.archetypes)} archetypes, status={document['status']}"
-          + (f", unavailable: {unavailable[0]['reasons'][0]}" if not routines else ""))
+    therapy = document.get("therapy_plan") or {}
+    care = document.get("care_decision") or {}
+    deferred = bool(therapy.get("deferred_reasons")) or care.get("therapy_disposition") == "defer"
+
+    def _has_treatment(routine):
+        return any(s["slot"] in ("treatment", "serum") for s in _steps(routine))
+
+    if deferred:
+        reason = (therapy.get("deferred_reasons") or ["therapy_deferred"])[0]
+        check("compose: therapy deferral is recorded, not silent",
+              bool(therapy.get("deferred_reasons") or care.get("therapy_disposition")),
+              f"deferred: {reason}")
+        check("compose: no treatment step is offered while therapy is deferred",
+              not any(_has_treatment(r) for r in routines),
+              f"{len(routines)} support-only routine(s)")
+    else:
+        explained = len(routines) + sum(1 for u in unavailable if u.get("reasons"))
+        check("compose: every archetype is built or explained (none silently dropped)",
+              explained >= len(knowledge.archetypes),
+              f"{len(routines)} built + {len(unavailable)} unavailable "
+              f"= {explained}/{len(knowledge.archetypes)}")
 
     # Every check from here quantifies over the steps the engine actually
     # produced, so each carries its population: no routines means these checks
