@@ -68,6 +68,14 @@ def profile_gate_reasons(
     reasons: list[str] = []
     actives = set(product.actives)
     expected_role = "sunscreen" if slot == "spf" else slot
+    # Every ingredient gate below reads actives/inci, so a row carrying neither
+    # clears all of them vacuously -- a "+Retinol" moisturizer with nothing
+    # parsed passes the pregnancy exclusion because there is no active to match
+    # and no INCI to scan. Unknown is data, never a favorable default. A drug row
+    # publishes no INCI but names its actives, and a plain moisturizer carries a
+    # real INCI and no actives; both are known. Only neither is unknown.
+    if not product.inci and not actives:
+        reasons.append("ingredients_unknown")
     if _excludes_face(product.intended_areas):
         reasons.append("intended_area_not_verified:face")
     if expected_role not in product.routine_roles:
@@ -131,34 +139,31 @@ def apply_profile_gates(
     profile: Profile,
     knowledge: Knowledge,
     strict: bool = True,
-) -> tuple[dict[str, list[CatalogProduct]], list[Veto], dict[tuple[str, str], list[str]]]:
-    """Split each product's gate reasons into hard vetoes and soft
-    verification-quality flags.
+) -> tuple[dict[str, list[CatalogProduct]], list[Veto]]:
+    """Keep the products that survive their gate reasons; return the rest as
+    vetoes.
 
     strict=True (default): any reason vetoes — the fail-closed, evidence-only
     posture (only individually-verified products enter routines).
     strict=False (hybrid): only HARD safety reasons veto; SOFT verification
-    reasons are returned as quality flags so the product is still eligible
-    (slotted by catalog category) but ranked below verified products and labeled
-    accordingly. Ingredient/profile/price safety is identical in both modes.
+    reasons do not, so the product stays eligible (slotted by catalog category)
+    but ranks below verified products and is labeled category-derived at
+    explain time. Ingredient/profile/price safety is identical in both modes.
     """
     kept: dict[str, list[CatalogProduct]] = {}
     vetoes: list[Veto] = []
-    quality_flags: dict[tuple[str, str], list[str]] = {}
     for slot, products in candidates_by_slot.items():
         kept[slot] = []
         for product in products:
             reasons = profile_gate_reasons(product, slot, profile, knowledge)
-            soft = [r for r in reasons if _reason_is_soft(r)]
-            hard = [r for r in reasons if not _reason_is_soft(r)]
-            blocking = reasons if strict else hard
+            blocking = (
+                reasons if strict else [r for r in reasons if not _reason_is_soft(r)]
+            )
             if blocking:
                 vetoes.extend(Veto(product.product_id, slot, r) for r in blocking)
             else:
                 kept[slot].append(product)
-                if soft:
-                    quality_flags[(product.product_id, slot)] = soft
-    return kept, vetoes, quality_flags
+    return kept, vetoes
 
 
 def duplicate_active_reasons(

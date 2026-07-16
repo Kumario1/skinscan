@@ -3,9 +3,17 @@
 Standalone rebuild of the SkinScan recommendation half. Design decisions:
 
 - **Coupling**: three file contracts only — reads `analysis.json` (schema 3) +
-  `profile.json`, writes `recommendations.json`. Zero imports from `src/`.
+  `profile.json`, writes `recommendations.json`. The **engine** imports nothing
+  from `src/` — all 15 top-level modules, verified. The **tools** are not so
+  clean: `tools/run_full_concern_pass.py` imports `src.config` and
+  `src.recommendation.concern_labels`, reaching into three of its private
+  functions (`_require_calibration_report`, `_configured_labeler_identity`,
+  `_labeler`) to reuse the proven D-023 labeler and its budget guard rather than
+  fork 1,656 lines. It is a batch path and cannot reach a recommendation — but
+  it is real coupling: renaming a private in `concern_labels.py` breaks the
+  Phase 2 pass.
 - **Catalog = product details only.** Every ranking signal (reviews,
-  popularity, ingredient analysis, concern efficacy, media) lives in its own
+  popularity, ingredient analysis, concern efficacy) lives in its own
   versioned store, discovered through a registry. Signals are extensible:
   adding one = a build tool + a store file + a registry entry + one provider
   class in `signals.py`. Zero edits to pipeline/gates/composer.
@@ -45,6 +53,14 @@ Order matters, and it is always the same:
    night, never two conflicting actives in one session), then assembles five
    different routines from the same ranked pool.
 
+Concretely, one pass, always this order — `pipeline.py` is the only place it
+lives:
+
+```
+load ─► select_targets ─► generate_candidates ─► apply_gates ─►
+list prescriptions & drop them ─► score ─► compose ─► explain ─► emit
+```
+
 ## What each file does
 
 **The engine** (pure, deterministic, no network — enforced by
@@ -56,13 +72,13 @@ Order matters, and it is always the same:
 | `catalog.py` | Product identity only — no scores. Enforces the INCI contract: `actives` must parse out of the ingredient list, or the row is rejected. Holds the one exception, for label-stated drug actives (see Prescriptions). |
 | `inci.py` | The deterministic ingredient parser. Turns an INCI string into canonical actives + comedogenic flags. Every safety gate keys off this, never off an LLM. |
 | `knowledge.py` | Loads the hand-authored tables in `data/knowledge/` — which actives target which concern, which are retinoids, which conflict, the five archetypes. |
-| `pipeline.py` | The orchestrator. Chains the stages below and stamps the output with the sha256 of every input and data file it used. |
-| `candidates.py` | Per-slot shortlist. Carrier slots (cleanser/moisturizer/SPF) take the whole category; treatment/serum need an active that targets a detected concern. |
-| `gates.py` | Hard vetoes with reason codes. Scores never participate. Splits HARD safety (always vetoes) from SOFT verification-quality (flags only — see Hybrid). |
-| `signals.py` | The pluggable scoring inputs. Each returns `SignalScore(value, evidence, details)` or `None`. Adding a signal touches this file only. |
-| `scoring.py` | Weighted mean. Every final score is decomposable back into named signals — tested, and visible in the output. |
-| `compose.py` | Archetypes-as-data. AM/PM assignment, conflict splitting, greedy pick with backtracking, budget swap loop, diversity vs best_overall. |
-| `explain.py` | The "why" for each step, built from the *same* SignalScore objects the ranker used — there is no separate marketing-copy path. Also builds `prescription_options`. |
+| `pipeline.py` | The orchestrator, and the only place the order above lives. Resolves and validates every input; picks targets (concerns severity ≥ 1, ordered by severity then confidence; `acne_cystic` flagged `referral_emphasis`); merges the optional drug catalog *before* applying the verification overlay, so approved facts reach drug rows too; stamps the output with the sha256 of every input and data file it used. Triage `derm_first`/`abstain` short-circuits to a `referral_only` document before any product logic runs. `emit` is `sort_keys=True` + atomic write; `--generated-at` pins the only non-deterministic field. |
+| `candidates.py` | Per-slot shortlist. Carrier slots (cleanser/moisturizer/SPF) take the whole category; treatment/serum need an active that targets a detected concern. No targets (clear skin) → carrier-only maintenance routines. |
+| `gates.py` | Hard vetoes with deterministic reason codes. Scores never participate and never override a veto. **HARD** safety always vetoes, in both modes: `retinoid_pregnancy_status_excluded` (pregnant/trying/nursing/**unknown**), `profile_allergy:<x>`, `product_contraindication:<x>`, `duplicates_current_active:<x>`, `ingredients_unknown` (no INCI *and* no parsed actives — nothing to reason about, so nothing can clear it), `spf_below_30_or_unknown`, `spf_not_broad_spectrum`, `price_above_profile_cap`. **SOFT** means *we haven't checked yet*, not *this is unsafe*: the eight verification-quality codes listed at `gates.py:36` (`role_not_verified`, `cadence_not_daily`, `cadence_unverified`, `treatment_label_unverified`, …). `strict` vetoes on them; `hybrid` turns them into quality flags and labels the step `category_derived`. That list is a **closed allowlist** — anything not on it is hard, so a *new* reason code defaults to vetoing rather than silently passing. Conflating the two is what made verified-only unusable; see "How it got here". |
+| `signals.py` | The pluggable scoring inputs. Each provider returns `SignalScore(value 0..1, evidence, details)` or `None` — and `None` means neutral 0.5 plus an uncertainty note, never a hidden penalty. Six weighted signals: concern fit, concern efficacy, ingredient analysis, review quality, popularity, price value. Adding one touches this file only. |
+| `scoring.py` | Weighted mean, weights per archetype. Every final score is decomposable back into named signals — tested, and visible in the output. |
+| `compose.py` | Archetypes-as-data (`archetypes.json`), not code branches. Session rules: SPF AM-only, retinoids PM-only, conflict pairs (BP×retinoid, BP×vitC, glycolic×retinoid) never share a session — split across AM/PM or reject the candidate. Greedy by score with per-candidate backtracking, budget cap via a cheapest-swap loop, diversity guarantee vs `best_overall`. |
+| `explain.py` | The "why" for each step, built from the *same* SignalScore objects the ranker used — there is no separate marketing-copy path. Also builds `prescription_options`, uncertainty flags, D-002 framing and the referral passthrough. |
 | `verification.py` | The evidence overlay. Approved, hash-bound facts that upgrade a product from "inferred" to "verified". Stale evidence stops applying. |
 | `evaluate.py` | Golden-file harness. Pins a full document so any behaviour change shows up as a diff. |
 | `__main__.py` | The CLI. |
@@ -107,13 +123,14 @@ broke on real data.
    whether it's even a face product) can't be guessed from a product name, so
    they need an approved, hash-bound snapshot of an authoritative page.
 5. **Hybrid eligibility (2026-07-15)** — because Phase 3 was too honest. Only 13
-   products were evidence-verified, so a real photo with severe scarring got 3 of
-   5 archetypes and *nothing* for the scarring. The fix was to notice that the
-   gates were conflating two different things: "this is unsafe" and "we haven't
-   verified this yet". Hard safety still vetoes; verification gaps became quality
-   flags. Hybrid opens the whole 1,634-product catalog by category, labels each
-   step `verified` or `category_derived`, and gives verified products a ranking
-   nudge. Strict remains the default and is unchanged.
+   of 1,634 products (0.8%) were evidence-verified, so a real photo with severe
+   scarring got 3 of 5 archetypes and *nothing* for the scarring. The fix was to
+   notice that the gates were conflating two different things: "this is unsafe"
+   and "we haven't verified this yet". Hard safety still vetoes; verification
+   gaps became quality flags. Hybrid opens the whole 1,634-product catalog by
+   category, labels each step `verified` or `category_derived`, and gives
+   verified products a ranking nudge. Strict remains the default and is
+   unchanged.
 6. **Prescriptions (2026-07-15).** See below.
 
 Governing decisions (`docs/DECISIONS.md`): **D-002** cosmetic framing, not
@@ -141,8 +158,8 @@ SPLs). Three things make that safe:
   and silently strand every store.
 - **Listed, never placed.** `prescription_options` surfaces the ones matching the
   detected concerns, with a referral note. They are read out of the gated pool
-  and then *dropped from it*, so the invariant holds by construction rather than
-  by whichever way the ranking falls — which also keeps a product with no retail
+  and then *dropped from it, before ranking*, so the invariant holds by
+  construction rather than by whichever way the ranking falls — which also keeps a product with no retail
   price out of every routine total. Hard safety still reaches them: a real run
   vetoes 6 Rx retinoids on pregnancy status before they can be listed.
 
@@ -158,7 +175,6 @@ SPLs). Three things make that safe:
 | Popularity | `recsys/data/signals/popularity.v1.json` | **Yes** (seed scope) | `build_popularity.py`: loves + full-dump same-category percentile | marked `snapshot-2023` |
 | Ingredient analysis (Phase 1) | `signals/ingredient_analysis.v1.json` + JSONL cache | Store yes / cache no | pinned free Nemotron MoE over INCI, keyed `(product_id, inci_sha256, prompt_version)` | re-labeled only on key change |
 | Concern efficacy (Phase 2) | `signals/concern_efficacy.v1.json` + cache | Store yes / cache no | proven D-023 labeler → file contract → deterministic recsys aggregate; cells carry n | static per dump |
-| Media/editorial | `signals/media.v1.json` | when evidence exists | verified value/evidence/source entries through `MediaSignal` | freshness window via overlay |
 | Verification overlay (Phase 3) | `recsys/data/verification/` | **Yes** | port of `src/recommendation/verification_loop.py` state machine | per-fact stale-flip windows |
 | Signal registry | `recsys/data/signals/registry.json` | **Yes** | written by each build tool | engine refuses sha256-mismatched stores |
 
@@ -169,50 +185,6 @@ marked `spf_source: "name_parse"` / `spf_value_from_name_parse_not_verified`
 until the Phase 3 overlay upgrades them. LLM-derived stores are scoring
 signals only, always labeled model-derived — safety gates key off the
 deterministic INCI parser + `knowledge/safety_rules.json`, never LLM output.
-
-## Pipeline stages (`pipeline.py`)
-
-1. **load** — validate analysis/profile/catalog/registry; resolve profile
-   precedence (file > `analysis.input_profile` > unknown; unknowns fail SAFE);
-   merge the optional drug catalog; apply the verification overlay *after* the
-   merge, so approved facts reach drug rows too; sha256 everything.
-   `contract_violation:<field>` on failure.
-2. **select_targets** — concerns severity ≥ 1, ordered by (severity,
-   confidence); `acne_cystic` flagged `referral_emphasis`.
-3. **generate_candidates** (`candidates.py`) — carrier slots take the whole
-   category; treatment/serum need an active matching a target concern. No
-   targets (clear skin) → carrier-only maintenance routines.
-4. **apply_gates** (`gates.py`) — deterministic reason codes, never
-   score-overridden: `retinoid_pregnancy_status_excluded` (pregnant/trying/
-   nursing/**unknown**), `profile_allergy:<x>`, `duplicates_current_active:<x>`,
-   `spf_below_30_or_unknown`, `price_above_profile_cap`,
-   `cadence_not_daily`. Triage `derm_first`/
-   `abstain` short-circuits to a `referral_only` document before any of this.
-   **Two classes of reason**: HARD safety always vetoes, in both modes. SOFT
-   ("…_not_verified") means *we haven't checked yet*, not *this is unsafe* — in
-   `strict` it vetoes, in `hybrid` it becomes a quality flag and the step is
-   labelled `category_derived`. Conflating the two is what made verified-only
-   unusable; see "How it got here".
-5. **list prescriptions, then drop them** (`explain.prescription_options`) —
-   read out of the gated pool and removed from it before ranking, so "listed,
-   never placed" holds by construction rather than by ranking luck.
-6. **score** (`signals.py` + `scoring.py`) — providers return
-   `SignalScore(value 0..1, evidence, details)` or `None` (= neutral 0.5 + an
-   uncertainty note; missing data is never a hidden penalty). Final = weighted
-   mean; the full per-signal breakdown is retained (decomposability is
-   tested). Signals: concern fit, concern efficacy, ingredient analysis,
-   review quality, popularity, price value, and optional verified media.
-7. **compose** (`compose.py`) — archetypes are data (`archetypes.json`), not
-   code branches. Session rules: SPF AM-only, retinoids PM-only, conflict
-   pairs (BP×retinoid, BP×vitC, glycolic×retinoid) never share a session —
-   split across AM/PM or reject the candidate. Greedy by score with
-   per-candidate backtracking; budget cap via cheapest-swap loop; diversity
-   guarantee vs best_overall.
-8. **explain** (`explain.py`) — per-product `why` built from the same
-   SignalScore objects the ranker used (no separate marketing-copy path),
-   uncertainty flags, D-002 framing, referral passthrough.
-9. **emit** — `sort_keys=True`, atomic write; `--generated-at` pins the only
-   non-deterministic field.
 
 ## Output document (`recommendations.json`, schema `recsys-1`)
 
@@ -251,15 +223,17 @@ processes to confirm identical bytes. It mirrors `pipeline.py`'s own catalog
 resolution so it cannot accidentally verify a different catalog than the engine
 used. Passes 18/18 across strict/hybrid × seed/derived.
 
-**Two silent failure modes it exists to catch**, both of which produce a
-plausible answer with no error:
+**The silent failure mode it exists to catch**, because it produces a plausible
+answer with no error: running without `--data-root recsys/data/derived` falls
+back to the bundled 60-product seed catalog. The run succeeds and the routines
+look reasonable; nothing says you ranked 60 products instead of 1,634.
 
-- Running without `--data-root recsys/data/derived` falls back to the bundled
-  60-product seed catalog.
-- Passing `--catalog` without `--data-root` leaves the signal stores pointing at
-  a different catalog; each store is keyed by `catalog_sha256` and on mismatch is
-  **skipped with only a warning**, so the ranker scores blind on neutral 0.5.
-  Always check `data_versions.signals` is populated and `warnings` is empty.
+There used to be a second, worse one: `--catalog` without `--data-root` left the
+signal stores keyed to a *different* catalog, and a `catalog_sha256` mismatch was
+skipped with only a warning — so the ranker scored blind on neutral 0.5 and the
+sole defence was a human remembering to check `warnings` was empty. Both halves
+are gone: a mismatched store now **raises**, and `--catalog` no longer exists —
+the catalog is whatever `--data-root` resolves to.
 
 **Reproducibility, precisely.** Verified on two different photos, four runs of
 one and two of the other:
@@ -287,7 +261,7 @@ is the weighting working, not ignoring the input.
 |---|---|
 | 1 — Ingredient analysis | **done** — store live, signal loads, ≥95% coverage |
 | 2 — Concern efficacy | **in flight** — p11 policy passed the ≥85% gate at 86% (independent Opus audit); full paid pass running: 472 requests, 77,801 review rows, 0 errors. The store is not built yet, so `concern_efficacy` is absent from `data_versions.signals` and its 0.25 archetype weight currently scores neutral. Ranking sharpens when it lands. |
-| 3 — Verification overlay | **done** — 14 overlay rows (13 catalog-matching, 1 dailymed row matching no catalog product), evidence hash-bound, stale-flip wired |
+| 3 — Verification overlay | **done** — 14 overlay rows, of which 13 match a catalog product: **0.8% of 1,634**. (The 14th is a DailyMed row that matches a drug-catalog row, not a cosmetics product.) Evidence hash-bound, stale-flip wired. |
 | 4 — Full catalog | **done** — 1,634 products; golden-file eval harness live |
 | 5 — Integration | **done** — `src/pipeline/e2e.py --recsys` writes both documents |
 | + Hybrid eligibility | **done** (2026-07-15, beyond the original plan) — see "How it got here" |
@@ -300,8 +274,8 @@ Known gaps, honestly:
   page, not assumed.
 - Strict on the full catalog yields **3 of 5 archetypes** (`budget` and
   `gentle_sensitive` go unavailable: `required_role_missing:treatment`), because
-  only 13 of 1,634 products are evidence-verified. That thinness is exactly why
-  hybrid exists.
+  only 13 of 1,634 products — **0.8%** — are evidence-verified. That thinness is
+  exactly why hybrid exists.
 - Stale-flip is wired but only half-exercised. `cmd_refresh` flips a product's
   approved assertions on any `evidence_issues()` hit; only the snapshot branch
   has fired on real data — the five `stale` rows in `approved-combined.json`
@@ -309,16 +283,6 @@ Known gaps, honestly:
   (`FRESHNESS_DAYS`, `recsys/verification.py:14`) has never fired: every
   approved `retrieved_at` is 0–1 days old against its 90/180-day window. Tests
   cover it; production has not.
-
-## Original phase plan (for reference)
-
-| Phase | Content | Acceptance |
-|---|---|---|
-| 1 — Ingredient analysis | finish `tools/build_ingredient_analysis.py` (LLM batch, cache schema already real); `IngredientAnalysisSignal`; irritancy feeds the gentle archetype; comedogenic notes in explanations | ≥95% catalog coverage; deterministic reruns; no-network test green |
-| 2 — Concern efficacy | port D-023 mining (`src/recommendation/concern_labels.py` + `concern_stats.py`); semantic model labels followed by the versioned literal-policy layer; `ConcernEfficacySignal`; ladder concern cell → acne_general → pooled | sample-bound exact-set audit ≥85% on the current prompt/policy version; cells for ≥300 products; "helped X% of n reviewers" evidence; weight scales with n |
-| 3 — Verification overlay | port `verification_loop.py` scoped to recsys facts (SPF/broad_spectrum); evidence bytes; stale-flip | `spf_source: "verified"` in output; loop never self-approves |
-| 4 — Full catalog + hardening | full-scope stores in `derived/`; media-store interface; dummy-provider conformance test; golden-file eval harness | new signal addable with zero pipeline edits |
-| 5 — Integration | `src/pipeline/e2e.py` optionally invokes the recsys CLI after writing analysis.json (subprocess/file handoff, no imports) | run dir carries both old `routine.json` and new `recommendations.json` |
 
 Unverified products still degrade honestly: cadence/contraindications remain
 unknown, SPF stays name-parsed with an uncertainty flag, and missing model

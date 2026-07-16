@@ -1,11 +1,20 @@
 """The recsys engine never touches the network — LLM/network code is allowed
-only under recsys/tools/. Enforced by scanning imports of every non-tools
-module."""
+only under recsys/tools/. This is a static import lint over every non-tools
+module, not a runtime sandbox: it catches a module that names a network library
+in an import, and nothing else — a dynamic import or a shell-out still gets
+through."""
 import ast
 from pathlib import Path
 
 PACKAGE = Path(__file__).parents[1]
-FORBIDDEN = {"urllib", "http", "socket", "ssl", "requests", "httpx", "aiohttp", "openai", "anthropic"}
+FORBIDDEN = {
+    # stdlib transports
+    "urllib", "http", "socket", "ssl", "ftplib", "smtplib", "telnetlib",
+    # third-party clients
+    "urllib3", "requests", "httpx", "aiohttp", "pycurl", "websockets", "grpc", "boto3",
+    # LLM SDKs
+    "openai", "anthropic",
+}
 
 
 def test_no_network_imports_outside_tools():
