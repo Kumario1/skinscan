@@ -33,12 +33,18 @@ class Veto:
 # and are surfaced as a "category-derived, not individually verified" label.
 # Everything NOT listed here is a HARD safety veto (ingredient/profile/price)
 # and always excludes the product — a new reason defaults to hard.
+#
+# A reason belongs here only if it means "we have not checked yet" — absence of
+# evidence. It does NOT belong here if we checked and the answer disqualifies
+# the product: cadence_unverified is a gap, cadence_not_daily is a verified
+# label saying "weekly", which no daily AM/PM routine can honour in either mode.
+# The membership of this frozenset is the whole HARD/SOFT decision; it is pinned
+# by test_gates.py::test_soft_reason_prefixes_membership_is_pinned_exactly.
 SOFT_REASON_PREFIXES = frozenset({
     "intended_area_not_verified",
     "role_not_verified",
     "exposure_not_verified",
     "cadence_unverified",
-    "cadence_not_daily",
     "treatment_active_unverified",
     "treatment_label_unverified",
     "spf_broad_spectrum_unverified",
@@ -49,17 +55,32 @@ def _reason_is_soft(reason: str) -> bool:
     return reason.split(":", 1)[0] in SOFT_REASON_PREFIXES
 
 
-# Mirrors src.recommendation.schema.excludes_face -- an OTC drug label states a
-# target ("cover the entire affected area") but almost never names the face, so
-# requiring an explicit "face" vetoes every label-verified product and leaves
-# the fact satisfiable only by inventing it. Veto a positive claim to another
-# area instead; unknown/empty stays open.
-_NON_FACE_AREAS = frozenset({"neck", "body", "eye", "lip"})
+# An OTC drug label states a target ("cover the entire affected area") but almost
+# never names the face, so requiring an explicit "face" vetoes every
+# label-verified product and leaves the fact satisfiable only by inventing it.
+# Veto a positive claim to another area instead; unknown/empty stays open.
+#
+# Only these values are absence of evidence. Every other stated area is a claim
+# to somewhere that is not the face, derived from the product's own areas rather
+# than enumerated: an enumerated list has to mirror the area vocabulary, and a
+# value added there but forgotten here (scalp) would make a non-face product
+# silently eligible for a facial routine. Deriving keeps a new area fail-closed.
+_AREA_ABSENCE_OF_EVIDENCE = frozenset({"unknown"})
 
 
 def _excludes_face(intended_areas) -> bool:
     areas = set(intended_areas)
-    return "face" not in areas and bool(areas & _NON_FACE_AREAS)
+    return "face" not in areas and bool(areas - _AREA_ABSENCE_OF_EVIDENCE)
+
+
+def _normalize_condition(value: str) -> str:
+    """Fold case and surrounding whitespace so a declared "Sensitive" or
+    "Warfarin " still meets a product's "sensitive"/"warfarin". Unlike
+    current_actives there is no closed vocabulary to validate a contraindication
+    against — both sides are free text off the evidence overlay — so matching
+    raw would fail this HARD gate open on nothing worse than a capital letter.
+    """
+    return value.strip().lower()
 
 
 def profile_gate_reasons(
@@ -80,12 +101,17 @@ def profile_gate_reasons(
     elif product.cadence not in ("am", "pm", "am_pm", "daily", "once_daily",
                                  "twice_daily", "per_label"):
         reasons.append("cadence_not_daily")
-    profile_contraindications = (
-        set(profile.sensitivity_conditions)
-        | set(profile.current_medications)
-        | {profile.pregnancy_status}
-    )
-    for condition in sorted(set(product.contraindications) & profile_contraindications):
+    profile_contraindications = {
+        _normalize_condition(condition) for condition in (
+            *profile.sensitivity_conditions,
+            *profile.current_medications,
+            profile.pregnancy_status,
+        )
+    }
+    product_contraindications = {
+        _normalize_condition(condition) for condition in product.contraindications
+    }
+    for condition in sorted(product_contraindications & profile_contraindications):
         reasons.append(f"product_contraindication:{condition}")
     if profile.pregnancy_status in knowledge.pregnancy_excluded_statuses and (
         actives & knowledge.retinoids or contains_retinoid(product.inci)

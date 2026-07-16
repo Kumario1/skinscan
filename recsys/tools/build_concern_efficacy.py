@@ -16,12 +16,48 @@ from pathlib import Path
 from ..contracts import sha256_file
 from .common import STORE_SCHEMA_VERSION, register_store, write_json
 
-PROMPT_VERSION = "p10"
+# NOT a filter, and NOT the version this builder aggregates. The labels file is
+# the contract: build() takes the prompt version from --prompt-version, or reads
+# it out of the file itself (`derive_prompt_version`). This constant only stamps
+# fixtures that need *a* version string, so it cannot drift out of agreement with
+# src/recommendation/concern_labels.py the way a filtering constant did: a
+# builder-local "p10" against a labeler writing "p11" silently discarded 33,775
+# of 33,825 paid labels, and recsys/ may not import from src/ to share one.
+PROMPT_VERSION = "p11"
 BUILDER = "recsys.tools.build_concern_efficacy@1"
 ACNE_CONCERNS = frozenset((
     "acne_comedonal", "acne_inflammatory", "acne_cystic", "acne_general",
 ))
 P3_TEST_FRACTION = 0.25
+
+
+def _version_counts(records: list[dict]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for record in records:
+        if record.get("status") == "ok":
+            version = record.get("prompt_version")
+            counts[str(version)] = counts.get(str(version), 0) + 1
+    return counts
+
+
+def derive_prompt_version(records: list[dict]) -> str | None:
+    """The prompt version of the newest usable label in an append-only ledger.
+
+    The labels file is append-only (the labeler only ever appends), so the LAST
+    ok record is by construction what the most recent pass wrote — i.e. the
+    policy version currently in force. Older rows are superseded by definition:
+    a real ledger holds the current pass plus stale calibration rows from the
+    versions before it, and aggregating those together would mix policies.
+
+    Position, not a majority vote: right after a p12 calibration the newest 50
+    rows are p12 while thousands of p11 rows remain, and p12 IS the current
+    policy. build() reports what it discarded so that choice is never silent,
+    and --prompt-version overrides it.
+    """
+    for record in reversed(records):
+        if record.get("status") == "ok" and record.get("prompt_version"):
+            return str(record["prompt_version"])
+    return None
 
 
 def p3_gate_passed(result: dict) -> bool:

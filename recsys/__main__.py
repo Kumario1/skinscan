@@ -4,7 +4,8 @@ from __future__ import annotations
 import argparse
 import sys
 
-from .pipeline import DEFAULT_DATA_ROOT, emit, run
+from .contracts import ContractViolation
+from .pipeline import DEFAULT_DATA_ROOT, emit, run, skipped_signal_warnings
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -20,23 +21,54 @@ def main(argv: list[str] | None = None) -> int:
     rec.add_argument("--eligibility-mode", default="strict", choices=("strict", "hybrid"),
                      help="strict: only evidence-verified products (default); "
                           "hybrid: whole catalog by category, verified products ranked/labeled higher")
+    rec.add_argument("--allow-signal-catalog-mismatch", action="store_true",
+                     help="accept a run whose signal stores are bound to a different "
+                          "catalog than --catalog: every store-backed signal scores a "
+                          "neutral 0.5 and the ranking is blind. Warns instead of failing.")
     args = parser.parse_args(argv)
 
-    document = run(
-        analysis_path=args.analysis,
-        profile_path=args.profile,
-        catalog_path=args.catalog,
-        data_root=args.data_root,
-        generated_at=args.generated_at,
-        eligibility_mode=args.eligibility_mode,
-    )
+    try:
+        document = run(
+            analysis_path=args.analysis,
+            profile_path=args.profile,
+            catalog_path=args.catalog,
+            data_root=args.data_root,
+            generated_at=args.generated_at,
+            eligibility_mode=args.eligibility_mode,
+            allow_signal_catalog_mismatch=args.allow_signal_catalog_mismatch,
+        )
+    except ContractViolation as exc:
+        # The contract is the product: a violated one is a clean non-zero exit
+        # with the reason on stderr, not a traceback the caller has to parse.
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
     out = emit(document, args.out)
     routines = document.get("routines") or []
+    # ARCHITECTURE.md tells operators to check that data_versions.signals is
+    # populated and warnings is empty. It said so because this CLI withheld both
+    # and always returned 0, which made every automated caller -- including the
+    # integrated pipeline, which shells out to this very command -- read a blind
+    # run as a success. Report them here so the check is the tool's job.
+    warnings = document.get("warnings") or []
+    for warning in warnings:
+        print(f"warning: {warning}", file=sys.stderr)
+
     print(f"{document['status']}: {len(routines)} routines -> {out}")
     for routine in routines:
         total = routine.get("total_price_usd")
         price = f"${total:.2f}" if total is not None else "n/a"
         print(f"  - {routine['archetype']}: {routine['slot_count']} steps, {price}")
+
+    skipped = skipped_signal_warnings(warnings)
+    if skipped:
+        print(
+            f"error: {len(skipped)} signal store(s) were skipped, so the ranking "
+            f"scored blind on a neutral 0.5 for every store-backed signal. "
+            f"data_versions.signals: {[s['name'] for s in document['data_versions']['signals']]}",
+            file=sys.stderr,
+        )
+        return 3
     return 0
 
 

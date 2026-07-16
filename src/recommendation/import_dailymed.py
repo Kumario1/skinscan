@@ -29,26 +29,34 @@ ACTIVE_NAMES = {
     "AZELAIC ACID": "azelaic_acid",
     "BENZOYL PEROXIDE": "benzoyl_peroxide",
     "ADAPALENE": "adapalene",
-    # Prescription acne actives. Salt forms map to the moiety the label doses;
-    # an active missing from this table makes the whole SPL fail closed below.
+    # Prescription acne actives. Every key must name the substance the numerator
+    # beside it measures, because that name is what the row goes on to claim the
+    # product contains. Salt names are absent on purpose: a label dosing
+    # clindamycin phosphate states 12 mg/g of the salt, and restating 12 mg/g
+    # under "clindamycin" claims a fifth more drug than the product holds. The
+    # salt and its moiety differ by a mass no label element carries, so a salt
+    # falls through to the fail-closed path below rather than being converted.
     "TRETINOIN": "tretinoin",
     "TAZAROTENE": "tazarotene",
     "TRIFAROTENE": "trifarotene",
     "CLINDAMYCIN": "clindamycin",
-    "CLINDAMYCIN PHOSPHATE": "clindamycin",
     "DAPSONE": "dapsone",
     "MINOCYCLINE": "minocycline",
-    "MINOCYCLINE HYDROCHLORIDE": "minocycline",
     "ERYTHROMYCIN": "erythromycin",
     "CLASCOTERONE": "clascoterone",
+    # Sulfacetamide sodium is the salt the label doses and the substance this
+    # name states, so its numerator needs no conversion to be true.
     "SULFACETAMIDE SODIUM": "sulfacetamide_sodium",
     "SODIUM SULFACETAMIDE": "sulfacetamide_sodium",
     "SULFUR": "sulfur",
 }
 TOPICAL_FORMS = {"gel", "cream", "lotion", "foam", "solution"}
 # SPL states an active's strength against its basis (ACTIB), its active moiety
-# (ACTIM), or a reference substance (ACTIR). Reading ACTIB alone silently drops
-# every label that doses by moiety -- most clindamycin products, for one.
+# (ACTIM), or a reference substance (ACTIR). All three mark an active, so all
+# three are collected here: an ACTIR ingredient left out of this set would not
+# fail its label closed, it would disappear from it, and a combination product
+# would import one active short. Which of them can be read is _dosed_name's
+# question, not this one's.
 ACTIVE_CLASS_CODES = {"ACTIB", "ACTIM", "ACTIR"}
 
 
@@ -61,6 +69,45 @@ def _direct(element: ET.Element, name: str) -> list[ET.Element]:
     return [node for node in element if node.tag.rsplit("}", 1)[-1] == name]
 
 
+def _text(element: ET.Element) -> str:
+    return "".join(element.itertext()).strip().upper()
+
+
+def _dosed_name(ingredient: ET.Element) -> str | None:
+    """The substance this ingredient's numerator measures, or None if unreadable.
+
+    An SPL quantity is meaningless without its basis: 12 mg/g against ACTIB
+    measures clindamycin phosphate, the same 12 mg/g against ACTIM would measure
+    clindamycin, and the two are different amounts of different substances. So
+    the basis, not document order, has to pick which name the number belongs to.
+    Reading whichever name appears first inside the ingredient reports the salt's
+    mass under the moiety's name, which is how a 1% drug came to be listed at
+    1.2%. ACTIR measures against a reference substance the ingredient never
+    identifies, leaving no name to hand the number to at all.
+    """
+    tag = ingredient.tag.rsplit("}", 1)[-1]
+    if tag == "activeIngredient":
+        # An <activeIngredient> doses the substance it names, like ACTIB. Labels
+        # spell the holder either way, so read both -- but only its own <name>,
+        # never a moiety nested under it.
+        names = {_text(name)
+                 for holder_name in ("activeIngredientSubstance", "ingredientSubstance")
+                 for holder in _direct(ingredient, holder_name)
+                 for name in _direct(holder, "name")}
+    elif ingredient.get("classCode") == "ACTIB":
+        names = {_text(name) for holder in _direct(ingredient, "ingredientSubstance")
+                 for name in _direct(holder, "name")}
+    elif ingredient.get("classCode") == "ACTIM":
+        # The moiety sits one or two <activeMoiety> deep depending on the label.
+        names = {_text(name) for holder in _local(ingredient, "activeMoiety")
+                 for name in _local(holder, "name")}
+    else:
+        return None
+    if len(names) != 1:
+        return None  # unnamed, or several names and no way to say which is dosed
+    return names.pop()
+
+
 def _product_actives(node: ET.Element, source_url: str) -> list[VerifiedActive] | None:
     """This product's actives, or None if the label leaves them ambiguous."""
     seen: dict[tuple[str, str | None], VerifiedActive] = {}
@@ -69,12 +116,12 @@ def _product_actives(node: ET.Element, source_url: str) -> list[VerifiedActive] 
         if child.get("classCode") in ACTIVE_CLASS_CODES
     ]
     for ingredient in ingredients:
-        names = ["".join(item.itertext()).strip().upper()
-                 for item in _local(ingredient, "name")]
-        canonical = next((ACTIVE_NAMES[name] for name in names if name in ACTIVE_NAMES), None)
+        name = _dosed_name(ingredient)
+        canonical = ACTIVE_NAMES.get(name) if name else None
         if not canonical:
-            # An active we cannot name is either another product entirely or a
-            # combination we would misreport by dropping an ingredient.
+            # An active we cannot name is either another product entirely, a
+            # combination we would misreport by dropping an ingredient, or a
+            # strength stated against something this parser cannot read.
             return None
         active = VerifiedActive(canonical, _strength(ingredient), source_url)
         seen[(active.name, active.strength)] = active  # a label may state one twice
@@ -199,12 +246,17 @@ def parse_spl(
         exact = tuple(sorted((active.name, active.strength or "") for active in actives))
         if otc and exact not in modeled:
             continue  # OTC rows are admitted only against an exact modeled path
+        active_key = "+".join(f"{item.name}-{item.strength}" for item in actives)
         # A prescription document's <title> is the HIGHLIGHTS OF PRESCRIBING
         # INFORMATION preamble, never a product name; the label names each
-        # product on its own node, so prefer that and keep title as a fallback.
+        # product on its own node, so prefer that. Only an OTC document titles
+        # itself with its product, so only there can the title stand in -- an Rx
+        # row falling back to the title is named "These highlights do not
+        # include all the information needed to use RETIN-A." The active key
+        # names nothing the label did not state, which the preamble cannot say.
         name = next((" ".join("".join(child.itertext()).split())
-                     for child in _direct(node, "name")), "") or title
-        active_key = "+".join(f"{item.name}-{item.strength}" for item in actives)
+                     for child in _direct(node, "name")), "")
+        name = name or (title if otc else "") or active_key
         products.append(Product(
             product_id=f"dailymed:{set_id}:{ndc}:{active_key}",
             name=name, brand="DailyMed SPL", category="treatment",

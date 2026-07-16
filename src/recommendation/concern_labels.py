@@ -14,6 +14,7 @@ import argparse
 import glob
 import hashlib
 import json
+import math
 import os
 import re
 import threading
@@ -1030,13 +1031,23 @@ class AzureResponsesLabeler(OpenRouterLabeler):
         self.max_budget_usd = (float(max_budget_usd)
                                if max_budget_usd is not None else None)
         self.input_price_per_million = (
-            float(input_price_per_million)
+            _validated_price(input_price_per_million, "input_price_per_million")
             if input_price_per_million is not None else None
         )
         self.output_price_per_million = (
-            float(output_price_per_million)
+            _validated_price(output_price_per_million, "output_price_per_million")
             if output_price_per_million is not None else None
         )
+        # A budget with no prices is not a budget: every request would cost $0
+        # and the ceiling could never fire. Either both prices are present and
+        # positive, or there is no cumulative dollar ceiling to enforce.
+        if self.max_budget_usd is not None and (
+                self.input_price_per_million is None
+                or self.output_price_per_million is None):
+            raise RuntimeError(
+                "max_budget_usd cannot be enforced without both "
+                "input_price_per_million and output_price_per_million"
+            )
         self.max_requests = int(max_requests) if max_requests is not None else None
         self.reasoning_effort = (reasoning_effort
                                  or os.environ.get("AZURE_REASONING_EFFORT")
@@ -1141,7 +1152,7 @@ class AzureResponsesLabeler(OpenRouterLabeler):
             return [(uid, None, type(exc).__name__) for uid in uids]
         finally:
             self._append_usage(rows, data, request_id, status, reservation_key,
-                               response is not None)
+                               response)
 
     def _reserve_request(self, body: dict, request_id: str) -> str | None:
         """Reserve a conservative per-request ceiling before HTTP submission.
@@ -1157,25 +1168,28 @@ class AzureResponsesLabeler(OpenRouterLabeler):
             body, separators=(",", ":"), ensure_ascii=False,
         ).encode("utf-8"))
         output_ceiling = int(body.get("max_output_tokens") or 0)
-        input_price = self.input_price_per_million or 0.0
-        output_price = self.output_price_per_million or 0.0
+        # No `or 0.0` fallback: __init__ refuses a max_budget_usd without both
+        # positive prices, so this arithmetic can never quietly price a paid
+        # request at $0 and hand back an unenforceable ceiling.
         reserved_cost = (
-            input_ceiling * input_price + output_ceiling * output_price
-        ) / 1e6
+            (input_ceiling * self.input_price_per_million
+             + output_ceiling * self.output_price_per_million) / 1e6
+            if self.max_budget_usd is not None else 0.0
+        )
         with self._usage_lock:
             usage = azure_usage_summary(self.usage_path, self.model, None)
             if (self.max_requests is not None
                     and usage["requests"] + len(self._reservations) + 1
                     > self.max_requests):
                 return "request_ceiling"
-            actual_cost = (
-                usage["input_tokens"] * input_price
-                + usage["output_tokens"] * output_price
-            ) / 1e6
-            if (self.max_budget_usd is not None
-                    and actual_cost + sum(self._reservations.values())
-                    + reserved_cost > self.max_budget_usd):
-                return "budget_ceiling"
+            if self.max_budget_usd is not None:
+                actual_cost = (
+                    usage["input_tokens"] * self.input_price_per_million
+                    + usage["output_tokens"] * self.output_price_per_million
+                ) / 1e6
+                if (actual_cost + sum(self._reservations.values())
+                        + reserved_cost > self.max_budget_usd):
+                    return "budget_ceiling"
             self._reservations[request_id] = reserved_cost
             self._ceilings[request_id] = (input_ceiling, output_ceiling)
         return None
@@ -1188,23 +1202,27 @@ class AzureResponsesLabeler(OpenRouterLabeler):
 
     def _append_usage(self, rows, data: dict, request_id: str, status: str,
                       reservation_key: str | None = None,
-                      had_response: bool = False) -> None:
+                      response=None) -> None:
         if not isinstance(data, dict):
             data = {}
         usage = data.get("usage") or {}
         if usage:
             input_tokens = usage.get("input_tokens", usage.get("prompt_tokens", 0))
             output_tokens = usage.get("output_tokens", usage.get("completion_tokens", 0))
-        elif had_response:
-            # An HTTP error came back (e.g. 429 rate limit or 5xx): Azure rejected
+        elif response is not None and getattr(response, "status_code", 0) >= 400:
+            # An HTTP ERROR came back (e.g. 429 rate limit or 5xx): Azure rejected
             # the request before generating, so it is genuinely unbilled — record
             # $0, not the ceiling (otherwise rate-limit retries inflate the ledger
-            # and can trip the budget guard mid-pass).
+            # and can trip the budget guard mid-pass). Only the status code proves
+            # this: a usage-less 2xx was generated and BILLED (a proxy's HTML
+            # error page, a body truncated by a reset), and charging it $0 would
+            # let an unbounded number of billed requests report as free.
             input_tokens = output_tokens = 0
         else:
-            # No response at all (timeout / connection drop): Azure may have
-            # generated and billed the response, so record the conservative
-            # reserved ceiling rather than $0 — never under-count real spend.
+            # No response, or a usage-less success: Azure may have generated and
+            # billed it, so record the conservative reserved ceiling rather than
+            # $0 — never under-count real spend. An unknown status code lands
+            # here too, which is the safe direction.
             input_tokens, output_tokens = self._ceilings.get(
                 reservation_key, (0, 0))
         record = {
@@ -1237,6 +1255,37 @@ def _azure_settings() -> tuple[str, str, str] | None:
             "AZURE_KEY/AZURE_OPENAI_API_KEY, and AZURE_OPENAI_DEPLOYMENT"
         )
     return key, url, deployment
+
+
+def _validated_price(value, source: str) -> float:
+    """A price that can actually enforce a budget: finite and strictly positive.
+
+    A price of 0 does not mean "free", it means "every ceiling computes to $0
+    and can never fire". configs/default.yaml ships input_price_per_million:
+    0.0 / output_price_per_million: 0.0 for the OpenRouter FREE model, directly
+    adjacent to the Azure knobs, so copying them across is a one-character way
+    to disable the budget guard on a paid endpoint. Refuse instead.
+    """
+    try:
+        price = float(value)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(
+            f"{source} must be a positive number of dollars per million "
+            f"tokens; got {value!r}"
+        ) from exc
+    if not math.isfinite(price) or price <= 0:
+        raise RuntimeError(
+            f"{source} must be > 0 to enforce the Azure budget ceiling; got "
+            f"{value!r}. The 0.0 prices in configs/default.yaml belong to the "
+            "free OpenRouter model and are not valid Azure prices."
+        )
+    return price
+
+
+def _azure_env_price(name: str) -> float | None:
+    """Validated $/million from the environment; None only when unset."""
+    raw = os.environ.get(name)
+    return None if raw is None else _validated_price(raw, name)
 
 
 def _calibrated_output_tokens_per_row(ccfg: dict, deployment: str) -> float:
@@ -1304,8 +1353,10 @@ def azure_preflight(rows, ccfg: dict) -> dict | None:
     _key, _url, deployment = azure
     estimated = estimate_cost(rows, ccfg)
     usage = azure_usage_summary(ccfg.get("azure_usage_path"), deployment, None)
-    input_price = float(os.environ["AZURE_INPUT_PRICE_PER_MILLION"])
-    output_price = float(os.environ["AZURE_OUTPUT_PRICE_PER_MILLION"])
+    input_price = _validated_price(os.environ.get("AZURE_INPUT_PRICE_PER_MILLION"),
+                                   "AZURE_INPUT_PRICE_PER_MILLION")
+    output_price = _validated_price(os.environ.get("AZURE_OUTPUT_PRICE_PER_MILLION"),
+                                    "AZURE_OUTPUT_PRICE_PER_MILLION")
     actual = (usage["input_tokens"] / 1e6 * input_price
               + usage["output_tokens"] / 1e6 * output_price)
     planned_requests = ((len(rows) + ccfg["reviews_per_request"] - 1)
@@ -1350,15 +1401,15 @@ def estimate_cost(rows, ccfg) -> float:
     if azure is not None:
         _key, _url, deployment = azure
         output_tokens = _calibrated_output_tokens_per_row(ccfg, deployment) * len(rows)
-        input_price = os.environ.get("AZURE_INPUT_PRICE_PER_MILLION")
-        output_price = os.environ.get("AZURE_OUTPUT_PRICE_PER_MILLION")
+        input_price = _azure_env_price("AZURE_INPUT_PRICE_PER_MILLION")
+        output_price = _azure_env_price("AZURE_OUTPUT_PRICE_PER_MILLION")
         if input_price is None or output_price is None:
             raise RuntimeError(
                 "Azure full-pass preflight requires AZURE_INPUT_PRICE_PER_MILLION "
                 "and AZURE_OUTPUT_PRICE_PER_MILLION"
             )
-        return (input_tokens / 1e6 * float(input_price)
-                + output_tokens / 1e6 * float(output_price))
+        return (input_tokens / 1e6 * input_price
+                + output_tokens / 1e6 * output_price)
     return (input_tokens / 1e6 * ccfg["input_price_per_million"]
             + output_tokens / 1e6 * ccfg["output_price_per_million"])
 
@@ -1367,8 +1418,8 @@ def _labeler(ccfg):
     azure = _azure_settings()
     if azure is not None:
         _key, _url, deployment = azure
-        input_price = os.environ.get("AZURE_INPUT_PRICE_PER_MILLION")
-        output_price = os.environ.get("AZURE_OUTPUT_PRICE_PER_MILLION")
+        input_price = _azure_env_price("AZURE_INPUT_PRICE_PER_MILLION")
+        output_price = _azure_env_price("AZURE_OUTPUT_PRICE_PER_MILLION")
         if input_price is None or output_price is None:
             raise RuntimeError(
                 "Azure labeling requires AZURE_INPUT_PRICE_PER_MILLION and "
@@ -1379,8 +1430,8 @@ def _labeler(ccfg):
             ccfg["request_concurrency"],
             usage_path=ccfg.get("azure_usage_path"),
             max_budget_usd=ccfg["max_budget_usd"],
-            input_price_per_million=float(input_price),
-            output_price_per_million=float(output_price),
+            input_price_per_million=input_price,
+            output_price_per_million=output_price,
             max_requests=_azure_max_requests(ccfg),
             reasoning_effort=ccfg.get("azure_reasoning_effort"),
             timeout=ccfg.get("azure_timeout_seconds"),
@@ -1587,7 +1638,7 @@ def _require_calibration_report(ccfg) -> dict:
     return report
 
 
-def cmd_label(rows, ccfg, yes: bool, p2_approved=False) -> dict | None:
+def cmd_label(rows, ccfg, yes: bool) -> dict | None:
     provider, model, prompt_version = _configured_labeler_identity(ccfg)
     cache = load_cache(ccfg["labels_path"], prompt_version, provider, model)
     todo = [r for r in rows if r["uid"] not in cache]
@@ -1634,7 +1685,9 @@ def main(argv=None):
             sp.add_argument("--audit-file", type=Path)
         if name == "label":
             sp.add_argument("--yes", action="store_true")
-            sp.add_argument("--p2-approved", action="store_true")
+            # No --p2-approved flag: P2 is approved by a persisted, sample-bound
+            # calibration report (_require_calibration_report), never by an
+            # operator asserting it on the command line.
     args = ap.parse_args(argv)
     cfg = load_config()
     ccfg = cfg["concern"]
@@ -1649,7 +1702,7 @@ def main(argv=None):
         cmd_calibrate(rows, ccfg, args.n or ccfg["calibration_sample_size"],
                       args.audited_rows, args.agreement, args.audit_file)
     else:
-        cmd_label(rows, ccfg, args.yes, args.p2_approved)
+        cmd_label(rows, ccfg, args.yes)
 
 
 if __name__ == "__main__":

@@ -21,6 +21,27 @@ AVAILABLE_ARCHETYPE_IDS = ["best_overall", "minimal", "comprehensive"]
 
 K = load_knowledge(DATA / "knowledge")
 
+# Retinoids named literally, never read from K. K.retinoids is the table the gate
+# filters with, so asserting a routine against it grades the engine with its own
+# answer key: delete an entry and the gate stops vetoing and the assertion stops
+# checking, in lockstep, and the test stays green while a pregnant user is handed
+# a retinoid. test_gates.py's test_spf_gate is the pattern -- literal spf=15 and
+# spf=30 against K.min_spf -- and this is the same move for retinoids.
+#
+# A deliberate lower bound, not a copy of the table: names may be added to
+# K.retinoids (tazarotene, trifarotene, isotretinoin) without touching this, and
+# every assertion below stays true. Pinning the table's exact contents is a
+# knowledge test, not this file's job.
+KNOWN_RETINOIDS = frozenset({"retinol", "retinal", "adapalene", "tretinoin"})
+
+# Seed-catalog products that a human can confirm carry a retinoid by reading the
+# label. Named so the pregnancy gate is checked against the world rather than
+# against the table it consults.
+RETINOL_PRODUCT_IDS = frozenset({"P269122", "P377533", "P439926", "P443842"})
+# Retinyl acetate parses to no canonical active at all: this row is caught only
+# by the raw-INCI scan, so it pins the other arm of the gate.
+RETINYL_ESTER_ONLY_PRODUCT_ID = "P421275"
+
 
 @pytest.fixture(scope="module")
 def document():
@@ -62,7 +83,7 @@ def test_session_safety_invariants(document):
             assert step["slot"] != "spf" or step["usage"] == "AM_PM"
         for step in routine["am"]:
             actives = set(catalog[step["product_id"]]["actives"])
-            assert not (actives & K.retinoids), "retinoid in AM"
+            assert not (actives & KNOWN_RETINOIDS), "retinoid in AM"
 
 
 def test_triage_and_framing_passthrough(document):

@@ -7,7 +7,7 @@ import json
 from dataclasses import replace
 from pathlib import Path
 
-from .catalog import CatalogProduct
+from .catalog import CatalogProduct, _label_stated_actives
 from .contracts import ContractViolation, sha256_file
 
 SCHEMA_VERSION = "recsys-verification-1"
@@ -30,7 +30,16 @@ _ASSERTION_KEYS = frozenset({
 })
 _FACT_ENUMS = {
     "intended_areas": frozenset({"face", "neck", "body", "eye", "lip", "unknown"}),
-    "routine_roles": frozenset({"cleanser", "treatment", "moisturizer", "sunscreen"}),
+    # Must cover every role gates.py asks a slot for: contracts.SLOTS names five
+    # slots and profile_gate_reasons maps each to a role (spf -> "sunscreen",
+    # otherwise the slot's own name). The four-role vocabulary was inherited from
+    # src.recommendation.schema, which has no serum slot; recsys does. A role the
+    # enum cannot express is a slot no overlay can ever fill, so "serum" was not
+    # thin evidence -- it was unreachable, and role_not_verified:serum vetoed the
+    # slot at 100% verification just as surely as at 1%.
+    "routine_roles": frozenset({
+        "cleanser", "treatment", "serum", "moisturizer", "sunscreen",
+    }),
     "exposure": frozenset({
         "unknown", "rinse_off", "short_contact", "leave_on", "mask", "scrub", "peel",
     }),

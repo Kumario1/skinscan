@@ -13,6 +13,8 @@ import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .inci import CANONICAL_ACTIVES
+
 SCHEMA_VERSION = "recsys-1"
 ANALYSIS_SCHEMA_VERSION = "3"
 
@@ -29,6 +31,15 @@ PREGNANCY_STATUSES = (
     "pregnant", "trying", "nursing", "not_pregnant", "not_applicable", "unknown",
 )
 SLOTS = ("cleanser", "treatment", "serum", "moisturizer", "spf")
+
+# The closed vocabulary a profile may declare it is already using, derived from
+# the INCI parser's synonym table so it cannot drift from what the catalog can
+# actually carry. gates.py matches these against product.actives by exact set
+# intersection, so an un-normalized value ("Retinol", "salicylic acid") would
+# intersect nothing and silently fail the duplicate-active HARD gate open rather
+# than veto. Ported from src.recommendation.schema.KNOWN_ACTIVE_IDS, whose
+# UserProfile raises on the same input.
+KNOWN_ACTIVE_IDS = frozenset(CANONICAL_ACTIVES.values())
 
 
 class ContractViolation(ValueError):
@@ -158,12 +169,23 @@ class Profile:
     profile_sha256: str | None = None
 
 
-def _profile_list(data: dict, field_name: str) -> tuple[str, ...]:
+def _profile_list(
+    data: dict, field_name: str, allowed: frozenset[str] | None = None
+) -> tuple[str, ...]:
+    """Free text by default: allergies are matched against raw INCI by
+    inci.allergy_matches, which normalizes and resolves synonyms itself.
+    `allowed` closes the vocabulary for fields matched by exact identity
+    downstream, where an unrecognized value fails a gate open instead of loud.
+    """
     value = data.get(field_name)
     if value is None:
         return ()
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         raise ContractViolation(f"profile.{field_name}", "expected a list of strings")
+    if allowed is not None:
+        unknown = sorted(set(value) - allowed)
+        if unknown:
+            raise ContractViolation(f"profile.{field_name}", f"unknown active IDs {unknown}")
     return tuple(value)
 
 
@@ -221,7 +243,7 @@ def _profile_from_dict(data: dict, source: str, sha256: str | None) -> Profile:
         age_years=_profile_optional_int(data, "age_years", maximum=130),
         allergies=_profile_list(data, "allergies"),
         sensitivity_conditions=_profile_list(data, "sensitivity_conditions"),
-        current_actives=_profile_list(data, "current_actives"),
+        current_actives=_profile_list(data, "current_actives", allowed=KNOWN_ACTIVE_IDS),
         current_medications=_profile_list(data, "current_medications"),
         treatment_history=_profile_list(data, "treatment_history"),
         acne_duration_weeks=_profile_optional_int(data, "acne_duration_weeks"),

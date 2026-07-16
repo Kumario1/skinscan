@@ -30,6 +30,10 @@ def update_registry(data_root: str | Path, entry: dict) -> Path:
     stores = [e for e in registry.get("stores", []) if e.get("name") != entry["name"]]
     stores.append(entry)
     registry["stores"] = sorted(stores, key=lambda e: e["name"])
+    # The entries below are written to THIS schema, so stamp it. Carrying an
+    # older version forward left a registry the builder had just rewritten
+    # failing load_providers' schema check, with no remedy but deleting it.
+    registry["schema_version"] = REGISTRY_SCHEMA_VERSION
     return write_json(registry_path, registry)
 
 

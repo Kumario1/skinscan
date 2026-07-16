@@ -4,7 +4,7 @@ and the doctor-referral passthrough.
 """
 from __future__ import annotations
 
-from .compose import ComposedRoutine, Step, _conflict_between, _sessions
+from .compose import ComposedRoutine, Step, session_rule_findings
 from .contracts import Profile
 from .knowledge import Knowledge
 
@@ -175,9 +175,20 @@ def prescription_options(products, targets, k: Knowledge) -> list[dict]:
             "format": product.format,
             "actives": [{"name": name, "strength": strength} for name, strength in strengths],
             "targets": targeted,
+            # States only what the row proves -- the strengths its label gives,
+            # and that the label does not mark it OTC -- which is exactly what
+            # is_prescription() decided on. This said "at a strength only a
+            # prescription can provide", which the engine's own drug catalog
+            # refutes: Differin Epiduo is otc_drug=True at the same adapalene
+            # 0.1% + benzoyl peroxide 2.5%. Rx status follows the molecule and
+            # its label, not the strength (Acanya is Rx because clindamycin is
+            # an antibiotic). The cause is left unstated rather than swapped for
+            # another guess: "these strengths are sold OTC" would be as false
+            # for clindamycin as the old sentence was for adapalene.
             "why": "Contains " + ", ".join(
                 f"{name.replace('_', ' ')} {strength}" for name, strength in strengths
-            ) + ", at a strength only a prescription can provide.",
+            ) + ", as stated on its FDA label, which does not list it as "
+                "over-the-counter.",
             "label_source": product.label_source,
             "note": "prescription — a doctor or dermatologist can advise on and prescribe this",
         })
@@ -186,24 +197,16 @@ def prescription_options(products, targets, k: Knowledge) -> list[dict]:
 
 
 def safety_checks(routine: ComposedRoutine, k: Knowledge) -> list[dict]:
-    steps = routine.steps
-    spf_ok = all(s.usage == "AM" for s in steps if s.slot == "spf")
-    retinoid_ok = all(
-        s.usage == "PM" for s in steps
-        if set(s.scored.product.actives) & k.retinoids
-    )
-    conflict_ok = True
-    for i, a in enumerate(steps):
-        for b in steps[i + 1:]:
-            if _sessions(a.usage) & _sessions(b.usage):
-                if _conflict_between(a.scored.product, b.scored.product, k):
-                    conflict_ok = False
-    slots_ok = len({s.slot for s in steps}) == len(steps)
+    """The routine's published attestation that it honours the session rules.
+
+    Projected from the very findings validate_routine vetoes on, so the two can
+    never disagree. They used to compute the rules separately, and a routine
+    could be emitted by the gate while carrying an attestation, right here in
+    its own document, that it had failed -- an attestation nothing gated on.
+    """
     return [
-        {"rule": "spf_am_only", "passed": spf_ok},
-        {"rule": "retinoids_pm_only", "passed": retinoid_ok},
-        {"rule": "no_conflicting_actives_in_same_session", "passed": conflict_ok},
-        {"rule": "one_product_per_slot", "passed": slots_ok},
+        {"rule": finding["rule"], "passed": finding["passed"]}
+        for finding in session_rule_findings(routine, k)
     ]
 
 

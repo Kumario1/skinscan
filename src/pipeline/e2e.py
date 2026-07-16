@@ -70,6 +70,13 @@ def load_optional_catalog(
         return None, f"catalog is unreadable or invalid: {exc}"
 
 
+# The standalone engine is a subprocess at the end of the pipeline; a wedged one
+# must not hold the whole run open. recsys/pipeline.py puts timeout=10 on its own
+# git subprocess -- this is the same idiom at the integration seam, with room for
+# a real catalog load.
+RECSYS_TIMEOUT_SECONDS = 300
+RECSYS_STDERR_TAIL_CHARS = 500
+
 # Catalog gaps the drugstore can fill: named OTC pointers for targets no
 # stocked product carries (e2e 2026-07-13: adapalene coverage is honestly 0).
 _OTC_POINTERS = {
@@ -599,6 +606,21 @@ def run_pipeline(
                     "standalone catalog not configured; pass --recsys-catalog or "
                     "--recsys-data-root",
                 )
+            elif recsys_data_root is None:
+                # A catalog without its data root strands every signal store: the
+                # stores are keyed by the sha256 of the catalog they were built
+                # against, so they load from the default data root, mismatch, and
+                # are skipped with only a warning -- leaving the ranker to score a
+                # neutral 0.5 on every store-backed signal while still reporting
+                # 'partial' with priced routines, exactly what a healthy run
+                # reports. Refusing here is the same fail-closed treatment the
+                # neither-configured case above already gets, and the worse of the
+                # two cases: that one fails loudly, this one does not fail at all.
+                _write_recsys_unavailable(
+                    recommendations_path,
+                    "standalone signal stores are keyed to a catalog; pass "
+                    "--recsys-data-root alongside --recsys-catalog",
+                )
             else:
                 command = [
                     sys.executable, "-m", "recsys", "recommend",
@@ -611,22 +633,51 @@ def run_pipeline(
                     command += ["--catalog", str(recsys_catalog)]
                 if recsys_eligibility_mode is not None:
                     command += ["--eligibility-mode", recsys_eligibility_mode]
-                completed = subprocess.run(
-                    command,
-                    cwd=Path(__file__).resolve().parents[2],
-                    capture_output=True,
-                    text=True,
-                )
-                if completed.returncode:
+                try:
+                    completed = subprocess.run(
+                        command,
+                        cwd=Path(__file__).resolve().parents[2],
+                        capture_output=True,
+                        text=True,
+                        timeout=RECSYS_TIMEOUT_SECONDS,
+                    )
+                except subprocess.TimeoutExpired:
+                    # Without a timeout a wedged child hangs run_pipeline forever
+                    # with no diagnostic at all. Unavailable-with-a-reason is the
+                    # contract for every other way this step can fail.
                     _write_recsys_unavailable(
                         recommendations_path,
-                        "standalone recommendation process exited with status "
-                        f"{completed.returncode}",
+                        "standalone recommendation process did not finish within "
+                        f"{RECSYS_TIMEOUT_SECONDS}s",
                     )
+                else:
+                    if completed.returncode:
+                        _write_recsys_unavailable(
+                            recommendations_path,
+                            "standalone recommendation process exited with status "
+                            f"{completed.returncode}"
+                            + _stderr_tail(completed.stderr),
+                        )
         _publish_staging(staging, output_dir)
     finally:
         _remove_path(staging)
     return PipelineResult(analysis, routine, output_dir)
+
+
+def _stderr_tail(stderr: str | None, limit: int = RECSYS_STDERR_TAIL_CHARS) -> str:
+    """The child's own diagnostic, appended to the reason.
+
+    capture_output=True puts the reason the run failed in stderr and then only the
+    returncode reached the operator: a missing catalog arrived as 'exited with
+    status 1', and a contract_violation:<field> would have been just as invisible.
+    The bytes are already in memory; the tail is the part that names the cause.
+    """
+    text = (stderr or "").strip()
+    if not text:
+        return ""
+    if len(text) > limit:
+        text = "..." + text[-limit:]
+    return f": {text}"
 
 
 def _write_recsys_unavailable(path: Path, reason: str) -> None:
