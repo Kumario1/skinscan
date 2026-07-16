@@ -71,11 +71,16 @@ TONE_ROWS = ["light", "medium", "deep", "unknown"]  # 'unknown' never dropped (D
 
 
 # --- 3a. shared feature builders (anti-skew: one path, train + inference) ----
-def product_features(product, brand_vocab) -> dict:
+def product_features(product, brand_vocab, active_vocab=ACTIVE_VOCAB) -> dict:
     """Product-side features. Missing price is OK per-row; an ENTIRELY-missing
     training price column crashes HistGradientBoostingClassifier 1.9 (handled in
-    assemble_frame by coercing f_price to float64)."""
-    feats = {f"active__{a}": int(a in product.actives) for a in ACTIVE_VOCAB}
+    assemble_frame by coercing f_price to float64).
+
+    active_vocab defaults to the catalog's current vocabulary for training;
+    inference passes the bundle's so a later catalog change cannot turn a
+    trained column into NaN (D-015).
+    """
+    feats = {f"active__{a}": int(a in product.actives) for a in active_vocab}
     feats["f_category"] = product.category
     feats["f_brand"] = product.brand if product.brand in brand_vocab else "other"
     feats["f_price"] = product.price_usd
@@ -297,9 +302,13 @@ def evaluate(train_df, test_df, model, feature_columns, low_n_floor,
 
 # --- 3e. review-stats artifact (train rows only) ---------------------------
 def _cell_stats(grp) -> dict:
+    ratings = grp["rating"]
     return {
         "n": int(len(grp)),
-        "mean_rating": float(grp["rating"].mean()),
+        # mean() skips missing ratings, so record the count it is actually over:
+        # the posterior must weight it by that, like bayesian_baseline's count.
+        "rating_n": int(ratings.count()),
+        "mean_rating": float(ratings.mean()),
         "pct_recommend": float(grp["label"].mean()),
     }
 
@@ -373,6 +382,7 @@ class Ranker:
         self.bundle = bundle
         self.model = bundle["model"]
         self.brand_vocab = set(bundle.get("brand_vocab", []))
+        self.active_vocab = bundle.get("active_vocab") or ACTIVE_VOCAB
         self.feature_columns = bundle["feature_columns"]
         self.base_rate = bundle.get("base_rate", 0.5)
         self.stats = stats or {}
@@ -388,7 +398,7 @@ class Ranker:
         key = (product.product_id, skin_type, tone_bucket)
         if key in self._memo:
             return self._memo[key]
-        feats = product_features(product, self.brand_vocab)
+        feats = product_features(product, self.brand_vocab, self.active_vocab)
         feats.update(reviewer_features(skin_type, tone_bucket))
         X = assemble_frame([feats], self.feature_columns)
         proba = float(self.model.predict_proba(X)[0, 1])
@@ -413,12 +423,16 @@ class StatsRanker:
         self.min_cell_size = min_cell_size
         prior = float(stats.get("global_mean_rating", 0.0))
         self._prior = prior
-        self._scores = {
-            pid: (cell["__all__"]["n"] * cell["__all__"]["mean_rating"] + m * prior)
-                 / (cell["__all__"]["n"] + m)
-            for pid, cell in self.cells.items()
-            if cell.get("__all__")
-        }
+        self._scores = {}
+        for pid, cell in self.cells.items():
+            pooled = cell.get("__all__")
+            mean = pooled.get("mean_rating") if pooled else None
+            if mean is None or math.isnan(mean):
+                continue  # no rating evidence -> score() falls back to the prior
+            # weight the mean by the reviews it covers; stats files written
+            # before rating_n predate any missing rating, so n is exact there.
+            n = pooled.get("rating_n", pooled["n"])
+            self._scores[pid] = (n * mean + m * prior) / (n + m)
         # D-028: small deliberate popularity bias — w * log1p(loves) normalized
         # against the most-loved product. No loves map -> no nudge anywhere.
         self._nudge = loves_nudges(stats.get("loves"), popularity_weight)
@@ -475,10 +489,12 @@ def _nan_to_none(obj):
 
 
 def _write_json(path, obj) -> None:
+    """Sanitizes here, not at the call site: a caller that forgets ships an
+    artifact with a bare NaN token in it."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(obj, f, indent=2, sort_keys=True)
+        json.dump(_nan_to_none(obj), f, indent=2, sort_keys=True)
         f.write("\n")
 
 
@@ -548,7 +564,7 @@ def train_pipeline(reviews_dir, catalog_path, out_model, out_stats, out_eval,
         stats["loves"] = loves
 
     _write_json(out_stats, stats)
-    _write_json(out_eval, _nan_to_none(result))
+    _write_json(out_eval, result)
 
     if verbose:
         _print_eval_table(result)

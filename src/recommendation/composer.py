@@ -15,14 +15,21 @@ from .schema import (
 
 
 ROLE_ORDER = ("cleanser", "treatment", "moisturizer", "sunscreen")
+# Every grade the catalogs actually carry is mapped: an unmapped grade takes the
+# fallback below, which must never let an undeclared string outrank a product
+# that honestly says "unknown".
 EVIDENCE_GRADE_SCORE = {
     "verified_label": 3.0,
     "guideline_class_plus_verified_product_form": 3.0,
     "reviewed_policy": 3.0,
+    "regulatory_label": 3.0,
     "synthetic_test": 2.0,
     "complete": 1.0,
+    "manufacturer_product_page": 1.0,
+    "pending_review": 0.0,  # imported, not yet reviewed — no better than unknown
     "unknown": 0.0,
 }
+UNGRADED_SCORE = 0.0
 
 
 def _score(scorer, product: Product, profile: UserProfile) -> float:
@@ -47,7 +54,7 @@ def rank_equivalents(
     def key(product: Product) -> tuple[float, float, float, float, float, str]:
         concern = _score(concern_scorer, product, profile)
         tolerability = -float(len(product.irritant_features))
-        evidence = EVIDENCE_GRADE_SCORE.get(product.evidence_grade, 0.5)
+        evidence = EVIDENCE_GRADE_SCORE.get(product.evidence_grade, UNGRADED_SCORE)
         budget = 0.0
         if (profile.max_price_usd is not None and product.price_usd is not None
                 and not product.price_is_stale):
@@ -79,6 +86,36 @@ def _instruction(role: str, product: Product, plan: TherapyPlan, slot: str) -> R
     )
 
 
+def _assign_roles(requested, ranked_by_role) -> dict[str, Product]:
+    """Fill as many roles as the eligible SKUs allow, each role taking the
+    best-ranked product it can hold.
+
+    One SKU can serve two roles (a moisturizer with SPF), and claiming it for
+    the earlier role must not cost the later one its slot when the earlier role
+    has another option — SPF is non-negotiable (RULES.md 3). So a contested SKU
+    re-homes its current holder instead of being refused. With no contested SKU
+    this is exactly first-choice-per-role.
+    """
+    holder: dict[str, str] = {}       # product_id -> role holding it
+    chosen: dict[str, Product] = {}   # role -> product
+
+    def claim(role: str, tried: set[str]) -> bool:
+        for product in ranked_by_role.get(role, ()):
+            if product.product_id in tried:
+                continue
+            tried.add(product.product_id)
+            current = holder.get(product.product_id)
+            if current is None or claim(current, tried):
+                holder[product.product_id] = role
+                chosen[role] = product
+                return True
+        return False
+
+    for role in requested:
+        claim(role, set())
+    return chosen
+
+
 def compose_regimen(
     decision: CareDecision,
     therapy_plan: TherapyPlan,
@@ -98,7 +135,6 @@ def compose_regimen(
         requested.append(therapy_plan.primary.role)
     requested = [role for role in ROLE_ORDER if role in requested]
 
-    selected: dict[str, Product] = {}
     alternatives: dict[str, list[Product]] = {}
     diagnostics = eligibility_diagnostics or EligibilityDiagnostics(
         requested, collect_details=bool(eligibility_rejections)
@@ -108,40 +144,38 @@ def compose_regimen(
             role, product_id = key.split(":", 1)
             diagnostics.record(role, product_id, list(reasons))
     explanation: list[dict[str, object]] = []
-    used_ids: set[str] = set()
 
+    ranked_by_role: dict[str, list[Product]] = {}
+    ranking_modes: dict[str, str] = {}
     for role in requested:
-        ranked, ranking_mode = rank_equivalents(
+        ranked_by_role[role], ranking_modes[role] = rank_equivalents(
             list(eligible_by_role.get(role, [])), profile,
             concern_scorer=concern_scorer, pooled_ranker=pooled_ranker,
         )
-        ranked = [product for product in ranked if product.product_id not in used_ids]
-        if not ranked:
+    selected = _assign_roles(requested, ranked_by_role)
+
+    # A SKU selected for any role is no longer an alternative anywhere.
+    selected_ids = {product.product_id for product in selected.values()}
+    for role in requested:
+        product = selected.get(role)
+        if product is None:
             diagnostics.mark_missing(role)
             continue
-        selected[role] = ranked[0]
-        used_ids.add(ranked[0].product_id)
-        alternatives[role] = ranked[1:1 + alternative_limit]
+        alternatives[role] = [
+            candidate for candidate in ranked_by_role[role]
+            if candidate.product_id not in selected_ids
+        ][:alternative_limit]
         item: dict[str, object] = {
             "role": role,
-            "product_id": ranked[0].product_id,
-            "ranking_basis": ranking_mode,
+            "product_id": product.product_id,
+            "ranking_basis": ranking_modes[role],
         }
         if role == "treatment" and therapy_plan.primary is not None:
             item["delivered_active"] = therapy_plan.primary.therapy
-            matching = [active for active in ranked[0].drug_actives
+            matching = [active for active in product.drug_actives
                         if active.name == therapy_plan.primary.therapy]
             item["strength"] = matching[0].strength if matching else None
         explanation.append(item)
-
-    # A multi-role SKU can be an earlier role's alternative and a later role's
-    # selected product. Alternatives are presentation choices, so remove any
-    # SKU selected anywhere after all roles have been composed.
-    selected_ids = {product.product_id for product in selected.values()}
-    alternatives = {
-        role: [product for product in products if product.product_id not in selected_ids]
-        for role, products in alternatives.items()
-    }
 
     regimen: dict[str, list[RoutineInstruction]] = {"am": [], "pm": []}
     for role in ROLE_ORDER:

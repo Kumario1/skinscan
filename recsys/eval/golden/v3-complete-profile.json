@@ -42,8 +42,8 @@
     ],
     "verification": {
       "path": "approved.json",
-      "products": 13,
-      "sha256": "e6365faaaba7f954b5d2776379a01bdc79d5c2011e01015a5d769206346ca655"
+      "products": 14,
+      "sha256": "d062e293fdfa9e38db81b53472b86d02f5a13432880e1cb39a30444262f4cd03"
     }
   },
   "engine": {
@@ -133,101 +133,54 @@
           }
         },
         {
-          "brand": "CLINIQUE",
-          "directions": {
-            "amount": "thin_layer",
-            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
-            "cadence": "am_pm",
-            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
-          },
-          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
-          "notes": [],
-          "prescription": false,
-          "price_usd": 26.0,
-          "product_id": "P188306",
-          "slot": "treatment",
-          "usage": "AM_PM",
-          "verification": "verified",
-          "why": {
-            "score": 0.571717,
-            "signals": [
-              {
-                "evidence": "benzoyl peroxide targets inflamed breakouts",
-                "name": "concern_fit",
-                "value": 0.230769
-              },
-              {
-                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
-                "name": "price_value",
-                "value": 0.545455
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.6059
-              },
-              {
-                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.81175
-              }
-            ],
-            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Tatcha",
+          "brand": "Paula's Choice",
           "directions": {
             "amount": null,
             "amount_source": null,
             "cadence": "am_pm",
-            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+            "cadence_source": "https://www.paulaschoice.com/clear-oil-free-moisturizer/380.html"
           },
-          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
+          "name": "CLEAR Oil-Free Moisturizer",
           "notes": [],
           "prescription": false,
-          "price_usd": 70.0,
-          "product_id": "P441101",
+          "price_usd": 29.0,
+          "product_id": "P469517",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "verification": "verified",
           "why": {
-            "score": 0.599055,
+            "score": 0.687177,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
+                "evidence": "niacinamide targets inflamed breakouts, the appearance of dark spots",
                 "name": "concern_fit",
-                "value": 0.230769
+                "value": 0.461538
               },
               {
-                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
+                "evidence": "$29.00 \u2014 cheaper than 64% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.0
+                "value": 0.636364
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "evidence": "model-estimated low irritancy from the INCI list",
                 "name": "ingredient_analysis",
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 67% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.9982
+                "value": 0.6667
               },
               {
-                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
+                "evidence": "4.5\u2605 across 90 reviews",
                 "name": "review_quality",
-                "value": 0.767475
+                "value": 0.8727
               }
             ],
-            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "Contains niacinamide, which targets inflamed breakouts; the appearance of dark spots.",
+            "uncertainty": [
+              "no_outcome_data_for_your_skin_type"
+            ]
           }
         },
         {
@@ -284,7 +237,57 @@
       "notes": [
         "slot_unfilled:serum"
       ],
-      "per_label": [],
+      "per_label": [
+        {
+          "brand": "CLINIQUE",
+          "directions": {
+            "amount": "thin_layer",
+            "amount_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml"
+          },
+          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
+          "notes": [],
+          "prescription": false,
+          "price_usd": 26.0,
+          "product_id": "P188306",
+          "slot": "treatment",
+          "usage": "PER_LABEL",
+          "verification": "verified",
+          "why": {
+            "score": 0.571717,
+            "signals": [
+              {
+                "evidence": "benzoyl peroxide targets inflamed breakouts",
+                "name": "concern_fit",
+                "value": 0.230769
+              },
+              {
+                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
+                "name": "price_value",
+                "value": 0.545455
+              },
+              {
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "name": "ingredient_analysis",
+                "value": 1.0
+              },
+              {
+                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
+                "name": "popularity",
+                "value": 0.6059
+              },
+              {
+                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
+                "name": "review_quality",
+                "value": 0.81175
+              }
+            ],
+            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
+            "uncertainty": []
+          }
+        }
+      ],
       "pm": [
         {
           "brand": "Farmacy",
@@ -336,101 +339,54 @@
           }
         },
         {
-          "brand": "CLINIQUE",
-          "directions": {
-            "amount": "thin_layer",
-            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
-            "cadence": "am_pm",
-            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
-          },
-          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
-          "notes": [],
-          "prescription": false,
-          "price_usd": 26.0,
-          "product_id": "P188306",
-          "slot": "treatment",
-          "usage": "AM_PM",
-          "verification": "verified",
-          "why": {
-            "score": 0.571717,
-            "signals": [
-              {
-                "evidence": "benzoyl peroxide targets inflamed breakouts",
-                "name": "concern_fit",
-                "value": 0.230769
-              },
-              {
-                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
-                "name": "price_value",
-                "value": 0.545455
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.6059
-              },
-              {
-                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.81175
-              }
-            ],
-            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Tatcha",
+          "brand": "Paula's Choice",
           "directions": {
             "amount": null,
             "amount_source": null,
             "cadence": "am_pm",
-            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+            "cadence_source": "https://www.paulaschoice.com/clear-oil-free-moisturizer/380.html"
           },
-          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
+          "name": "CLEAR Oil-Free Moisturizer",
           "notes": [],
           "prescription": false,
-          "price_usd": 70.0,
-          "product_id": "P441101",
+          "price_usd": 29.0,
+          "product_id": "P469517",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "verification": "verified",
           "why": {
-            "score": 0.599055,
+            "score": 0.687177,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
+                "evidence": "niacinamide targets inflamed breakouts, the appearance of dark spots",
                 "name": "concern_fit",
-                "value": 0.230769
+                "value": 0.461538
               },
               {
-                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
+                "evidence": "$29.00 \u2014 cheaper than 64% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.0
+                "value": 0.636364
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "evidence": "model-estimated low irritancy from the INCI list",
                 "name": "ingredient_analysis",
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 67% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.9982
+                "value": 0.6667
               },
               {
-                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
+                "evidence": "4.5\u2605 across 90 reviews",
                 "name": "review_quality",
-                "value": 0.767475
+                "value": 0.8727
               }
             ],
-            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "Contains niacinamide, which targets inflamed breakouts; the appearance of dark spots.",
+            "uncertainty": [
+              "no_outcome_data_for_your_skin_type"
+            ]
           }
         }
       ],
@@ -455,7 +411,7 @@
       ],
       "slot_count": 4,
       "title": "Best overall",
-      "total_price_usd": 170.0
+      "total_price_usd": 129.0
     },
     {
       "am": [
@@ -509,101 +465,54 @@
           }
         },
         {
-          "brand": "CLINIQUE",
-          "directions": {
-            "amount": "thin_layer",
-            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
-            "cadence": "am_pm",
-            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
-          },
-          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
-          "notes": [],
-          "prescription": false,
-          "price_usd": 26.0,
-          "product_id": "P188306",
-          "slot": "treatment",
-          "usage": "AM_PM",
-          "verification": "verified",
-          "why": {
-            "score": 0.571717,
-            "signals": [
-              {
-                "evidence": "benzoyl peroxide targets inflamed breakouts",
-                "name": "concern_fit",
-                "value": 0.230769
-              },
-              {
-                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
-                "name": "price_value",
-                "value": 0.545455
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.6059
-              },
-              {
-                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.81175
-              }
-            ],
-            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Tatcha",
+          "brand": "Paula's Choice",
           "directions": {
             "amount": null,
             "amount_source": null,
             "cadence": "am_pm",
-            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+            "cadence_source": "https://www.paulaschoice.com/clear-oil-free-moisturizer/380.html"
           },
-          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
+          "name": "CLEAR Oil-Free Moisturizer",
           "notes": [],
           "prescription": false,
-          "price_usd": 70.0,
-          "product_id": "P441101",
+          "price_usd": 29.0,
+          "product_id": "P469517",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "verification": "verified",
           "why": {
-            "score": 0.599055,
+            "score": 0.687177,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
+                "evidence": "niacinamide targets inflamed breakouts, the appearance of dark spots",
                 "name": "concern_fit",
-                "value": 0.230769
+                "value": 0.461538
               },
               {
-                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
+                "evidence": "$29.00 \u2014 cheaper than 64% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.0
+                "value": 0.636364
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "evidence": "model-estimated low irritancy from the INCI list",
                 "name": "ingredient_analysis",
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 67% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.9982
+                "value": 0.6667
               },
               {
-                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
+                "evidence": "4.5\u2605 across 90 reviews",
                 "name": "review_quality",
-                "value": 0.767475
+                "value": 0.8727
               }
             ],
-            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "Contains niacinamide, which targets inflamed breakouts; the appearance of dark spots.",
+            "uncertainty": [
+              "no_outcome_data_for_your_skin_type"
+            ]
           }
         },
         {
@@ -661,7 +570,57 @@
         "diversified_from_best_overall:cleanser",
         "spf_added_to_minimal"
       ],
-      "per_label": [],
+      "per_label": [
+        {
+          "brand": "CLINIQUE",
+          "directions": {
+            "amount": "thin_layer",
+            "amount_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml"
+          },
+          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
+          "notes": [],
+          "prescription": false,
+          "price_usd": 26.0,
+          "product_id": "P188306",
+          "slot": "treatment",
+          "usage": "PER_LABEL",
+          "verification": "verified",
+          "why": {
+            "score": 0.571717,
+            "signals": [
+              {
+                "evidence": "benzoyl peroxide targets inflamed breakouts",
+                "name": "concern_fit",
+                "value": 0.230769
+              },
+              {
+                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
+                "name": "price_value",
+                "value": 0.545455
+              },
+              {
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "name": "ingredient_analysis",
+                "value": 1.0
+              },
+              {
+                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
+                "name": "popularity",
+                "value": 0.6059
+              },
+              {
+                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
+                "name": "review_quality",
+                "value": 0.81175
+              }
+            ],
+            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
+            "uncertainty": []
+          }
+        }
+      ],
       "pm": [
         {
           "brand": "Tatcha",
@@ -713,101 +672,54 @@
           }
         },
         {
-          "brand": "CLINIQUE",
-          "directions": {
-            "amount": "thin_layer",
-            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
-            "cadence": "am_pm",
-            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
-          },
-          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
-          "notes": [],
-          "prescription": false,
-          "price_usd": 26.0,
-          "product_id": "P188306",
-          "slot": "treatment",
-          "usage": "AM_PM",
-          "verification": "verified",
-          "why": {
-            "score": 0.571717,
-            "signals": [
-              {
-                "evidence": "benzoyl peroxide targets inflamed breakouts",
-                "name": "concern_fit",
-                "value": 0.230769
-              },
-              {
-                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
-                "name": "price_value",
-                "value": 0.545455
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.6059
-              },
-              {
-                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.81175
-              }
-            ],
-            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Tatcha",
+          "brand": "Paula's Choice",
           "directions": {
             "amount": null,
             "amount_source": null,
             "cadence": "am_pm",
-            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+            "cadence_source": "https://www.paulaschoice.com/clear-oil-free-moisturizer/380.html"
           },
-          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
+          "name": "CLEAR Oil-Free Moisturizer",
           "notes": [],
           "prescription": false,
-          "price_usd": 70.0,
-          "product_id": "P441101",
+          "price_usd": 29.0,
+          "product_id": "P469517",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "verification": "verified",
           "why": {
-            "score": 0.599055,
+            "score": 0.687177,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
+                "evidence": "niacinamide targets inflamed breakouts, the appearance of dark spots",
                 "name": "concern_fit",
-                "value": 0.230769
+                "value": 0.461538
               },
               {
-                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
+                "evidence": "$29.00 \u2014 cheaper than 64% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.0
+                "value": 0.636364
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "evidence": "model-estimated low irritancy from the INCI list",
                 "name": "ingredient_analysis",
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 67% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.9982
+                "value": 0.6667
               },
               {
-                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
+                "evidence": "4.5\u2605 across 90 reviews",
                 "name": "review_quality",
-                "value": 0.767475
+                "value": 0.8727
               }
             ],
-            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "Contains niacinamide, which targets inflamed breakouts; the appearance of dark spots.",
+            "uncertainty": [
+              "no_outcome_data_for_your_skin_type"
+            ]
           }
         }
       ],
@@ -832,7 +744,7 @@
       ],
       "slot_count": 4,
       "title": "Minimal 3-step",
-      "total_price_usd": 174.0
+      "total_price_usd": 133.0
     },
     {
       "am": [
@@ -886,101 +798,54 @@
           }
         },
         {
-          "brand": "CLINIQUE",
-          "directions": {
-            "amount": "thin_layer",
-            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
-            "cadence": "am_pm",
-            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
-          },
-          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
-          "notes": [],
-          "prescription": false,
-          "price_usd": 26.0,
-          "product_id": "P188306",
-          "slot": "treatment",
-          "usage": "AM_PM",
-          "verification": "verified",
-          "why": {
-            "score": 0.571717,
-            "signals": [
-              {
-                "evidence": "benzoyl peroxide targets inflamed breakouts",
-                "name": "concern_fit",
-                "value": 0.230769
-              },
-              {
-                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
-                "name": "price_value",
-                "value": 0.545455
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.6059
-              },
-              {
-                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.81175
-              }
-            ],
-            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Tatcha",
+          "brand": "Paula's Choice",
           "directions": {
             "amount": null,
             "amount_source": null,
             "cadence": "am_pm",
-            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+            "cadence_source": "https://www.paulaschoice.com/clear-oil-free-moisturizer/380.html"
           },
-          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
+          "name": "CLEAR Oil-Free Moisturizer",
           "notes": [],
           "prescription": false,
-          "price_usd": 70.0,
-          "product_id": "P441101",
+          "price_usd": 29.0,
+          "product_id": "P469517",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "verification": "verified",
           "why": {
-            "score": 0.599055,
+            "score": 0.687177,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
+                "evidence": "niacinamide targets inflamed breakouts, the appearance of dark spots",
                 "name": "concern_fit",
-                "value": 0.230769
+                "value": 0.461538
               },
               {
-                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
+                "evidence": "$29.00 \u2014 cheaper than 64% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.0
+                "value": 0.636364
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "evidence": "model-estimated low irritancy from the INCI list",
                 "name": "ingredient_analysis",
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 67% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.9982
+                "value": 0.6667
               },
               {
-                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
+                "evidence": "4.5\u2605 across 90 reviews",
                 "name": "review_quality",
-                "value": 0.767475
+                "value": 0.8727
               }
             ],
-            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "Contains niacinamide, which targets inflamed breakouts; the appearance of dark spots.",
+            "uncertainty": [
+              "no_outcome_data_for_your_skin_type"
+            ]
           }
         },
         {
@@ -1038,7 +903,57 @@
         "diversified_from_best_overall:cleanser",
         "slot_unfilled:serum"
       ],
-      "per_label": [],
+      "per_label": [
+        {
+          "brand": "CLINIQUE",
+          "directions": {
+            "amount": "thin_layer",
+            "amount_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+            "cadence": "per_label",
+            "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml"
+          },
+          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
+          "notes": [],
+          "prescription": false,
+          "price_usd": 26.0,
+          "product_id": "P188306",
+          "slot": "treatment",
+          "usage": "PER_LABEL",
+          "verification": "verified",
+          "why": {
+            "score": 0.571717,
+            "signals": [
+              {
+                "evidence": "benzoyl peroxide targets inflamed breakouts",
+                "name": "concern_fit",
+                "value": 0.230769
+              },
+              {
+                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
+                "name": "price_value",
+                "value": 0.545455
+              },
+              {
+                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "name": "ingredient_analysis",
+                "value": 1.0
+              },
+              {
+                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
+                "name": "popularity",
+                "value": 0.6059
+              },
+              {
+                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
+                "name": "review_quality",
+                "value": 0.81175
+              }
+            ],
+            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
+            "uncertainty": []
+          }
+        }
+      ],
       "pm": [
         {
           "brand": "Tatcha",
@@ -1090,101 +1005,54 @@
           }
         },
         {
-          "brand": "CLINIQUE",
-          "directions": {
-            "amount": "thin_layer",
-            "amount_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment",
-            "cadence": "am_pm",
-            "cadence_source": "https://www.ch.clinique.com/product/anti-blemish-solutions-all-over-clearing-treatment"
-          },
-          "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
-          "notes": [],
-          "prescription": false,
-          "price_usd": 26.0,
-          "product_id": "P188306",
-          "slot": "treatment",
-          "usage": "AM_PM",
-          "verification": "verified",
-          "why": {
-            "score": 0.571717,
-            "signals": [
-              {
-                "evidence": "benzoyl peroxide targets inflamed breakouts",
-                "name": "concern_fit",
-                "value": 0.230769
-              },
-              {
-                "evidence": "$26.00 \u2014 cheaper than 55% of treatment options in this catalog",
-                "name": "price_value",
-                "value": 0.545455
-              },
-              {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
-                "name": "ingredient_analysis",
-                "value": 1.0
-              },
-              {
-                "evidence": "more loved than 61% of treatment products on Sephora (snapshot-2023)",
-                "name": "popularity",
-                "value": 0.6059
-              },
-              {
-                "evidence": "4.2\u2605 from 150 oily-skin reviewers",
-                "name": "review_quality",
-                "value": 0.81175
-              }
-            ],
-            "summary": "Contains benzoyl peroxide, which targets inflamed breakouts.",
-            "uncertainty": []
-          }
-        },
-        {
-          "brand": "Tatcha",
+          "brand": "Paula's Choice",
           "directions": {
             "amount": null,
             "amount_source": null,
             "cadence": "am_pm",
-            "cadence_source": "https://tatcha.com/products/the-dewy-skin-cream"
+            "cadence_source": "https://www.paulaschoice.com/clear-oil-free-moisturizer/380.html"
           },
-          "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
+          "name": "CLEAR Oil-Free Moisturizer",
           "notes": [],
           "prescription": false,
-          "price_usd": 70.0,
-          "product_id": "P441101",
+          "price_usd": 29.0,
+          "product_id": "P469517",
           "slot": "moisturizer",
           "usage": "AM_PM",
           "verification": "verified",
           "why": {
-            "score": 0.599055,
+            "score": 0.687177,
             "signals": [
               {
-                "evidence": "gluconolactone targets clogged-pore breakouts (blackheads and whiteheads)",
+                "evidence": "niacinamide targets inflamed breakouts, the appearance of dark spots",
                 "name": "concern_fit",
-                "value": 0.230769
+                "value": 0.461538
               },
               {
-                "evidence": "$70.00 \u2014 cheaper than 0% of moisturizer options in this catalog",
+                "evidence": "$29.00 \u2014 cheaper than 64% of moisturizer options in this catalog",
                 "name": "price_value",
-                "value": 0.0
+                "value": 0.636364
               },
               {
-                "evidence": "model-estimated low irritancy from the INCI list; fragrance or essential oils flagged",
+                "evidence": "model-estimated low irritancy from the INCI list",
                 "name": "ingredient_analysis",
                 "value": 1.0
               },
               {
-                "evidence": "more loved than 100% of moisturizer products on Sephora (snapshot-2023)",
+                "evidence": "more loved than 67% of moisturizer products on Sephora (snapshot-2023)",
                 "name": "popularity",
-                "value": 0.9982
+                "value": 0.6667
               },
               {
-                "evidence": "4.0\u2605 from 180 oily-skin reviewers",
+                "evidence": "4.5\u2605 across 90 reviews",
                 "name": "review_quality",
-                "value": 0.767475
+                "value": 0.8727
               }
             ],
-            "summary": "Contains gluconolactone, which targets clogged-pore breakouts (blackheads and whiteheads).",
-            "uncertainty": []
+            "summary": "Contains niacinamide, which targets inflamed breakouts; the appearance of dark spots.",
+            "uncertainty": [
+              "no_outcome_data_for_your_skin_type"
+            ]
           }
         }
       ],
@@ -1209,7 +1077,7 @@
       ],
       "slot_count": 4,
       "title": "Comprehensive",
-      "total_price_usd": 174.0
+      "total_price_usd": 133.0
     }
   ],
   "schema_version": "recsys-1",
@@ -1282,11 +1150,6 @@
     "profile": [
       {
         "product_id": "P173726",
-        "reason": "intended_area_not_verified:face",
-        "slot": "cleanser"
-      },
-      {
-        "product_id": "P173726",
         "reason": "role_not_verified:cleanser",
         "slot": "cleanser"
       },
@@ -1298,11 +1161,6 @@
       {
         "product_id": "P173726",
         "reason": "cadence_unverified",
-        "slot": "cleanser"
-      },
-      {
-        "product_id": "P4016",
-        "reason": "intended_area_not_verified:face",
         "slot": "cleanser"
       },
       {
@@ -1327,11 +1185,6 @@
       },
       {
         "product_id": "P405096",
-        "reason": "intended_area_not_verified:face",
-        "slot": "cleanser"
-      },
-      {
-        "product_id": "P405096",
         "reason": "role_not_verified:cleanser",
         "slot": "cleanser"
       },
@@ -1343,11 +1196,6 @@
       {
         "product_id": "P405096",
         "reason": "cadence_unverified",
-        "slot": "cleanser"
-      },
-      {
-        "product_id": "P409800",
-        "reason": "intended_area_not_verified:face",
         "slot": "cleanser"
       },
       {
@@ -1367,11 +1215,6 @@
       },
       {
         "product_id": "P411387",
-        "reason": "intended_area_not_verified:face",
-        "slot": "cleanser"
-      },
-      {
-        "product_id": "P411387",
         "reason": "role_not_verified:cleanser",
         "slot": "cleanser"
       },
@@ -1383,11 +1226,6 @@
       {
         "product_id": "P411387",
         "reason": "cadence_unverified",
-        "slot": "cleanser"
-      },
-      {
-        "product_id": "P443833",
-        "reason": "intended_area_not_verified:face",
         "slot": "cleanser"
       },
       {
@@ -1412,11 +1250,6 @@
       },
       {
         "product_id": "P444718",
-        "reason": "intended_area_not_verified:face",
-        "slot": "cleanser"
-      },
-      {
-        "product_id": "P444718",
         "reason": "role_not_verified:cleanser",
         "slot": "cleanser"
       },
@@ -1432,11 +1265,6 @@
       },
       {
         "product_id": "P455364",
-        "reason": "intended_area_not_verified:face",
-        "slot": "cleanser"
-      },
-      {
-        "product_id": "P455364",
         "reason": "role_not_verified:cleanser",
         "slot": "cleanser"
       },
@@ -1448,11 +1276,6 @@
       {
         "product_id": "P455364",
         "reason": "cadence_unverified",
-        "slot": "cleanser"
-      },
-      {
-        "product_id": "P502749",
-        "reason": "intended_area_not_verified:face",
         "slot": "cleanser"
       },
       {
@@ -1477,11 +1300,6 @@
       },
       {
         "product_id": "P7880",
-        "reason": "intended_area_not_verified:face",
-        "slot": "cleanser"
-      },
-      {
-        "product_id": "P7880",
         "reason": "role_not_verified:cleanser",
         "slot": "cleanser"
       },
@@ -1497,11 +1315,6 @@
       },
       {
         "product_id": "P12045",
-        "reason": "intended_area_not_verified:face",
-        "slot": "moisturizer"
-      },
-      {
-        "product_id": "P12045",
         "reason": "role_not_verified:moisturizer",
         "slot": "moisturizer"
       },
@@ -1517,11 +1330,6 @@
       },
       {
         "product_id": "P248407",
-        "reason": "intended_area_not_verified:face",
-        "slot": "moisturizer"
-      },
-      {
-        "product_id": "P248407",
         "reason": "role_not_verified:moisturizer",
         "slot": "moisturizer"
       },
@@ -1537,11 +1345,6 @@
       },
       {
         "product_id": "P394639",
-        "reason": "intended_area_not_verified:face",
-        "slot": "moisturizer"
-      },
-      {
-        "product_id": "P394639",
         "reason": "role_not_verified:moisturizer",
         "slot": "moisturizer"
       },
@@ -1557,11 +1360,6 @@
       },
       {
         "product_id": "P427415",
-        "reason": "intended_area_not_verified:face",
-        "slot": "moisturizer"
-      },
-      {
-        "product_id": "P427415",
         "reason": "role_not_verified:moisturizer",
         "slot": "moisturizer"
       },
@@ -1577,11 +1375,6 @@
       },
       {
         "product_id": "P439928",
-        "reason": "intended_area_not_verified:face",
-        "slot": "moisturizer"
-      },
-      {
-        "product_id": "P439928",
         "reason": "role_not_verified:moisturizer",
         "slot": "moisturizer"
       },
@@ -1597,11 +1390,6 @@
       },
       {
         "product_id": "P448852",
-        "reason": "intended_area_not_verified:face",
-        "slot": "moisturizer"
-      },
-      {
-        "product_id": "P448852",
         "reason": "role_not_verified:moisturizer",
         "slot": "moisturizer"
       },
@@ -1613,11 +1401,6 @@
       {
         "product_id": "P448852",
         "reason": "cadence_unverified",
-        "slot": "moisturizer"
-      },
-      {
-        "product_id": "P455369",
-        "reason": "intended_area_not_verified:face",
         "slot": "moisturizer"
       },
       {
@@ -1637,11 +1420,6 @@
       },
       {
         "product_id": "P467249",
-        "reason": "intended_area_not_verified:face",
-        "slot": "moisturizer"
-      },
-      {
-        "product_id": "P467249",
         "reason": "role_not_verified:moisturizer",
         "slot": "moisturizer"
       },
@@ -1656,16 +1434,6 @@
         "slot": "moisturizer"
       },
       {
-        "product_id": "P469517",
-        "reason": "intended_area_not_verified:face",
-        "slot": "moisturizer"
-      },
-      {
-        "product_id": "P429953",
-        "reason": "intended_area_not_verified:face",
-        "slot": "spf"
-      },
-      {
         "product_id": "P429953",
         "reason": "role_not_verified:sunscreen",
         "slot": "spf"
@@ -1683,16 +1451,6 @@
       {
         "product_id": "P429953",
         "reason": "spf_broad_spectrum_unverified",
-        "slot": "spf"
-      },
-      {
-        "product_id": "P454380",
-        "reason": "intended_area_not_verified:face",
-        "slot": "spf"
-      },
-      {
-        "product_id": "P456392",
-        "reason": "intended_area_not_verified:face",
         "slot": "spf"
       },
       {
@@ -1717,11 +1475,6 @@
       },
       {
         "product_id": "P467976",
-        "reason": "intended_area_not_verified:face",
-        "slot": "spf"
-      },
-      {
-        "product_id": "P467976",
         "reason": "role_not_verified:sunscreen",
         "slot": "spf"
       },
@@ -1742,11 +1495,6 @@
       },
       {
         "product_id": "P504283",
-        "reason": "intended_area_not_verified:face",
-        "slot": "spf"
-      },
-      {
-        "product_id": "P504283",
         "reason": "role_not_verified:sunscreen",
         "slot": "spf"
       },
@@ -1763,11 +1511,6 @@
       {
         "product_id": "P504283",
         "reason": "spf_broad_spectrum_unverified",
-        "slot": "spf"
-      },
-      {
-        "product_id": "P505711",
-        "reason": "intended_area_not_verified:face",
         "slot": "spf"
       },
       {
@@ -1792,11 +1535,6 @@
       },
       {
         "product_id": "P400259",
-        "reason": "intended_area_not_verified:face",
-        "slot": "serum"
-      },
-      {
-        "product_id": "P400259",
         "reason": "role_not_verified:serum",
         "slot": "serum"
       },
@@ -1812,11 +1550,6 @@
       },
       {
         "product_id": "P427410",
-        "reason": "intended_area_not_verified:face",
-        "slot": "serum"
-      },
-      {
-        "product_id": "P427410",
         "reason": "role_not_verified:serum",
         "slot": "serum"
       },
@@ -1832,11 +1565,6 @@
       },
       {
         "product_id": "P427411",
-        "reason": "intended_area_not_verified:face",
-        "slot": "serum"
-      },
-      {
-        "product_id": "P427411",
         "reason": "role_not_verified:serum",
         "slot": "serum"
       },
@@ -1852,11 +1580,6 @@
       },
       {
         "product_id": "P427412",
-        "reason": "intended_area_not_verified:face",
-        "slot": "serum"
-      },
-      {
-        "product_id": "P427412",
         "reason": "role_not_verified:serum",
         "slot": "serum"
       },
@@ -1872,11 +1595,6 @@
       },
       {
         "product_id": "P427413",
-        "reason": "intended_area_not_verified:face",
-        "slot": "serum"
-      },
-      {
-        "product_id": "P427413",
         "reason": "role_not_verified:serum",
         "slot": "serum"
       },
@@ -1892,11 +1610,6 @@
       },
       {
         "product_id": "P427417",
-        "reason": "intended_area_not_verified:face",
-        "slot": "serum"
-      },
-      {
-        "product_id": "P427417",
         "reason": "role_not_verified:serum",
         "slot": "serum"
       },
@@ -1912,11 +1625,6 @@
       },
       {
         "product_id": "P439926",
-        "reason": "intended_area_not_verified:face",
-        "slot": "serum"
-      },
-      {
-        "product_id": "P439926",
         "reason": "role_not_verified:serum",
         "slot": "serum"
       },
@@ -1928,11 +1636,6 @@
       {
         "product_id": "P439926",
         "reason": "cadence_unverified",
-        "slot": "serum"
-      },
-      {
-        "product_id": "P443842",
-        "reason": "intended_area_not_verified:face",
         "slot": "serum"
       },
       {
@@ -1952,11 +1655,6 @@
       },
       {
         "product_id": "P466123",
-        "reason": "intended_area_not_verified:face",
-        "slot": "serum"
-      },
-      {
-        "product_id": "P466123",
         "reason": "role_not_verified:serum",
         "slot": "serum"
       },
@@ -1968,11 +1666,6 @@
       {
         "product_id": "P466123",
         "reason": "cadence_unverified",
-        "slot": "serum"
-      },
-      {
-        "product_id": "P469515",
-        "reason": "intended_area_not_verified:face",
         "slot": "serum"
       },
       {

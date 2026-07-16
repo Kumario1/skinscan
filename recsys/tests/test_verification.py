@@ -9,6 +9,55 @@ from recsys.contracts import ContractViolation
 from recsys.verification import apply_verification, load_verification_overlay
 
 
+def _multi_row_overlay(tmp_path, rows):
+    """Write an overlay verbatim from `rows`, snapshotting each row's evidence."""
+    root = tmp_path / "verification"
+    evidence = root / "evidence"
+    evidence.mkdir(parents=True)
+    products = []
+    for product_id, body, approved_at, facts in rows:
+        digest = hashlib.sha256(body).hexdigest()
+        (evidence / digest).write_bytes(body)
+        products.append({"product_id": product_id, "assertions": [{
+            "status": "approved",
+            "reviewer_id": "reviewer-1",
+            "reviewer_type": "agent",
+            "approved_at": approved_at,
+            "retrieved_at": approved_at,
+            "source_url": f"https://example.test/{approved_at}",
+            "source_sha256": digest,
+            "facts": facts,
+        }]})
+    (root / "approved.json").write_text(json.dumps({
+        "schema_version": "recsys-verification-1", "products": products,
+    }))
+    return root
+
+
+@pytest.mark.parametrize("order", ["newest_first", "oldest_first"])
+def test_newest_approval_wins_when_one_product_spans_several_rows(tmp_path, order):
+    """approved_at decides precedence -- that is what the loader sorts on. A
+    product re-reviewed in a later batch can land in a second row for the same
+    product_id, and document row order must not be able to resurrect the
+    superseded facts. Both approvals are recent, so neither is dropped as stale.
+    """
+    newest = ("p1", b"july label", "2026-07-10T00:00:00Z", {"otc_drug": True})
+    oldest = ("p1", b"june label", "2026-06-01T00:00:00Z", {"otc_drug": False})
+    rows = [newest, oldest] if order == "newest_first" else [oldest, newest]
+    root = _multi_row_overlay(tmp_path, rows)
+
+    overlay, warnings, _ = load_verification_overlay(
+        root, now=datetime(2026, 7, 15, tzinfo=timezone.utc))
+
+    assert warnings == []
+    assert overlay["p1"]["otc_drug"] is True
+    # provenance keeps both sources, oldest approval first
+    assert [s["url"] for s in overlay["p1"]["_sources"]] == [
+        "https://example.test/2026-06-01T00:00:00Z",
+        "https://example.test/2026-07-10T00:00:00Z",
+    ]
+
+
 def _product():
     return CatalogProduct(
         product_id="p1", name="SPF 15", brand="Test", category="spf",

@@ -118,6 +118,17 @@ def test_neck_serum_fails_facial_moisturizer():
     ).reasons
 
 
+def test_unstated_area_is_not_a_non_face_claim():
+    # An OTC drug label says "cover the entire affected area" and never names
+    # the face, so an unstated area must not veto: requiring an explicit "face"
+    # is satisfiable only by inventing the fact. A stated face wins over a
+    # co-stated body.
+    for areas in ([], ["unknown"], ["face", "body"]):
+        assert "intended_area_not_face" not in check_eligibility(
+            support("moisturizer", intended_areas=areas), "moisturizer", None, profile()
+        ).reasons
+
+
 def test_mask_scrub_and_peel_fail_daily_leave_on_treatment():
     for exposure in ("mask", "scrub", "peel"):
         product = treatment(exposure=exposure, format="gel")

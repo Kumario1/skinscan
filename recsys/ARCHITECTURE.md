@@ -121,7 +121,9 @@ medical advice · **D-029** the therapy policy — which treatments exist for wh
 concern — is clinician-gated · **D-032** an identified agent may approve
 *factual* catalog evidence after checking the source · **D-033** OTC status no
 longer gates treatment eligibility, and prescription options may be surfaced
-with a referral.
+with a referral · **D-034** intended-area vetoes only a *stated* non-face area —
+unknown and empty stay open, and `import_verification` refuses to silently drop
+a fact the committed overlay asserts.
 
 ## Prescriptions
 
@@ -184,7 +186,7 @@ deterministic INCI parser + `knowledge/safety_rules.json`, never LLM output.
    score-overridden: `retinoid_pregnancy_status_excluded` (pregnant/trying/
    nursing/**unknown**), `profile_allergy:<x>`, `duplicates_current_active:<x>`,
    `spf_below_30_or_unknown`, `price_above_profile_cap`,
-   `product_discontinued`, `cadence_not_daily`. Triage `derm_first`/
+   `cadence_not_daily`. Triage `derm_first`/
    `abstain` short-circuits to a `referral_only` document before any of this.
    **Two classes of reason**: HARD safety always vetoes, in both modes. SOFT
    ("…_not_verified") means *we haven't checked yet*, not *this is unsafe* — in
@@ -285,7 +287,7 @@ is the weighting working, not ignoring the input.
 |---|---|
 | 1 — Ingredient analysis | **done** — store live, signal loads, ≥95% coverage |
 | 2 — Concern efficacy | **in flight** — p11 policy passed the ≥85% gate at 86% (independent Opus audit); full paid pass running: 472 requests, 77,801 review rows, 0 errors. The store is not built yet, so `concern_efficacy` is absent from `data_versions.signals` and its 0.25 archetype weight currently scores neutral. Ranking sharpens when it lands. |
-| 3 — Verification overlay | **done** — 13 approved products, evidence hash-bound, stale-flip live |
+| 3 — Verification overlay | **done** — 14 overlay rows (13 catalog-matching, 1 dailymed row matching no catalog product), evidence hash-bound, stale-flip wired |
 | 4 — Full catalog | **done** — 1,634 products; golden-file eval harness live |
 | 5 — Integration | **done** — `src/pipeline/e2e.py --recsys` writes both documents |
 | + Hybrid eligibility | **done** (2026-07-15, beyond the original plan) — see "How it got here" |
@@ -300,10 +302,13 @@ Known gaps, honestly:
   `gentle_sensitive` go unavailable: `required_role_missing:treatment`), because
   only 13 of 1,634 products are evidence-verified. That thinness is exactly why
   hybrid exists.
-- `recsys/data/verification/approved.json` is out of sync with the loop's truth.
-  Re-importing it drops a *stale* fact from the seed catalog's only verified
-  treatment and collapses every routine to zero. Tracked separately — do not
-  "fix" it by re-pinning the overlay.
+- Stale-flip is wired but only half-exercised. `cmd_refresh` flips a product's
+  approved assertions on any `evidence_issues()` hit; only the snapshot branch
+  has fired on real data — the five `stale` rows in `approved-combined.json`
+  were flipped a day after retrieval, not by age. The age window
+  (`FRESHNESS_DAYS`, `recsys/verification.py:14`) has never fired: every
+  approved `retrieved_at` is 0–1 days old against its 90/180-day window. Tests
+  cover it; production has not.
 
 ## Original phase plan (for reference)
 
@@ -311,7 +316,7 @@ Known gaps, honestly:
 |---|---|---|
 | 1 — Ingredient analysis | finish `tools/build_ingredient_analysis.py` (LLM batch, cache schema already real); `IngredientAnalysisSignal`; irritancy feeds the gentle archetype; comedogenic notes in explanations | ≥95% catalog coverage; deterministic reruns; no-network test green |
 | 2 — Concern efficacy | port D-023 mining (`src/recommendation/concern_labels.py` + `concern_stats.py`); semantic model labels followed by the versioned literal-policy layer; `ConcernEfficacySignal`; ladder concern cell → acne_general → pooled | sample-bound exact-set audit ≥85% on the current prompt/policy version; cells for ≥300 products; "helped X% of n reviewers" evidence; weight scales with n |
-| 3 — Verification overlay | port `verification_loop.py` scoped to recsys facts (SPF/broad_spectrum, discontinued flags); evidence bytes; stale-flip | `spf_source: "verified"` in output; loop never self-approves |
+| 3 — Verification overlay | port `verification_loop.py` scoped to recsys facts (SPF/broad_spectrum); evidence bytes; stale-flip | `spf_source: "verified"` in output; loop never self-approves |
 | 4 — Full catalog + hardening | full-scope stores in `derived/`; media-store interface; dummy-provider conformance test; golden-file eval harness | new signal addable with zero pipeline edits |
 | 5 — Integration | `src/pipeline/e2e.py` optionally invokes the recsys CLI after writing analysis.json (subprocess/file handoff, no imports) | run dir carries both old `routine.json` and new `recommendations.json` |
 

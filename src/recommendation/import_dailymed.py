@@ -209,7 +209,10 @@ def parse_spl(
             product_id=f"dailymed:{set_id}:{ndc}:{active_key}",
             name=name, brand="DailyMed SPL", category="treatment",
             actives=sorted(active.name for active in actives),
-            intended_areas=["face"], routine_roles=[],
+            # An SPL states its target as "cover the entire affected area" and
+            # never names the face, so leave the area unstated (D-034) rather
+            # than stamp every drug row with a claim no label carries.
+            intended_areas=[], routine_roles=[],
             format=form, exposure="leave_on", drug_actives=actives,
             otc_drug=otc, label_source=source_url, label_verified_at=retrieved_at,
             evidence_roles=[], evidence_grade="pending_review",

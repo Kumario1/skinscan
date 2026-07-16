@@ -49,15 +49,26 @@ def _reason_is_soft(reason: str) -> bool:
     return reason.split(":", 1)[0] in SOFT_REASON_PREFIXES
 
 
+# Mirrors src.recommendation.schema.excludes_face -- an OTC drug label states a
+# target ("cover the entire affected area") but almost never names the face, so
+# requiring an explicit "face" vetoes every label-verified product and leaves
+# the fact satisfiable only by inventing it. Veto a positive claim to another
+# area instead; unknown/empty stays open.
+_NON_FACE_AREAS = frozenset({"neck", "body", "eye", "lip"})
+
+
+def _excludes_face(intended_areas) -> bool:
+    areas = set(intended_areas)
+    return "face" not in areas and bool(areas & _NON_FACE_AREAS)
+
+
 def profile_gate_reasons(
     product: CatalogProduct, slot: str, profile: Profile, knowledge: Knowledge
 ) -> list[str]:
     reasons: list[str] = []
     actives = set(product.actives)
     expected_role = "sunscreen" if slot == "spf" else slot
-    if product.discontinued:
-        reasons.append("product_discontinued")
-    if "face" not in product.intended_areas:
+    if _excludes_face(product.intended_areas):
         reasons.append("intended_area_not_verified:face")
     if expected_role not in product.routine_roles:
         reasons.append(f"role_not_verified:{expected_role}")

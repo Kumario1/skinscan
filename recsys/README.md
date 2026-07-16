@@ -78,6 +78,10 @@ python -m recsys.tools.build_concern_efficacy \
   --out recsys/data/signals/concern_efficacy.v1.json --data-root recsys/data
 
 # Import only already-approved assertions; this command never approves facts.
+# It refuses to drop a fact the committed overlay asserts (a re-verification
+# that supersedes an assertion without re-asserting all of its facts silently
+# quarantines the product). Re-assert the fact against a source that states it,
+# or pass --allow-fact-loss when no source does and the loss is intended.
 python -m recsys.tools.import_verification \
   --source data/verification/approved-combined.json \
   --source-evidence data/verification/evidence \

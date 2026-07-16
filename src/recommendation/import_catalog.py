@@ -23,7 +23,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Optional
 
-from .schema import CATEGORIES, Product
+from .schema import CATEGORIES, Product, excludes_face
 
 # --- vocabularies (from CATALOG_SCHEMA.md) ---------------------------------
 # normalized ingredient string -> canonical active ID. Keys are what
@@ -493,7 +493,7 @@ def apply_verification_overlay(
 
 def _quarantine_reasons(product: Product, role: str) -> list[str]:
     reasons: list[str] = []
-    if "face" not in product.intended_areas:
+    if excludes_face(product.intended_areas):
         reasons.append("intended_area_not_face")
     if role not in product.routine_roles:
         reasons.append("routine_role_not_verified")

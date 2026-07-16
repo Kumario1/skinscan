@@ -46,6 +46,11 @@ def test_current_exact_topical_spl_becomes_quarantined_v2_candidate():
         ("adapalene", "0.1%"), ("benzoyl_peroxide", "2.5%")
     ]
     assert product.routine_roles == []
+    # D-034: an SPL states "cover the entire affected area" and never names the
+    # face, so the importer must not stamp one on. A fabricated "face" here
+    # would be indistinguishable from a verified one downstream, and would let
+    # a body-only drug pass the intended-area veto.
+    assert product.intended_areas == []
     assert product.evidence_grade == "pending_review"
 
 

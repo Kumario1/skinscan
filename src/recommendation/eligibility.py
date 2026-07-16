@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from collections.abc import Mapping
 
-from .schema import Product, TherapyOption, UserProfile
+from .schema import Product, TherapyOption, UserProfile, excludes_face
 
 
 RETINOIDS = {"adapalene", "retinol", "retinal", "tretinoin"}
@@ -71,7 +71,7 @@ def check_eligibility(
 
     if product.is_legacy:
         reject("catalog_schema_legacy", "catalog_schema_version")
-    if "face" not in product.intended_areas:
+    if excludes_face(product.intended_areas):
         reject("intended_area_not_face", "intended_areas")
     if role not in product.routine_roles:
         reject("routine_role_not_verified", "routine_roles")

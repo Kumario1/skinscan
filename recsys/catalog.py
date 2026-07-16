@@ -58,7 +58,6 @@ class CatalogProduct:
     broad_spectrum: bool | None = None
     cadence: str | None = None
     contraindications: tuple[str, ...] = ()
-    discontinued: bool = False
     intended_areas: tuple[str, ...] = ()
     routine_roles: tuple[str, ...] = ()
     exposure: str | None = None
@@ -90,7 +89,6 @@ class CatalogProduct:
             "broad_spectrum": self.broad_spectrum,
             "cadence": self.cadence,
             "contraindications": list(self.contraindications),
-            "discontinued": self.discontinued,
             "intended_areas": list(self.intended_areas),
             "routine_roles": list(self.routine_roles),
             "exposure": self.exposure,
@@ -148,7 +146,6 @@ class CatalogProduct:
             broad_spectrum=d.get("broad_spectrum"),
             cadence=d.get("cadence"),
             contraindications=tuple(d.get("contraindications") or []),
-            discontinued=bool(d.get("discontinued", False)),
             intended_areas=tuple(d.get("intended_areas") or []),
             routine_roles=tuple(d.get("routine_roles") or []),
             exposure=d.get("exposure"),

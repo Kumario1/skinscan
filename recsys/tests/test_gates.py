@@ -111,11 +111,8 @@ def test_price_cap():
     assert "price_above_profile_cap" in profile_gate_reasons(pricey, "treatment", profile, K)
 
 
-def test_verified_discontinued_and_non_daily_products_are_vetoed():
+def test_non_daily_products_are_vetoed():
     profile = Profile(pregnancy_status="not_pregnant")
-    assert "product_discontinued" in profile_gate_reasons(
-        product(discontinued=True), "treatment", profile, K
-    )
     assert "cadence_not_daily" in profile_gate_reasons(
         product(cadence="weekly"), "treatment", profile, K
     )
@@ -157,6 +154,19 @@ def test_hard_role_eligibility_vetoes_unverified_or_wrong_products():
         product(category="moisturizer", actives=("retinol",)),
         "moisturizer", profile, K,
     )
+
+
+def test_unstated_area_is_not_a_non_face_claim():
+    # A regulatory label states "cover the entire affected area" and never names
+    # the face, so an unstated area must not veto: requiring an explicit "face"
+    # is satisfiable only by inventing the fact. A stated face wins over a
+    # co-stated body.
+    profile = Profile(pregnancy_status="not_pregnant")
+    for areas in ((), ("unknown",), ("face", "body")):
+        assert "intended_area_not_verified:face" not in profile_gate_reasons(
+            product(category="moisturizer", intended_areas=areas),
+            "moisturizer", profile, K,
+        )
 
 
 def test_treatment_requires_verified_drug_active_and_safe_format():

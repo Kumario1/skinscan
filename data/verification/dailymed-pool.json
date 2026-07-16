@@ -26,9 +26,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20250901",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/08ab7e0c-1437-455f-815c-98904d96a289.xml",
@@ -74,9 +72,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20250901",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/08ab7e0c-1437-455f-815c-98904d96a289.xml",
@@ -122,9 +118,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20250901",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/08ab7e0c-1437-455f-815c-98904d96a289.xml",
@@ -170,9 +164,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20250901",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/08ab7e0c-1437-455f-815c-98904d96a289.xml",
@@ -218,9 +210,7 @@
     "exposure": "leave_on",
     "format": "lotion",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20200302",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/1412aba5-71aa-4cce-8db4-c189bed1852c.xml",
@@ -266,9 +256,7 @@
     "exposure": "leave_on",
     "format": "cream",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20250102",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/1673a84b-7f5c-47ab-a99c-1e3db21a6a09.xml",
@@ -314,9 +302,7 @@
     "exposure": "leave_on",
     "format": "solution",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20240814",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21b64a3f-2c95-1c1a-e063-6294a90a0ea0.xml",
@@ -362,9 +348,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20251023",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/22058b7d-a578-4eaa-a476-ac982337f02a.xml",
@@ -416,9 +400,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20200930",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/3dcd2c96-72b1-4a9f-b65c-08198d63b7df.xml",
@@ -464,9 +446,7 @@
     "exposure": "leave_on",
     "format": "solution",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20251124",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/4a3901a4-194f-4a15-9c85-3d0982afcf31.xml",
@@ -512,9 +492,7 @@
     "exposure": "leave_on",
     "format": "lotion",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20251124",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/4a3901a4-194f-4a15-9c85-3d0982afcf31.xml",
@@ -560,9 +538,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20251124",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/4a3901a4-194f-4a15-9c85-3d0982afcf31.xml",
@@ -608,9 +584,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20251113",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/4e4e4b81-420e-4492-8a74-80b692a80057.xml",
@@ -656,9 +630,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20251113",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/4e4e4b81-420e-4492-8a74-80b692a80057.xml",
@@ -704,9 +676,7 @@
     "exposure": "leave_on",
     "format": "cream",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20240916",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/62d910db-85a6-4696-b69b-4bd2f3080cfc.xml",
@@ -758,9 +728,7 @@
     "exposure": "leave_on",
     "format": "cream",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20250811",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/654ae869-5bc0-40b3-a423-dcc3270c05d8.xml",
@@ -812,9 +780,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20260615",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/66858a82-cfda-4ba9-aac7-cf65499f4b1a.xml",
@@ -860,9 +826,7 @@
     "exposure": "leave_on",
     "format": "lotion",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20200831",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/66ab38ea-5cea-47be-97f2-486517999fb0.xml",
@@ -914,9 +878,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20250723",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/697e760a-c206-4565-8f4e-a8085e215827.xml",
@@ -968,9 +930,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20260515",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/78c329f9-f0c9-486d-9e54-0123699fb9e1.xml",
@@ -1028,9 +988,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20250424",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/9468da0f-9978-4c58-8135-0274c3415084.xml",
@@ -1076,9 +1034,7 @@
     "exposure": "leave_on",
     "format": "cream",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20240517",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/9556d73d-c573-4e0a-9feb-764ce2d1107b.xml",
@@ -1124,9 +1080,7 @@
     "exposure": "leave_on",
     "format": "cream",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20240517",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/9556d73d-c573-4e0a-9feb-764ce2d1107b.xml",
@@ -1172,9 +1126,7 @@
     "exposure": "leave_on",
     "format": "cream",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20240517",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/9556d73d-c573-4e0a-9feb-764ce2d1107b.xml",
@@ -1220,9 +1172,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20240517",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/9556d73d-c573-4e0a-9feb-764ce2d1107b.xml",
@@ -1268,9 +1218,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20240517",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/9556d73d-c573-4e0a-9feb-764ce2d1107b.xml",
@@ -1316,9 +1264,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20231227",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/a0031324-92a6-4c11-90e2-c2818f7278ec.xml",
@@ -1370,9 +1316,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20260520",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/ae3f8cd9-9046-4b69-b80f-3e9d4468ba7f.xml",
@@ -1424,9 +1368,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20250703",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/b39aaacb-f429-4cb4-b88b-341b8b8b217c.xml",
@@ -1472,9 +1414,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20180528",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/b7d605cf-bf84-461b-939b-1f773a4cba65.xml",
@@ -1520,9 +1460,7 @@
     "exposure": "leave_on",
     "format": "foam",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20231001",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/cc251492-977b-4eb1-a088-a90831324bad.xml",
@@ -1568,9 +1506,7 @@
     "exposure": "leave_on",
     "format": "lotion",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20230926",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/d941ff25-c221-4a55-8012-0dcf3bbcbbd1.xml",
@@ -1622,9 +1558,7 @@
     "exposure": "leave_on",
     "format": "cream",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20260212",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/dfc5bab2-2170-606e-e053-2a95a90a3961.xml",
@@ -1670,9 +1604,7 @@
     "exposure": "leave_on",
     "format": "cream",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20240304",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/ebdfcaf7-b5d6-47e1-be87-ccaba4b97e75.xml",
@@ -1724,9 +1656,7 @@
     "exposure": "leave_on",
     "format": "gel",
     "ingredient_match": {},
-    "intended_areas": [
-      "face"
-    ],
+    "intended_areas": [],
     "irritant_features": [],
     "label_effective_date": "20241024",
     "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/f4e5d381-098a-4c93-9ff0-002cae46daac.xml",
