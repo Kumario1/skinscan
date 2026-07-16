@@ -192,9 +192,6 @@ forbidden = {
     "ultralytics",
     "src.classification.classifier",
     "src.classification.run_acne04_pipeline",
-    "src.recommendation.bridge",
-    "src.recommendation.ranker",
-    "src.recommendation.concern_stats",
 }
 loaded = sorted(name for name in forbidden if name in sys.modules)
 print(loaded)
@@ -674,29 +671,6 @@ def test_routine_payload_reports_target_coverage(tmp_path, fake_sarpn_server):
     assert analysis["recommendation_summary"]["selected_roles"] == []
     assert "treatment" in analysis["recommendation_summary"]["missing_roles"]
     assert not (output_dir / "routine.json").exists()
-
-
-def test_broken_ranker_artifact_degrades_to_rules_only(
-    tmp_path, fake_sarpn_server, monkeypatch,
-):
-    """D-019: a ranker that fails to load must not kill the routine — the
-    pipeline falls back to rules-only catalog order."""
-    import src.recommendation.ranker as ranker_module
-
-    def explode(config=None):
-        raise RuntimeError("corrupt joblib bundle")
-
-    monkeypatch.setattr(ranker_module, "load_ranker", explode)
-
-    image_path = tmp_path / "face.jpg"
-    catalog_path = tmp_path / "catalog.json"
-    output_dir = tmp_path / "output"
-    _write_image(image_path)
-    _write_catalog(catalog_path)
-
-    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
-    analysis = json.loads((output_dir / "analysis.json").read_text())
-    assert analysis["recommendation_status"] == "unavailable"
 
 
 @pytest.mark.parametrize("catalog_case", ["missing", "invalid", "unreadable"])

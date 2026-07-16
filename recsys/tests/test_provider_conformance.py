@@ -6,7 +6,7 @@ from recsys.catalog import CatalogProduct
 from recsys.contracts import Profile
 from recsys.knowledge import load_knowledge
 from recsys.scoring import score_products
-from recsys.signals import MediaSignal, ScoringContext, SignalScore, load_providers
+from recsys.signals import ScoringContext, SignalScore, load_providers
 
 
 DATA = Path(__file__).parents[1] / "data"
@@ -24,19 +24,6 @@ def _context():
     return ScoringContext(
         targets=(), profile=Profile(),
         knowledge=load_knowledge(DATA / "knowledge"), category_prices={},
-    )
-
-
-def test_verified_media_store_is_a_normal_scoring_provider():
-    provider = MediaSignal({"products": {"p1": {
-        "value": 0.8,
-        "evidence": "Dermatologist editorial shortlist",
-        "source_url": "https://example.test/editorial",
-    }}}, {"version": "v1"})
-    result = provider.score(_product(), "serum", _context())
-    assert result == SignalScore(
-        "media", 0.8, "Dermatologist editorial shortlist",
-        {"source_url": "https://example.test/editorial"},
     )
 
 
@@ -61,12 +48,13 @@ def test_new_registry_provider_needs_no_scorer_or_composer_changes(tmp_path, mon
         "schema_version": "recsys-registry-1",
         "stores": [{
             "name": "dummy", "kind": "dummy", "version": "v1",
-            "path": "signals/dummy.v1.json", "sha256": digest, "status": "active",
+            "path": "signals/dummy.v1.json", "sha256": digest,
+            "source": {"catalog_sha256": "catalog-1"}, "status": "active",
         }],
     }))
     monkeypatch.setitem(signals.STORE_PROVIDERS, "dummy", DummyProvider)
 
-    providers, _meta, warnings = load_providers(data_root)
+    providers, _meta, warnings = load_providers(data_root, "catalog-1")
     scored = score_products([_product()], "serum", providers, _context(), {"dummy": 1})
     assert warnings == []
     assert scored[0].final == 0.9

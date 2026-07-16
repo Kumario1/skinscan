@@ -90,15 +90,25 @@ def _step_uncertainty(step: Step, profile: Profile) -> list[str]:
     return sorted(set(notes))
 
 
-def step_to_dict(step: Step, k: Knowledge, profile: Profile) -> dict:
+def step_to_dict(
+    step: Step,
+    k: Knowledge,
+    profile: Profile,
+    quality_flags: dict[tuple[str, str], list[str]] | None = None,
+) -> dict:
     product = step.scored.product
-    # A product whose usage facts came from the evidence overlay is "verified";
-    # one placed by catalog category + safe defaults is "category_derived".
-    verification = "verified" if product.routine_roles else "category_derived"
+    # The label reports the gates' own soft flags: a step is "verified" exactly
+    # when nothing about it went unverified. The old proxy ("verified" whenever
+    # routine_roles was set) disagreed with the flags whenever a product had a
+    # verified role but unverified exposure or cadence — carrying two flags and
+    # a "verified" label in the same document.
+    flags = (quality_flags or {}).get((product.product_id, step.slot), [])
+    verification = "category_derived" if flags else "verified"
     notes = list(step.notes)
     if verification == "category_derived":
-        notes.append("category-derived: role and usage inferred from the product "
-                     "category, not individually evidence-verified")
+        unverified = ", ".join(sorted(flags))
+        notes.append("category-derived: placed by catalog category; not "
+                     f"individually evidence-verified ({unverified})")
     # The pipeline lists prescriptions rather than placing them, so this should
     # stay false; it holds the line if a drug row ever reaches a step.
     prescription = is_prescription(product)
@@ -210,8 +220,13 @@ def safety_checks(routine: ComposedRoutine, k: Knowledge) -> list[dict]:
     ]
 
 
-def routine_to_dict(routine: ComposedRoutine, k: Knowledge, profile: Profile) -> dict:
-    steps = [step_to_dict(s, k, profile) for s in routine.steps]
+def routine_to_dict(
+    routine: ComposedRoutine,
+    k: Knowledge,
+    profile: Profile,
+    quality_flags: dict[tuple[str, str], list[str]] | None = None,
+) -> dict:
+    steps = [step_to_dict(s, k, profile, quality_flags) for s in routine.steps]
     return {
         "archetype": routine.archetype["id"],
         "title": routine.archetype["title"],

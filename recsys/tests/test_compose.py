@@ -24,10 +24,13 @@ TARGETS = (TargetConcern("inflammatory_acne", 2, 0.9),)
 
 
 def product(pid, category, actives=(), *, price_usd=10.0, cadence=None, spf=None):
+    # A carrier INCI so the ingredients are KNOWN: a row with neither actives
+    # nor INCI now draws the hard ingredients_unknown veto, and these fixtures
+    # exercise session composition, not that gate.
     return CatalogProduct(
         product_id=pid, name=pid, brand="b", category=category,
         price_usd=price_usd, size=None, format=None, spf=spf, spf_source=None,
-        inci=(), inci_sha256="", actives=tuple(actives), cadence=cadence,
+        inci=("Water",), inci_sha256="", actives=tuple(actives), cadence=cadence,
     )
 
 

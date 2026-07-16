@@ -7,7 +7,7 @@ import pytest
 
 from recsys.catalog import load_catalog
 from recsys.compose import Step
-from recsys.contracts import load_analysis, resolve_profile, sha256_file
+from recsys.contracts import ContractViolation, load_analysis, resolve_profile, sha256_file
 from recsys.explain import step_to_dict
 from recsys.knowledge import load_knowledge
 from recsys.pipeline import run
@@ -367,3 +367,18 @@ def test_full_derived_data_root_uses_full_catalog_and_static_knowledge(tmp_path)
     assert document["status"] == "partial"
     assert document["data_versions"]["catalog"]["path"] == str(derived / "catalog_full.json")
     assert document["data_versions"]["verification"]["products"] == 14
+
+
+def test_a_data_root_without_a_catalog_names_what_is_missing(tmp_path):
+    # The seed is a 60-product fixture. A derived root that carries no catalog of
+    # its own has to say so by name: degrading to the fixture answers plausibly
+    # from the wrong 60 products, which reads as a working run.
+    derived = tmp_path / "derived"
+    derived.mkdir()
+
+    with pytest.raises(ContractViolation) as excinfo:
+        run(ANALYSIS, FIXTURES / "profile_complete.json", data_root=derived,
+            generated_at="2026-07-14T00:00:00+00:00")
+
+    message = str(excinfo.value)
+    assert "catalog_full.json" in message and "seed_catalog.json" in message

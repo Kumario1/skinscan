@@ -89,6 +89,14 @@ def profile_gate_reasons(
     reasons: list[str] = []
     actives = set(product.actives)
     expected_role = "sunscreen" if slot == "spf" else slot
+    # Every ingredient gate below reads actives/inci, so a row carrying neither
+    # clears all of them vacuously -- a "+Retinol" moisturizer with nothing
+    # parsed passes the pregnancy exclusion because there is no active to match
+    # and no INCI to scan. Unknown is data, never a favorable default. A drug row
+    # publishes no INCI but names its actives, and a plain moisturizer carries a
+    # real INCI and no actives; both are known. Only neither is unknown.
+    if not product.inci and not actives:
+        reasons.append("ingredients_unknown")
     if _excludes_face(product.intended_areas):
         reasons.append("intended_area_not_verified:face")
     if expected_role not in product.routine_roles:
@@ -164,9 +172,14 @@ def apply_profile_gates(
     strict=True (default): any reason vetoes — the fail-closed, evidence-only
     posture (only individually-verified products enter routines).
     strict=False (hybrid): only HARD safety reasons veto; SOFT verification
-    reasons are returned as quality flags so the product is still eligible
-    (slotted by catalog category) but ranked below verified products and labeled
-    accordingly. Ingredient/profile/price safety is identical in both modes.
+    reasons are returned as quality flags — the product stays eligible (slotted
+    by catalog category) but ranks below verified products, and explain labels
+    the step category-derived FROM THESE FLAGS. A parallel branch deleted this
+    return as dead code; the proxy it left behind ("verified" whenever
+    routine_roles is set) disagrees with the flags exactly when a product has a
+    verified role but unverified exposure or cadence, and the flags are the
+    fact the label claims to report. Ingredient/profile/price safety is
+    identical in both modes.
     """
     kept: dict[str, list[CatalogProduct]] = {}
     vetoes: list[Veto] = []
