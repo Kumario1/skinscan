@@ -7,6 +7,11 @@
     "tretinoin", "trifarotene"
   ],
   "retinoid_inci_stems": ["retinaldehyde", "retinoate", "retinoic", "retinyl"],
+  "_prescription_actives_authority": "Drug-catalog actives a profile may truthfully declare in current_actives that are neither canonical INCI actives nor retinoids. contracts.DECLARABLE_ACTIVE_IDS derives from CANONICAL_ACTIVES + retinoids + this list, so the profile vocabulary cannot lag the actives import_drug_catalog mints into product.actives (the duplicate-active gate intersects the two; a declarable gap silences it for exactly the users on the most dangerous actives). sulfur is OTC, not Rx, but rides here for the same reason: it is in the drug catalog and never parses out of a cosmetic INCI. recsys/tests/test_contracts.py checks this list covers the committed DailyMed pool.",
+  "prescription_actives": [
+    "clascoterone", "clindamycin", "dapsone", "erythromycin", "minocycline",
+    "sulfacetamide_sodium", "sulfur"
+  ],
   "treatment_actives": [
     "adapalene", "azelaic_acid", "benzoyl_peroxide", "glycolic_acid",
     "isotretinoin", "lactic_acid", "mandelic_acid", "retinal", "retinol",

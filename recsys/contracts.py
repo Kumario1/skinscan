@@ -13,7 +13,7 @@ import math
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .inci import CANONICAL_ACTIVES
+from .inci import CANONICAL_ACTIVES, _SAFETY_RULES_PATH
 
 SCHEMA_VERSION = "recsys-1"
 ANALYSIS_SCHEMA_VERSION = "3"
@@ -32,14 +32,30 @@ PREGNANCY_STATUSES = (
 )
 SLOTS = ("cleanser", "treatment", "serum", "moisturizer", "spf")
 
-# The closed vocabulary a profile may declare it is already using, derived from
-# the INCI parser's synonym table so it cannot drift from what the catalog can
-# actually carry. gates.py matches these against product.actives by exact set
-# intersection, so an un-normalized value ("Retinol", "salicylic acid") would
-# intersect nothing and silently fail the duplicate-active HARD gate open rather
-# than veto. Ported from src.recommendation.schema.KNOWN_ACTIVE_IDS, whose
-# UserProfile raises on the same input.
+# The closed vocabulary a profile may declare it is already using. gates.py
+# matches these against product.actives by exact set intersection, so an
+# un-normalized value ("Retinol", "salicylic acid") would intersect nothing and
+# silently fail the duplicate-active HARD gate open rather than veto. Ported
+# from src.recommendation.schema.KNOWN_ACTIVE_IDS, whose UserProfile raises on
+# the same input.
 KNOWN_ACTIVE_IDS = frozenset(CANONICAL_ACTIVES.values())
+
+
+def _declarable_active_ids(path: Path = _SAFETY_RULES_PATH) -> frozenset[str]:
+    """KNOWN_ACTIVE_IDS plus every active safety_rules.json names (retinoids +
+    prescription_actives), read from the SAME packaged file inci.py derives the
+    pregnancy scan from. The synonym table alone cannot express a prescription:
+    the drug door mints "tretinoin" into product.actives, but no cosmetic INCI
+    ever parses to it, so a truthful "I am on tretinoin" hard-errored the whole
+    run — and the duplicate-active gate could therefore never fire for exactly
+    the users with the most dangerous current actives. Deriving both sides from
+    one file makes profile-vocabulary-lags-catalog unrepresentable."""
+    rules = json.loads(path.read_text(encoding="utf-8"))
+    extra = set(rules.get("retinoids") or []) | set(rules.get("prescription_actives") or [])
+    return KNOWN_ACTIVE_IDS | extra
+
+
+DECLARABLE_ACTIVE_IDS = _declarable_active_ids()
 
 
 class ContractViolation(ValueError):
@@ -243,7 +259,7 @@ def _profile_from_dict(data: dict, source: str, sha256: str | None) -> Profile:
         age_years=_profile_optional_int(data, "age_years", maximum=130),
         allergies=_profile_list(data, "allergies"),
         sensitivity_conditions=_profile_list(data, "sensitivity_conditions"),
-        current_actives=_profile_list(data, "current_actives", allowed=KNOWN_ACTIVE_IDS),
+        current_actives=_profile_list(data, "current_actives", allowed=DECLARABLE_ACTIVE_IDS),
         current_medications=_profile_list(data, "current_medications"),
         treatment_history=_profile_list(data, "treatment_history"),
         acne_duration_weeks=_profile_optional_int(data, "acne_duration_weeks"),

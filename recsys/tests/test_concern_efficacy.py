@@ -9,18 +9,31 @@ from recsys.knowledge import load_knowledge
 from recsys.signals import (
     ConcernEfficacySignal, ScoringContext, TargetConcern, load_providers,
 )
-from recsys.tools.build_concern_efficacy import PROMPT_VERSION, _p3_bakeoff, build
+from recsys.tools.build_concern_efficacy import (
+    PROMPT_VERSION, _p3_bakeoff, build, resolve_prompt_version,
+)
 
 
 DATA = Path(__file__).parents[1] / "data"
 
+# A P3 evaluation the D-023 gate accepts. build() refuses to run without one --
+# derived from review metadata or supplied like this -- so tests that are about
+# aggregation rather than the gate pass it explicitly.
+PASSING_P3 = {
+    "pooled": {
+        "champion": {"roc_auc": 0.70, "pairwise": 0.60},
+        "concern_conditioned": {"roc_auc": 0.71, "pairwise": 0.61},
+    },
+}
 
-def _record(uid, outcome, skin_type="oily", product_id="p1", has_condition=True):
+
+def _record(uid, outcome, skin_type="oily", product_id="p1", has_condition=True,
+            prompt_version=PROMPT_VERSION):
     return {
         "uid": uid,
         "product_id": product_id,
         "skin_type": skin_type,
-        "prompt_version": PROMPT_VERSION,
+        "prompt_version": prompt_version,
         "status": "ok",
         "labels": [{
             "concern": "acne_comedonal",
@@ -37,7 +50,8 @@ def test_cached_labels_build_registered_concern_signal(tmp_path):
     data_root = tmp_path / "data"
     out = data_root / "signals" / "concern_efficacy.v1.json"
 
-    build(labels, out, data_root, catalog_products=1, smoothing_m=20, sub_cell_min_n=5)
+    build(labels, out, data_root, catalog_products=1, smoothing_m=20, sub_cell_min_n=5,
+          p3_evaluation=PASSING_P3)
 
     store = json.loads(out.read_text())
     registry = json.loads((data_root / "signals" / "registry.json").read_text())
@@ -46,6 +60,7 @@ def test_cached_labels_build_registered_concern_signal(tmp_path):
         "catalog_products": 1,
         "products": 1,
         "products_with_acne_cell_n15": 0,
+        "p3_gate_passed": True,
     }
 
     provider = ConcernEfficacySignal(store, {"version": "v1"})
@@ -80,6 +95,7 @@ def test_build_only_includes_products_in_selected_catalog(tmp_path):
         data_root,
         catalog_products=1,
         catalog_product_ids=frozenset({"p1"}),
+        p3_evaluation=PASSING_P3,
     )
 
     store = json.loads(out.read_text())
@@ -96,7 +112,7 @@ def test_build_ignores_labels_from_reviewers_without_the_condition(tmp_path):
     data_root = tmp_path / "data"
     out = data_root / "signals" / "concern_efficacy.v1.json"
 
-    build(labels, out, data_root, catalog_products=1)
+    build(labels, out, data_root, catalog_products=1, p3_evaluation=PASSING_P3)
 
     cell = json.loads(out.read_text())["products"]["p1"]["acne_comedonal"]["all"]
     assert cell["n"] == 1
@@ -251,8 +267,9 @@ def test_p3_bakeoff_excludes_other_prompt_versions():
                          "helped" if i % 2 else "worsened") for i in range(8)]
     stale = [evaluable(f"stale{i}", "p1", "helped") for i in range(20)]
 
-    only_current = _p3_bakeoff(current, smoothing_m=20)
-    with_stale = _p3_bakeoff(current + stale, smoothing_m=20)
+    only_current = _p3_bakeoff(current, smoothing_m=20, prompt_version=PROMPT_VERSION)
+    with_stale = _p3_bakeoff(current + stale, smoothing_m=20,
+                             prompt_version=PROMPT_VERSION)
 
     assert only_current is not None
     # Stale-prompt-version rows must never enter the bake-off population — the
@@ -271,7 +288,8 @@ def test_build_skips_unclear_only_cells_without_zero_division(tmp_path):
 
     # smoothing_m=0 turns an unclear-only (n=0) cell into a 0/0 division unless
     # _cell guards it; the cell must also be dropped rather than emitted at n=0.
-    build(labels, out, data_root, catalog_products=2, smoothing_m=0)
+    build(labels, out, data_root, catalog_products=2, smoothing_m=0,
+          p3_evaluation=PASSING_P3)
 
     store = json.loads(out.read_text())
     assert "p1" not in store["products"]
@@ -290,3 +308,144 @@ def test_evaluable_labels_auto_run_the_p3_gate(tmp_path):
         build(labels, out, data_root, catalog_products=1)
 
     assert not (data_root / "signals" / "registry.json").exists()
+
+
+def test_a_single_version_file_builds_at_that_version_not_a_constant(tmp_path):
+    # The original defect: a builder-local constant ("p10") filtering a ledger
+    # written at another version ("p11") silently discarded 33,775 of 33,825
+    # paid labels. The version now comes from the file: a ledger written
+    # entirely at a version the builder has never heard of must build at that
+    # version, with the store and its provenance saying so.
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text("\n".join(
+        json.dumps(_record(str(i), "helped" if i < 8 else "worsened",
+                           prompt_version="p12"))
+        for i in range(10)) + "\n")
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "concern_efficacy.v1.json"
+
+    coverage = build(labels, out, data_root, catalog_products=1,
+                     p3_evaluation=PASSING_P3)
+
+    store = json.loads(out.read_text())
+    registry = json.loads((data_root / "signals" / "registry.json").read_text())
+    assert coverage["products"] == 1
+    assert store["prompt_version"] == "p12"
+    assert store["products"]["p1"]["acne_comedonal"]["all"]["n"] == 10
+    assert registry["stores"][0]["source"]["prompt_version"] == "p12"
+
+
+def test_a_mixed_version_file_errors_without_explicit_selection(tmp_path):
+    # Two versions are two labeling policies; aggregating them together mixes
+    # policies and guessing one silently discards the other. Ambiguity is the
+    # operator's call to resolve, not the builder's to paper over.
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text("\n".join((
+        json.dumps(_record("old", "worsened", prompt_version="p11")),
+        json.dumps(_record("new", "helped", prompt_version="p12")),
+    )) + "\n")
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "concern_efficacy.v1.json"
+
+    with pytest.raises(SystemExit, match="mixes prompt versions"):
+        build(labels, out, data_root, catalog_products=1, p3_evaluation=PASSING_P3)
+
+    assert not out.exists()
+    assert not (data_root / "signals" / "registry.json").exists()
+
+
+def test_an_explicit_prompt_version_selects_one_policy_from_a_mixed_file(tmp_path):
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text("\n".join(
+        [json.dumps(_record(f"old{i}", "worsened", prompt_version="p11"))
+         for i in range(3)]
+        + [json.dumps(_record("new", "helped", prompt_version="p12"))]
+    ) + "\n")
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "concern_efficacy.v1.json"
+
+    build(labels, out, data_root, catalog_products=1, p3_evaluation=PASSING_P3,
+          prompt_version="p12")
+
+    store = json.loads(out.read_text())
+    cell = store["products"]["p1"]["acne_comedonal"]["all"]
+    assert store["prompt_version"] == "p12"
+    # only the selected policy's single row aggregates; the p11 rows do not
+    assert (cell["n"], cell["helped"], cell["worsened"]) == (1, 1, 0)
+
+
+def test_a_version_matching_zero_records_hard_fails_and_registers_nothing(tmp_path):
+    # The recurrence path of the original bug: select a version the ledger
+    # holds no rows at, and the filter yields nothing. That used to write
+    # "products": {} and register it active with confident provenance.
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text(json.dumps(_record("one", "helped", prompt_version="p11")) + "\n")
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "concern_efficacy.v1.json"
+
+    with pytest.raises(SystemExit, match="matches no ok records"):
+        build(labels, out, data_root, catalog_products=1, p3_evaluation=PASSING_P3,
+              prompt_version="p12")
+
+    assert not out.exists()
+    assert not (data_root / "signals" / "registry.json").exists()
+
+
+def test_resolve_prompt_version_requires_ok_records():
+    with pytest.raises(SystemExit, match="no ok records"):
+        resolve_prompt_version([{"status": "error", "prompt_version": "p11"}])
+
+
+def test_labels_without_review_metadata_fail_rather_than_skip_the_p3_gate(tmp_path):
+    # _p3_bakeoff returning None used to slip past the gate entirely: a store
+    # the D-023 protocol never examined registered exactly like one that had
+    # passed it. No evaluable rows and no --p3-eval is a build failure.
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text(json.dumps(_record("one", "helped")) + "\n")  # no author_id/rating
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "concern_efficacy.v1.json"
+
+    with pytest.raises(SystemExit, match="P3 bake-off has nothing to evaluate"):
+        build(labels, out, data_root, catalog_products=1)
+
+    assert not out.exists()
+    assert not (data_root / "signals" / "registry.json").exists()
+
+
+def test_zero_surviving_cells_never_write_an_empty_store(tmp_path):
+    # Records exist at the right version but none survive aggregation (here:
+    # no reviewer has the condition). An empty store scores every product at
+    # neutral while registered as an active signal -- refuse to write it.
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text(json.dumps(_record("one", "helped", has_condition=False)) + "\n")
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "concern_efficacy.v1.json"
+
+    with pytest.raises(SystemExit, match="empty store"):
+        build(labels, out, data_root, catalog_products=1, p3_evaluation=PASSING_P3)
+
+    assert not out.exists()
+    assert not (data_root / "signals" / "registry.json").exists()
+
+
+def test_cli_prompt_version_flag_reaches_the_build(tmp_path):
+    from recsys.tools.build_concern_efficacy import main
+    catalog = tmp_path / "catalog.json"
+    catalog.write_text(json.dumps({"products": [{"product_id": "p1"}]}))
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text("\n".join((
+        json.dumps(_record("old", "worsened", prompt_version="p11")),
+        json.dumps(_record("new", "helped", prompt_version="p12")),
+    )) + "\n")
+    p3_eval = tmp_path / "p3.json"
+    p3_eval.write_text(json.dumps(PASSING_P3))
+    data_root = tmp_path / "data"
+    out = data_root / "signals" / "concern_efficacy.v1.json"
+    argv = ["--labels", str(labels), "--catalog", str(catalog), "--out", str(out),
+            "--data-root", str(data_root), "--p3-eval", str(p3_eval)]
+
+    with pytest.raises(SystemExit, match="mixes prompt versions"):
+        main(argv)
+
+    assert main(argv + ["--prompt-version", "p12"]) == 0
+    assert json.loads(out.read_text())["prompt_version"] == "p12"

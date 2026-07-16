@@ -271,13 +271,18 @@ STORE_PROVIDERS: dict[str, type] = {
 def load_providers(
     data_root: str | Path,
     catalog_sha256: str | None = None,
+    *,
+    allow_catalog_mismatch: bool = False,
 ) -> tuple[list, list[dict], list[str]]:
     """Instantiate built-in providers plus every active registry store whose
     sha256 matches the file on disk and whose catalog provenance matches the
     active catalog. A store built against a different catalog is a hard error,
     not a skip: its product ids would not be the ones being scored, and a
     silently dropped store leaves every product at neutral 0.5 in a document
-    that still looks complete. Returns (providers, store_meta, warnings)."""
+    that still looks complete. allow_catalog_mismatch=True takes the skip
+    deliberately: the mismatched store is dropped with a warning so the blind
+    ranking is visible in the document rather than silent.
+    Returns (providers, store_meta, warnings)."""
     data_root = Path(data_root)
     providers: list = [ConcernFitSignal(), PriceValueSignal()]
     meta: list[dict] = []
@@ -315,11 +320,17 @@ def load_providers(
                 f"which is bound to catalog {bound_catalog_sha256}",
             )
         if bound_catalog_sha256 != catalog_sha256:
-            raise ContractViolation(
-                "registry.catalog_sha256",
-                f"store {entry.get('name')!r} was built against a different catalog "
-                f"(expected {catalog_sha256}, got {bound_catalog_sha256})",
+            if not allow_catalog_mismatch:
+                raise ContractViolation(
+                    "registry.catalog_sha256",
+                    f"store {entry.get('name')!r} was built against a different catalog "
+                    f"(expected {catalog_sha256}, got {bound_catalog_sha256})",
+                )
+            warnings.append(
+                f"catalog_sha256 mismatch for store {entry.get('name')!r}: "
+                f"expected {catalog_sha256}, got {bound_catalog_sha256} — skipped"
             )
+            continue
         store_path = data_root / entry["path"]
         actual = sha256_file(store_path)
         if actual != entry.get("sha256"):

@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from recsys.contracts import (
+    DECLARABLE_ACTIVE_IDS,
     KNOWN_ACTIVE_IDS,
     ContractViolation,
     load_analysis,
@@ -12,6 +13,7 @@ from recsys.contracts import (
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
+REPO_ROOT = Path(__file__).parents[2]
 
 
 def test_loads_real_analysis_artifact():
@@ -121,7 +123,7 @@ def test_profile_falls_back_to_analysis_input_profile():
 
 
 @pytest.mark.parametrize("declared", [
-    "Retinol", "RETINOL", "retinol ", "salicylic acid", "tretinoin", "vitamin c",
+    "Retinol", "RETINOL", "retinol ", "salicylic acid", "Tretinoin", "vitamin c",
 ])
 def test_rejects_current_actives_outside_the_canonical_vocabulary(tmp_path, declared):
     """gates.py matches current_actives against product.actives by exact set
@@ -156,6 +158,69 @@ def test_accepts_canonical_current_actives(tmp_path):
     profile = resolve_profile(path, load_analysis(FIXTURES / "analysis_v3_sample.json"))
     assert profile.current_actives == ("retinol", "salicylic_acid")
     assert {"retinol", "salicylic_acid"} <= KNOWN_ACTIVE_IDS
+
+
+@pytest.mark.parametrize("declared", ["tretinoin", "retinal", "clindamycin"])
+def test_accepts_prescription_and_knowledge_retinoid_current_actives(tmp_path, declared):
+    """The INCI synonym table alone cannot express a prescription: the drug
+    door mints "tretinoin" into product.actives, but no cosmetic INCI ever
+    parses to it, so a truthful "I am on tretinoin" — THE most common Rx acne
+    treatment — hard-errored the whole run. Refusing the declaration is worse
+    than useless: it silences the duplicate-active HARD gate for exactly the
+    users whose current actives are the most dangerous to double. The id must
+    also survive into Profile.current_actives in the exact form the gate
+    intersects against product.actives.
+    """
+    data = json.loads((FIXTURES / "profile_complete.json").read_text())
+    data["current_actives"] = [declared]
+    path = tmp_path / "profile.json"
+    path.write_text(json.dumps(data))
+
+    profile = resolve_profile(path, load_analysis(FIXTURES / "analysis_v3_sample.json"))
+    assert profile.current_actives == (declared,)
+    assert declared in DECLARABLE_ACTIVE_IDS
+
+
+def test_declared_prescription_active_actually_fires_the_duplicate_gate(tmp_path):
+    """End to end through the gate itself: a profile on tretinoin plus a
+    tretinoin drug row must produce the duplicate-active veto. Before the
+    declarable vocabulary carried prescription actives this pairing was
+    unrepresentable, so the gate could never fire on any Rx active."""
+    from recsys.catalog import CatalogProduct
+    from recsys.gates import profile_gate_reasons
+    from recsys.knowledge import load_knowledge
+
+    data = json.loads((FIXTURES / "profile_complete.json").read_text())
+    data["current_actives"] = ["tretinoin"]
+    path = tmp_path / "profile.json"
+    path.write_text(json.dumps(data))
+    profile = resolve_profile(path, load_analysis(FIXTURES / "analysis_v3_sample.json"))
+
+    product = CatalogProduct(
+        product_id="dailymed:test:tretinoin-0.1%",
+        name="Retin-A MICRO", brand="DailyMed SPL", category="treatment",
+        price_usd=None, size=None, format="gel", spf=None, spf_source=None,
+        inci=(), inci_sha256="", actives=("tretinoin",),
+    )
+    knowledge = load_knowledge(REPO_ROOT / "recsys" / "data" / "knowledge")
+    reasons = profile_gate_reasons(product, "treatment", profile, knowledge)
+    assert "duplicates_current_active:tretinoin" in reasons
+
+
+def test_declarable_vocabulary_covers_every_drug_catalog_active():
+    """Single-authority check against the committed DailyMed pool: every active
+    the drug door can mint into product.actives must be declarable in
+    current_actives, or the duplicate gate is structurally blind to it. Reads
+    the pool (committed) rather than the derived drug catalog (gitignored)."""
+    pool = json.loads(
+        (REPO_ROOT / "data" / "verification" / "dailymed-pool.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    names = {a["name"] for row in pool for a in row.get("drug_actives") or []}
+    assert names, "committed pool names no drug actives; the check is vacuous"
+    missing = sorted(names - DECLARABLE_ACTIVE_IDS)
+    assert not missing, f"drug-catalog actives a profile cannot declare: {missing}"
 
 
 def test_current_actives_vocabulary_is_enforced_on_the_analysis_fallback_path(tmp_path):
