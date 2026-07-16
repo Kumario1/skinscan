@@ -26,29 +26,16 @@ class Veto:
         return {"product_id": self.product_id, "slot": self.slot, "reason": self.reason}
 
 
-# Verification-QUALITY reasons: the product's usage facts (role/area/exposure/
-# cadence) or drug/label proof are not individually evidence-verified. In hybrid
-# eligibility these do NOT veto — the product is still slotted by its catalog
-# category and its facts derived from safe defaults; they instead lower ranking
-# and are surfaced as a "category-derived, not individually verified" label.
-# Everything NOT listed here is a HARD safety veto (ingredient/profile/price)
-# and always excludes the product — a new reason defaults to hard.
-#
-# A reason belongs here only if it means "we have not checked yet" — absence of
-# evidence. It does NOT belong here if we checked and the answer disqualifies
-# the product: cadence_unverified is a gap, cadence_not_daily is a verified
-# label saying "weekly", which no daily AM/PM routine can honour in either mode.
-# The membership of this frozenset is the whole HARD/SOFT decision; it is pinned
-# by test_gates.py::test_soft_reason_prefixes_membership_is_pinned_exactly.
-SOFT_REASON_PREFIXES = frozenset({
-    "intended_area_not_verified",
-    "role_not_verified",
-    "exposure_not_verified",
-    "cadence_unverified",
-    "treatment_active_unverified",
-    "treatment_label_unverified",
-    "spf_broad_spectrum_unverified",
-})
+# Compatibility export from the superseded hybrid engine. D-029 makes every
+# missing required fact a hard eligibility failure, so nothing is soft.
+SOFT_REASON_PREFIXES = frozenset()
+ALLOWED_FORMATS = {
+    "cleanser": frozenset({"cleanser", "gel", "foam", "cream", "bar", "wash"}),
+    "treatment": frozenset({"gel", "cream", "lotion", "serum", "suspension", "solution"}),
+    "serum": frozenset({"serum", "gel", "solution", "suspension"}),
+    "moisturizer": frozenset({"cream", "lotion", "gel", "balm", "emulsion"}),
+    "spf": frozenset({"sunscreen", "cream", "lotion", "gel", "fluid", "stick"}),
+}
 
 
 def _reason_is_soft(reason: str) -> bool:
@@ -101,6 +88,10 @@ def profile_gate_reasons(
         reasons.append("intended_area_not_verified:face")
     if expected_role not in product.routine_roles:
         reasons.append(f"role_not_verified:{expected_role}")
+    if product.format is None:
+        reasons.append("format_unverified")
+    elif product.format not in ALLOWED_FORMATS.get(slot, frozenset()):
+        reasons.append(f"format_not_allowed_for_role:{product.format}")
     expected_exposure = "rinse_off" if slot == "cleanser" else "leave_on"
     if product.exposure != expected_exposure:
         reasons.append(f"exposure_not_verified:{expected_exposure}")
@@ -109,6 +100,8 @@ def profile_gate_reasons(
     elif product.cadence not in ("am", "pm", "am_pm", "daily", "once_daily",
                                  "twice_daily", "per_label"):
         reasons.append("cadence_not_daily")
+    if product.amount is not None and not product.amount_source:
+        reasons.append("amount_source_unverified")
     profile_contraindications = {
         _normalize_condition(condition) for condition in (
             *profile.sensitivity_conditions,
@@ -134,6 +127,8 @@ def profile_gate_reasons(
         for active in sorted(actives & knowledge.treatment_actives):
             reasons.append(f"treatment_active_in_support_role:{active}")
     if slot == "treatment":
+        if not product.contraindications_verified:
+            reasons.append("contraindications_unverified")
         verified_drug_actives = {
             active.get("name") for active in product.drug_actives
             if isinstance(active, dict)
@@ -151,12 +146,11 @@ def profile_gate_reasons(
             reasons.append("spf_not_broad_spectrum")
         elif product.broad_spectrum is not True:
             reasons.append("spf_broad_spectrum_unverified")
-    if (
-        profile.max_price_usd is not None
-        and product.price_usd is not None
-        and product.price_usd > profile.max_price_usd
-    ):
-        reasons.append("price_above_profile_cap")
+    if profile.max_price_usd is not None:
+        if product.price_usd is None:
+            reasons.append("price_unknown_for_profile_cap")
+        elif product.price_usd > profile.max_price_usd:
+            reasons.append("price_above_profile_cap")
     return reasons
 
 
@@ -166,21 +160,8 @@ def apply_profile_gates(
     knowledge: Knowledge,
     strict: bool = True,
 ) -> tuple[dict[str, list[CatalogProduct]], list[Veto], dict[tuple[str, str], list[str]]]:
-    """Split each product's gate reasons into hard vetoes and soft
-    verification-quality flags.
-
-    strict=True (default): any reason vetoes — the fail-closed, evidence-only
-    posture (only individually-verified products enter routines).
-    strict=False (hybrid): only HARD safety reasons veto; SOFT verification
-    reasons are returned as quality flags — the product stays eligible (slotted
-    by catalog category) but ranks below verified products, and explain labels
-    the step category-derived FROM THESE FLAGS. A parallel branch deleted this
-    return as dead code; the proxy it left behind ("verified" whenever
-    routine_roles is set) disagrees with the flags exactly when a product has a
-    verified role but unverified exposure or cadence, and the flags are the
-    fact the label claims to report. Ingredient/profile/price safety is
-    identical in both modes.
-    """
+    """Fail-closed eligibility. `strict` remains for source compatibility;
+    D-029 permits no mode that relaxes required evidence."""
     kept: dict[str, list[CatalogProduct]] = {}
     vetoes: list[Veto] = []
     quality_flags: dict[tuple[str, str], list[str]] = {}
@@ -188,15 +169,10 @@ def apply_profile_gates(
         kept[slot] = []
         for product in products:
             reasons = profile_gate_reasons(product, slot, profile, knowledge)
-            soft = [r for r in reasons if _reason_is_soft(r)]
-            hard = [r for r in reasons if not _reason_is_soft(r)]
-            blocking = reasons if strict else hard
-            if blocking:
-                vetoes.extend(Veto(product.product_id, slot, r) for r in blocking)
+            if reasons:
+                vetoes.extend(Veto(product.product_id, slot, r) for r in reasons)
             else:
                 kept[slot].append(product)
-                if soft:
-                    quality_flags[(product.product_id, slot)] = soft
     return kept, vetoes, quality_flags
 
 

@@ -20,7 +20,7 @@ def main(argv: list[str] | None = None) -> int:
     rec.add_argument("--generated-at", default=None, help="pin the timestamp (deterministic runs)")
     rec.add_argument("--eligibility-mode", default="strict", choices=("strict", "hybrid"),
                      help="strict: only evidence-verified products (default); "
-                          "hybrid: whole catalog by category, verified products ranked/labeled higher")
+                          "hybrid: deprecated compatibility alias; strict is still applied")
     rec.add_argument("--allow-signal-catalog-mismatch", action="store_true",
                      help="accept a run whose signal stores are bound to a different "
                           "catalog: mismatched stores are skipped with a warning, every "

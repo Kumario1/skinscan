@@ -59,6 +59,7 @@ class CatalogProduct:
     broad_spectrum: bool | None = None
     cadence: str | None = None
     contraindications: tuple[str, ...] = ()
+    contraindications_verified: bool = False
     intended_areas: tuple[str, ...] = ()
     routine_roles: tuple[str, ...] = ()
     exposure: str | None = None
@@ -90,6 +91,7 @@ class CatalogProduct:
             "broad_spectrum": self.broad_spectrum,
             "cadence": self.cadence,
             "contraindications": list(self.contraindications),
+            "contraindications_verified": self.contraindications_verified,
             "intended_areas": list(self.intended_areas),
             "routine_roles": list(self.routine_roles),
             "exposure": self.exposure,
@@ -147,6 +149,11 @@ class CatalogProduct:
             broad_spectrum=d.get("broad_spectrum"),
             cadence=d.get("cadence"),
             contraindications=tuple(d.get("contraindications") or []),
+            contraindications_verified=bool(
+                stated is not None
+                and d.get("label_verified_at")
+                and "contraindications" in d
+            ),
             intended_areas=tuple(d.get("intended_areas") or []),
             routine_roles=tuple(d.get("routine_roles") or []),
             exposure=d.get("exposure"),

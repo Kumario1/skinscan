@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 
 from .catalog import CatalogProduct
 from .contracts import SLOTS, Profile
-from .gates import _reason_is_soft, duplicate_active_reasons, profile_gate_reasons
+from .gates import duplicate_active_reasons, profile_gate_reasons
 from .knowledge import Knowledge
 from .scoring import ScoredCandidate
 from .signals import TargetConcern
@@ -221,11 +221,7 @@ def validate_routine(
     strict: bool = True,
 ) -> list[str]:
     """Final fail-closed validation over the complete selected regimen.
-
-    strict=True re-vetoes on any gate reason. strict=False (hybrid) only a HARD
-    safety reason makes a step ineligible; soft verification-quality reasons are
-    tolerated here exactly as they were at the gate, so the routine stays valid.
-    """
+    `strict` remains for source compatibility; D-029 permits no soft gate."""
     reasons: list[str] = []
     slots_present = {step.slot for step in routine.steps}
     required = {"cleanser", "moisturizer", "spf"}
@@ -235,8 +231,7 @@ def validate_routine(
         reasons.append(f"required_role_missing:{slot}")
     for step in routine.steps:
         for reason in profile_gate_reasons(step.scored.product, step.slot, profile, k):
-            if strict or not _reason_is_soft(reason):
-                reasons.append(f"product_ineligible:{step.scored.product.product_id}:{reason}")
+            reasons.append(f"product_ineligible:{step.scored.product.product_id}:{reason}")
         # Backstop only: try_place already refuses these at insertion, so a
         # composed routine never carries one. It stays here because this
         # function is the last fail-closed check over a *complete* regimen and

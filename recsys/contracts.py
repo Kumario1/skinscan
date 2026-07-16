@@ -23,7 +23,7 @@ CONCERNS = (
     "hyperpigmentation", "dryness",
 )
 TRIAGE_LEVELS = ("routine", "routine_plus_review", "derm_first", "abstain")
-REFERRAL_ONLY_TRIAGE = ("derm_first", "abstain")
+THERAPY_DISPOSITIONS = ("active_treatment", "supportive_only", "maintenance", "defer")
 SKIN_TYPES = ("combination", "dry", "normal", "oily", "unknown")
 TONE_BUCKETS = ("light", "medium", "deep", "unknown")
 TONE_SOURCES = ("self_report", "photo", "unknown")
@@ -87,6 +87,13 @@ class AnalysisInput:
     safety_observations: tuple[dict, ...]  # {code, professional_review} kept verbatim
     triage_level: str
     referral_reasons: tuple[str, ...]
+    therapy_disposition: str
+    policy_reviewed: bool
+    therapy_policy_reviewed: bool
+    therapy_plan: dict
+    therapy_primary: dict | None
+    therapy_support_roles: tuple[str, ...]
+    therapy_deferred_reasons: tuple[str, ...]
     input_profile: dict
     source_image_sha256: str | None
     generated_at: str | None
@@ -143,6 +150,102 @@ def load_analysis(path: str | Path) -> AnalysisInput:
     triage = decision.get("triage_level")
     if triage not in TRIAGE_LEVELS:
         raise ContractViolation("decision.triage_level", f"unknown {triage!r}")
+    disposition = decision.get("therapy_disposition")
+    if disposition not in THERAPY_DISPOSITIONS:
+        raise ContractViolation("decision.therapy_disposition", f"unknown {disposition!r}")
+    policy_reviewed = decision.get("policy_reviewed")
+    if not isinstance(policy_reviewed, bool):
+        raise ContractViolation("decision.policy_reviewed", "expected a boolean")
+    if triage in {"derm_first", "abstain"} and disposition == "active_treatment":
+        raise ContractViolation(
+            "decision.therapy_disposition",
+            f"{triage} requires treatment to remain deferred",
+        )
+    therapy_policy = (data.get("policies") or {}).get("therapy")
+    if not isinstance(therapy_policy, dict):
+        raise ContractViolation("policies.therapy", "expected an object")
+    therapy_policy_reviewed = therapy_policy.get("reviewed")
+    if not isinstance(therapy_policy_reviewed, bool):
+        raise ContractViolation("policies.therapy.reviewed", "expected a boolean")
+    therapy_policy_identity = therapy_policy.get("identity")
+    therapy_policy_sha256 = therapy_policy.get("sha256")
+
+    plan = data.get("therapy_plan")
+    if not isinstance(plan, dict):
+        raise ContractViolation("therapy_plan", "expected an object")
+    support_roles = plan.get("support_roles")
+    required_support_roles = {"cleanser", "moisturizer", "sunscreen"}
+    if (
+        not isinstance(support_roles, list)
+        or len(support_roles) != len(required_support_roles)
+        or set(support_roles) != required_support_roles
+    ):
+        raise ContractViolation(
+            "therapy_plan.support_roles",
+            "expected cleanser, moisturizer, and sunscreen exactly once",
+        )
+    deferred = plan.get("deferred_reasons")
+    if not isinstance(deferred, list) or not all(isinstance(x, str) for x in deferred):
+        raise ContractViolation("therapy_plan.deferred_reasons", "expected string list")
+    primary = plan.get("primary")
+    if primary is not None:
+        if not isinstance(primary, dict):
+            raise ContractViolation("therapy_plan.primary", "expected object or null")
+        required = ("therapy", "strength_band", "exposure", "cadence", "role")
+        missing = [key for key in required
+                   if not isinstance(primary.get(key), str) or not primary[key]]
+        if missing:
+            raise ContractViolation("therapy_plan.primary", f"missing fields {missing}")
+        if primary["role"] != "treatment":
+            raise ContractViolation(
+                "therapy_plan.primary.role", "recsys supports treatment intent only"
+            )
+        if disposition != "active_treatment":
+            raise ContractViolation(
+                "therapy_plan.primary",
+                "primary treatment requires active_treatment disposition",
+            )
+        if not therapy_policy_reviewed:
+            raise ContractViolation(
+                "therapy_plan.primary",
+                "primary treatment requires a reviewed therapy policy",
+            )
+        if not isinstance(therapy_policy_identity, str) or not therapy_policy_identity:
+            raise ContractViolation(
+                "policies.therapy.identity", "reviewed policy requires a named identity"
+            )
+        if (
+            not isinstance(therapy_policy_sha256, str)
+            or len(therapy_policy_sha256) != 64
+            or any(c not in "0123456789abcdef" for c in therapy_policy_sha256.lower())
+        ):
+            raise ContractViolation(
+                "policies.therapy.sha256", "reviewed policy requires a sha256 digest"
+            )
+        if not isinstance(primary.get("cadence_source"), str) or not primary["cadence_source"]:
+            raise ContractViolation(
+                "therapy_plan.primary.cadence_source", "expected a named source"
+            )
+        amount = primary.get("amount")
+        if amount is not None and (not isinstance(amount, str) or not amount):
+            raise ContractViolation(
+                "therapy_plan.primary.amount", "expected a non-empty string or null"
+            )
+        if amount is not None and (
+            not isinstance(primary.get("amount_source"), str)
+            or not primary["amount_source"]
+        ):
+            raise ContractViolation(
+                "therapy_plan.primary.amount_source",
+                "required when amount is specified",
+            )
+        if not isinstance(plan.get("policy_version"), str) or not plan["policy_version"]:
+            raise ContractViolation("therapy_plan.policy_version", "expected a named policy")
+        if plan["policy_version"] != therapy_policy_identity:
+            raise ContractViolation(
+                "therapy_plan.policy_version",
+                "must match policies.therapy.identity",
+            )
 
     bucket = (data.get("skin_tone") or {}).get("bucket", "unknown")
     if bucket not in TONE_BUCKETS:
@@ -158,6 +261,13 @@ def load_analysis(path: str | Path) -> AnalysisInput:
         safety_observations=observations,
         triage_level=triage,
         referral_reasons=tuple(decision.get("referral_reasons") or []),
+        therapy_disposition=disposition,
+        policy_reviewed=policy_reviewed,
+        therapy_policy_reviewed=therapy_policy_reviewed,
+        therapy_plan=dict(plan),
+        therapy_primary=dict(primary) if primary is not None else None,
+        therapy_support_roles=tuple(support_roles),
+        therapy_deferred_reasons=tuple(deferred),
         input_profile=dict(data.get("input_profile") or {}),
         source_image_sha256=data.get("source_image_sha256"),
         generated_at=data.get("generated_at"),
@@ -181,6 +291,7 @@ class Profile:
     painful_or_deep_lesions: bool | None = None
     prior_scarring: bool | None = None
     max_price_usd: float | None = None
+    unknown_fields: frozenset[str] = frozenset()
     source: str = "unknown"  # "file" | "analysis.input_profile" | "unknown"
     profile_sha256: str | None = None
 
@@ -266,6 +377,12 @@ def _profile_from_dict(data: dict, source: str, sha256: str | None) -> Profile:
         painful_or_deep_lesions=_profile_optional_bool(data, "painful_or_deep_lesions"),
         prior_scarring=_profile_optional_bool(data, "prior_scarring"),
         max_price_usd=float(price) if price is not None else None,
+        unknown_fields=frozenset(
+            field_name for field_name in (
+                "allergies", "sensitivity_conditions", "current_actives",
+                "current_medications", "treatment_history",
+            ) if field_name not in data or data.get(field_name) is None
+        ),
         source=source,
         profile_sha256=sha256,
     )

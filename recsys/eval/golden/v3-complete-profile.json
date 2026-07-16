@@ -19,7 +19,8 @@
     "skin_type": "oily",
     "tone_bucket": "medium",
     "tone_source": "self_report",
-    "treatment_history": []
+    "treatment_history": [],
+    "unknown_fields": []
   },
   "routines": [
     {
@@ -30,63 +31,11 @@
       ],
       "archetype": "best_overall",
       "notes": [
-        "slot_unfilled:serum"
+        "support_only_treatment_deferred"
       ],
-      "per_label": [
-        "treatment:P188306"
-      ],
+      "per_label": [],
       "pm": [
         "cleanser:P417238",
-        "moisturizer:P469517"
-      ],
-      "safety_checks": {
-        "no_conflicting_actives_in_same_session": true,
-        "one_product_per_slot": true,
-        "retinoids_pm_only": true,
-        "spf_am_only": true
-      }
-    },
-    {
-      "am": [
-        "cleanser:P461537",
-        "moisturizer:P469517",
-        "spf:P456218"
-      ],
-      "archetype": "minimal",
-      "notes": [
-        "diversified_from_best_overall:cleanser",
-        "spf_added_to_minimal"
-      ],
-      "per_label": [
-        "treatment:P188306"
-      ],
-      "pm": [
-        "cleanser:P461537",
-        "moisturizer:P469517"
-      ],
-      "safety_checks": {
-        "no_conflicting_actives_in_same_session": true,
-        "one_product_per_slot": true,
-        "retinoids_pm_only": true,
-        "spf_am_only": true
-      }
-    },
-    {
-      "am": [
-        "cleanser:P461537",
-        "moisturizer:P469517",
-        "spf:P456218"
-      ],
-      "archetype": "comprehensive",
-      "notes": [
-        "diversified_from_best_overall:cleanser",
-        "slot_unfilled:serum"
-      ],
-      "per_label": [
-        "treatment:P188306"
-      ],
-      "pm": [
-        "cleanser:P461537",
         "moisturizer:P469517"
       ],
       "safety_checks": {
@@ -98,30 +47,30 @@
     }
   ],
   "schema_version": "recsys-1",
-  "status": "partial",
+  "status": "ok",
   "target_concerns": [
     {
       "concern": "acne_scarring",
       "referral_emphasis": false,
-      "selected_for_treatment": true,
+      "selected_for_treatment": false,
       "severity": 4
     },
     {
       "concern": "acne_inflammatory",
       "referral_emphasis": false,
-      "selected_for_treatment": true,
+      "selected_for_treatment": false,
       "severity": 3
     },
     {
       "concern": "hyperpigmentation",
       "referral_emphasis": false,
-      "selected_for_treatment": true,
+      "selected_for_treatment": false,
       "severity": 3
     },
     {
       "concern": "acne_comedonal",
       "referral_emphasis": false,
-      "selected_for_treatment": true,
+      "selected_for_treatment": false,
       "severity": 3
     }
   ],
@@ -137,34 +86,22 @@
       "scarring_risk",
       "persistent_pigment_concern"
     ],
-    "see_doctor_note": "These routines are safe to start, but a professional review is recommended for the number or severity of detected lesions, possible scarring, persistent dark-spot concerns. The analysis also noticed a spot it cannot assess (nevus_observation) \u2014 worth showing to a doctor."
+    "see_doctor_note": "Treatment is deferred; the routine below contains support only. Please see a dermatologist before starting or stopping medicine. The analysis also noticed a spot it cannot assess (nevus_observation) \u2014 worth showing to a doctor."
   },
-  "unavailable_archetypes": [
-    {
-      "archetype": "budget",
-      "reasons": [
-        "required_role_missing:cleanser",
-        "required_role_missing:moisturizer",
-        "required_role_missing:spf",
-        "required_role_missing:treatment"
-      ]
-    },
-    {
-      "archetype": "gentle_sensitive",
-      "reasons": [
-        "required_role_missing:treatment"
-      ]
-    }
-  ],
+  "unavailable_archetypes": [],
   "veto_reasons": {
     "compose": [],
     "profile": [
       "cadence_unverified",
       "exposure_not_verified:leave_on",
       "exposure_not_verified:rinse_off",
+      "format_not_allowed_for_role:balm",
+      "format_not_allowed_for_role:mist",
+      "format_not_allowed_for_role:oil",
+      "format_not_allowed_for_role:serum",
+      "format_unverified",
       "role_not_verified:cleanser",
       "role_not_verified:moisturizer",
-      "role_not_verified:serum",
       "role_not_verified:sunscreen",
       "spf_broad_spectrum_unverified",
       "treatment_active_in_support_role:benzoyl_peroxide",

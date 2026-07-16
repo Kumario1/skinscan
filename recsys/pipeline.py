@@ -14,7 +14,6 @@ from .candidates import generate_candidates
 from .catalog import load_catalog
 from .compose import compose_all, validate_routine
 from .contracts import (
-    REFERRAL_ONLY_TRIAGE,
     SCHEMA_VERSION,
     AnalysisInput,
     ContractViolation,
@@ -56,6 +55,27 @@ def select_targets(analysis: AnalysisInput) -> tuple[TargetConcern, ...]:
     findings = [c for c in analysis.concerns if c.severity >= 1]
     findings.sort(key=lambda c: (-c.severity, -c.confidence, c.concern))
     return tuple(TargetConcern(c.concern, c.severity, c.confidence) for c in findings)
+
+
+def _primary_treatment_unknowns(profile) -> tuple[str, ...]:
+    """Critical intake fields D-029 requires before primary treatment."""
+    unknown = set(profile.unknown_fields)
+    for name in ("age_years", "acne_duration_weeks", "painful_or_deep_lesions",
+                 "prior_scarring"):
+        if getattr(profile, name) is None:
+            unknown.add(name)
+    if profile.pregnancy_status == "unknown":
+        unknown.add("pregnancy_status")
+    return tuple(sorted(unknown))
+
+
+def _mark_support_only(routines) -> None:
+    for routine in routines:
+        routine.notes = [
+            note for note in routine.notes if note != "clear_skin_maintenance"
+        ]
+        if "support_only_treatment_deferred" not in routine.notes:
+            routine.notes.append("support_only_treatment_deferred")
 
 
 def _git_commit() -> str | None:
@@ -140,6 +160,21 @@ def run(
     knowledge = load_knowledge(static_root / "knowledge")
     analysis = load_analysis(analysis_path)
     profile = resolve_profile(profile_path, analysis)
+    all_targets = select_targets(analysis)
+    profile_unknowns = _primary_treatment_unknowns(profile)
+    can_treat = (
+        analysis.therapy_disposition == "active_treatment"
+        and analysis.therapy_primary is not None
+        and not profile_unknowns
+    )
+    therapy_primary = analysis.therapy_primary if can_treat else None
+    effective_disposition = analysis.therapy_disposition
+    deferred_reasons = list(analysis.therapy_deferred_reasons)
+    if analysis.therapy_disposition == "active_treatment" and not can_treat:
+        effective_disposition = "defer"
+        deferred_reasons.extend(f"required_profile_unknown:{name}" for name in profile_unknowns)
+        if analysis.therapy_primary is None:
+            deferred_reasons.append("therapy_plan_primary_missing")
     products, catalog_header = load_catalog(catalog_path)
     catalog_sha256 = sha256_file(catalog_path)
     verification_now = (
@@ -168,14 +203,21 @@ def run(
         allow_catalog_mismatch=allow_signal_catalog_mismatch,
     )
     warnings = verification_warnings + signal_warnings
+    if eligibility_mode == "hybrid":
+        warnings.append("hybrid eligibility is disabled by D-029 — strict eligibility applied")
 
-    targets = select_targets(analysis)
+    fulfillment_status = (
+        "pending" if can_treat
+        else "deferred" if analysis.therapy_disposition == "active_treatment"
+        else "not_requested"
+    )
     document: dict = {
         "schema_version": SCHEMA_VERSION,
         "generated_at": generated_at
         or _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
         "engine": {"version": ENGINE_VERSION, "git_commit": _git_commit(),
-                   "eligibility_mode": eligibility_mode},
+                   "eligibility_mode": "strict",
+                   "requested_eligibility_mode": eligibility_mode},
         "inputs": {
             "analysis_sha256": analysis.analysis_sha256,
             "source_image_sha256": analysis.source_image_sha256,
@@ -197,6 +239,19 @@ def run(
             "painful_or_deep_lesions": profile.painful_or_deep_lesions,
             "prior_scarring": profile.prior_scarring,
             "max_price_usd": profile.max_price_usd,
+            "unknown_fields": sorted(profile.unknown_fields),
+        },
+        "care_decision": {
+            "triage_level": analysis.triage_level,
+            "referral_reasons": list(analysis.referral_reasons),
+            "therapy_disposition": analysis.therapy_disposition,
+            "policy_reviewed": analysis.policy_reviewed,
+            "therapy_policy_reviewed": analysis.therapy_policy_reviewed,
+        },
+        "therapy_plan": dict(analysis.therapy_plan),
+        "treatment_fulfillment": {
+            "status": fulfillment_status,
+            "reasons": list(dict.fromkeys(deferred_reasons)),
         },
         "data_versions": {
             "catalog": {
@@ -221,31 +276,27 @@ def run(
                 if o.get("professional_review")
             ],
             "see_doctor_note": see_doctor_note(
-                analysis.triage_level, analysis.referral_reasons, analysis.safety_observations
+                analysis.triage_level, analysis.referral_reasons,
+                analysis.safety_observations, effective_disposition,
             ),
         },
         "target_concerns": [
             {
                 "concern": t.concern,
                 "severity": t.severity,
-                "selected_for_treatment": True,
+                "selected_for_treatment": can_treat,
                 "referral_emphasis": t.concern in knowledge.referral_emphasis,
             }
-            for t in targets
+            for t in all_targets
         ],
         "warnings": warnings,
     }
 
-    if analysis.triage_level in REFERRAL_ONLY_TRIAGE:
-        document["status"] = "referral_only"
-        document["routines"] = []
-        document["veto_log"] = {"profile": [], "compose": {}}
-        return document
-
-    strict_eligibility = eligibility_mode != "hybrid"
-    candidates = generate_candidates(products, targets, knowledge, strict=strict_eligibility)
+    candidates = generate_candidates(
+        products, all_targets, knowledge, therapy_primary=therapy_primary,
+    )
     gated, profile_vetoes, quality_flags = apply_profile_gates(
-        candidates, profile, knowledge, strict=strict_eligibility
+        candidates, profile, knowledge,
     )
     # Listed, never placed. Surfacing prescription-strength options with a
     # referral is D-033; ranking one into a routine would instead assert that it
@@ -254,7 +305,10 @@ def run(
     # dropping them makes that true by construction rather than by whichever way
     # the ranking happens to fall -- and keeps rows that carry no retail price
     # out of every routine total.
-    rx_options = prescription_options(gated.get("treatment", []), targets, knowledge)
+    rx_options = (
+        prescription_options(gated.get("treatment", []), therapy_primary)
+        if can_treat else []
+    )
     gated = {
         slot: [p for p in items if not is_prescription(p)] for slot, items in gated.items()
     }
@@ -267,12 +321,12 @@ def run(
         for category in {p.category for p in products}
     }
     ctx = ScoringContext(
-        targets=targets, profile=profile, knowledge=knowledge,
+        targets=all_targets, profile=profile, knowledge=knowledge,
         category_prices=category_prices,
     )
 
     archetype_scored = []
-    for archetype in knowledge.archetypes:
+    for archetype in knowledge.archetypes[:1]:
         weights = archetype.get("weights") or knowledge.default_weights
         scored_by_slot = {
             slot: score_products(slot_products, slot, providers, ctx, weights)
@@ -280,14 +334,15 @@ def run(
         }
         archetype_scored.append((archetype, scored_by_slot))
 
-    routines = compose_all(archetype_scored, targets, profile, knowledge)
+    routines = compose_all(archetype_scored, all_targets if can_treat else (), profile, knowledge)
+    if not can_treat:
+        _mark_support_only(routines)
 
     valid_routines = []
     unavailable = []
     for routine in routines:
         reasons = validate_routine(
-            routine, profile, knowledge, has_targets=bool(targets),
-            strict=(eligibility_mode != "hybrid"),
+            routine, profile, knowledge, has_targets=can_treat,
         )
         if reasons:
             unavailable.append({
@@ -296,13 +351,42 @@ def run(
             })
         else:
             valid_routines.append(routine)
-    document["status"] = (
-        "ok" if len(valid_routines) == len(routines)
-        else "partial" if valid_routines else "unavailable"
-    )
-    document["routines"] = [
-        routine_to_dict(r, knowledge, profile, quality_flags) for r in valid_routines
+    if can_treat and not valid_routines:
+        document["treatment_fulfillment"] = {
+            "status": "unfilled",
+            "reasons": ["required_role_unfilled:treatment"],
+        }
+        for target in document["target_concerns"]:
+            target["selected_for_treatment"] = False
+        document["triage"]["see_doctor_note"] = see_doctor_note(
+            analysis.triage_level, analysis.referral_reasons,
+            analysis.safety_observations, "defer",
+        )
+        support_routines = compose_all(archetype_scored, (), profile, knowledge)
+        _mark_support_only(support_routines)
+        valid_routines = [
+            routine for routine in support_routines
+            if not validate_routine(routine, profile, knowledge, has_targets=False)
+        ]
+        routines.extend(support_routines)
+        if valid_routines:
+            unavailable = []
+    elif can_treat:
+        document["treatment_fulfillment"] = {
+            "status": "included",
+            "reasons": [],
+        }
+    document["status"] = "ok" if valid_routines else "unavailable"
+    serialized = [
+        routine_to_dict(r, knowledge, profile, quality_flags) for r in valid_routines[:1]
     ]
+    document["routines"] = serialized
+    document["selected_regimen"] = serialized[0] if serialized else None
+    document["selected_products"] = (
+        {step.slot: step.scored.product.product_id for step in valid_routines[0].steps}
+        if valid_routines else {}
+    )
+    document["alternatives"] = {}
     document["unavailable_archetypes"] = unavailable
     document["prescription_options"] = rx_options
     document["veto_log"] = {

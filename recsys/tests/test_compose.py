@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 
 from recsys.catalog import CatalogProduct
@@ -27,10 +28,28 @@ def product(pid, category, actives=(), *, price_usd=10.0, cadence=None, spf=None
     # A carrier INCI so the ingredients are KNOWN: a row with neither actives
     # nor INCI now draws the hard ingredients_unknown veto, and these fixtures
     # exercise session composition, not that gate.
+    role = "sunscreen" if category == "spf" else category
     return CatalogProduct(
         product_id=pid, name=pid, brand="b", category=category,
-        price_usd=price_usd, size=None, format=None, spf=spf, spf_source=None,
+        price_usd=price_usd, size=None,
+        format=(
+            "cleanser" if category == "cleanser"
+            else "serum" if category == "serum"
+            else "cream"
+        ),
+        spf=spf, spf_source="verified" if spf else None,
         inci=("Water",), inci_sha256="", actives=tuple(actives), cadence=cadence,
+        cadence_source="https://example.test/label",
+        intended_areas=("face",), routine_roles=(role,),
+        exposure="rinse_off" if category == "cleanser" else "leave_on",
+        drug_actives=tuple(
+            {"name": active, "strength": "verified", "source": "https://example.test/label"}
+            for active in actives
+        ) if category == "treatment" else (),
+        label_source="https://example.test/label",
+        label_verified_at="2026-07-14",
+        contraindications_verified=True,
+        broad_spectrum=True if category == "spf" else None,
     )
 
 
@@ -57,7 +76,18 @@ def carrier_steps():
 
 
 def hybrid_reasons(routine, *, has_targets=True):
-    return validate_routine(routine, PROFILE, K, has_targets=has_targets, strict=False)
+    # These tests exercise composition. Give synthetic steps label-backed
+    # cadence matching their composed session so eligibility does not obscure
+    # the composition assertion now that D-029 has no relaxed validator mode.
+    cadences = {"AM": "am", "PM": "pm", "AM_PM": "am_pm", "PER_LABEL": "per_label"}
+    checked = replace(routine, steps=[
+        replace(item, scored=replace(
+            item.scored,
+            product=replace(item.scored.product, cadence=cadences[item.usage]),
+        ))
+        for item in routine.steps
+    ])
+    return validate_routine(checked, PROFILE, K, has_targets=has_targets)
 
 
 def test_pinned_sessions():

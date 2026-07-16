@@ -707,8 +707,8 @@ def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
     parser.add_argument("--recsys-catalog", type=Path, default=None)
     parser.add_argument("--recsys-eligibility-mode", default=None,
                         choices=("strict", "hybrid"),
-                        help="passed through to recsys; hybrid opens the whole "
-                             "catalog by category and lists prescription options")
+                        help="passed through to recsys; hybrid is a deprecated "
+                             "compatibility alias and still applies strict eligibility")
     parser.add_argument("--face-landmarker", type=Path, default=Path(paths["face_landmarker"]))
     parser.add_argument("--tile-size", type=int, default=sa_rpn["tile_size"])
     parser.add_argument("--overlap", type=int, default=sa_rpn["tile_overlap"])

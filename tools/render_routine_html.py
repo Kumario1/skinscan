@@ -567,7 +567,7 @@ def render_recsys(data: dict[str, Any], source_path: str) -> str:
             f'<div class="why">{esc(o.get("format"))} · '
             + esc(", ".join(f'{a["name"].replace("_", " ")} {a["strength"]}'
                             for a in o.get("actives") or []))
-            + f'</div></td><td>{chips(o.get("targets"))}</td></tr>'
+            + f'</div></td><td>{chips((o.get("therapy_plan_match") or {}).values())}</td></tr>'
             for o in options
         )
         blocks.append(

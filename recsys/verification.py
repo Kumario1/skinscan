@@ -294,6 +294,8 @@ def apply_verification(
             for key, value in facts.items()
             if key in fields
         }
+        if "contraindications" in facts:
+            updates["contraindications_verified"] = True
         updates["actives"] = tuple(sorted(set(product.actives) | set(verified_actives or ())))
         if "spf" in facts:
             updates["spf_source"] = "verified"
