@@ -141,7 +141,7 @@ def run(
     catalog_path: str | Path | None = None,
     data_root: str | Path | None = None,
     generated_at: str | None = None,
-    eligibility_mode: str = "strict",
+    eligibility_mode: str = "hybrid",
     allow_signal_catalog_mismatch: bool = False,
 ) -> dict:
     # The signal stores are keyed by the sha256 of the catalog they were built
@@ -203,8 +203,8 @@ def run(
         allow_catalog_mismatch=allow_signal_catalog_mismatch,
     )
     warnings = verification_warnings + signal_warnings
-    if eligibility_mode == "hybrid":
-        warnings.append("hybrid eligibility is disabled by D-029 — strict eligibility applied")
+    if eligibility_mode == "strict":
+        warnings.append("strict verification-only eligibility is retired by D-035 — hybrid applied")
 
     fulfillment_status = (
         "pending" if can_treat
@@ -216,7 +216,7 @@ def run(
         "generated_at": generated_at
         or _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
         "engine": {"version": ENGINE_VERSION, "git_commit": _git_commit(),
-                   "eligibility_mode": "strict",
+                   "eligibility_mode": "hybrid",
                    "requested_eligibility_mode": eligibility_mode},
         "inputs": {
             "analysis_sha256": analysis.analysis_sha256,

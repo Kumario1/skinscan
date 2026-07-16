@@ -205,23 +205,26 @@ def _hybrid():
                generated_at="2026-07-14T00:00:00+00:00", eligibility_mode="hybrid")
 
 
-def test_hybrid_request_is_compatibility_only_and_stays_strict():
+def test_strict_request_is_compatibility_only_and_uses_d035_hybrid():
     strict = run(ANALYSIS, FIXTURES / "profile_complete.json",
-                 generated_at="2026-07-14T00:00:00+00:00")  # default strict
+                 generated_at="2026-07-14T00:00:00+00:00",
+                 eligibility_mode="strict")
     hybrid = _hybrid()
     strict_products = {s["product_id"] for r in strict["routines"] for s in _steps(r)}
     hybrid_products = {s["product_id"] for r in hybrid["routines"] for s in _steps(r)}
     assert hybrid_products == strict_products
-    assert hybrid["engine"]["eligibility_mode"] == "strict"
+    assert hybrid["engine"]["eligibility_mode"] == "hybrid"
     assert hybrid["engine"]["requested_eligibility_mode"] == "hybrid"
-    assert any("disabled by D-029" in warning for warning in hybrid["warnings"])
+    assert not any("retired by D-035" in warning for warning in hybrid["warnings"])
+    assert any("retired by D-035" in warning for warning in strict["warnings"])
 
 
-def test_hybrid_never_emits_category_derived_products():
+def test_hybrid_emits_explicit_verification_status():
     hybrid = _hybrid()
     for routine in hybrid["routines"]:
         for step in _steps(routine):
-            assert step["verification"] == "verified"
+            assert step["verification_status"] in {"verified", "partial", "unverified"}
+            assert step["verification"] == step["verification_status"]
             assert step["prescription"] is False  # no Rx products in the seed catalog
 
 
@@ -287,6 +290,7 @@ def test_referral_only_path(tmp_path):
 
 def _derived_root_with_drug(tmp_path, **over):
     import hashlib
+    import shutil
     derived = tmp_path / "derived"
     derived.mkdir()
     (derived / "catalog_full.json").write_bytes(
@@ -309,6 +313,26 @@ def _derived_root_with_drug(tmp_path, **over):
     (derived / "catalog_drug.json").write_text(json.dumps(
         {"schema_version": "recsys-catalog-1", "products": [row]}
     ))
+    shutil.copytree(DATA / "verification", derived / "verification")
+    evidence = b"synthetic label explicitly reviewed: contraindications none stated"
+    digest = hashlib.sha256(evidence).hexdigest()
+    (derived / "verification" / "evidence" / digest).write_bytes(evidence)
+    approved_path = derived / "verification" / "approved.json"
+    approved = json.loads(approved_path.read_text())
+    approved["products"].append({
+        "product_id": row["product_id"],
+        "assertions": [{
+            "status": "approved",
+            "reviewer_id": "synthetic-test-reviewer",
+            "reviewer_type": "agent",
+            "approved_at": "2026-07-14T00:00:00+00:00",
+            "source_url": spl,
+            "retrieved_at": "2026-07-14T00:00:00+00:00",
+            "source_sha256": digest,
+            "facts": {"contraindications": []},
+        }],
+    })
+    approved_path.write_text(json.dumps(approved))
     return derived
 
 

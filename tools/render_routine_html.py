@@ -519,9 +519,11 @@ def _recsys_steps(title: str, steps: list[dict[str, Any]]) -> str:
         return ""
     rows = []
     for step in steps:
-        badge = ('<span class="tag ok">verified</span>'
-                 if step.get("verification") == "verified"
-                 else '<span class="tag der">category-derived</span>')
+        status = step.get("verification_status") or step.get("verification") or "unverified"
+        badge = (
+            f'<span class="tag {"ok" if status == "verified" else "der"}">'
+            f'{esc(status)}</span>'
+        )
         if step.get("prescription"):
             badge += '<span class="tag rx">Rx · see a doctor</span>'
         why = ((step.get("why") or {}).get("summary")) or ""

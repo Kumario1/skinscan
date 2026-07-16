@@ -387,9 +387,9 @@ def test_recsys_eligibility_mode_reaches_the_standalone_engine(
     assert main(args) == 0
 
     recommendations = json.loads((output_dir / "recommendations.json").read_text())
-    assert recommendations["engine"]["eligibility_mode"] == "strict"
+    assert recommendations["engine"]["eligibility_mode"] == "hybrid"
     assert recommendations["engine"]["requested_eligibility_mode"] == "hybrid"
-    assert any("disabled by D-029" in warning for warning in recommendations["warnings"])
+    assert not any("retired by D-035" in warning for warning in recommendations["warnings"])
     assert "prescription_options" in recommendations
 
 

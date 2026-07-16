@@ -703,3 +703,60 @@ a fabricated fact there would otherwise outlive the code that wrote it. This
 changes no eligibility (verified by rebuild: identical states, reasons, and
 `eligible_by_role`); it only stops the catalog asserting an area no label
 states, which a reader downstream cannot tell from a verified one.
+
+## D-035 — Verification ranks safe catalog candidates; it does not admit them (2026-07-16)
+
+**LOCKED. Owner decision.** Production v3 considers the whole catalog rather
+than limiting recommendation candidates to fully verified products. A
+product's overall verification state is not an eligibility gate. Every
+candidate carries an explicit `verification_status` (`verified`, `partial`, or
+`unverified`), and ranking prefers more completely verified products after
+therapeutic fit and safety.
+
+Hard safety and role compatibility remain mandatory before ranking. A product
+is excluded when the requested role lacks required facts or violates them,
+including treatment active and strength, contraindications, profile or
+cross-product active conflicts, usable sourced instructions, and SPF and
+broad-spectrum facts where sunscreen is required. Format, exposure, and a
+stated non-face intended area remain hard role vetoes. Missing non-safety
+verification facts lower `verification_status` and ranking; they do not by
+themselves remove the product from the candidate pool.
+
+**Support-role exception.** For cleanser, moisturizer, and sunscreen only, an
+approved, hash-bound `daily_support` evidence role is sufficient suitability
+evidence even when the source did not assert a contraindications fact. The
+contraindications state remains unknown and lowers `verification_status`; it is
+never presented as verified-none. Deterministic INCI/allergy, current-active,
+profile-conflict, exposure/format, and SPF gates still apply. Treatment and
+prescription candidates continue to require an explicit approved
+contraindications fact, including an empty list only when the reviewed source
+supports that assertion.
+
+The v3 hybrid order is therefore:
+
+```text
+whole catalog → hard safety/role eligibility → therapeutic fit
+              → verification completeness → concern/general ranking
+              → one regimen → validation
+```
+
+This amends:
+
+- **D-005:** the ranker may reorder every safety- and role-approved catalog
+  candidate; "rule-approved" no longer means fully verified.
+- **D-029:** hard eligibility gates safety-critical and role-compatible facts,
+  not overall catalog verification. Full verification of every recommended SKU
+  is no longer an external release gate; authoritative evidence for mandatory
+  safety facts remains required.
+- **D-030:** an unfilled role means no product passed the hard safety/role gate,
+  not merely that no fully verified product existed.
+- **D-032:** proposed, stale, or absent verification does not automatically make
+  a product ineligible. It cannot supply a missing mandatory safety fact or
+  count as verified evidence, and it lowers the product's verification status.
+- **D-033:** `label_source` and `label_verified_at` contribute to verification
+  status but are not standalone admission gates. Exact treatment active,
+  strength, cadence, exposure, contraindication, and conflict checks remain.
+
+Rules out: treating verification as a safety override; allowing ranking to
+repair a product missing mandatory safety facts; presenting partial or
+unverified products as verified; and dropping whole-regimen validation.

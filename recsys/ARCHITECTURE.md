@@ -75,8 +75,8 @@ list prescriptions & drop them ─► score ─► compose ─► explain ─►
 | `inci.py` | The deterministic ingredient parser. Turns an INCI string into canonical actives + comedogenic flags. Every safety gate keys off this, never off an LLM. |
 | `knowledge.py` | Loads the hand-authored tables in `data/knowledge/` — which actives target which concern, which are retinoids, which conflict, the five archetypes. |
 | `pipeline.py` | The orchestrator, and the only place the order above lives. It treats the reviewed therapy plan as the sole treatment intent, preserves that upstream intent when catalog fulfillment fails, reports fulfillment separately, retains a support-only regimen for deferred or unfillable treatment, and emits at most one selected regimen. It stamps the output with the sha256 of every input and data file it used. `emit` is `sort_keys=True` + atomic write; `--generated-at` pins the only non-deterministic field. |
-| `candidates.py` | Per-slot shortlist. Carrier slots take their verified category. A treatment is admitted only when its verified active, strength, exposure, and cadence exactly match the upstream primary therapy plan; detected concerns never manufacture treatment intent. |
-| `gates.py` | Hard vetoes with deterministic reason codes. Scores never participate and never override a veto. Missing role, label, exposure, cadence, SPF, ingredient, contraindication, or price evidence is not softened. The deprecated `hybrid` request is recorded for compatibility, but effective eligibility remains strict. |
+| `candidates.py` | Per-slot shortlist. Carrier slots begin with the whole catalog category. A treatment is admitted only when its verified active, strength, exposure, and cadence exactly match the upstream primary therapy plan; detected concerns never manufacture treatment intent. |
+| `gates.py` | Hard safety and role vetoes with deterministic reason codes. Scores never participate and never override a veto. D-035 permits approved `daily_support` evidence for support roles while leaving missing contraindications visible in verification status; treatments still require explicit contraindication evidence. |
 | `signals.py` | The pluggable scoring inputs. Each provider returns `SignalScore(value 0..1, evidence, details)` or `None` — and `None` means neutral 0.5 plus an uncertainty note, never a hidden penalty. Six weighted signals: concern fit, concern efficacy, ingredient analysis, review quality, popularity, price value. Adding one touches this file only. |
 | `scoring.py` | Weighted mean, weights per archetype. Every final score is decomposable back into named signals — tested, and visible in the output. |
 | `compose.py` | Archetypes remain data (`archetypes.json`), while the pipeline composes only `best_overall`. Session rules keep SPF AM-only, retinoids PM-only, and conflicting actives out of the same session. Validation re-applies every gate before output. |
@@ -124,11 +124,9 @@ broke on real data.
 4. **Phase 3 added evidence.** Facts that back a safety claim (SPF, cadence,
    whether it's even a face product) can't be guessed from a product name, so
    they need an approved, hash-bound snapshot of an authoritative page.
-5. **Hybrid eligibility was retired.** An early attempt treated missing
-   verification as a quality flag so more catalog rows could enter routines.
-   D-029 requires those facts before a treatment can implement a reviewed plan,
-   so `hybrid` is now only a deprecated CLI alias and effective eligibility is
-   always strict.
+5. **D-035 hybrid eligibility.** The whole catalog enters hard safety and role
+   gates. Surviving candidates carry `verified`, `partial`, or `unverified`
+   status, and completeness is a ranking tier rather than a safety override.
 6. **Prescriptions (2026-07-15).** See below.
 
 Governing decisions (`docs/DECISIONS.md`): **D-002** cosmetic framing, not
@@ -195,8 +193,8 @@ modes), `inputs`
 `care_decision` and `therapy_plan`, `treatment_fulfillment`, `triage`, `status` (`ok` | `unavailable`),
 `target_concerns`, `selected_regimen`, `selected_products`, `alternatives`,
 `prescription_options[]`, `veto_log`, and `warnings`. `routines[]` remains as a
-compatibility view containing zero or one selected regimen. Each step is
-verified and includes product identity, usage, and the decomposable `why` data.
+compatibility view containing zero or one selected regimen. Each step includes
+explicit `verification_status`, product identity, usage, and decomposable `why` data.
 
 ## Verifying it
 
@@ -210,9 +208,8 @@ python tools/verify_e2e.py --data-root recsys/data
 python tools/render_routine_html.py <recommendations.json>   # readable page
 ```
 
-The effective eligibility mode is always `strict`. `hybrid` remains accepted so
-older callers do not break, but it records a warning and does not widen the
-catalog.
+The effective eligibility mode is D-035 `hybrid`. `strict` remains accepted so
+older callers do not break, but records a deprecation warning.
 
 `verify_e2e.py` checks 18 stages against the *real* catalog and a real photo's
 analysis — the wiring fixtures cannot see — and re-runs the CLI in three
@@ -261,7 +258,7 @@ is the weighting working, not ignoring the input.
 | 3 — Verification overlay | **done** — 14 overlay rows, of which 13 match a catalog product: **0.8% of 1,634**. (The 14th is a DailyMed row that matches a drug-catalog row, not a cosmetics product.) Evidence hash-bound, stale-flip wired. |
 | 4 — Full catalog | **done** — 1,634 products; golden-file eval harness live |
 | 5 — Integration | **done** — `src/pipeline/e2e.py --recsys` writes both documents |
-| + Hybrid eligibility | **retired** — compatibility alias only; strict gates always apply |
+| + Hybrid eligibility | **done** — D-035 hard gates plus verification-aware ranking |
 | + Prescriptions | **done** (2026-07-15) — 34 Rx products catalogued and listed |
 
 Known gaps, honestly:
@@ -280,6 +277,5 @@ Known gaps, honestly:
   approved `retrieved_at` is 0–1 days old against its 90/180-day window. Tests
   cover it; production has not.
 
-Unverified required facts fail closed: unknown cadence, exposure, label role,
-SPF, contraindications, or price-under-a-user-cap veto the product. Missing
-ranking signals remain neutral because they cannot rescue a vetoed candidate.
+Unverified mandatory facts fail closed. Missing non-safety facts lower
+`verification_status` and ranking; they cannot rescue a vetoed candidate.

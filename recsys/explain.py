@@ -103,15 +103,10 @@ def step_to_dict(
     quality_flags: dict[tuple[str, str], list[str]] | None = None,
 ) -> dict:
     product = step.scored.product
-    # Effective eligibility is strict. Keeping this projection makes old callers
-    # safe if they pass a quality-flags mapping, but emitted steps have no flags.
-    flags = (quality_flags or {}).get((product.product_id, step.slot), [])
-    verification = "category_derived" if flags else "verified"
+    verification = step.scored.verification_status
     notes = list(step.notes)
-    if verification == "category_derived":
-        unverified = ", ".join(sorted(flags))
-        notes.append("category-derived: placed by catalog category; not "
-                     f"individually evidence-verified ({unverified})")
+    if verification != "verified":
+        notes.append(f"verification status: {verification}")
     # The pipeline lists prescriptions rather than placing them, so this should
     # stay false; it holds the line if a drug row ever reaches a step.
     prescription = is_prescription(product)
@@ -125,6 +120,7 @@ def step_to_dict(
         "price_usd": product.price_usd,
         "usage": step.usage,
         "verification": verification,
+        "verification_status": verification,
         "prescription": prescription,
         "directions": {
             "cadence": product.cadence,

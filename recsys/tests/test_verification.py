@@ -166,6 +166,7 @@ def test_verified_facts_override_name_parse_and_stale_facts_do_not(tmp_path):
     assert verified.amount == "thin_layer"
     assert verified.amount_source == "https://example.test/label"
     assert verified.evidence_roles == ("daily_support",)
+    assert verified.daily_support_verified is True
     assert "benzoyl_peroxide" in verified.actives
 
     stale, warnings, _meta = load_verification_overlay(

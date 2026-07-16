@@ -20,7 +20,38 @@ from dataclasses import dataclass, field
 from .catalog import CatalogProduct
 from .signals import ScoringContext, SignalScore
 
-VERIFIED_BONUS = 0.05  # ranking nudge for evidence-verified products (sort-only)
+VERIFICATION_RANK = {"verified": 0, "partial": 1, "unverified": 2}
+
+
+def verification_status(product: CatalogProduct, slot: str) -> str:
+    """D-035 completeness tier. Safety eligibility remains in gates.py."""
+    role = "sunscreen" if slot == "spf" else slot
+    facts = [
+        bool(product.intended_areas),
+        role in product.routine_roles,
+        product.format is not None,
+        product.exposure is not None,
+        product.cadence is not None and bool(product.cadence_source),
+        product.contraindications_verified,
+        product.comedogenic_claim not in (None, "unknown"),
+    ]
+    if slot in {"treatment", "spf"}:
+        facts.extend([bool(product.label_source), bool(product.label_verified_at)])
+    if slot == "treatment":
+        facts.append(bool(product.drug_actives))
+    if slot == "spf":
+        facts.extend([product.spf_source == "verified", product.broad_spectrum is True])
+    if all(facts):
+        return "verified"
+    has_evidence = bool(
+        product.evidence_grade
+        or product.daily_support_verified
+        or product.routine_roles
+        or product.cadence_source
+        or product.label_source
+        or product.contraindications_verified
+    )
+    return "partial" if has_evidence else "unverified"
 
 
 @dataclass(frozen=True)
@@ -29,6 +60,7 @@ class ScoredCandidate:
     final: float
     signals: tuple[SignalScore, ...]
     uncertainty: tuple[str, ...] = field(default=())
+    verification_status: str = "unverified"
 
 
 def score_products(
@@ -65,12 +97,11 @@ def score_products(
             total_weight += weight
         # No signal had anything to say: there is no weighted mean to report.
         final = round(acc / total_weight, 6) if total_weight else 0.0
-        scored.append(ScoredCandidate(product, final, tuple(signals), tuple(uncertainty)))
-    # Evidence-verified products (usage facts proven from a source) get a modest
-    # ranking nudge over category-derived ones — applied only in the sort so the
-    # stored `final` stays exactly the weighted mean. In strict mode every kept
-    # product is verified, so the nudge is uniform and changes nothing.
+        scored.append(ScoredCandidate(
+            product, final, tuple(signals), tuple(uncertainty),
+            verification_status(product, slot),
+        ))
     def rank_key(s: ScoredCandidate) -> tuple:
-        nudge = VERIFIED_BONUS if s.product.routine_roles else 0.0
-        return (-(s.final + nudge), s.product.product_id)
+        fit = next((signal.value for signal in s.signals if signal.name == "concern_fit"), 0.0)
+        return (-fit, VERIFICATION_RANK[s.verification_status], -s.final, s.product.product_id)
     return sorted(scored, key=rank_key)

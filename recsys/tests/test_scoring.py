@@ -21,6 +21,18 @@ class FixedSignal:
         return SignalScore(self.name, self._value, f"{self.name} evidence")
 
 
+class PerProductSignal:
+    name = "concern_fit"
+    version = "test"
+
+    def __init__(self, values):
+        self.values = values
+
+    def score(self, product, slot, ctx):
+        value = self.values[product.product_id]
+        return SignalScore(self.name, value, "synthetic fit")
+
+
 def ctx(targets=()):
     return ScoringContext(
         targets=tuple(targets), profile=Profile(pregnancy_status="not_pregnant"),
@@ -28,11 +40,12 @@ def ctx(targets=()):
     )
 
 
-def product(pid="p1", actives=(), roles=()):
+def product(pid="p1", actives=(), roles=(), **facts):
     return CatalogProduct(
         product_id=pid, name=pid, brand="b", category="treatment",
-        price_usd=None, size=None, format=None, spf=None, spf_source=None,
+        price_usd=None, size=None, format=facts.pop("format", None), spf=None, spf_source=None,
         inci=(), inci_sha256="", actives=tuple(actives), routine_roles=tuple(roles),
+        **facts,
     )
 
 
@@ -114,25 +127,61 @@ def test_final_stays_decomposable_when_a_signal_is_missing():
     assert scored.final == round(recomputed, 6) == 0.666667
 
 
-def test_verified_bonus_still_only_moves_the_sort_never_the_stored_final():
-    """Renormalising must not leak the ranking nudge into the reported score.
-
-    VERIFIED_BONUS is deliberately applied inside rank_key alone, so `final` stays
-    exactly the weighted mean while evidence-verified products still sort ahead of
-    category-derived peers. Both halves are checked here: the verified product
-    wins the sort on a bonus it does not carry in its score, and the two products'
-    `final` values remain identical and untouched by the nudge.
-    """
+def test_verification_status_is_explicit_and_sort_only():
     providers = [FixedSignal("a", 0.8), FixedSignal("b", None)]
     weights = {"a": 0.5, "b": 0.5}
     scored = score_products(
-        # p2 is evidence-verified (routine_roles set); p1 is category-derived.
-        # p1 sorts first on product_id, so only the nudge can put p2 ahead.
+        # p2 has some evidence; p1 has none. Completeness is a tier, not a score.
         [product("p1"), product("p2", roles=("treatment",))],
         "treatment", providers, ctx(), weights,
     )
     assert [s.product.product_id for s in scored] == ["p2", "p1"]
     assert [s.final for s in scored] == [0.8, 0.8]
+    assert [s.verification_status for s in scored] == ["partial", "unverified"]
+
+
+def test_verified_candidate_precedes_partial_candidate():
+    full = product(
+        "full", actives=("azelaic_acid",), roles=("treatment",),
+        intended_areas=("face",), format="cream", exposure="leave_on",
+        cadence="daily", cadence_source="https://example.test/directions",
+        contraindications_verified=True,
+        comedogenic_claim="claimed_noncomedogenic",
+        label_source="https://example.test/label", label_verified_at="2026-07-16",
+        drug_actives=({
+            "name": "azelaic_acid", "strength": "10%",
+            "source": "https://example.test/label",
+        },),
+    )
+    partial = product("partial", roles=("treatment",))
+    scored = score_products(
+        [partial, full], "treatment", [FixedSignal("a", 0.5)], ctx(), {"a": 1.0},
+    )
+
+    assert [item.verification_status for item in scored] == ["verified", "partial"]
+
+
+def test_therapeutic_fit_precedes_verification_completeness():
+    verified = product(
+        "verified", actives=("azelaic_acid",), roles=("treatment",),
+        intended_areas=("face",), format="cream", exposure="leave_on",
+        cadence="daily", cadence_source="https://example.test/directions",
+        contraindications_verified=True,
+        comedogenic_claim="claimed_noncomedogenic",
+        label_source="https://example.test/label", label_verified_at="2026-07-16",
+        drug_actives=({
+            "name": "azelaic_acid", "strength": "10%",
+            "source": "https://example.test/label",
+        },),
+    )
+    partial = product("partial", roles=("treatment",))
+    scored = score_products(
+        [verified, partial], "treatment",
+        [PerProductSignal({"verified": 0.2, "partial": 0.8})],
+        ctx(), {"concern_fit": 1.0},
+    )
+
+    assert [item.product.product_id for item in scored] == ["partial", "verified"]
 
 
 def test_a_product_with_no_signals_at_all_scores_zero_rather_than_an_invented_mean():

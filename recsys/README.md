@@ -15,7 +15,8 @@ python -m recsys recommend \
 ```
 
 Output: one selected, safety-valid AM/PM regimen with a per-product `why`
-built from the exact signal values the ranker used. A treatment enters that
+built from the exact signal values the ranker used and an explicit
+`verification_status` (`verified`, `partial`, or `unverified`). A treatment enters that
 regimen only when it exactly implements the reviewed upstream therapy plan;
 otherwise the engine emits support care only and names why treatment was
 deferred.

@@ -296,6 +296,8 @@ def apply_verification(
         }
         if "contraindications" in facts:
             updates["contraindications_verified"] = True
+        if "daily_support" in (facts.get("evidence_roles") or []):
+            updates["daily_support_verified"] = True
         updates["actives"] = tuple(sorted(set(product.actives) | set(verified_actives or ())))
         if "spf" in facts:
             updates["spf_source"] = "verified"
