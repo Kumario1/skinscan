@@ -1,0 +1,684 @@
+{
+  "schema_version": "lesion-care-proposal-1",
+  "policy_id": "skinscan-lesion-care-us",
+  "version": "2026-07-16-proposed.1",
+  "status": "proposed_pending_independent_dermatologist_review",
+  "jurisdiction": "US",
+  "effective_at": null,
+  "production_eligible": false,
+  "source_manifest": "lesion_care_source_manifest.json",
+  "review": {
+    "required_specialty": "board-certified dermatologist or jurisdictionally equivalent independent dermatologist",
+    "approved": false,
+    "reviewer_name": null,
+    "reviewer_credentials": null,
+    "reviewer_affiliation": null,
+    "reviewed_at": null,
+    "report_sha256": null,
+    "approved_policy_version": null,
+    "exceptions": [],
+    "blocking_reason": "No independent clinical review has been recorded. This proposal must not be loaded by production code."
+  },
+  "interpretation": {
+    "detector_output_is": "image-feature evidence for a named model label",
+    "detector_output_is_not": "a diagnosis, severity assessment, malignancy screen, or treatment authorization",
+    "confidence_is": "model evidence quality for the predicted label",
+    "confidence_is_not": "probability that the user has a clinical diagnosis",
+    "required_finding_prefix": "The image model found features most consistent with",
+    "diagnostic_confirmation": "A clinician may need history, palpation, dermoscopy, Wood lamp examination, or biopsy; a photograph cannot supply those checks."
+  },
+  "global_rules": [
+    {
+      "code": "approval_required",
+      "effect": "defer_all_medical_instruction",
+      "rule": "Until review.approved is true and the approved report hash and policy version match the deployed artifacts, return findings and safety-oriented referral wording only; do not generate an active treatment routine."
+    },
+    {
+      "code": "unknown_intake_defers",
+      "effect": "defer_active_treatment",
+      "rule": "A missing required or label-conditional intake answer is not a favorable default."
+    },
+    {
+      "code": "exact_label_only",
+      "effect": "forbid_group_substitution",
+      "rule": "Select a care path by the exact detector label. Do not collapse labels into acne, scarring, or pigmentation groups for treatment selection."
+    },
+    {
+      "code": "one_product_per_role",
+      "effect": "limit_output",
+      "rule": "Return at most one product for each requested routine role within an AM or PM session. An empty eligible set remains empty."
+    },
+    {
+      "code": "no_unverified_substitution",
+      "effect": "preserve_coverage_gap",
+      "rule": "Do not substitute a different ingredient, role, exposure, strength, or formulation when the exact proposed target has no eligible product."
+    },
+    {
+      "code": "prescription_and_procedure_discussion_only",
+      "effect": "forbid_start_stop_instruction",
+      "rule": "Prescription drugs and procedures may be described as clinician discussion options only. The application must not instruct a user to start, stop, obtain, or change one."
+    },
+    {
+      "code": "product_verification_is_ranked",
+      "effect": "rank_not_blanket_exclude",
+      "rule": "verified ranks above partial above unverified, but incomplete non-safety evidence alone is not a universal exclusion. Exact active identity and any fact required by a safety or role gate remain mandatory."
+    },
+    {
+      "code": "no_home_mole_or_peel_treatment",
+      "effect": "forbid_product_match",
+      "rule": "Never match a mole-removal product or an unsupervised high-strength chemical peel."
+    }
+  ],
+  "intake_contract": {
+    "policy_critical_required": [
+      "age_years",
+      "pregnancy_status",
+      "allergies",
+      "sensitivity_conditions",
+      "current_actives",
+      "current_medications",
+      "treatment_history",
+      "finding_duration_weeks",
+      "painful_or_deep_lesions",
+      "prior_scarring"
+    ],
+    "profile_fields_preserved_but_not_always_policy_blocking": [
+      "skin_type",
+      "tone_bucket",
+      "tone_source",
+      "max_price_usd"
+    ],
+    "conditional": {
+      "atrophic_scar": [
+        "active_acne_controlled",
+        "scar_duration_months"
+      ],
+      "hypertrophic_scar": [
+        "active_acne_controlled",
+        "scar_duration_months",
+        "wound_closed",
+        "scar_diagnosis_confirmed_by_clinician"
+      ],
+      "melasma": [
+        "spot_new_or_changing",
+        "spot_bleeding_itching_or_painful",
+        "pregnancy_or_hormonal_medication_onset"
+      ],
+      "nevus": [
+        "spot_new_or_changing",
+        "spot_bleeding_itching_or_painful",
+        "abcde_change_present"
+      ],
+      "other": [
+        "spot_new_or_changing",
+        "spot_bleeding_itching_or_painful"
+      ]
+    },
+    "pregnancy_values": [
+      "pregnant",
+      "trying",
+      "nursing",
+      "not_pregnant",
+      "not_applicable",
+      "unknown"
+    ],
+    "unknown_behavior": "defer the affected active-treatment path and explain which answer is needed"
+  },
+  "product_evidence_contract": {
+    "treatment": {
+      "required": [
+        "exact normalized active identity",
+        "exact strength",
+        "authoritative evidence for active identity, strength, exposure, cadence, and contraindications; a regulatory Drug Facts or prescription label is mandatory only when the reviewed therapeutic intent claims OTC or prescription drug status",
+        "no stated intended area that excludes the face; unknown or empty intended area lowers completeness but remains eligible",
+        "treatment role",
+        "known format, when present, must be permitted; unknown format lowers completeness but remains eligible",
+        "leave-on exposure unless the reviewed path explicitly permits rinse-off",
+        "cadence and cadence source",
+        "contraindications and their source"
+      ],
+      "ranking_only_unless_therapeutic_intent_requires_them": [
+        "label_source",
+        "label_verified_at"
+      ]
+    },
+    "sunscreen": {
+      "required": [
+        "SPF 30 or greater from an authoritative source",
+        "broad-spectrum status",
+        "sunscreen role",
+        "leave-on exposure",
+        "no stated intended area that excludes the face; unknown or empty intended area lowers completeness but remains eligible",
+        "known format, when present, must be permitted; unknown format lowers completeness but remains eligible"
+      ],
+      "melasma_additional_required": [
+        "deterministically parsed iron oxide or CI 77491, CI 77492, or CI 77499 ingredient"
+      ]
+    },
+    "scar_care_evidence": {
+      "required": [
+        "dedicated scar-care evidence role; this does not add a routine role to the current closed vocabulary",
+        "exact silicone sheet or silicone gel formulation evidence",
+        "closed and healed wound requirement",
+        "warnings and stop conditions",
+        "clinician-confirmed raised-scar context"
+      ]
+    }
+  },
+  "labels": [
+    {
+      "lesion_type": "closed_comedo",
+      "finding_wording": "The image model found features most consistent with a closed comedo (a white or skin-colored plugged pore).",
+      "finding_limit": "A photograph cannot confirm that the bump is acne or exclude lookalikes such as milia, folliculitis, keratosis pilaris, or perioral dermatitis.",
+      "care_path": {
+        "status": "proposed_retail_or_clinician",
+        "channels": [
+          "retail",
+          "prescription_discussion",
+          "refer"
+        ],
+        "retail_target_actives": [
+          {
+            "active_id": "adapalene",
+            "strength": "0.1%",
+            "formulation": "FDA-labeled OTC leave-on acne drug",
+            "cadence": "per Drug Facts; introductory cadence wording requires clinical approval",
+            "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review"
+          },
+          {
+            "active_id": "salicylic_acid",
+            "strength": "0.5%-2%",
+            "formulation": "FDA-compliant OTC acne drug with exact exposure and directions",
+            "cadence": "per Drug Facts",
+            "eligibility": "no allergy, conflicting current active, or product contraindication"
+          }
+        ],
+        "required_product_roles": [
+          "treatment"
+        ],
+        "clinician_options": [
+          "topical retinoid or combination therapy when OTC care is unsuitable or unsuccessful",
+          "azelaic acid when clinically appropriate"
+        ],
+        "review_period": "Review response and tolerability at 12 weeks; improvement may not be visible for 6-8 weeks.",
+        "stop_or_escalate": [
+          "severe irritation or allergic reaction",
+          "diagnostic uncertainty",
+          "painful deep lesions, scarring, or persistent pigment change",
+          "no adequate response after a completed reviewed course"
+        ],
+        "prohibited_matches": [
+          "topical antibiotic monotherapy",
+          "unverified cosmetic retinol substituted for adapalene",
+          "scrub or peel substituted for a leave-on treatment"
+        ],
+        "reason_codes": [
+          "exact_label_closed_comedo",
+          "comedonal_path_proposed",
+          "clinical_approval_pending"
+        ]
+      },
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ]
+    },
+    {
+      "lesion_type": "open_comedo",
+      "finding_wording": "The image model found features most consistent with an open comedo (a blackhead caused by an open plugged pore, not trapped dirt).",
+      "finding_limit": "A photograph cannot confirm acne or distinguish every pigmented or follicular lookalike.",
+      "care_path": {
+        "status": "proposed_retail_or_clinician",
+        "channels": [
+          "retail",
+          "prescription_discussion",
+          "refer"
+        ],
+        "retail_target_actives": [
+          {
+            "active_id": "adapalene",
+            "strength": "0.1%",
+            "formulation": "FDA-labeled OTC leave-on acne drug",
+            "cadence": "per Drug Facts; introductory cadence wording requires clinical approval",
+            "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review"
+          },
+          {
+            "active_id": "salicylic_acid",
+            "strength": "0.5%-2%",
+            "formulation": "FDA-compliant OTC acne drug with exact exposure and directions",
+            "cadence": "per Drug Facts",
+            "eligibility": "no allergy, conflicting current active, or product contraindication"
+          }
+        ],
+        "required_product_roles": [
+          "treatment"
+        ],
+        "clinician_options": [
+          "topical retinoid or combination therapy when OTC care is unsuitable or unsuccessful",
+          "azelaic acid when clinically appropriate"
+        ],
+        "review_period": "Review response and tolerability at 12 weeks; improvement may not be visible for 6-8 weeks.",
+        "stop_or_escalate": [
+          "severe irritation or allergic reaction",
+          "diagnostic uncertainty",
+          "painful deep lesions, scarring, or persistent pigment change",
+          "no adequate response after a completed reviewed course"
+        ],
+        "prohibited_matches": [
+          "topical antibiotic monotherapy",
+          "manual extraction instruction",
+          "unverified cosmetic retinol substituted for adapalene"
+        ],
+        "reason_codes": [
+          "exact_label_open_comedo",
+          "comedonal_path_proposed",
+          "clinical_approval_pending"
+        ]
+      },
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ]
+    },
+    {
+      "lesion_type": "papule",
+      "finding_wording": "The image model found features most consistent with an inflamed papule (a small solid bump without visible pus).",
+      "finding_limit": "A photograph cannot confirm acne, measure depth, or exclude folliculitis, rosacea, perioral dermatitis, or another inflammatory eruption.",
+      "care_path": {
+        "status": "proposed_retail_or_clinician",
+        "channels": [
+          "retail",
+          "prescription_discussion",
+          "refer"
+        ],
+        "retail_target_actives": [
+          {
+            "active_id": "benzoyl_peroxide",
+            "strength": "2.5%-10%",
+            "formulation": "FDA-compliant OTC acne drug; exact reviewed path must state leave-on or short-contact exposure",
+            "cadence": "per Drug Facts; alternate-day or short-contact introduction may be considered only in approved wording",
+            "eligibility": "no allergy, conflicting current active, or product contraindication"
+          },
+          {
+            "active_id": "adapalene",
+            "strength": "0.1%",
+            "formulation": "FDA-labeled OTC leave-on acne drug, including an exact fixed benzoyl-peroxide combination when the label supports it",
+            "cadence": "per Drug Facts",
+            "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review"
+          }
+        ],
+        "required_product_roles": [
+          "treatment"
+        ],
+        "clinician_options": [
+          "fixed topical combination therapy",
+          "azelaic acid",
+          "oral therapy for clinically assessed moderate-to-severe acne"
+        ],
+        "review_period": "Review response and tolerability at 12 weeks; improvement may not be visible for 6-8 weeks.",
+        "stop_or_escalate": [
+          "rapid spread, fever, eye involvement, or severe pain",
+          "deep lesions or scarring",
+          "severe irritation or allergic reaction",
+          "no adequate response after a completed reviewed course"
+        ],
+        "prohibited_matches": [
+          "topical antibiotic monotherapy",
+          "oral antibiotic monotherapy",
+          "simultaneous topical and oral antibiotic without a clinician-managed regimen"
+        ],
+        "reason_codes": [
+          "exact_label_papule",
+          "inflammatory_path_proposed",
+          "clinical_approval_pending"
+        ]
+      },
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ]
+    },
+    {
+      "lesion_type": "pustule",
+      "finding_wording": "The image model found features most consistent with a pustule (an inflamed bump with visible pus).",
+      "finding_limit": "A photograph cannot confirm acne or exclude folliculitis, infection, rosacea, or another pustular eruption.",
+      "care_path": {
+        "status": "proposed_retail_or_clinician",
+        "channels": [
+          "retail",
+          "prescription_discussion",
+          "refer"
+        ],
+        "retail_target_actives": [
+          {
+            "active_id": "benzoyl_peroxide",
+            "strength": "2.5%-10%",
+            "formulation": "FDA-compliant OTC acne drug; exact reviewed path must state leave-on or short-contact exposure",
+            "cadence": "per Drug Facts; alternate-day or short-contact introduction may be considered only in approved wording",
+            "eligibility": "no allergy, conflicting current active, or product contraindication"
+          },
+          {
+            "active_id": "adapalene",
+            "strength": "0.1%",
+            "formulation": "FDA-labeled OTC leave-on acne drug, including an exact fixed benzoyl-peroxide combination when the label supports it",
+            "cadence": "per Drug Facts",
+            "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review"
+          }
+        ],
+        "required_product_roles": [
+          "treatment"
+        ],
+        "clinician_options": [
+          "fixed topical combination therapy",
+          "azelaic acid",
+          "oral therapy for clinically assessed moderate-to-severe acne"
+        ],
+        "review_period": "Review response and tolerability at 12 weeks; improvement may not be visible for 6-8 weeks.",
+        "stop_or_escalate": [
+          "rapid spread, fever, eye involvement, or severe pain",
+          "deep lesions or scarring",
+          "severe irritation or allergic reaction",
+          "no adequate response after a completed reviewed course"
+        ],
+        "prohibited_matches": [
+          "popping or lancing instruction",
+          "topical antibiotic monotherapy",
+          "oral antibiotic monotherapy"
+        ],
+        "reason_codes": [
+          "exact_label_pustule",
+          "inflammatory_path_proposed",
+          "clinical_approval_pending"
+        ]
+      },
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ]
+    },
+    {
+      "lesion_type": "nodule",
+      "finding_wording": "The image model found features most consistent with a nodule, but a photograph cannot establish that a lesion is deep or nodular.",
+      "finding_limit": "Depth, tenderness, fluctuation, cyst formation, and scarring risk require history and often palpation by a clinician.",
+      "care_path": {
+        "status": "clinician_first",
+        "channels": [
+          "refer",
+          "prescription_discussion"
+        ],
+        "retail_target_actives": [],
+        "required_product_roles": [],
+        "clinician_options": [
+          "confirm nodular or nodulocystic acne and assess severity and scarring risk",
+          "systemic therapy, including isotretinoin when clinically indicated",
+          "combination topical and systemic therapy",
+          "intralesional corticosteroid for selected large lesions"
+        ],
+        "review_period": "Prompt clinical assessment; urgency rises with severe pain, rapid worsening, systemic symptoms, or scarring.",
+        "stop_or_escalate": [
+          "severe pain, rapid worsening, fever, or extensive involvement",
+          "scarring or psychosocial burden",
+          "diagnostic uncertainty"
+        ],
+        "prohibited_matches": [
+          "automatic retail treatment",
+          "popping, lancing, or home drainage",
+          "isotretinoin start or stop instruction"
+        ],
+        "reason_codes": [
+          "exact_label_nodule",
+          "photo_cannot_confirm_depth",
+          "nodular_acne_referral",
+          "no_retail_product_match"
+        ]
+      },
+      "source_ids": [
+        "S01",
+        "S02",
+        "S06",
+        "S07"
+      ]
+    },
+    {
+      "lesion_type": "atrophic_scar",
+      "finding_wording": "The image model found features most consistent with a depressed acne scar.",
+      "finding_limit": "A photograph cannot reliably distinguish scar subtype, active inflammatory disease, enlarged pores, or other textural change, and it cannot assess skin mechanics.",
+      "care_path": {
+        "status": "clinician_first",
+        "channels": [
+          "refer",
+          "procedure",
+          "prescription_discussion"
+        ],
+        "retail_target_actives": [],
+        "required_product_roles": [],
+        "clinician_options": [
+          "control active acne before scar procedures",
+          "scar-subtype assessment",
+          "microneedling, laser, chemical reconstruction, filler, punch techniques, or surgery selected by a dermatologist",
+          "topical retinoid or salicylic acid for selected mild scarring only after clinical assessment"
+        ],
+        "review_period": "If severe scarring persists one year after acne clears, NICE recommends specialist referral; individual procedure follow-up is clinician-defined.",
+        "stop_or_escalate": [
+          "active acne is uncontrolled",
+          "scar is new, changing, painful, bleeding, or diagnostically uncertain",
+          "procedure causes blistering, infection, worsening pigment change, or scarring"
+        ],
+        "prohibited_matches": [
+          "unsupervised high-strength chemical peel",
+          "automatic retinoid or acid product match",
+          "silicone product substituted for a depressed-scar procedure path"
+        ],
+        "reason_codes": [
+          "exact_label_atrophic_scar",
+          "scar_subtype_requires_confirmation",
+          "procedure_discussion_only",
+          "no_retail_product_match"
+        ]
+      },
+      "source_ids": [
+        "S02",
+        "S08",
+        "S18"
+      ]
+    },
+    {
+      "lesion_type": "hypertrophic_scar",
+      "finding_wording": "The image model found features most consistent with a raised scar.",
+      "finding_limit": "A photograph cannot confirm hypertrophic scar versus keloid, active inflammation, infection, tumor, or another raised lesion.",
+      "care_path": {
+        "status": "clinician_first",
+        "channels": [
+          "refer",
+          "procedure",
+          "prescription_discussion"
+        ],
+        "retail_target_actives": [],
+        "required_product_roles": [],
+        "clinician_options": [
+          "confirm hypertrophic scar versus keloid and whether the wound is fully closed",
+          "silicone sheet or silicone gel discussion, with explicit acknowledgement that comparative evidence is low certainty",
+          "injection, laser, cryotherapy, or surgery selected for the confirmed scar type"
+        ],
+        "review_period": "Silicone use, when recommended by a clinician, is commonly prolonged for months; exact duration and stop rules require reviewer-approved wording.",
+        "stop_or_escalate": [
+          "open wound, infection, rash, skin breakdown, or worsening pain",
+          "rapid growth, bleeding, color change, or diagnostic uncertainty"
+        ],
+        "prohibited_matches": [
+          "automatic silicone product match without confirmed scar context and closed wound",
+          "generic dimethicone moisturizer substituted for dedicated scar-care evidence",
+          "unsupervised scar procedure"
+        ],
+        "reason_codes": [
+          "exact_label_hypertrophic_scar",
+          "scar_subtype_requires_confirmation",
+          "silicone_evidence_very_low_certainty",
+          "verified_scar_product_gap"
+        ]
+      },
+      "source_ids": [
+        "S09",
+        "S10",
+        "S18"
+      ]
+    },
+    {
+      "lesion_type": "melasma",
+      "finding_wording": "The image model found a pigment pattern that may be consistent with melasma.",
+      "finding_limit": "A photograph cannot confirm melasma or exclude post-inflammatory pigment change, medication-related pigmentation, a nevus, or skin cancer; dermoscopy, Wood lamp examination, or biopsy may be needed.",
+      "care_path": {
+        "status": "proposed_photoprotection_or_clinician",
+        "channels": [
+          "retail",
+          "prescription_discussion",
+          "procedure",
+          "refer"
+        ],
+        "retail_target_actives": [
+          {
+            "active_id": "iron_oxides",
+            "strength": "ingredient identity required; no therapeutic percentage inferred",
+            "formulation": "tinted broad-spectrum face sunscreen with SPF 30 or greater and exact SKU evidence",
+            "cadence": "per product label",
+            "eligibility": "no product contraindication or allergy; all sunscreen and iron-oxide evidence gates pass"
+          }
+        ],
+        "required_product_roles": [
+          "sunscreen"
+        ],
+        "clinician_options": [
+          "hydroquinone prescription therapy",
+          "triple-combination prescription therapy",
+          "azelaic acid, kojic acid, or vitamin C in a clinician-selected plan",
+          "carefully selected procedure after diagnosis and pigment-risk assessment"
+        ],
+        "review_period": "Visible improvement often takes 3-12 months; reassess sooner if the pattern changes or diagnosis is uncertain.",
+        "stop_or_escalate": [
+          "new, changing, asymmetric, bleeding, itching, or painful spot",
+          "irritation or paradoxical darkening",
+          "diagnostic uncertainty",
+          "history suggesting medication or hormonal trigger that needs clinician review"
+        ],
+        "prohibited_matches": [
+          "OTC hydroquinone or unapproved skin-lightening product",
+          "unsupervised high-strength chemical peel",
+          "untinted sunscreen substituted when the reviewed path requires visible-light protection"
+        ],
+        "reason_codes": [
+          "exact_label_melasma",
+          "diagnosis_not_confirmed_by_photo",
+          "iron_oxide_spf_path_proposed",
+          "clinical_approval_pending"
+        ]
+      },
+      "source_ids": [
+        "S05",
+        "S11",
+        "S12",
+        "S13",
+        "S18"
+      ]
+    },
+    {
+      "lesion_type": "nevus",
+      "finding_wording": "The image model found features most consistent with a mole (nevus), but it cannot determine that a spot is benign.",
+      "finding_limit": "A photograph and model score are not a skin-cancer screen. Dermoscopy, change over time, full history, and sometimes biopsy are needed.",
+      "care_path": {
+        "status": "monitor_or_refer",
+        "channels": [
+          "monitor",
+          "refer"
+        ],
+        "retail_target_actives": [],
+        "required_product_roles": [],
+        "clinician_options": [
+          "dermatoscopic examination",
+          "biopsy or clinician removal when suspicious or bothersome"
+        ],
+        "review_period": "Seek prompt dermatology review for a new or evolving spot or any ABCDE feature; otherwise follow clinician-directed monitoring.",
+        "stop_or_escalate": [
+          "asymmetry, irregular border, varied color, concerning diameter, or evolution",
+          "new mole after age 30",
+          "bleeding, itching, pain, rapid growth, or an outlier spot"
+        ],
+        "prohibited_matches": [
+          "any mole-removal product",
+          "acid, retinoid, freezing, burning, cutting, or home remedy",
+          "reassurance that the spot is benign"
+        ],
+        "reason_codes": [
+          "exact_label_nevus",
+          "not_a_skin_cancer_screen",
+          "monitor_or_refer_only",
+          "no_product_match"
+        ]
+      },
+      "source_ids": [
+        "S14",
+        "S15",
+        "S16",
+        "S17",
+        "S19"
+      ]
+    },
+    {
+      "lesion_type": "other",
+      "finding_wording": "The image model could not support one of the named lesion-specific pathways.",
+      "finding_limit": "The unsupported class can contain benign, infectious, inflammatory, medication-related, or malignant conditions that require different management.",
+      "care_path": {
+        "status": "unsupported",
+        "channels": [
+          "unsupported",
+          "refer"
+        ],
+        "retail_target_actives": [],
+        "required_product_roles": [],
+        "clinician_options": [
+          "history and examination to establish a diagnosis"
+        ],
+        "review_period": "No treatment review period is assigned because no treatment pathway is supported.",
+        "stop_or_escalate": [
+          "new or changing lesion",
+          "bleeding, itching, pain, rapid spread, fever, eye involvement, or systemic symptoms",
+          "persistent concern or diagnostic uncertainty"
+        ],
+        "prohibited_matches": [
+          "all treatment products",
+          "substitution from the nearest detector label",
+          "reassurance or diagnosis based on model confidence"
+        ],
+        "reason_codes": [
+          "exact_label_other",
+          "unsupported_finding",
+          "no_product_match"
+        ]
+      },
+      "source_ids": [
+        "S07",
+        "S16",
+        "S19"
+      ]
+    }
+  ]
+}
