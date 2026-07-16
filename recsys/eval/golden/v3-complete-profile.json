@@ -93,6 +93,7 @@
     "compose": [],
     "profile": [
       "cadence_unverified",
+      "contraindications_unverified",
       "exposure_not_verified:leave_on",
       "exposure_not_verified:rinse_off",
       "format_not_allowed_for_role:balm",

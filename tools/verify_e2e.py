@@ -203,7 +203,7 @@ def main() -> int:
     parser.add_argument("--analysis", type=Path,
                         default=ROOT / "runs/e2e/rx_test_1/analysis.json")
     parser.add_argument("--data-root", type=Path, default=ROOT / "recsys/data/derived")
-    parser.add_argument("--mode", default="strict", choices=("strict", "hybrid"))
+    parser.add_argument("--mode", default="hybrid", choices=("strict", "hybrid"))
     parser.add_argument("--runs", type=int, default=3)
     args = parser.parse_args()
 

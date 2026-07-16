@@ -80,7 +80,6 @@ def test_verification_quality_gaps_are_hard():
         "exposure_not_verified:leave_on",
         "cadence_unverified",
         "treatment_active_unverified",
-        "treatment_label_unverified",
         "contraindications_unverified",
         "format_unverified",
         "amount_source_unverified",
@@ -95,6 +94,25 @@ def test_treatment_requires_explicit_contraindication_evidence():
     )
     assert "contraindications_unverified" in profile_gate_reasons(
         treatment, "treatment", Profile(pregnancy_status="not_pregnant"), K
+    )
+
+
+def test_support_requires_explicit_contraindications_or_approved_daily_support():
+    profile = Profile(pregnancy_status="not_pregnant")
+    unknown = product(
+        category="moisturizer", contraindications_verified=False,
+        daily_support_verified=False,
+    )
+    approved = product(
+        category="moisturizer", contraindications_verified=False,
+        daily_support_verified=True,
+    )
+
+    assert "contraindications_unverified" in profile_gate_reasons(
+        unknown, "moisturizer", profile, K
+    )
+    assert "contraindications_unverified" not in profile_gate_reasons(
+        approved, "moisturizer", profile, K
     )
 
 

@@ -71,6 +71,7 @@ class CatalogProduct:
     amount: str | None = None
     amount_source: str | None = None
     evidence_roles: tuple[str, ...] = ()
+    daily_support_verified: bool = False
     evidence_grade: str | None = None
     comedogenic_claim: str | None = None
 
@@ -103,6 +104,7 @@ class CatalogProduct:
             "amount": self.amount,
             "amount_source": self.amount_source,
             "evidence_roles": list(self.evidence_roles),
+            "daily_support_verified": self.daily_support_verified,
             "evidence_grade": self.evidence_grade,
             "comedogenic_claim": self.comedogenic_claim,
         }
@@ -149,11 +151,7 @@ class CatalogProduct:
             broad_spectrum=d.get("broad_spectrum"),
             cadence=d.get("cadence"),
             contraindications=tuple(d.get("contraindications") or []),
-            contraindications_verified=bool(
-                stated is not None
-                and d.get("label_verified_at")
-                and "contraindications" in d
-            ),
+            contraindications_verified=False,
             intended_areas=tuple(d.get("intended_areas") or []),
             routine_roles=tuple(d.get("routine_roles") or []),
             exposure=d.get("exposure"),

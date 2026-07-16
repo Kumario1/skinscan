@@ -124,6 +124,8 @@ def profile_gate_reasons(
     for duplicate in sorted(actives & set(profile.current_actives)):
         reasons.append(f"duplicates_current_active:{duplicate}")
     if slot in ("cleanser", "moisturizer", "spf"):
+        if not product.contraindications_verified and not product.daily_support_verified:
+            reasons.append("contraindications_unverified")
         for active in sorted(actives & knowledge.treatment_actives):
             reasons.append(f"treatment_active_in_support_role:{active}")
     if slot == "treatment":
@@ -137,8 +139,6 @@ def profile_gate_reasons(
             reasons.append("treatment_active_unverified")
         if product.format in ("mask", "peel", "scrub"):
             reasons.append(f"treatment_format_not_daily_leave_on:{product.format}")
-        if not product.label_source or not product.label_verified_at:
-            reasons.append("treatment_label_unverified")
     if slot == "spf":
         if product.spf is None or product.spf < knowledge.min_spf:
             reasons.append("spf_below_30_or_unknown")
