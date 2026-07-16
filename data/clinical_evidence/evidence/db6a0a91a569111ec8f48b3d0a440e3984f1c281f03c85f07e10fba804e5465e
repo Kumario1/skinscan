@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html  lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+<meta name="Generator" content="Drupal 10 (https://www.drupal.org)" />
+<meta name="MobileOptimized" content="width" />
+<meta name="HandheldFriendly" content="true" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="/uspstf/sites/default/files/favicon.png" type="image/png" />
+
+    <title>Recommendation: Skin Cancer: Screening | United States Preventive Services Taskforce</title>
+    <link rel="stylesheet" media="all" href="/uspstf/sites/default/files/css/css_78SGTprsTPf8wQxZu91d3FmlnvgNjS7J8Vt586AtiYE.css?delta=0&amp;language=en&amp;theme=custom&amp;include=eJxljEEOwjAMBD8UmidFTurQqHVcvI6i_h64gBC3mdFqabPHwAmvkT64GBcV4b6SN-03-HUwQmZ3tgQtjY6Ejaz1e8rDXTvie_TykFUdbnTGaiQ81fZQBlwl-WTaEX9soVVaD7jgLDETOEzOVU3S9-mvPAGzC0oj" />
+<link rel="stylesheet" media="all" href="/uspstf/sites/default/files/css/css_wLikQ1hCovCpJ2TH_jtD4iDLo4MU7zUb14n22X2KYJA.css?delta=1&amp;language=en&amp;theme=custom&amp;include=eJxljEEOwjAMBD8UmidFTurQqHVcvI6i_h64gBC3mdFqabPHwAmvkT64GBcV4b6SN-03-HUwQmZ3tgQtjY6Ejaz1e8rDXTvie_TykFUdbnTGaiQ81fZQBlwl-WTaEX9soVVaD7jgLDETOEzOVU3S9-mvPAGzC0oj" />
+<link rel="stylesheet" media="print" href="/uspstf/themes/custom/custom/css/print.css?tfoh8a" />
+
+    
+    <!-- Google Tag Manager -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GTM-WPQVLRP"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){window.dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'GTM-WPQVLRP');
+    </script> 
+    <!-- End Google Tag Manager -->
+    <script>
+    // ForeSee Production Embed Script v2.01
+    // DO NOT MODIFY BELOW THIS LINE *****************************************
+    ;(function (g) {
+      var d = document, am = d.createElement('script'), h = d.head || d.getElementsByTagName("head")[0], fsr = 'fsReady',
+      aex = { 
+        "src": "//gateway.foresee.com/sites/ahrq/production/gateway.min.js",
+        "type": "text/javascript", 
+        "async": "true", 
+        "data-vendor": "fs", 
+        "data-role": "gateway" 
+      };
+      for (var attr in aex) { am.setAttribute(attr, aex[attr]); } h.appendChild(am); g[fsr] || (g[fsr] = function () { var aT = '__' + fsr + '_stk__'; g[aT] = g[aT] || []; g[aT].push(arguments); });
+    })(window);
+    // DO NOT MODIFY ABOVE THIS LINE *****************************************
+
+    // Un-comment out the function below when you are ready to input your variable
+    /*fsReady(function() { 
+      FSR.CPPS.set('name','value'); // use single quotes when passing a static-value 
+      FSR.CPPS.set('name2',somevariable); // don't use quotes for a dynamic value 
+      FSR.CPPS.set('name3',othervariable); // add as many CPPs as you like in this way 
+    });*/
+    </script>
+    <script src="https://dap.digitalgov.gov/Universal-Federated-Analytics-Min.js?agency=HHS&subagency=AHRQ" type="text/javascript" id="_fed_an_ua_tag"></script>
+  </head>
+  <body class="path-recommendation navbar-is-static-top has-glyphicons">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+        <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WPQVLRP" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <a href="#main-content" class="visually-hidden focusable skip-link">
+      Skip to main content
+    </a>
+    
+      <div class="dialog-off-canvas-main-canvas" data-off-canvas-main-canvas>
+              <header class="navbar navbar-default navbar-static-top" id="navbar" role="banner">
+              <div>
+            <div class="navbar-header container">
+          <div class="region region-navigation">
+          <a class="logo navbar-btn pull-left" href="/uspstf/" title="Home" rel="home">
+      <img src="/uspstf/sites/default/files/uspstf_bnr_logo_color.png" alt="Home" />
+    </a>
+      <section class="custom-quick-search-form hidden-xs block block-custom-tweaks block-custom-quick-search-form clearfix" data-drupal-selector="custom-quick-search-form-2" id="block-quicksearchblock">
+  
+    
+
+      <form action="/uspstf/recommendation/skin-cancer-screening" method="post" id="custom-quick-search-form--2" accept-charset="UTF-8">
+  <div class="form-item js-form-item form-type-textfield js-form-type-textfield form-item-title js-form-item-title form-no-label form-group">
+  
+  
+  <label for="edit-title--2" class="sr-only">Search the USPSTF Site</label><input placeholder="Search the USPSTF Site" data-drupal-selector="edit-title" class="form-text form-control" type="text" id="edit-title--2" name="title" value="" size="60" maxlength="128" />
+
+  
+  
+  </div>
+<input autocomplete="off" data-drupal-selector="form-hwn3gi3cbfzmreecwgyb9q-tqvzcwgp-bb-g6ofxtii" type="hidden" name="form_build_id" value="form-hwn3gI3CBFZMrEEcwgYb9Q_tqvZCWgP-bB_G6OFXtiI" /><input data-drupal-selector="edit-custom-quick-search-form-2" type="hidden" name="form_id" value="custom_quick_search_form" /><div data-drupal-selector="edit-actions" class="form-actions form-group js-form-wrapper form-wrapper" id="edit-actions--2"><button data-drupal-selector="edit-submit" class="button js-form-submit form-submit btn-default btn icon-before" type="submit" id="edit-submit--2" name="op" value=""><span class="sr-only">Button</span><span class="glyphicon glyphicon-search"></span></button></div>
+
+</form>
+
+  </section>
+
+<section id="block-subscribebutton" class="block block-block-content block-block-content9d140560-5904-4c04-8982-492d3f6fafa4 clearfix">
+  
+    
+
+      
+            <div class="field field--name-body field--type-text-with-summary field--label-hidden field--item"><div class="header-buttons-wrapp">
+<p><a class="btn btn-default" href="/uspstf/email-updates">Subscribe</a></p>
+
+<div class="header-connect-logo"><a href="http://www.linkedin.com/company/uspstf"><img alt="LinkedIn" height="32" src="/uspstf/sites/default/files/inline-images/linkedin-icon.png" width="32" loading="lazy"></a></div>
+</div>
+</div>
+      
+  </section>
+
+
+  </div>
+
+                          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+              </div>
+
+                    <div id="navbar-collapse" class="navbar-collapse collapse">
+            <div class="region region-navigation-collapsible">
+    <section class="custom-quick-search-form visible-xs-block block block-custom-tweaks block-custom-quick-search-form clearfix" data-drupal-selector="custom-quick-search-form" id="block-quicksearchblock-2">
+  
+    
+
+      <form action="/uspstf/recommendation/skin-cancer-screening" method="post" id="custom-quick-search-form" accept-charset="UTF-8">
+  <div class="form-item js-form-item form-type-textfield js-form-type-textfield form-item-title js-form-item-title form-no-label form-group">
+  
+  
+  <label for="edit-title" class="sr-only">Search the USPSTF Site</label><input placeholder="Search the USPSTF Site" data-drupal-selector="edit-title" class="form-text form-control" type="text" id="edit-title" name="title" value="" size="60" maxlength="128" />
+
+  
+  
+  </div>
+<input autocomplete="off" data-drupal-selector="form-cezlke-nkrxpyw94fsrwlm4lt0nlmbxsrrkgf-9-3ou" type="hidden" name="form_build_id" value="form-CezLKE_nKrXPyw94fSrwLM4lt0nLmBxsrrKgf_9_3oU" /><input data-drupal-selector="edit-custom-quick-search-form" type="hidden" name="form_id" value="custom_quick_search_form" /><div data-drupal-selector="edit-actions" class="form-actions form-group js-form-wrapper form-wrapper" id="edit-actions"><button data-drupal-selector="edit-submit" class="button js-form-submit form-submit btn-default btn icon-before" type="submit" id="edit-submit" name="op" value=""><span class="sr-only">Button</span><span class="glyphicon glyphicon-search"></span></button></div>
+
+</form>
+
+  </section>
+
+<section id="block-menu-2" class="hidden-xs block-main-menu block block-block-content block-block-contentd048e383-4406-42e3-a542-40cc74ebd4da clearfix">
+  
+    
+
+      
+            <div class="field field--name-body field--type-text-with-summary field--label-hidden field--item"><div class="container">
+<div class="block-main-menu-content row">
+<div class="col-xs-12 col-sm-6 col-md-3">
+<div class="main-sub-menu">
+<h4><a href="/uspstf/recommendation-topics">Recommendations</a></h4>
+
+<div class="main-menu-link"><a href="/uspstf/topic_search_results">Search and Filter All Recommendations</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/standards-guideline-development">Standards for Guideline Development</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/grade-definitions">Grade Definitions</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/recommendation-topics/uspstf-a-and-b-recommendations">USPSTF A&amp;B Recommendations</a></div>
+
+<div class="main-menu-link"><a href="https://www.uspreventiveservicestaskforce.org/apps/">USPSTF Recommendations App - Prevention TaskForce</a></div>
+</div>
+</div>
+
+<div class="col-xs-12 col-sm-6 col-md-3">
+<div class="main-sub-menu">
+<h4><a href="/uspstf/public-comments-and-nominations">Public Comments and Nominations</a></h4>
+
+<div class="main-menu-link"><a href="/uspstf/public-comments-and-nominations/opportunity-for-public-comment">Opportunity for Public Comment</a></div>
+
+<div class="main-menu-link"><a href="https://www.ahrq.gov/cpi/about/otherwebsites/uspstf/nominate.html">Nominate a New USPSTF Member</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/public-comments-and-nominations/nominate-recommendation-statement-topic">Nominate a Recommendation Statement Topic</a></div>
+</div>
+</div>
+
+<div class="col-xs-12 col-sm-6 col-md-3">
+<div class="main-sub-menu">
+<h4><a href="/uspstf/news">News</a></h4>
+
+<div class="main-menu-link"><a href="/uspstf/news#block-news-bulletins">News Bulletins</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/email-updates">Subscribe for Email Updates</a></div>
+</div>
+</div>
+
+<div class="col-xs-12 col-sm-6 col-md-3">
+<div class="main-sub-menu">
+<h4><a href="https://uspreventiveservicestaskforce.org/uspstf/about-uspstf">About the USPSTF</a></h4>
+
+<div class="main-menu-link"><a href="/uspstf/about-uspstf/task-force-at-a-glance">Task Force at a Glance</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/about-uspstf/current-members">Our Members</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/about-uspstf/methods-and-processes">Methods &amp; Processes</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/about-uspstf/task-force-resources">Task Force Resources</a></div>
+
+<div class="main-menu-link"><a href="https://www.uspreventiveservicestaskforce.org/uspstf/about-uspstf/our-partners">Our Partners</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/about-uspstf/contact-us-form">Contact Us</a></div>
+
+<div class="connect"><span class="connect-title">Connect with us</span><a href="http://www.linkedin.com/company/uspstf"><img alt="LinkedIn" height="28" src="/uspstf/sites/default/files/inline-images/linkedin-icon.png" width="28" loading="lazy"></a></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+      
+  </section>
+
+<nav role="navigation" aria-labelledby="block-mainnavigation-menu" id="block-mainnavigation" class="visible-xs-block">
+            
+  <h2 class="visually-hidden" id="block-mainnavigation-menu">Main navigation</h2>
+  
+
+              <ul class="menu menu--main nav">
+                      <li class="first">
+                                        <a href="/uspstf/" data-drupal-link-system-path="&lt;front&gt;">Home</a>
+              </li>
+                      <li class="expanded dropdown">
+                                                                    <a href="/uspstf/recommendation-topics" class="dropdown" data-drupal-link-system-path="recommendation-topics">Recommendations</a>
+                        <ul class="dropdown-menu">
+                      <li class="first">
+                                        <a href="/uspstf/topic_search_results?topic_status=P" data-drupal-link-query="{&quot;topic_status&quot;:&quot;P&quot;}" data-drupal-link-system-path="topic_search_results">Published Recommendations</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/recommendation-topics/recommendations-in-progress" data-drupal-link-system-path="node/77">Recommendations in Progress</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/recommendation-topics/information-for-consumers" data-drupal-link-system-path="recommendation-topics/information-for-consumers">Information for Consumers</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/recommendation-topics/tools-and-resources-for-better-preventive-care" data-drupal-link-system-path="recommendation-topics/tools-and-resources-for-better-preventive-care">Information for Professionals</a>
+              </li>
+                      <li class="last">
+                                        <a href="/uspstf/recommendation-topics/copyright-notice" data-drupal-link-system-path="node/53">Copyright Notice</a>
+              </li>
+        </ul>
+  
+              </li>
+                      <li class="expanded dropdown">
+                                                                    <a href="/uspstf/public-comments-and-nominations" class="dropdown" data-drupal-link-system-path="node/10">Public Comments &amp; Nominations</a>
+                        <ul class="dropdown-menu">
+                      <li class="first">
+                                        <a href="/uspstf/public-comments-and-nominations/opportunity-for-public-comment" data-drupal-link-system-path="node/224">Opportunity for Public Comment</a>
+              </li>
+                      <li>
+                                        <a href="https://www.ahrq.gov/cpi/about/otherwebsites/uspstf/nominate.html">Nominate a New USPSTF Member</a>
+              </li>
+                      <li class="last">
+                                        <a href="/uspstf/public-comments-and-nominations/nominate-recommendation-statement-topic" data-drupal-link-system-path="node/29">Nominate a Recommendation Statement Topic</a>
+              </li>
+        </ul>
+  
+              </li>
+                      <li>
+                                        <a href="/uspstf/news" data-drupal-link-system-path="node/25">News</a>
+              </li>
+                      <li class="expanded dropdown last">
+                                                                    <a href="/uspstf/about-uspstf" class="dropdown" data-drupal-link-system-path="node/5">About the USPSTF</a>
+                        <ul class="dropdown-menu">
+                      <li class="first">
+                                        <a href="/uspstf/about-uspstf/40th-anniversary-timeline" data-drupal-link-system-path="node/1257">40th Anniversary Timeline</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/task-force-at-a-glance" title="Task Force at a Glance" data-drupal-link-system-path="node/1170">Task Force at a Glance</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/current-members" data-drupal-link-system-path="node/930">Our Members</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/methods-and-processes" data-drupal-link-system-path="node/83">Methods and Processes </a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/our-partners" data-drupal-link-system-path="node/111">Our Partners</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/reports-congress" data-drupal-link-system-path="node/118">Reports to Congress</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/task-force-resources" data-drupal-link-system-path="node/63">Task Force Resources</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/conflict-interest-disclosures" data-drupal-link-system-path="node/47">Conflict of Interest Disclosures</a>
+              </li>
+                      <li class="last">
+                                        <a href="/uspstf/about-uspstf/contact-us-form" data-drupal-link-system-path="webform/contact">Contact Us</a>
+              </li>
+        </ul>
+  
+              </li>
+        </ul>
+  
+
+  </nav>
+
+  </div>
+
+        </div>
+                    </div>
+          </header>
+  
+  <div class="main-wrapper-background">
+                              <div class="region region-header">
+    <nav role="navigation" aria-labelledby="block-custom-main-menu-menu" id="block-custom-main-menu" class="container hidden-xs">
+            
+  <h2 class="visually-hidden" id="block-custom-main-menu-menu">Main navigation</h2>
+  
+
+              <ul class="menu menu--main nav">
+                      <li class="first">
+                                        <a href="/uspstf/" data-drupal-link-system-path="&lt;front&gt;">Home</a>
+              </li>
+                      <li class="expanded dropdown">
+                                                                    <a href="/uspstf/recommendation-topics" class="dropdown" data-drupal-link-system-path="recommendation-topics">Recommendations</a>
+                        <ul class="dropdown-menu">
+                      <li class="first">
+                                        <a href="/uspstf/topic_search_results?topic_status=P" data-drupal-link-query="{&quot;topic_status&quot;:&quot;P&quot;}" data-drupal-link-system-path="topic_search_results">Published Recommendations</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/recommendation-topics/recommendations-in-progress" data-drupal-link-system-path="node/77">Recommendations in Progress</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/recommendation-topics/information-for-consumers" data-drupal-link-system-path="recommendation-topics/information-for-consumers">Information for Consumers</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/recommendation-topics/tools-and-resources-for-better-preventive-care" data-drupal-link-system-path="recommendation-topics/tools-and-resources-for-better-preventive-care">Information for Professionals</a>
+              </li>
+                      <li class="last">
+                                        <a href="/uspstf/recommendation-topics/copyright-notice" data-drupal-link-system-path="node/53">Copyright Notice</a>
+              </li>
+        </ul>
+  
+              </li>
+                      <li class="expanded dropdown">
+                                                                    <a href="/uspstf/public-comments-and-nominations" class="dropdown" data-drupal-link-system-path="node/10">Public Comments &amp; Nominations</a>
+                        <ul class="dropdown-menu">
+                      <li class="first">
+                                        <a href="/uspstf/public-comments-and-nominations/opportunity-for-public-comment" data-drupal-link-system-path="node/224">Opportunity for Public Comment</a>
+              </li>
+                      <li>
+                                        <a href="https://www.ahrq.gov/cpi/about/otherwebsites/uspstf/nominate.html">Nominate a New USPSTF Member</a>
+              </li>
+                      <li class="last">
+                                        <a href="/uspstf/public-comments-and-nominations/nominate-recommendation-statement-topic" data-drupal-link-system-path="node/29">Nominate a Recommendation Statement Topic</a>
+              </li>
+        </ul>
+  
+              </li>
+                      <li>
+                                        <a href="/uspstf/news" data-drupal-link-system-path="node/25">News</a>
+              </li>
+                      <li class="expanded dropdown last">
+                                                                    <a href="/uspstf/about-uspstf" class="dropdown" data-drupal-link-system-path="node/5">About the USPSTF</a>
+                        <ul class="dropdown-menu">
+                      <li class="first">
+                                        <a href="/uspstf/about-uspstf/40th-anniversary-timeline" data-drupal-link-system-path="node/1257">40th Anniversary Timeline</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/task-force-at-a-glance" title="Task Force at a Glance" data-drupal-link-system-path="node/1170">Task Force at a Glance</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/current-members" data-drupal-link-system-path="node/930">Our Members</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/methods-and-processes" data-drupal-link-system-path="node/83">Methods and Processes </a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/our-partners" data-drupal-link-system-path="node/111">Our Partners</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/reports-congress" data-drupal-link-system-path="node/118">Reports to Congress</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/task-force-resources" data-drupal-link-system-path="node/63">Task Force Resources</a>
+              </li>
+                      <li>
+                                        <a href="/uspstf/about-uspstf/conflict-interest-disclosures" data-drupal-link-system-path="node/47">Conflict of Interest Disclosures</a>
+              </li>
+                      <li class="last">
+                                        <a href="/uspstf/about-uspstf/contact-us-form" data-drupal-link-system-path="webform/contact">Contact Us</a>
+              </li>
+        </ul>
+  
+              </li>
+        </ul>
+  
+
+  </nav>
+
+  </div>
+
+            </div>
+
+            <div class="header-second" role="heading" aria-level="1">
+          <div class="region region-header-second">
+        <div class="breadcrumb-wrapper">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-12">
+          <ol class="breadcrumb">
+                          <li >
+                                  <a href="/uspstf/">Home</a>
+                              </li>
+                          <li >
+                                  <a href="/uspstf/recommendation-topics">Recommendation Topics</a>
+                              </li>
+                          <li >
+                                  Recommendation: Skin Cancer: Screening
+                              </li>
+                          <li  class="active">
+                                  Recommendation: Skin Cancer: Screening
+                              </li>
+                      </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  </div>
+
+      </div>
+      
+  <div class="main-wrapper main-wrapper-background">
+    <div role="main" class="main-container container js-quickedit-main-content">
+      <div class="row">
+                
+                        <section class="col-sm-12">
+
+                                              <div class="highlighted">  <div class="region region-highlighted">
+    <div data-drupal-messages-fallback class="hidden"></div>
+
+  </div>
+</div>
+                      
+                                              
+                      
+                                <a id="main-content"></a>
+              <div class="region region-content">
+    <section id="block-bettersocialsharingbuttons" class="block block-better-social-sharing-buttons block-social-sharing-buttons-block clearfix">
+  
+    
+
+      
+
+<div style="display: none"><link rel="preload" href="/uspstf/modules/better_social_sharing_buttons/assets/dist/sprites/social-icons--no-color.svg" as="image" type="image/svg+xml" crossorigin="anonymous" /></div>
+
+<div class="social-sharing-buttons">
+                <a href="https://www.facebook.com/sharer/sharer.php?u=https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/skin-cancer-screening&amp;title=Recommendation%3A%20Skin%20Cancer%3A%20Screening" target="_blank" title="Share to Facebook" aria-label="Share to Facebook" class="social-sharing-buttons-button share-facebook" rel="noopener">
+                <title>Share to Facebook</title>
+            <svg aria-hidden="true" width="20px" height="20px" style="border-radius:3px;">
+                <use href="/uspstf/modules/better_social_sharing_buttons/assets/dist/sprites/social-icons--no-color.svg#facebook" />
+            </svg>
+        </a>
+    
+                <a href="https://twitter.com/intent/tweet?text=Recommendation%3A%20Skin%20Cancer%3A%20Screening+https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/skin-cancer-screening" target="_blank" title="Share to X" aria-label="Share to X" class="social-sharing-buttons-button share-x" rel="noopener">
+                <title>Share to X</title>
+            <svg aria-hidden="true" width="20px" height="20px" style="border-radius:3px;">
+                <use href="/uspstf/modules/better_social_sharing_buttons/assets/dist/sprites/social-icons--no-color.svg#x" />
+            </svg>
+        </a>
+    
+                <a href="https://wa.me/?text=https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/skin-cancer-screening" target="_blank" title="Share to WhatsApp" aria-label="Share to WhatsApp" class="social-sharing-buttons-button share-whatsapp" rel="noopener">
+                <title>Share to WhatsApp</title>
+            <svg aria-hidden="true" width="20px" height="20px" style="border-radius:3px;">
+                <use href="/uspstf/modules/better_social_sharing_buttons/assets/dist/sprites/social-icons--no-color.svg#whatsapp" />
+            </svg>
+        </a>
+    
+        
+        
+        
+    
+    
+        
+        
+        
+        
+                <a href="mailto:?subject=Recommendation%3A%20Skin%20Cancer%3A%20Screening&amp;body=https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/skin-cancer-screening" title="Share to Email" aria-label="Share to Email" class="social-sharing-buttons-button share-email" target="_blank" rel="noopener">
+                <title>Share to Email</title>
+            <svg aria-hidden="true" width="20px" height="20px" style="border-radius:3px;">
+                <use href="/uspstf/modules/better_social_sharing_buttons/assets/dist/sprites/social-icons--no-color.svg#email" />
+            </svg>
+        </a>
+    
+        
+                      <a href="javascript:window.print()" rel="" class="bssb-printlink share-print" title="Print"  aria-label="Print">
+      <svg aria-hidden="true" width="20px" height="20px" style="border-radius:3px;">
+        <title>Print</title>
+        <use href="/uspstf/modules/better_social_sharing_buttons/assets/dist/sprites/social-icons--no-color.svg#print" />
+      </svg>
+    </a>
+  </div>
+
+  </section>
+
+      
+<script type="application/ld+json">
+
+{
+  "@context": "https://schema.org/",
+  "@type": "Article",
+  "headline": "Skin Cancer: Screening",
+  "author": "",  
+  "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/skin-cancer-screening",
+  "datePublished": "2023-04-18",
+  "description": "",
+  "publisher": {
+     "@type": "Organization",
+     "name": "US Preventive Services Taskforce"
+  }, 
+  "image": [
+    "/uspstf/sites/default/files/skin-cancer-screening.jpg"
+  ],
+  "articleSection": [
+                                                                                                                                            "Importance" ,                     "USPSTF Assessment of Magnitude of Net Benefit" ,                     "Practice Considerations" ,                     "Update of Previous USPSTF Recommendation" ,                     "Supporting Evidence" ,                     "Research Needs and Gaps" ,                     "Recommendations of Others" ,                     "Members of the US Preventive Services Task Force" ,                     "Copyright and Source Information" ,                     "References" ,                     "Table. Summary of USPSTF Rationale"             ],
+   "keyWords": "Skin Cancer|Melanoma|Skin lesion|Sunscreen|Carcinoma|Mole"
+}
+
+</script>
+ 
+
+<article class="ahrquspstf full clearfix">
+<div class="content">
+<div class="field field--name-field-php-body field--type-text-long field--label-hidden field--item">
+      
+<div class="recommendation-statement  tag_screening  tag_adult  tag_female  tag_cancer  tag_male  tag_senior ">
+    <section class='recommendation-statement-intro' >
+                                    <h4>Final Recommendation Statement</h4>
+            <h1 data-qa="extendedtitle">Skin Cancer: Screening</h1>
+            <h4 data-qa="pubdate" class="pubdate">April     18, 2023</h4>
+            <p style='font-style: italic'>Recommendations made by the USPSTF are independent of the U.S. government. They should not be construed as an official position of the Agency for Healthcare Research and Quality or the U.S. Department of Health and Human Services. </p>
+             
+        
+                        <img src="/uspstf/sites/default/files/skin-cancer-screening.jpg" width="1140" height="356" alt="" typeof="foaf:Image" class="img-responsive">
+                </section>
+
+ 
+    <section>
+        <div class="custom-recommendation-link">
+            <div>
+                <a class='btn' href='#fullrecommendationstart'><span class='glyphicon glyphicon-eye-open' aria-hidden='true'> </span>Read the Full Recommendation</a>
+                <a class='btn' href='https://jamanetwork.com/journals/jama/fullarticle/2803797'><span class='glyphicon glyphicon-eye-open' aria-hidden='true'> </span>Read the Full Recommendation in <span style='font-style:italic;'>&nbsp;JAMA&nbsp;</span> (FREE)</a>  
+                 <a class='btn btn-download' href='/home/getfilebytoken/zWWcTu328Y27Uu4mPt6ZVF'><span class='glyphicon glyphicon-save' aria-hidden='true'> </span>Download <span style='font-style:italic;'>&nbsp;JAMA&nbsp;</span> PDF</a>            </div>
+        </div>
+        <h3>Recommendation Summary</h3>
+        <div class="summary-table field">
+            <div class="table-responsive field field--name-field-recommendation-summary field--type-text-long field--label-hidden field--item">
+                <table class="table" style="margin-bottom: 25px;">
+                    <thead>
+                        <tr>
+                            <th>Population</th>
+                            <th>Recommendation</th>
+                            <th><a target="_blank" href="/uspstf/grade-definitions">Grade</a></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                                                                                <tr class='spec_recom gradeI'>
+                                <td>Asymptomatic adolescents and adults</td>
+                                <td>The USPSTF concludes that the current evidence is insufficient to assess the balance of benefits and harms of visual skin examination by a clinician to screen for skin cancer in adolescents and adults.
+
+See the Practice Considerations section for additional information regarding the I statement.</td> 
+                                <td><span class='gradeI'> I</span></td> 
+                            </tr>
+                                            </tbody>
+                </table>
+            </div>
+        </div>
+
+                            <div class="title-with-btn">
+                <h3>Clinician Summary</h3>
+                <a aria-controls="collapseExample" aria-expanded="false" class="btn btn-collapse custom-expanded-tab collapsed" data-toggle="collapse" href="#collapseExample" role="button">Expand All</a>
+            </div>
+            <div class="collapse custom-expanded-tab-body" id="collapseExample" style="height: 32px;">
+                <div class="table table-responsive">
+                                                                <table border="1" width="95%" cellspacing="0" cellpadding="3">
+<tbody>
+<tr>
+<td valign="top" width="25%"><strong>What does the USPSTF recommend?</strong></td>
+<td valign="top">
+<p><strong>For adolescents and adults who do not have signs or symptoms of skin cancer:</strong><br />The USPSTF found the current evidence is insufficient to assess the balance of benefits and harms of visual skin examination by a clinician to screen for skin cancer.<br /><strong>Grade:</strong> I statement</p>
+</td>
+</tr>
+<tr>
+<td valign="top"><strong>To whom does this recommendation apply?</strong></td>
+<td valign="top">
+<ul>
+<li>This recommendation applies to adolescents and adults who do not have signs or symptoms of skin cancer.</li>
+<li>It does not apply to persons with a personal or family history of skin cancer.</li>
+<li>It does not apply to persons with symptoms, such as changes in size, shape, or color of skin growths or irregular moles.</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td valign="top"><strong>What&rsquo;s new?</strong></td>
+<td valign="top">This recommendation is consistent with the 2016 USPSTF recommendation.</td>
+</tr>
+<tr>
+<td valign="top"><strong>How to implement this recommendation?</strong> <strong>&nbsp;</strong></td>
+<td valign="top">
+<ul>
+<li>There is insufficient evidence to recommend for or against screening for skin cancer in adolescents and adults. The USPSTF is calling for more research on the effectiveness of screening for skin cancer in populations with a diversity of skin tones and for studies assessing the accuracy of risk assessment tools and the impact of social determinants of health.</li>
+<li>Clinicians should use their judgment when deciding whether to screen for skin cancer.</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td valign="top"><strong>What additional information should clinicians know about this recommendation?</strong></td>
+<td valign="top">
+<ul>
+<li>There are 2 main types of skin cancer: melanoma and keratinocyte carcinoma (KC), which consists of basal and squamous cell carcinomas. KC is more common, but melanoma causes more deaths.</li>
+<li>Exposure to UV radiation from sun exposure, indoor tanning beds, and other UV radiation-emitting devices is the major environmental risk factor for skin cancer.</li>
+<li>A history of frequent sunburns, older age, and male sex are associated with increased risk for skin cancer.</li>
+<li>Melanoma is about 30 times more common in White persons than in Black persons. However, persons with darker skin color are often diagnosed at later stages, when skin cancer is more difficult to treat. Several factors may contribute to these disparities, including differences in risk factors, access to care, and clinical presentation.</li>
+<li>The most common type of melanoma among Black persons occurs mostly on skin not frequently exposed to direct sunlight, such as palms of hands, soles of feet, or under fingernails or toenails.</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td valign="top"><strong>Why is this recommendation and topic important?</strong></td>
+<td valign="top">
+<ul>
+<li>Skin cancer is the most common type of cancer in the US; however, most skin cancers do not cause serious health problems or death.</li>
+<li>Melanoma constitutes about 1% of skin cancers. An estimated 98,000 new cases of melanoma will be diagnosed in the US in 2023, with 8000 associated deaths.</li>
+<li>There are many preventive behaviors persons can take to reduce skin cancer risk, such as minimizing sun exposure, protecting their skin when in the sun, and avoiding tanning beds.</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td valign="top"><strong>What are other relevant USPSTF recommendations?</strong></td>
+<td valign="top">The USPSTF has a recommendation on behavioral counseling for skin cancer prevention. This recommendation is available at <a href="/">www.uspreventiveservicestaskforce.org</a>.</td>
+</tr>
+<tr>
+<td valign="top"><strong>What are additional tools and resources?</strong></td>
+<td valign="top">
+<ul>
+<li>The Community Preventive Services Task Force recommends interventions for skin cancer prevention in childcare centers; primary and middle schools; outdoor occupational, recreational, and tourism settings; and communities (<a href="https://www.thecommunityguide.org/">https://www.thecommunityguide.org/</a>).</li>
+<li>The Centers for Disease Control and Prevention&rsquo;s Melanoma Dashboard provides state and local data for melanoma incidence and mortality, UV radiation levels, and other risk factors. These geographic-specific data can help communities better meet their unique melanoma prevention needs (<a href="https://ephtracking.cdc.gov/Applications/melanomadashboard">https://ephtracking.cdc.gov/Applications/melanomadashboard</a>).</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td valign="top"><strong>Where to read the full recommendation statement?</strong></td>
+<td valign="top">Visit the USPSTF website (<a href="/">www.uspreventiveservicestaskforce.org</a>) or the <em>JAMA</em> website (<a href="https://jamanetwork.com/collections/44068/united-states-preventive-services-task-force">https://jamanetwork.com/collections/44068/united-states-preventive-services-task-force</a>) to read the full recommendation statement. This includes more details on the rationale of the recommendation, including benefits and harms; supporting evidence; and recommendations of others.</td>
+</tr>
+</tbody>
+</table>
+                                                            </div>
+            </div>
+                            <div class="clinical-summary-pdf-links" style="margin-top:10px" >
+                <ul>
+                                        <li>View the Clinician Summary in <a target='_blank' href='/home/getfilebytoken/rPyJKLWYZhmQ-Cc4pe2oMJ'>PDF</a></li>
+                </ul>
+            </div>
+                <div class="togglable-tabs">
+            <h3>Additional Information</h3>
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active" role="presentation"><a aria-controls="supdocs" data-toggle="tab" href="#supdocs" role="tab">Supporting Evidence and Research Taxonomy</a></li>
+                <li role="presentation"><a aria-controls="tools" data-toggle="tab" href="#tools" role="tab">Related Resources &amp; Tools</a></li>
+                    </ul>
+            
+            <div class="tab-content">
+                <div class="tab-pane active" id="supdocs" role="tabpanel">
+                                    <ul>
+                                                                                                                                                                                                                                                             
+                                                                                                                                    <li>
+                                <a href='https://www.ncbi.nlm.nih.gov/books/NBK591447/'>Final Evidence Review</a> (April     18, 2023)
+                            </li>
+                                                                                                                                                                                                                                                                                                                    <li>
+                                <a href='/uspstf/document/final-evidence-summary/skin-cancer-screening'>Evidence Summary</a> (April     18, 2023)
+                            </li>
+                                                                                                                                                                                                                                                                                                                    <li>
+                                <a href='/uspstf/document/final-research-plan/skin-cancer-screening'>Final Research Plan</a> (March     25, 2021)
+                            </li>
+                                                                        </ul>
+                                                </div>
+            <div class="tab-pane" id="tools" role="tabpanel"> 
+                                    <strong>Tools</strong>
+                    <ul>
+                                                                                                                                    <li>
+                                 
+                                    <a href='https://ephtracking.cdc.gov/Applications/melanomadashboard/'>
+                                                                Melanoma Dashboard (CDC)
+                                 
+                                    </a>
+                                                                 
+                                    - For Providers
+                                                                                                                                
+                            </li>
+                                                                                                                                                            <li>
+                                 
+                                    <a href='https://www.thecommunityguide.org/search/?query=skin%20cancer&amp;dpage=1'>
+                                                                The Community Guide: Skin Cancer
+                                 
+                                    </a>
+                                                                 
+                                    - For Providers
+                                                                                                                                
+                            </li>
+                                                                                                                                                                                                                    </ul>
+                    <strong>Related Resources</strong>
+                    <ul>
+                                                                                                                                                                                                                                    <li>
+                                 
+                                    <a href='https://sites.jamanetwork.com/spanish-patient-pages/2023/hoja-para-el-paciente-de-jama-230418.pdf'>
+                                                                Cribado y prevención del cáncer de la piel
+                                 
+                                    </a>
+                                                                                                                                                                
+                            </li>
+                                                                                                                                                            <li>
+                                 
+                                    <a href='https://jamanetwork.com/journals/jama/fullarticle/2803802'>
+                                                                JAMA Patient Page: Screening and Prevention of Skin Cancer
+                                 
+                                    </a>
+                                                                                                                                                                
+                            </li>
+                                                                                                                                                            <li>
+                                 
+                                    <a href='https://edhub.ama-assn.org/jn-learning/audio-player/18774710'>
+                                                                JAMA Podcast: Screening for Skin Cancer
+                                 
+                                    </a>
+                                                                                                                                                                
+                            </li>
+                                                                    </ul>
+                                                </div>
+                </div>
+    </div>
+
+    <div class="additional-recommendation-info">
+        <h3>Recommendation Information</h3>
+        <div class="table table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Table of Contents</th>
+                        <th style="width: 35%;">PDF Version and JAMA Link</th>
+                        <th style="width: 25%;">Archived Versions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div id="toc" class="table-of-contents">
+                                <ul>
+                                                                                                                                                                                                                                                                                <li>
+                                                <a href='#bootstrap-panel--5'>Importance</a>
+                                            </li>
+                                                                                                                                                                                                        <li>
+                                                <a href='#bootstrap-panel--6'>USPSTF Assessment of Magnitude of Net Benefit</a>
+                                            </li>
+                                                                                                                                                                                                        <li>
+                                                <a href='#bootstrap-panel--7'>Practice Considerations</a>
+                                            </li>
+                                                                                                                                                                                                        <li>
+                                                <a href='#bootstrap-panel--8'>Update of Previous USPSTF Recommendation</a>
+                                            </li>
+                                                                                                                                                                                                        <li>
+                                                <a href='#bootstrap-panel--9'>Supporting Evidence</a>
+                                            </li>
+                                                                                                                                                                                                        <li>
+                                                <a href='#bootstrap-panel--10'>Research Needs and Gaps</a>
+                                            </li>
+                                                                                                                                                                                                        <li>
+                                                <a href='#bootstrap-panel--11'>Recommendations of Others</a>
+                                            </li>
+                                                                                                                                                                                                        <li>
+                                                <a href='#bootstrap-panel--12'>Members of the US Preventive Services Task Force</a>
+                                            </li>
+                                                                                                                                                                                                        <li>
+                                                <a href='#bootstrap-panel--13'>Copyright and Source Information</a>
+                                            </li>
+                                                                                                                                                                                                        <li>
+                                                <a href='#bootstrap-panel--14'>References</a>
+                                            </li>
+                                                                                                                                                                                                        <li>
+                                                <a href='#bootstrap-panel--15'>Table. Summary of USPSTF Rationale</a>
+                                            </li>
+                                                                                                                                                    </ul>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="recommendation-pdf-links">
+                                <ul>
+                                                                            <li>View the Recommendation in <a target='_blank' href='/home/getfilebytoken/zWWcTu328Y27Uu4mPt6ZVF'>PDF Format</a></li>
+                                                                    </ul>
+                            </div>
+                             
+                                <div class="jama-links">
+                                    <p>To read the recommendation statement in <em>JAMA</em>, select <a href="https://jama.jamanetwork.com/article.aspx?doi=10.1001/jama.2023.4342" target="_blank" rel="noopener">here</a>.</p>
+<p>To read the evidence summary in <em>JAMA</em>, select <a href="https://jama.jamanetwork.com/article.aspx?doi=10.1001/jama.2023.3262" target="_blank" rel="noopener">here</a>.</p>
+                                </div>
+                                                   </td>
+                        <td>
+                            <div class="archived-links">
+                                <ul>
+                                                                                                                                                                                                                                                    <li><a rel="nofollow" href='/uspstf/recommendation/skin-cancer-screening-july-2016'>(July 2016)</a></li>
+                                                                                                                                                                                                                                                            <li><a rel="nofollow" href='/uspstf/recommendation/skin-cancer-screening-2009'>(February 2009)</a></li>
+                                                                                                                                                                                                                                                            <li><a rel="nofollow" href='/uspstf/recommendation/skin-cancer-screening-2001'>(April 2001)</a></li>
+                                                                                                                                                                                                                                                            <li><a rel="nofollow" href='/uspstf/recommendation/skin-cancer-screening-behavioral-counseling-1996'>(January 1996)</a></li>
+                                                                                                                                                        </ul>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</div>
+
+<div class="collapsable-wrapper">
+<div class="title-with-btn">
+<div class="title-with-btn-left-part">
+<h3 id="fullrecommendationstart">Full Recommendation:</h3>
+<p>Recommendations made by the USPSTF are independent of the U.S. government. They should not be construed as an official position of the Agency for Healthcare Research and Quality or the U.S. Department of Health and Human Services.</p>
+</div>
+<a class="custom-expanded-tab btn-collapse field btn">Expand All</a>
+</div>
+<div  class="field collapsable-section">
+
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--4">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--4--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--4--content">
+                          Preamble
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--4--content" class="panel-body panel-collapse collapse">
+                    <div id="Preamble" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <p><em>The US Preventive Services Task Force (USPSTF) makes recommendations about the effectiveness of specific preventive care services for patients without obvious related signs or symptoms to improve the health of people nationwide.</em><em>&nbsp;</em></p>
+<p><em>It bases its recommendations on the evidence of both the benefits and harms of the service and an assessment of the balance. The USPSTF does not consider the costs of providing a service in this assessment.</em><em>&nbsp;</em></p>
+<p><em>The USPSTF recognizes that clinical decisions involve more considerations than evidence alone. Clinicians should understand the evidence but individualize decision-making to the specific patient or situation. Similarly, the USPSTF notes that policy and coverage decisions involve considerations in addition to the evidence of clinical benefits and harms.</em><em>&nbsp;</em></p>
+<p><em>The USPSTF is committed to mitigating the health inequities that prevent many people from fully benefiting from preventive services. Systemic or structural racism results in policies and practices, including health care delivery, that can lead to inequities in health. The USPSTF recognizes that race, ethnicity, and gender are all social rather than biological constructs. However, they are also often important predictors of health risk. The USPSTF is committed to helping reverse the negative impacts of systemic and structural racism, gender-based discrimination, bias, and other sources of health inequities, and their effects on health, throughout its work.</em></p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--5">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--5--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--5--content">
+                          Importance
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--5--content" class="panel-body panel-collapse collapse">
+                    <div id="Importance" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <p>Skin cancer is the most commonly diagnosed cancer in the US.<sup><a href="#citation1">1</a></sup> There are different types of skin cancer varying in disease incidence and severity. Basal and squamous cell carcinomas are the most common types of skin cancer but infrequently lead to death or substantial morbidity.<sup><a href="#citation2">2</a></sup> Melanomas represent about 1% of skin cancer and cause the most skin cancer deaths. An estimated 8000 individuals in the US will die of melanoma in 2023.<sup><a href="#citation3">3</a></sup></p>
+<p>Melanoma is about 30 times more common in White persons than in Black persons.<sup><a href="#citation4">4</a></sup> However, persons with darker skin color are often diagnosed at later stages, when skin cancer is more difficult to treat.<sup><a href="#citation5">5-7</a></sup> Several factors may contribute to these disparities, including differences in risk factors, access to care, and clinical presentation.<sup><a href="#citation8">8</a>,<a href="#citation9">9</a></sup></p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--6">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--6--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--6--content">
+                          USPSTF Assessment of Magnitude of Net Benefit
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--6--content" class="panel-body panel-collapse collapse">
+                    <div id="USPSTF Assessment of Magnitude of Net Benefit" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <p>The US Preventive Services Task Force (USPSTF) concludes that the <strong>evidence is insufficient</strong>, and the balance of benefits and harms for visual skin examination by a clinician to screen for skin cancer in asymptomatic adolescents and adults cannot be determined.</p>
+<p>See the <a href="#tab">Table</a> for more information on the USPSTF recommendation rationale and assessment. For more details on the methods the USPSTF uses to determine the net benefit, see the USPSTF Procedure Manual.<sup><a href="#citation10">10</a></sup></p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--7">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--7--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--7--content">
+                          Practice Considerations
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--7--content" class="panel-body panel-collapse collapse">
+                    <div id="Practice Considerations" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <h3>Patient Population Under Consideration</h3>
+<p>This recommendation applies to asymptomatic adolescents and adults who do not have a history of premalignant or malignant skin lesions. It does not apply to symptomatic patients, including those who present with a suspicious skin lesion, or those already under surveillance because of a high risk of skin cancer, such as persons with a familial syndrome (eg, familial atypical mole and melanoma syndrome).</p>
+<h3>Definitions</h3>
+<p>Keratinocyte carcinoma, previously referred to as nonmelanoma skin cancer, consists of basal and squamous cell carcinomas.<sup><a href="#citation2">2</a></sup></p>
+<h3>Screening Tests</h3>
+<p>A visual skin examination is the most commonly proposed method for skin cancer screening and includes a survey of the body for skin lesions. A common technique used by clinicians to assess a potential melanoma is the &ldquo;ABCDE&rdquo; rule, which looks for lesions with the following characteristics: asymmetry, border irregularity, nonuniform color, diameter greater than 6 mm, and evolution over time. Another approach for visual skin examination is the &ldquo;ugly duckling&rdquo; sign, in which the clinician identifies pigmented lesions that look different than other moles on the patient. Visual skin examination can be performed with either the naked eye or a magnifying device called a dermatoscope. Biopsy of a suspicious lesion is needed to definitively diagnose skin cancer.<sup><a href="#citation8">8</a></sup></p>
+<h3>Treatment</h3>
+<p>Melanoma is generally treated by surgically removing the primary tumor and surrounding normal tissue and possibly taking a biopsy of the sentinel lymph node to determine stage.</p>
+<p>Immunotherapy and targeted therapy are also used to treat advanced melanoma. There are several treatments for keratinocyte carcinoma, including surgical excision, Mohs micrographic surgery, radiation therapy, electrodessication and curettage, and photodynamic therapy, among others.<sup><a href="#citation8">8</a></sup></p>
+<h3>Suggestions for Practice Regarding the I Statement</h3>
+<h4>Potential Preventable Burden</h4>
+<p>Skin cancer is the most commonly diagnosed cancer in the US.<sup><a href="#citation1">1</a></sup> Melanoma, which constitutes 1% of skin cancer, causes more skin cancer deaths than keratinocyte carcinoma. An estimated 98,000 new cases of melanoma will be diagnosed in the US in 2023, with 8000 associated deaths.<sup><a href="#citation3">3</a></sup> Estimated 5-year survival for melanoma ranges from 99.5% for localized-stage disease to 31.9% for distant-stage disease.<sup><a href="#citation11">11</a></sup> Because keratinocyte carcinoma is common and usually curable, it is not monitored by cancer registries and reliable epidemiologic data are not available. However, emerging evidence indicates that mortality data for squamous cell carcinoma may be underestimated.<sup><a href="#citation2">2</a>,<a href="#citation8">8</a></sup></p>
+<p>Exposure to UV radiation from sun exposure, indoor tanning beds, and other UV radiation–emitting devices is the major environmental risk factor for skin cancer. History of frequent sunburns, older age, and male sex are associated with increased risk for skin cancer. Exposure to UV radiation from the use of indoor tanning beds is an important risk factor in adolescents. Incidence of melanoma is higher among White persons compared with persons of other races and ethnicities. This difference likely reflects traits associated with increased melanoma risk, such as fair skin (which is more susceptible to sunburning), light-colored eyes, and red or blond hair being more common among White persons compared with persons of other races and ethnicities.<sup><a href="#citation8">8</a></sup> Acral lentiginous melanoma, which occurs mostly on skin not frequently exposed to direct sunlight (eg, palms of hands, soles of feet, or under fingernails or toenails), is the most common type of melanoma among Black populations.<sup><a href="#citation8">8</a>,<a href="#citation12">12</a></sup> Other melanoma risk factors include higher numbers of moles on the skin, atypical moles, as well as a personal and family history of skin cancer.<sup><a href="#citation8">8</a></sup></p>
+<h4>Potential Harms</h4>
+<p>Trial evidence on the harms of skin cancer screening is limited. Potential harms include cosmetic harms (eg, scarring) from diagnostic workup, psychosocial harms (eg, worry) from the screening process, and overdiagnosis leading to overtreatment.<sup><a href="#citation8">8</a>,<a href="#citation13">13</a></sup> Treatment harms vary in frequency and severity depending on treatment type. Harms tend to be infrequent and less severe for local excisional treatments, whereas systemic treatments like chemotherapy or immunotherapy have the potential for more common and severe harms.<sup><a href="#citation8">8</a></sup></p>
+<h4>Current Practice</h4>
+<p>Contemporary data on clinician practice patterns related to skin cancer screening are limited. Available studies show that the majority of melanomas are detected either by the patient discovering the lesion and reporting it to their clinician or by the clinician finding it incidentally.<sup><a href="#citation14">14</a></sup> In 1 study, survey data showed that dermatologists perform more skin cancer screening examinations than family practice clinicians or internists (552 [81.3%] dermatologists vs 333 [59.6%] family practice clinicians vs 243 [56.4%] internists).<sup><a href="#citation15">15</a></sup></p>
+<h3>Additional Tools and Resources</h3>
+<p>The Community Preventive Services Task Force recommends interventions for skin cancer prevention in child care centers; primary and middle schools; outdoor occupational, recreational, and tourism settings; and communities (<a href="https://www.thecommunityguide.org/">https://www.thecommunityguide.org/</a>).<sup><a href="#citation16">16</a></sup></p>
+<p>The Centers for Disease Control and Prevention&rsquo;s Melanoma Dashboard provides state and local data for melanoma incidence and mortality, UV radiation levels, and other risk factors. These geography-specific data can help communities better meet their unique melanoma prevention needs (<a href="http://ephtracking.cdc.gov/Applications/melanomadashboard/">http://ephtracking.cdc.gov/Applications/melanomadashboard/</a>).<sup><a href="#citation17">17</a></sup></p>
+<h3>Other Related USPSTF Recommendations</h3>
+<p>In a separate recommendation, the USPSTF recommends counseling all young adults, adolescents, children, and parents of young children about minimizing exposure to UV radiation for persons aged 6 months to 24 years with a fair skin type to reduce their risk of skin cancer (B recommendation) and selectively offering counseling (based on risk factors) to adults older than 24 years with a fair skin type (C recommendation). The USPSTF concludes that the current evidence is insufficient to assess the balance of benefits and harms of counseling adults about skin self-examination for skin cancer prevention (I statement).<sup><a href="#citation18">18</a></sup></p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--8">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--8--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--8--content">
+                          Update of Previous USPSTF Recommendation
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--8--content" class="panel-body panel-collapse collapse">
+                    <div id="Update of Previous USPSTF Recommendation" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <p>In 2016, the USPSTF found insufficient evidence to assess the balance of benefits and harms of visual skin examination by a clinician to screen for skin cancer in adults (I statement).<sup><a href="#citation19">19</a></sup> This recommendation concurs with the previous I statement.</p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--9">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--9--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--9--content">
+                          Supporting Evidence
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--9--content" class="panel-body panel-collapse collapse">
+                    <div id="Supporting Evidence" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <h3>Scope of Review</h3>
+<p>The USPSTF commissioned a systematic review to evaluate the benefits and harms of screening for skin cancer in asymptomatic adolescents and adults.<sup><a href="#citation8">8</a>,<a href="#citation20">20</a></sup> The review included evidence for both keratinocyte carcinoma and cutaneous melanoma. The USPSTF used foundational evidence from previous reviews to assess the diagnostic accuracy of visual skin examination by a clinician to detect skin cancer.</p>
+<h3>Accuracy of Screening Tests and Risk Assessment</h3>
+<p>Based on foundational evidence, the sensitivity of visual skin examination by a clinician (eg, primary care clinician, dermatologist, or plastic surgeon) to detect melanoma ranged from 40% to 70% and specificity ranged from 86% to 98%. Evidence evaluating the diagnostic accuracy of visual skin examination to detect keratinocyte carcinoma was limited and inconsistent.<sup><a href="#citation19">19</a></sup> No new studies from the current review reported diagnostic accuracy for an asymptomatic screening population.<sup><a href="#citation8">8</a>,<a href="#citation20">20</a></sup></p>
+<h3>Benefits of Early Detection and Treatment</h3>
+<p>The USPSTF reviewed 3 nonrandomized studies evaluating 2 skin cancer screening programs in Germany. One fair-quality study (SCREEN; n = 360,288 screened) included in the previous review measured melanoma mortality in 1 region of Germany before and after implementing a population-based skin cancer screening program. The screening program consisted of clinician education and training, a public awareness campaign, and clinical skin examinations for 1 year. At the 5-year follow-up, melanoma mortality declined 49% in the screening region compared with surrounding areas without a screening program. However, this mortality benefit attenuated at the 10-year follow-up, with melanoma mortality returning to similar rates as at program initiation.<sup><a href="#citation8">8</a>,<a href="#citation20">20</a>,<a href="#citation21">21</a></sup></p>
+<p>Following the initial positive outcomes from the SCREEN trial, Germany implemented a nationwide routine skin cancer screening program covered by statutory health insurance. This program included clinician education and free total skin examinations every 2 years by either a participating primary care clinician or dermatologist. One fair-quality study (N not reported) compared melanoma mortality between Germany and 22 other European countries and found that the annual melanoma mortality rate increased, not decreased, prior to and after implementation of the German national screening program. The mean unadjusted melanoma mortality rate per 100,000 population in Germany increased from 2.7 deaths to 3.4 deaths after initiation of the national screening program. Melanoma mortality rates increased in other European countries throughout the same period but not as much as in Germany. These data suggested that there is no observable melanoma mortality benefit from a national skin cancer screening program.<sup><a href="#citation8">8</a>,<a href="#citation20">20</a>,<a href="#citation22">22</a></sup></p>
+<p>Another nonrandomized but good-quality study (n = 1,431,327) from the German national skin cancer screening program found a higher proportion of melanoma deaths in the unscreened group compared with the screened group during a 4-year observation period (171 deaths [9.5% of the screened group] vs 154 deaths [22.8% of the unscreened group]; unadjusted hazard ratio, 0.37 [95% CI, 0.30-0.46]; <em>P</em> &lt; .05). However, this difference was attenuated on multivariate analysis and after adjustment for lead time bias.<sup><a href="#citation8">8</a>,<a href="#citation20">20</a>,<a href="#citation23">23</a></sup></p>
+<p>The ecological and nonrandomized design of the German screening studies limits the conclusions that can be drawn about the effectiveness of clinical skin cancer screening on melanoma mortality. No included studies reported outcomes for keratinocyte carcinoma mortality or all-cause mortality. The applicability to US settings is also difficult to assess because the population diversity and health care delivery in the US differ from the characteristics in available studies.<sup><a href="#citation8">8</a>,<a href="#citation20">20</a></sup></p>
+<p>Given the limitations in studies evaluating the direct effect of skin cancer screening on mortality, the USPSTF reviewed evidence for an indirect pathway that evaluated whether screening is associated with earlier detection of skin cancer or precancerous lesions and whether earlier detection reduces melanoma and all-cause mortality. The USPSTF reviewed 6 nonrandomized observational studies (n = 2,947,595) assessing the effectiveness of skin cancer screening on earlier detection (measured by cancer stage or lesion thickness). Results were either inconsistent or showed no association between routine clinician skin examination and increased detection of keratinocyte carcinoma, melanoma, or skin cancer precursor lesions compared with usual care or lesion-directed examination.<sup><a href="#citation8">8</a>,<a href="#citation20">20</a></sup></p>
+<p>The USPSTF reviewed 9 nonrandomized studies (n = 1,326,051) assessing the association between stage at diagnosis and melanoma or all-cause mortality. Results showed that there is a strong, consistent positive association between more advanced stage at melanoma detection and increasing melanoma and all-cause mortality risk.<sup><a href="#citation8">8</a>,<a href="#citation20">20</a></sup> For example, 1 good-quality US-based study (n = 185,219) showed that compared with in situ disease at detection, the adjusted hazard ratios for melanoma mortality were 5.8 (95% CI, 5.3-6.3) for localized stage, 31.5 (95% CI, 28.9-34.2) for regional stage, and 169.6 (95% CI, 154.2-186.6) for distant stage. Regarding all-cause mortality, the same pattern was observed; the adjusted hazard ratios for all-cause mortality were 1.5 (95% CI, 1.5-1.5) for localized stage, 3.9 (95% CI, 3.8-4.1) for regional stage, and 15.8 (95% CI, 14.9-16.7) for distant stage, compared with in situ melanoma at detection.<sup><a href="#citation24">24</a></sup> US-based studies also showed higher melanoma mortality risk at all stages among men compared with women, and at stage 1 among Asian American, Black, Hispanic, Native American, and Pacific Islander adults compared with White adults. No evidence was available assessing the association between stage at keratinocyte carcinoma detection and skin cancer or all-cause mortality.<sup><a href="#citation8">8</a>,<a href="#citation20">20</a></sup></p>
+<h3>Harms of Screening and Treatment</h3>
+<p>The USPSTF reviewed 2 small fair-quality nonrandomized studies evaluating the harms of skin cancer screening. A fair-quality study (n = 45) in Germany described patient ratings of cosmetic acceptance of deep shave excisions after 6 months. Patients judged 7% of shave sites as having poor cosmetic outcomes.<sup><a href="#citation25">25</a></sup> A fair-quality US-based study (n = 187) used various scales to estimate patient-reported psychological harms (eg, anxiety, depression, and physical and social consequences) and health-related quality of life at 5 and 8 months after screening with visual examination and subsequent diagnostic biopsy as indicated. Scores in both the screened and unscreened groups were within the normal range on all measures, indicating there were no significant psychological effects.<sup><a href="#citation8">8</a>,<a href="#citation20">20</a>,<a href="#citation26">26</a>,<a href="#citation27">27</a></sup></p>
+<h3>Response to Public Comment</h3>
+<p>A draft version of this recommendation statement was posted for public comment on the USPSTF website from October 25, 2022, to November 21, 2022. In response to comments, the USPSTF provided more information on the risk of melanoma in individuals with darker skin color in the Practice Considerations section. The USPSTF also clarified the difference between asymptomatic and symptomatic patient populations in the Practice Considerations section. Comments inquired about screening in higher-risk populations. Due to the lack of available data applicable to a diverse US population, the USPSTF is recommending neither for nor against screening for skin cancer in an asymptomatic population. As such, health care professionals are encouraged to use their clinical judgment when deciding whether to perform a visual skin examination. Comments suggested alternate terms to describe differences in skin color. The USPSTF is committed to using inclusive language in its recommendations and acknowledges that inclusive language and terminology continues to evolve. Terminology used in this recommendation statement reflects current medical terms, clear language principles, and how skin color was reported in included studies.</p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--10">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--10--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--10--content">
+                          Research Needs and Gaps
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--10--content" class="panel-body panel-collapse collapse">
+                    <div id="Research Needs and Gaps" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <p>Studies are needed that provide the following information.</p>
+<ul>
+<li>Consistent data showing the effects of screening on morbidity and mortality or early detection of skin cancer, particularly melanoma.</li>
+<li>Clearer descriptions of skin color and inclusion of a full spectrum of skin colors in study participants.</li>
+<li>Morbidity and mortality outcomes in participants reflective of a US population with a diversity of skin tones.</li>
+<li>The effectiveness of screening in a range of primary care settings that reflect the variation in access to care in the US.</li>
+<li>The effectiveness of screening for reducing morbidity and mortality of acral lentiginous melanoma, which is the most frequently diagnosed melanoma in persons with darker skin color.</li>
+<li>Validated risk assessment tools to identify persons at highest risk for skin cancer and who might benefit from screening.</li>
+<li>The impact of social determinants of health (eg, outdoor occupational exposure, geographic exposure differences, and access to quality care) on skin cancer risk, prevention, screening, and treatment.</li>
+</ul>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--11">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--11--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--11--content">
+                          Recommendations of Others
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--11--content" class="panel-body panel-collapse collapse">
+                    <div id="Recommendations of Others" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <p>Currently, no professional organizations in the US recommend clinical visual examination for skin cancer screening. Although the American Academy of Dermatology does not have formal guidelines on clinician-performed skin cancer screening, it does encourage and provide resources for its clinician members to hold free skin cancer screening events for the public.<sup><a href="#citation8">8</a>,<a href="#citation28">28</a></sup></p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--12">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--12--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--12--content">
+                          Members of the US Preventive Services Task Force
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--12--content" class="panel-body panel-collapse collapse">
+                    <div id="Members of the US Preventive Services Task Force" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <p>The US Preventive Services Task Force members include the following individuals:<strong> </strong>Carol M. Mangione, MD, MSPH (University of California, Los Angeles); Michael J. Barry, MD (Harvard Medical School, Boston, Massachusetts); Wanda K. Nicholson, MD, MPH, MBA (George Washington University, Washington, DC); David Chelmow, MD (Virginia Commonwealth University, Richmond); Tumaini Rucker Coker, MD, MBA (University of Washington, Seattle); Esa M. Davis, MD, MPH (University of Pittsburgh, Pittsburgh, Pennsylvania); Katrina E. Donahue, MD, MPH (University of North Carolina at Chapel Hill); Carlos Roberto Ja&eacute;n, MD, PhD, MS (University of Texas Health Science Center, San Antonio); Martha Kubik, PhD, RN (George Mason University, Fairfax, Virginia); Li Li, MD, PhD, MPH (University of Virginia, Charlottesville); Gbenga Ogedegbe, MD, MPH (New York University, New York, New York);&nbsp;Goutham Rao, MD (Case Western Reserve University, Cleveland, Ohio); John M. Ruiz, PhD (University of Arizona, Tucson); James Stevermer, MD, MSPH (University of Missouri, Columbia); Joel Tsevat, MD, MPH (The University of Texas Health Science Center, San Antonio); Sandra Millon Underwood, PhD, RN (University of Wisconsin, Milwaukee); John B. Wong, MD (Tufts University School of Medicine, Boston, Massachusetts).</p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--13">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--13--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--13--content">
+                          Copyright and Source Information
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--13--content" class="panel-body panel-collapse collapse">
+                    <div id="Copyright and Source Information" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <p><strong>Conflict of Interest Disclosures:</strong> Authors followed the policy regarding conflicts of interest described at <a href="https://www.uspreventiveservicestaskforce.org/uspstf/conflict-of-interest-disclosures">https://www.uspreventiveservicestaskforce.org/uspstf/conflict-of-interest-disclosures</a>. Dr Barry reported receiving grants from Healthwise, a nonprofit. All members of the USPSTF receive travel reimbursement and an honorarium for participating in USPSTF meetings.<strong>&nbsp;</strong></p>
+<p><strong>Funding/Support:</strong> The USPSTF is an independent, voluntary body. The US Congress mandates that the Agency for Healthcare Research and Quality (AHRQ) support the operations of the USPSTF.<strong>&nbsp;</strong></p>
+<p><strong>Role of the Funder/Sponsor:</strong> AHRQ staff assisted in the following: development and review of the research plan, commission of the systematic evidence review from an Evidence-based Practice Center, coordination of expert review and public comment of the draft evidence report and draft recommendation statement, and the writing and preparation of the final recommendation statement and its submission for publication. AHRQ staff had no role in the approval of the final recommendation statement or the decision to submit for publication.<strong>&nbsp;</strong></p>
+<p><strong>Disclaimer:</strong> Recommendations made by the USPSTF are independent of the US government. They should not be construed as an official position of AHRQ or the US Department of Health and Human Services.<strong>&nbsp;</strong></p>
+<p><strong>Additional Information:</strong> Published by JAMA&reg;—Journal of the American Medical Association under arrangement with the Agency for Healthcare Research and Quality (AHRQ). &copy;2023 AMA and United States Government, as represented by the Secretary of the Department of Health and Human Services (HHS), by assignment from the members of the United States Preventive Services Task Force (USPSTF). All rights reserved.</p>
+<p><strong>Copyright Notice: </strong>USPSTF recommendations are based on a rigorous review of existing peer-reviewed evidence and are intended to help primary care clinicians and patients decide together whether a preventive service is right for a patient's needs. To encourage widespread discussion, consideration, adoption, and implementation of USPSTF recommendations, AHRQ permits members of the public to reproduce, redistribute, publicly display, and incorporate USPSTF work into other materials provided that it is reproduced without any changes to the work of portions thereof, except as permitted as fair use under the US Copyright Act.</p>
+<p>AHRQ and the US Department of Health and Human Services cannot endorse, or appear to endorse, derivative or excerpted materials, and they cannot be held liable for the content or use of adapted products that are incorporated on other Web sites. Any adaptations of these electronic documents and resources must include a disclaimer to this effect. Advertising or implied endorsement for any commercial products or services is strictly prohibited.</p>
+<p>This work may not be reproduced, reprinted, or redistributed for a fee, nor may the work be sold for profit or incorporated into a profit-making venture without the express written permission of AHRQ. This work is subject to the restrictions of Section 1140 of the Social Security Act, 42 U.S.C. &sect;320b-10. When parts of a recommendation statement are used or quoted, the USPSTF Web page should be cited as the source.</p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--14">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--14--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--14--content">
+                          References
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--14--content" class="panel-body panel-collapse collapse">
+                    <div id="References" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <p><a id="citation1" name="citation1"></a> 1. Skin cancer. Centers for Disease Control and Prevention. Last reviewed April 18, 2022. Accessed March 2, 2023.&nbsp;<a href="https://www.cdc.gov/cancer/skin/index.htm">https://www.cdc.gov/cancer/skin/index.htm</a><br /><a id="citation2" name="citation2"></a> 2. Skin cancer (non-melanoma): introduction. American Society of Clinical Oncology. Published 2022. Accessed March 2, 2023.&nbsp;<a href="https://www.cancer.net/cancer-types/skin-cancer-non-melanoma/introduction">https://www.cancer.net/cancer-types/skin-cancer-non-melanoma/introduction&nbsp; </a><br /><a id="citation3" name="citation3"></a> 3. Key statistics for melanoma skin cancer. American Cancer Society. Last revised January 12, 2023. Accessed March 2, 2023. <a href="https://www.cancer.org/cancer/melanoma-skin-cancer/about/key-statistics.html">https://www.cancer.org/cancer/melanoma-skin-cancer/about/key-statistics.html</a> <br /><a id="citation4" name="citation4"></a> 4. Surveillance, Epidemiology and End Results Program. SEER*Explorer: recent trends in SEER age-adjusted incidence rates, 2000-2019. National Cancer Institute. Accessed March 2, 2023. <a href="https://seer.cancer.gov/statistics-network/explorer/">https://seer.cancer.gov/statistics-network/explorer/</a><br /><a id="citation5" name="citation5"></a> 5. Skin cancer: incidence rates. American Academy of Dermatology Association. Accessed March 2, 2023.&nbsp;<a href="https://www.aad.org/media/stats-skin-cancer">https://www.aad.org/media/stats-skin-cancer</a><br /><a id="citation6" name="citation6"></a> 6. Chen ML, de Vere Hunt IJ, John EM, Weinstock MA, Swetter SM, Linos E. Differences in thickness-specific incidence and factors associated with cutaneous melanoma in the US from 2010 to 2018. <em>JAMA Oncol</em>. 2022;8(5):755-759. <br /><a id="citation7" name="citation7"></a> 7. Wang Y, Zhao Y, Ma S. Racial differences in six major subtypes of melanoma: descriptive epidemiology. <em>BMC Cancer</em>. 2016;16(1):691. <br /><a id="citation8" name="citation8"></a> 8. Henrikson NB, Ivlev I, Blasi PR, et al. <em>Screening for Skin Cancer: A Systematic Evidence Review for the US Preventive Services Task Force. Evidence Synthesis No. 225.</em> Agency for Healthcare Research and Quality; 2022. AHRQ publication 22-05297-EF-1.<br /><a id="citation9" name="citation9"></a> 9. Cortez JL, Vasquez J, Wei ML. The impact of demographics, socioeconomics, and health care access on melanoma outcomes. <em>J Am Acad Dermatol</em>. 2021;84(6):1677-1683. <br /><a id="citation10" name="citation10"></a> 10. U.S. Preventive Services Task Force Procedure Manual. U.S. Preventive Services Task Force. Updated August 2022. Accessed March 2, 2023. <a href="/uspstf/procedure-manual">www.uspreventiveservicestaskforce.org/uspstf/procedure-manual</a><br /><a id="citation11" name="citation11"></a> 11. Surveillance, Epidemiology and End Results Program. Cancer Stat Facts: melanoma of the skin. National Cancer Institute. Accessed March 2, 2023.&nbsp;<a href="https://seer.cancer.gov/statfacts/html/melan.html">https://seer.cancer.gov/statfacts/html/melan.html</a>&nbsp; <br /><a id="citation12" name="citation12"></a> 12. Huang K, Fan J, Misra S. Acral lentiginous melanoma: incidence and survival in the United States, 2006-2015, an analysis of the SEER registry. <em>J Surg Res</em>. 2020;251:329-339.<br /><a id="citation13" name="citation13"></a> 13. Adamson AS, Suarez EA, Welch HG. Estimating overdiagnosis of melanoma using trends among black and white patients in the US. <em>JAMA Dermatol</em>. 2022;158(4):426-431. <br /><a id="citation14" name="citation14"></a> 14. Epstein DS, Lange JR, Gruber SB, Mofid M, Koch SE. Is physician detection associated with thinner melanomas? <em>JAMA</em>.&nbsp;1999;281(7):640-643. <br /><a id="citation15" name="citation15"></a> 15. Oliveria SA, Heneghan MK, Cushman LF, Ughetta EA, Halpern AC. Skin cancer screening by dermatologists, family practitioners, and internists: barriers and facilitating factors. <em>Arch Dermatol</em>. 2011;147(1):39-44. <br /><a id="citation16" name="citation16"></a> 16. The Community Guide. Community Preventive Services Task Force. Accessed March 2, 2023. <a href="https://www.thecommunityguide.org">https://www.thecommunityguide.org</a><br /><a id="citation17" name="citation17"></a> 17. Melanoma dashboard. Centers for Disease Control and Prevention. Accessed March 2, 2023. <a href="https://ephtracking.cdc.gov/Applications/melanomadashboard/">https://ephtracking.cdc.gov/Applications/melanomadashboard/</a><br /><a id="citation18" name="citation18"></a> 18. US Preventive Services Task Force. Behavioral counseling to prevent skin cancer: US Preventive Services Task Force recommendation statement. <em>JAMA</em>. 2018;319(11):1134-1142. <br /><a id="citation19" name="citation19"></a> 19. US Preventive Services Task Force. Screening for skin cancer: US Preventive Services Task Force recommendation statement. <em>JAMA</em>. 2016;316(4):429-435. <br /><a id="citation20" name="citation20"></a> 20. Henrikson NB, Ivlev I, Blasi PR, et al. Skin cancer screening: updated evidence report and systematic review for the US Preventive Services Task Force. <em>JAMA</em>. Published April 18, 2023. <br /><a id="citation21" name="citation21"></a> 21. Katalinic A, Eisemann N, Waldmann A. Skin cancer screening in Germany. Documenting melanoma incidence and mortality from 2008 to 2013. <em>Dtsch Arztebl Int</em>. 2015;112(38):629-634. <br /><a id="citation22" name="citation22"></a> 22. Kaiser M, Schiller J, Schreckenberger C. The effectiveness of a population-based skin cancer screening program: evidence from Germany.<em> Eur J Health Econ</em>. 2018;19(3):355-367. <br /><a id="citation23" name="citation23"></a> 23. Datzmann T, Schoffer O, Meier F, Seidler A, Schmitt J. Are patients benefiting from participation in the German skin cancer screening programme? A large cohort study based on administrative data. <em>Br J Dermatol</em>. 2022;186(1):69-77.<br /><a id="citation24" name="citation24"></a>24. Ward-Peterson M, Acu&ntilde;a JM, Alkhalifah MK, et al. Association between race/ethnicity and survival of melanoma patients in the United States over 3 decades. <em>Medicine (Baltimore)</em>. 2016;95(17):e3315.<br /><a id="citation25" name="citation25"></a>25. Gambichler T, Senger E, Rapp S, Alamouti D, Altmeyer P, Hoffmann K. Deep shave excision of macular melanocytic nevi with the razor blade biopsy technique.&nbsp;<em>Dermatol Surg</em>.&nbsp;2000;26(7):662-666.<br /><a id="citation26" name="citation26"></a>26. Matthews NH, Risica PM, Ferris LK, et al. Psychosocial impact of skin biopsies in the setting of melanoma screening: a cross-sectional survey. <em>Br J Dermatol</em>. 2019;180(3):664-665<br /><a id="citation27" name="citation27"></a>27. Risica PM, Matthews NH, Dionne L, et al. Psychosocial consequences of skin cancer screening. <em>Prev Med Rep</em>. 2018;10:310-316. <br /><a id="citation28" name="citation28"></a>28. Free skin cancer screenings. American Academy of Dermatology Association. Accessed March 2, 2023. <a href="https://www.aad.org/public/public-health/skin-cancer-screenings">https://www.aad.org/public/public-health/skin-cancer-screenings</a></p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+             
+            <div class="js-form-wrapper form-wrapper form-item js-form-item panel panel-default" id="bootstrap-panel--15">
+                <div class="panel-heading">
+                    <a aria-controls="bootstrap-panel--15--content" 
+                       aria-expanded="false" 
+                       aria-pressed="true" 
+                       data-toggle="collapse" 
+                       role="button" 
+                       class="panel-title collapse collapsed" 
+                       href="#bootstrap-panel--15--content">
+                          Table. Summary of USPSTF Rationale
+                                              </a>
+                </div>
+                <div id="bootstrap-panel--15--content" class="panel-body panel-collapse collapse">
+                    <div id="Table. Summary of USPSTF Rationale" class="field field--name-field-preface field--type-text-long field--label-hidden field--item table-responsive">
+                       <p><a id="tab" name="tab"></a></p>
+<table border="1" width="95%" cellspacing="0" cellpadding="4">
+<tbody>
+<tr valign="top">
+<th scope="col">Rationale</th>
+<th scope="col">Assessment</th>
+</tr>
+<tr valign="top">
+<td scope="row">Detection</td>
+<td>The USPSTF found adequate foundational evidence that visual skin examination by a clinician has modest sensitivity and specificity for detecting melanoma. However, skin cancer has primarily been studied in persons with fair skin, so the evidence may not be applicable to all skin colors. Evidence is limited regarding the accuracy of the clinical visual skin examination for detecting keratinocyte carcinoma.</td>
+</tr>
+<tr valign="top">
+<td scope="row">Benefits of early detection and internation and treatment</td>
+<td>The USPSTF found inadequate evidence that screening for skin cancer through visual skin examination by a clinician reduces morbidity or mortality.</td>
+</tr>
+<tr valign="top">
+<td scope="row">Harms of early detection and internation and treatment</td>
+<td>The USPSTF found inadequate evidence of the harms of skin cancer screening and diagnostic follow-up.</td>
+</tr>
+<tr valign="top">
+<td scope="row">USPSTF assessment</td>
+<td>Due to a lack of available data applicable to a US population, the USPSTF found that the evidence is insufficient to determine the balance of benefits and harms for visual skin examination by a clinician to screen for skin cancer in asymptomatic adolescents and adults.</td>
+</tr>
+</tbody>
+</table>
+<p>Abbreviation: USPSTF, US Preventive Services Task Force.</p>
+                    </div>
+                    <a href='#toc' class='returnTOC'>Return to Table of Contents</a>
+                </div>
+            </div>
+         
+             
+ 
+
+</div>
+</div>
+</div>
+</article>
+
+
+  </div>
+
+                  </section>
+
+                      </div>
+    </div>
+  </div>
+
+      <footer class="footer" role="contentinfo">
+        <div class="region region-footer">
+    <section id="block-menu" class="block-main-menu block block-block-content block-block-contentd048e383-4406-42e3-a542-40cc74ebd4da clearfix">
+  
+    
+
+      
+            <div class="field field--name-body field--type-text-with-summary field--label-hidden field--item"><div class="container">
+<div class="block-main-menu-content row">
+<div class="col-xs-12 col-sm-6 col-md-3">
+<div class="main-sub-menu">
+<h4><a href="/uspstf/recommendation-topics">Recommendations</a></h4>
+
+<div class="main-menu-link"><a href="/uspstf/topic_search_results">Search and Filter All Recommendations</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/standards-guideline-development">Standards for Guideline Development</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/grade-definitions">Grade Definitions</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/recommendation-topics/uspstf-a-and-b-recommendations">USPSTF A&amp;B Recommendations</a></div>
+
+<div class="main-menu-link"><a href="https://www.uspreventiveservicestaskforce.org/apps/">USPSTF Recommendations App - Prevention TaskForce</a></div>
+</div>
+</div>
+
+<div class="col-xs-12 col-sm-6 col-md-3">
+<div class="main-sub-menu">
+<h4><a href="/uspstf/public-comments-and-nominations">Public Comments and Nominations</a></h4>
+
+<div class="main-menu-link"><a href="/uspstf/public-comments-and-nominations/opportunity-for-public-comment">Opportunity for Public Comment</a></div>
+
+<div class="main-menu-link"><a href="https://www.ahrq.gov/cpi/about/otherwebsites/uspstf/nominate.html">Nominate a New USPSTF Member</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/public-comments-and-nominations/nominate-recommendation-statement-topic">Nominate a Recommendation Statement Topic</a></div>
+</div>
+</div>
+
+<div class="col-xs-12 col-sm-6 col-md-3">
+<div class="main-sub-menu">
+<h4><a href="/uspstf/news">News</a></h4>
+
+<div class="main-menu-link"><a href="/uspstf/news#block-news-bulletins">News Bulletins</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/email-updates">Subscribe for Email Updates</a></div>
+</div>
+</div>
+
+<div class="col-xs-12 col-sm-6 col-md-3">
+<div class="main-sub-menu">
+<h4><a href="https://uspreventiveservicestaskforce.org/uspstf/about-uspstf">About the USPSTF</a></h4>
+
+<div class="main-menu-link"><a href="/uspstf/about-uspstf/task-force-at-a-glance">Task Force at a Glance</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/about-uspstf/current-members">Our Members</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/about-uspstf/methods-and-processes">Methods &amp; Processes</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/about-uspstf/task-force-resources">Task Force Resources</a></div>
+
+<div class="main-menu-link"><a href="https://www.uspreventiveservicestaskforce.org/uspstf/about-uspstf/our-partners">Our Partners</a></div>
+
+<div class="main-menu-link"><a href="/uspstf/about-uspstf/contact-us-form">Contact Us</a></div>
+
+<div class="connect"><span class="connect-title">Connect with us</span><a href="http://www.linkedin.com/company/uspstf"><img alt="LinkedIn" height="28" src="/uspstf/sites/default/files/inline-images/linkedin-icon.png" width="28" loading="lazy"></a></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+      
+  </section>
+
+<section id="block-footer" class="block block-block-content block-block-contentc25aa3a7-d441-4463-b149-ade6f84d9f00 clearfix">
+  
+    
+
+      
+            <div class="field field--name-body field--type-text-with-summary field--label-hidden field--item"><div class="custom-footer-menu"><a class="custom-footer-menu-link" href="/admin">Admin</a><a class="custom-footer-menu-link" href="/uspstf/user/login">Login</a><a class="custom-footer-menu-link" href="/uspstf/recommendation-topics/copyright-notice">Copyright Notice</a><a class="custom-footer-menu-link" href="/uspstf/social-media-policy">Social Media Policy</a><a class="custom-footer-menu-link" href="https://goo.gl/maps/K5pTEYHQv592P7mS7" target="_blank">USPSTF Program Office - 5600 Fishers Lane, Mail Stop 06E53A, Rockville, MD 20857</a></div>
+<noscript><style type="text/css">@import '/uspstf/themes/custom/custom/css/noscript.css';</style></noscript></div>
+      
+  </section>
+
+
+  </div>
+
+    </footer>
+  
+  </div>
+
+    
+    <script type="application/json" data-drupal-selector="drupal-settings-json">{"path":{"baseUrl":"\/uspstf\/","pathPrefix":"","currentPath":"recommendation\/skin-cancer-screening","currentPathIsAdmin":false,"isFront":false,"currentLanguage":"en"},"pluralDelimiter":"\u0003","suppressDeprecationErrors":true,"bootstrap":{"forms_has_error_value_toggle":1,"modal_animation":1,"modal_backdrop":"true","modal_focus_input":1,"modal_keyboard":1,"modal_select_text":1,"modal_show":1,"modal_size":"","popover_enabled":1,"popover_animation":1,"popover_auto_close":1,"popover_container":"body","popover_content":"","popover_delay":"0","popover_html":0,"popover_placement":"right","popover_selector":"","popover_title":"","popover_trigger":"click"},"ajaxTrustedUrl":{"form_action_p_pvdeGsVG5zNF_XLGPTvYSKCf43t8qZYSwcfZl2uzM":true},"user":{"uid":0,"permissionsHash":"fd6c515df5818cfcc5c49360993648e140ee9ac4b7d79b2c890f8ea550f69d3f"}}</script>
+<script src="/uspstf/sites/default/files/js/js_SDCd7MEeGD74qZFK2oy6cSH8SbhVc2aPkp10aw8NHpQ.js?scope=footer&amp;delta=0&amp;language=en&amp;theme=custom&amp;include=eJxli9EKgDAIAH9o5CfJbAYSm6LWfr-niujt7uBINSO9GtBNaM4oQ7I8CUxNT_ayHpHaMSfXPeBjS21dRplMm3rH9_2VC84xL0Y"></script>
+
+    <noscript>Your browser does not support JavaScript!</noscript>
+  </body>
+</html>
