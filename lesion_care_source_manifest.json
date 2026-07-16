@@ -1,30 +1,41 @@
 {
   "schema_version": "lesion-care-source-manifest-1",
   "research_id": "skinscan-lesion-care-us-2026-07-16",
-  "status": "complete_pending_independent_dermatologist_review",
+  "status": "ai_research_audit_approved_for_mvp_development_and_synthetic_testing",
   "evidence_cutoff": "2026-07-16",
   "retrieved_at": "2026-07-16T22:15:15Z",
   "jurisdiction": "US",
-  "approval_gate": {
-    "approved": false,
-    "required_specialty": "board-certified dermatologist or jurisdictionally equivalent independent dermatologist",
-    "reviewer": null,
-    "reviewed_at": null,
-    "report_sha256": "87ab71e790d4739bcdfd2495fd872dbcfc4451294a7ada2ed5a55696bf17b9cb",
-    "policy_version": "2026-07-16-proposed.1",
-    "exceptions": [],
-    "production_changes_authorized": false
+  "ai_research_audit": {
+    "review_type": "ai_research_audit",
+    "approved": true,
+    "reviewer_identity": "OpenAI Codex GPT-5 research-audit agent (AI, non-clinician, no medical credentials)",
+    "reviewer_type": "agent",
+    "reviewed_at": "2026-07-16T23:02:45Z",
+    "reviewed_commit": "94045f8940cdf73b1b708388900c1fffa9a5c3bf",
+    "report_sha256": "8e201d6d869a67e8635f29cc43452138e760561ae0e34d2b2b4b8ba1d6e4344d",
+    "policy_version": "2026-07-16-mvp.1",
+    "policy_sha256": "8d24399f076e7721a96b1fc6cf59174bb94390b655a15eb326c8d3a722ffbae1",
+    "decision": "approved_for_development_and_synthetic_testing_only",
+    "summary": "The evidence package is internally sufficient as a conservative specification for implementation and synthetic testing. It is not clinical approval or authorization for real-user or production use. Exact catalog coverage remains provisional because its input artifacts are not pinned to the reviewed commit.",
+    "exceptions": [
+      "No real-user, external-beta, or production use",
+      "Preserve all referral, abstention, contraindication, and unknown-input deferrals",
+      "Pin or regenerate catalog coverage inputs before relying on exact counts or SKUs"
+    ],
+    "mvp_development_changes_authorized": true,
+    "production_changes_authorized": false,
+    "real_user_use_authorized": false
   },
   "artifacts": [
     {
       "path": "LESION_CARE_EVIDENCE_REPORT.md",
-      "sha256": "87ab71e790d4739bcdfd2495fd872dbcfc4451294a7ada2ed5a55696bf17b9cb",
-      "bytes": 59749
+      "sha256": "8e201d6d869a67e8635f29cc43452138e760561ae0e34d2b2b4b8ba1d6e4344d",
+      "bytes": 60586
     },
     {
       "path": "lesion_care_policy.proposed.json",
-      "sha256": "695de071bd8bfe3dd00c83f173ccbd01151ec56bb84209124e5ad433f8ffd501",
-      "bytes": 27721
+      "sha256": "8d24399f076e7721a96b1fc6cf59174bb94390b655a15eb326c8d3a722ffbae1",
+      "bytes": 28899
     }
   ],
   "searches": [
@@ -672,7 +683,7 @@
         "papule",
         "pustule"
       ],
-      "coverage_status": "partial_coverage_pending_clinical_approval",
+      "coverage_status": "partial_coverage_approved_for_synthetic_mvp",
       "verification_status": "partial",
       "neutral_profile_gate": {
         "eligible": true,
@@ -715,7 +726,7 @@
           ]
         }
       ],
-      "uncertainty": "Catalog evidence approval does not approve the lesion-care pathway. Completeness remains partial."
+      "uncertainty": "Catalog evidence approval is separate from the AI research audit; the synthetic MVP path is approved while completeness remains partial."
     },
     {
       "product_id": "P456218",
@@ -723,7 +734,7 @@
       "target_labels": [
         "melasma"
       ],
-      "coverage_status": "partial_coverage_pending_clinical_approval",
+      "coverage_status": "partial_coverage_approved_for_synthetic_mvp",
       "verification_status": "partial",
       "neutral_profile_gate": {
         "eligible": true,
@@ -783,7 +794,7 @@
           ]
         }
       ],
-      "uncertainty": "Iron-oxide percentage is not stated; completeness remains partial and clinical path approval is absent."
+      "uncertainty": "Iron-oxide percentage is not stated; completeness remains partial and real-user authorization is absent."
     },
     {
       "product_id": "P467976",
@@ -860,7 +871,7 @@
       "target_labels": [
         "melasma"
       ],
-      "coverage_status": "partial_coverage_pending_clinical_approval",
+      "coverage_status": "partial_coverage_approved_for_synthetic_mvp",
       "verification_status": "partial",
       "neutral_profile_gate": {
         "eligible": true,
@@ -922,7 +933,7 @@
           ]
         }
       ],
-      "uncertainty": "Iron-oxide percentage is not stated; completeness remains partial and clinical path approval is absent."
+      "uncertainty": "Iron-oxide percentage is not stated; completeness remains partial and real-user authorization is absent."
     },
     {
       "product_id": "P481169",
@@ -930,7 +941,7 @@
       "target_labels": [
         "melasma"
       ],
-      "coverage_status": "partial_coverage_pending_clinical_approval",
+      "coverage_status": "partial_coverage_approved_for_synthetic_mvp",
       "verification_status": "partial",
       "neutral_profile_gate": {
         "eligible": true,
@@ -986,11 +997,14 @@
           ]
         }
       ],
-      "uncertainty": "Format is unknown and lowers completeness but does not veto under D-036; iron-oxide percentage is not stated; clinical path approval is absent."
+      "uncertainty": "Format is unknown and lowers completeness but does not veto under D-036; iron-oxide percentage is not stated; real-user authorization is absent."
     }
   ],
   "product_coverage_audit": {
     "audited_at": "2026-07-16T22:15:15Z",
+    "status": "provisional_dirty_worktree_snapshot",
+    "commit_pinned": false,
+    "reproducibility_exception": "Two derived catalog inputs are absent from clean commit 94045f8, and the committed verification overlay and concern-active file do not match the recorded hashes. Regenerate or pin these inputs before treating exact counts or SKU eligibility as fixed acceptance criteria.",
     "method": "Load current full and drug catalogs, apply the approved verification overlay at the fixed audit timestamp, parse actives deterministically, and run current hard gates with a complete neutral coverage-audit profile. Presence counts are not eligibility claims.",
     "inputs": [
       {
@@ -1094,13 +1108,13 @@
         "reason": "No OTC adapalene or exact salicylic-acid acne-drug row clears the current treatment gates."
       },
       "papule": {
-        "status": "partial_coverage_pending_clinical_approval",
+        "status": "partial_coverage_approved_for_synthetic_mvp",
         "products": [
           "P188306"
         ]
       },
       "pustule": {
-        "status": "partial_coverage_pending_clinical_approval",
+        "status": "partial_coverage_approved_for_synthetic_mvp",
         "products": [
           "P188306"
         ]
@@ -1121,7 +1135,7 @@
         "reason": "No dedicated, verified silicone sheet or gel product is present."
       },
       "melasma": {
-        "status": "partial_coverage_pending_clinical_approval",
+        "status": "partial_coverage_approved_for_synthetic_mvp",
         "products": [
           "P456218",
           "P476733",
@@ -1155,11 +1169,15 @@
     ],
     "required_invariants": [
       "policy JSON parses and contains each exact label once",
-      "production_eligible is false and review.approved is false",
+      "production_eligible is false, mvp_synthetic_eligible is true, and ai_research_audit.approved is true",
+      "test_only is true and any runtime translation is confined to tests/fixtures",
+      "authorized environments are development and test; authorized inputs are synthetic profiles and fixture images only",
+      "real-user, external-beta, and production use remain unauthorized",
       "nodule, atrophic_scar, hypertrophic_scar, nevus, and other have no retail target active",
       "nevus and other have no required product role",
       "every included, rejected-with-snapshot, and product-evidence snapshot exists and hashes to snapshot_sha256",
       "exact-label coverage names all 10 labels and preserves every unfilled path",
+      "product coverage counts and SKU eligibility are marked provisional until their dirty-worktree inputs are pinned or regenerated",
       "report and policy hash to the values recorded in artifacts"
     ]
   }
