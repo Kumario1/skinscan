@@ -38,12 +38,10 @@ from .verification import apply_verification, load_verification_overlay
 DEFAULT_DATA_ROOT = Path(__file__).parent / "data"
 
 # load_providers() reports a store it declined to load by ending the warning with
-# SKIPPED_MARKER, and reports the catalog_sha256 mismatch case with
-# SIGNAL_CATALOG_MISMATCH. Matching on the message is a seam, not a contract:
-# signals.py should return these structurally (see the note in the review). Kept
-# here as named constants so the coupling is greppable from one place.
+# SKIPPED_MARKER. Matching on the message is a seam, not a contract: signals.py
+# should return this structurally (see the note in the review). Kept here as a
+# named constant so the coupling is greppable from one place.
 SKIPPED_MARKER = "— skipped"
-SIGNAL_CATALOG_MISMATCH = "catalog_sha256 mismatch for store"
 
 
 def skipped_signal_warnings(warnings: list[str]) -> list[str]:
@@ -117,37 +115,6 @@ def resolve_paths(
     return catalog_path, static_root, drug_path, verification_root
 
 
-def _fail_on_signal_mismatch(
-    signal_warnings: list[str], catalog_path: Path, data_root: Path,
-    *, explicit: bool, allowed: bool,
-) -> None:
-    """Refuse to score blind against an explicitly supplied catalog.
-
-    A store is keyed by the sha256 of the catalog it was built against; on a
-    mismatch load_providers skips it with only a warning and every store-backed
-    signal falls back to a neutral 0.5. The run still reports 'partial' with
-    priced routines, and 'partial' is also what a healthy run reports -- so the
-    status cannot tell the two apart and nothing downstream can either.
-
-    Only when the catalog was named explicitly: resolved from a data root the
-    catalog and stores are one curated pair, but --catalog overrides half of that
-    pair and strands the other half. Pass allow_signal_catalog_mismatch=True to
-    take the old warn-and-continue behaviour deliberately.
-    """
-    mismatched = [w for w in signal_warnings if w.startswith(SIGNAL_CATALOG_MISMATCH)]
-    if not mismatched or not explicit or allowed:
-        return
-    raise ContractViolation(
-        "data_versions.signals",
-        f"{len(mismatched)} signal store(s) are bound to a different catalog than "
-        f"{catalog_path}, so every store-backed signal would score a neutral 0.5 "
-        f"and the ranker would be blind. Point --data-root at the data root the "
-        f"stores were built against (tried {data_root}), rebuild the stores for "
-        f"this catalog, or pass --allow-signal-catalog-mismatch to accept a blind "
-        f"ranking. Skipped: " + "; ".join(mismatched),
-    )
-
-
 def run(
     analysis_path: str | Path,
     profile_path: str | Path | None = None,
@@ -157,12 +124,14 @@ def run(
     eligibility_mode: str = "strict",
     allow_signal_catalog_mismatch: bool = False,
 ) -> dict:
-    # An explicitly supplied catalog is the operator overriding one half of a
-    # matched pair: the signal stores are keyed by the sha256 of the catalog they
-    # were built against, so pointing --catalog somewhere else strands every
-    # store. That is the difference between a checked answer and a blind one, so
-    # it is a hard failure rather than a warning. See _fail_on_signal_mismatch.
-    catalog_was_explicit = catalog_path is not None
+    # The signal stores are keyed by the sha256 of the catalog they were built
+    # against; scoring any other catalog with them strands every store, and a
+    # stranded store means every store-backed signal degenerates to a neutral
+    # 0.5 -- a blind ranking in a document that still looks complete. So
+    # load_providers hard-fails on a mismatch unless
+    # allow_signal_catalog_mismatch=True takes the blind ranking deliberately,
+    # in which case the store is skipped with a warning that lands in this
+    # document's warnings/data_versions.signals (and the CLI's exit code).
     data_root = Path(data_root) if data_root else DEFAULT_DATA_ROOT
     catalog_path, static_root, drug_path, verification_root = resolve_paths(
         data_root, catalog_path
@@ -194,12 +163,11 @@ def run(
             "prescription": sum(1 for p in drug_products if p.otc_drug is False),
         }
     products = apply_verification(products, overlay)
-    providers, store_meta, signal_warnings = load_providers(data_root, catalog_sha256)
-    warnings = verification_warnings + signal_warnings
-    _fail_on_signal_mismatch(
-        signal_warnings, catalog_path, data_root,
-        explicit=catalog_was_explicit, allowed=allow_signal_catalog_mismatch,
+    providers, store_meta, signal_warnings = load_providers(
+        data_root, catalog_sha256,
+        allow_catalog_mismatch=allow_signal_catalog_mismatch,
     )
+    warnings = verification_warnings + signal_warnings
 
     targets = select_targets(analysis)
     document: dict = {

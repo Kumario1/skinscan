@@ -25,10 +25,11 @@ def _label_stated_actives(d: dict) -> tuple[str, ...] | None:
 
     A drug label publishes no INCI list, so the usual "actives must parse out of
     the INCI" derivation cannot apply. It does something stronger: it names each
-    active, gives its exact strength, and cites the label it came from, and the
-    row is bound to that label by hash. Rows that clear all of that derive their
-    actives from drug_actives instead. Returns None for everything else, which
-    keeps the INCI rule in force for every cosmetic.
+    active, gives its exact strength, and cites the DailyMed label it came from.
+    Rows that clear all of that derive their actives from drug_actives instead.
+    Returns None for everything else, which keeps the INCI rule in force for
+    every cosmetic. Evidence-byte hash binding belongs to verification.py, not
+    this catalog door.
     """
     drug_actives = d.get("drug_actives") or []
     if not drug_actives or not _cites_label(d.get("label_source")):

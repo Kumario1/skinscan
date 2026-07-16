@@ -43,8 +43,12 @@ a byte-identical rebuild from the Kaggle dump (skips when the dump is absent).
 ## Rebuild the data
 
 The raw Kaggle Sephora dump lives at the repo level (`data/raw/sephora/`,
-gitignored — main checkout only). All committed artifacts regenerate
-deterministically (no timestamps → byte-identical):
+gitignored — main checkout only). The catalog, review-stats and popularity
+artifacts regenerate byte-identically from the dump (no timestamps; the
+`raw_dump`-marked tests verify exactly this). `ingredient_analysis.v1.json` is
+LLM-backed and only as reproducible as its cache (gitignored, keyed on
+`(product_id, inci_sha256, prompt_version, model_id)`): rebuilding from the
+cache is byte-stable, re-querying the model is not.
 
 ```bash
 RAW=/Users/princekumar/Documents/skinscan/data/raw/sephora
@@ -76,6 +80,8 @@ python -m recsys.tools.build_concern_efficacy \
   --labels data/processed/review_concern_labels.jsonl \
   --catalog recsys/data/catalog/seed_catalog.json \
   --out recsys/data/signals/concern_efficacy.v1.json --data-root recsys/data
+# Add --prompt-version p11 when the append-only labels file contains older
+# policy versions; a mixed-version build is refused unless one is selected.
 
 # Import only already-approved assertions; this command never approves facts.
 # It refuses to drop a fact the committed overlay asserts (a re-verification
@@ -96,10 +102,14 @@ python -m recsys.tools.import_drug_catalog \
 ```
 
 A drug label publishes no INCI list, so drug rows are the one exception to
-"actives must parse out of the INCI". They earn it: the label names each active,
-states its exact strength, and cites itself as the source, and the row is bound
-to the label bytes by hash — checked in `catalog.py`, and enforced per active.
-Anything short of that falls back to the INCI rule.
+"actives must parse out of the INCI". They earn it: `catalog.py` accepts a
+row's declared actives only when the label names each active with its exact
+strength and each active (and the row itself) cites a DailyMed label URL as its
+source — checked per active, on every load. Binding to source bytes by hash
+lives in the verification-overlay path, not in `catalog.py`:
+`tools/import_verification.py` and `verification.py` check each assertion's
+`source_sha256` against the stored evidence file. Anything short of the
+per-active citation rule falls back to the INCI rule.
 
 Prescriptions are **listed, never placed**. `prescription_options` surfaces the
 ones that fit the reported concerns so a user can raise them with a doctor
@@ -112,8 +122,9 @@ When Azure is configured, the labeler requires `TARGET_URL` (or
 `AZURE_OPENAI_ENDPOINT`), `AZURE_KEY` (or `AZURE_OPENAI_API_KEY`), the exact
 `AZURE_OPENAI_DEPLOYMENT`, and explicit `AZURE_INPUT_PRICE_PER_MILLION` /
 `AZURE_OUTPUT_PRICE_PER_MILLION` values. The full pass refuses partial Azure
-configuration, writes an ignored token ledger, and enforces both the configured
-$40 cumulative ceiling and 900-request ceiling. Each in-flight request reserves
+configuration, writes an ignored token ledger, and enforces both ceilings
+configured in `configs/default.yaml` — `concern.max_budget_usd: 90.0`
+cumulative and `concern.azure_max_requests: 1400`. Each in-flight request reserves
 its conservative maximum cost before submission, so retries and concurrency
 cannot bypass those limits.
 

@@ -18,7 +18,7 @@ def decision(disposition="active_treatment"):
     return CareDecision("routine", [], disposition, [], "synthetic", True)
 
 
-def product(product_id, role, active=None, grade="verified_label"):
+def product(product_id, role, active=None, grade="verified_label", otc_drug=True):
     category = "spf" if role == "sunscreen" else role
     values = dict(
         product_id=product_id, name=product_id, brand="Example", category=category,
@@ -34,7 +34,7 @@ def product(product_id, role, active=None, grade="verified_label"):
     if role == "treatment":
         values.update(
             actives=[active], drug_actives=[VerifiedActive(active, "10%", "synthetic://label")],
-            otc_drug=True,
+            otc_drug=otc_drug,
             label_source="synthetic://label", label_verified_at="2026-07-13",
         )
     if role == "sunscreen":
@@ -126,6 +126,22 @@ def test_concern_scorer_precedes_pooled_stats_and_fallback_is_truthful():
     )
     assert fallback.selected_products["treatment"] == b
     assert fallback.explanation[0]["ranking_basis"] == "pooled_general_fallback"
+
+
+@pytest.mark.parametrize("otc_drug", [False, None])
+def test_prescription_treatment_explains_that_a_doctor_must_prescribe(otc_drug):
+    result = compose_regimen(
+        decision(), active_plan(),
+        {"treatment": [product("rx", "treatment", "azelaic_acid",
+                               otc_drug=otc_drug)]},
+        profile(),
+    )
+
+    explanation = result.explanation[0]
+    assert explanation["prescription"] is True
+    assert explanation["referral_note"] == (
+        "prescription — a doctor or dermatologist can advise on and prescribe this"
+    )
 
 
 # --- one SKU, two roles -------------------------------------------------------

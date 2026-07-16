@@ -13,6 +13,12 @@ from recsys.tools.build_review_stats import build as build_review_stats
 
 DATA = Path(__file__).parents[1] / "data"
 FIXTURES = Path(__file__).parent / "fixtures"
+PASSING_P3 = {
+    "pooled": {
+        "champion": {"roc_auc": 0.70, "pairwise": 0.60},
+        "concern_conditioned": {"roc_auc": 0.71, "pairwise": 0.61},
+    },
+}
 
 
 def _registered_store(tmp_path, *, source=None, name="review_stats", kind="review_stats"):
@@ -60,6 +66,21 @@ def test_catalog_mismatch_refuses_to_load_the_store(tmp_path, name, kind):
 
     with pytest.raises(ContractViolation):
         load_providers(tmp_path, "catalog-new")
+
+
+def test_catalog_mismatch_can_be_skipped_only_when_explicitly_allowed(tmp_path):
+    _registered_store(tmp_path, source={"catalog_sha256": "catalog-old"})
+
+    providers, meta, warnings = load_providers(
+        tmp_path, "catalog-new", allow_catalog_mismatch=True
+    )
+
+    assert not any(isinstance(provider, ReviewQualitySignal) for provider in providers)
+    assert meta == []
+    assert warnings == [
+        "catalog_sha256 mismatch for store 'review_stats': expected "
+        "catalog-new, got catalog-old — skipped"
+    ]
 
 
 def test_bound_store_refuses_to_load_for_an_unnamed_catalog(tmp_path):
@@ -132,7 +153,8 @@ def test_concern_efficacy_builder_records_catalog_sha(tmp_path):
     out = data_root / "signals" / "concern_efficacy.v1.json"
 
     build_concern(labels, out, data_root, catalog_products=1,
-                  catalog_product_ids=frozenset({"p1"}), catalog_path=catalog)
+                  catalog_product_ids=frozenset({"p1"}), catalog_path=catalog,
+                  p3_evaluation=PASSING_P3)
 
     registry = json.loads((data_root / "signals" / "registry.json").read_text())
     assert registry["stores"][0]["source"]["catalog_sha256"] == sha256_file(catalog)
@@ -175,3 +197,27 @@ def test_pipeline_binds_runtime_stores_to_selected_catalog(tmp_path):
     assert [entry["name"] for entry in document["data_versions"]["signals"]] == [
         "review_stats"
     ]
+
+
+def test_cli_writes_but_returns_three_when_catalog_mismatch_is_allowed(tmp_path):
+    from recsys.__main__ import main
+
+    catalog = tmp_path / "catalog_full.json"
+    catalog.write_bytes((DATA / "catalog" / "seed_catalog.json").read_bytes())
+    _registered_store(tmp_path, source={"catalog_sha256": "catalog-old"})
+    out = tmp_path / "recommendations.json"
+
+    code = main([
+        "recommend",
+        "--analysis", str(FIXTURES / "analysis_v3_sample.json"),
+        "--profile", str(FIXTURES / "profile_complete.json"),
+        "--data-root", str(tmp_path),
+        "--generated-at", "2026-07-14T00:00:00+00:00",
+        "--allow-signal-catalog-mismatch",
+        "--out", str(out),
+    ])
+
+    document = json.loads(out.read_text())
+    assert code == 3
+    assert document["data_versions"]["signals"] == []
+    assert any("catalog_sha256 mismatch" in warning for warning in document["warnings"])

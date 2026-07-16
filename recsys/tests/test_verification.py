@@ -6,7 +6,10 @@ import pytest
 
 from recsys.catalog import CatalogProduct
 from recsys.contracts import ContractViolation
+from recsys.explain import is_prescription
 from recsys.verification import apply_verification, load_verification_overlay
+
+SPL = "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/x.xml"
 
 
 def _multi_row_overlay(tmp_path, rows):
@@ -243,6 +246,74 @@ def test_approved_assertion_rejects_invalid_fact_shapes(tmp_path, facts, field):
 
     with pytest.raises(ContractViolation, match=field):
         load_verification_overlay(root, now=datetime(2026, 7, 15, tzinfo=timezone.utc))
+
+
+def _drug_product():
+    """A drug row as the DailyMed importer builds it: label-stated actives,
+    otc_drug straight off its own FDA label."""
+    return CatalogProduct(
+        product_id="p1", name="AZELEX", brand="DailyMed SPL", category="treatment",
+        price_usd=None, size=None, format="cream", spf=None, spf_source=None,
+        inci=(), inci_sha256="", actives=("azelaic_acid",),
+        drug_actives=({"name": "azelaic_acid", "strength": "20%", "source": SPL},),
+        otc_drug=False, label_source=SPL,
+    )
+
+
+def test_minted_drug_actives_with_no_otc_fact_still_read_as_a_prescription(tmp_path):
+    """otc_drug is an OPTIONAL fact, so an approved assertion can mint
+    DailyMed-cited drug_actives onto a cosmetic base row and simply never
+    mention OTC status: the merged row carries drug_actives with otc_drug=None.
+    Under `otc_drug is False` that None read as not-a-prescription, and the
+    Rx-strength row was scored, composed, and published as a routine step with
+    "prescription": false and no doctor note. Unknown is data, never a
+    favorable default: a drug the label has not proven OTC is a prescription --
+    listed for a doctor conversation, never placed."""
+    root = _write_approved_overlay(tmp_path, {
+        "drug_actives": [{"name": "tretinoin", "strength": "0.025%", "source": SPL}],
+        "label_source": SPL,
+    })
+    overlay, warnings, _meta = load_verification_overlay(
+        root, now=datetime(2026, 7, 15, tzinfo=timezone.utc))
+
+    verified = apply_verification([_product()], overlay)[0]
+
+    assert warnings == []
+    assert verified.drug_actives == (
+        {"name": "tretinoin", "strength": "0.025%", "source": SPL},)
+    assert verified.otc_drug is None, "the overlay never asserted OTC status"
+    assert is_prescription(verified) is True
+
+
+def test_an_empty_drug_actives_fact_cannot_clear_a_drug_rows_own_actives(tmp_path):
+    """[] is a list, so it passes the shape validation, and it skips the
+    per-active label contract because there is no active to check -- but merged
+    onto a drug row it deletes drug_actives while `actives` keeps the drug
+    names, and a row without drug_actives is not a prescription. That is the
+    otc_drug bypass again, by deletion instead of a boolean flip, and it is
+    refused the same way: un-prescriptioning a drug takes fresh label evidence,
+    not an eraser."""
+    root = _write_approved_overlay(tmp_path, {"drug_actives": []})
+    overlay, _warnings, _meta = load_verification_overlay(
+        root, now=datetime(2026, 7, 15, tzinfo=timezone.utc))
+
+    with pytest.raises(ContractViolation, match="drug_actives"):
+        apply_verification([_drug_product()], overlay)
+
+
+def test_an_empty_drug_actives_fact_is_a_no_op_on_a_cosmetic(tmp_path):
+    """The refusal is scoped to rows that have label-stated actives to lose.
+    On a cosmetic (drug_actives already empty) the same fact asserts nothing
+    and deletes nothing, so it merges as the no-op it is."""
+    root = _write_approved_overlay(tmp_path, {"drug_actives": [], "spf": 50})
+    overlay, _warnings, _meta = load_verification_overlay(
+        root, now=datetime(2026, 7, 15, tzinfo=timezone.utc))
+
+    verified = apply_verification([_product()], overlay)[0]
+
+    assert verified.drug_actives == ()
+    assert verified.spf == 50
+    assert is_prescription(verified) is False
 
 
 def test_a_tampered_evidence_snapshot_stops_its_facts_from_applying(tmp_path):

@@ -143,12 +143,21 @@ def step_to_dict(
 
 
 def is_prescription(product) -> bool:
-    """A drug whose own label does not call it OTC (D-033).
+    """A drug whose own label does not state it is OTC (D-033).
+
+    `is not True` rather than `is False`: otc_drug is an optional fact, so a
+    verification overlay can mint drug_actives onto a cosmetic base row without
+    ever asserting OTC status, and the row arrives here with otc_drug=None.
+    Unknown is data, never a favorable default -- a drug the label has not
+    proven OTC is treated as a prescription, which fails safe: it is listed for
+    a doctor conversation, never placed in a routine. Under `is False` that
+    same row read as not-a-prescription and rode into published routine steps
+    with "prescription": false and no doctor note.
 
     Both halves matter: a cosmetic carries no drug_actives, so it can never be
     mislabelled by otc_drug alone.
     """
-    return bool(product.drug_actives) and product.otc_drug is False
+    return bool(product.drug_actives) and product.otc_drug is not True
 
 
 def prescription_options(products, targets, k: Knowledge) -> list[dict]:

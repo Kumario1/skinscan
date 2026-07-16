@@ -262,6 +262,17 @@ def apply_verification(
                 "verification.otc_drug",
                 f"refusing to override the label's own OTC status for {product.product_id}",
             )
+        # The same bypass by deletion: an empty drug_actives list is valid by
+        # shape (a list is a list) and skips the label-contract check below
+        # because there is nothing to check -- but merged onto a drug row it
+        # clears drug_actives while `actives` keeps the drug names, and a row
+        # with no drug_actives is not a prescription. Un-prescriptioning a drug
+        # takes fresh label evidence, not an eraser.
+        if product.drug_actives and facts.get("drug_actives") == []:
+            raise ContractViolation(
+                "verification.drug_actives",
+                f"refusing to clear the label's own drug_actives for {product.product_id}",
+            )
         # Actives are minted through the same door the catalog enforces: each
         # active named, dosed, and cited to the label, or nothing merges. The
         # old bare-name union let {"name": "tretinoin"} with no strength and no

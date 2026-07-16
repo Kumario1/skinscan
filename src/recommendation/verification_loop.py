@@ -439,10 +439,17 @@ def cmd_select(paths: Paths, args) -> int:
                          f"facts fresh: {keys}\n")
         if target in PATH_SPECS:
             spec = ", ".join(f"{n} {s}" for n, s in PATH_SPECS[target])
+            # DailyMed only, not "or the manufacturer's own page": recsys's drug
+            # door (recsys/catalog.py LABEL_PREFIX) refuses any per-active source
+            # that is not a DailyMed label, so a batch researched against a
+            # manufacturer page imports here and then fails there. The brief
+            # states the stricter contract both engines can honour.
             lines.append(f"- Treatment path target: exactly [{spec}] verified via a "
-                         "current authoritative label (DailyMed SPL) or the "
-                         "manufacturer's own page (facts.drug_actives + label fields; "
-                         "D-033: OTC status recorded but not required).\n")
+                         "current DailyMed SPL label; label_source and every "
+                         "facts.drug_actives[].source must cite the DailyMed label "
+                         "(https://dailymed.nlm.nih.gov/...) -- a manufacturer page "
+                         "does not qualify for drug rows "
+                         "(D-033: OTC status recorded but not required).\n")
         for reason in reasons:
             lines.append(f"- {reason}: {REASON_HINTS.get(reason, 'resolve from source')}\n")
     brief = batch_dir / "RESEARCH_BRIEF.md"

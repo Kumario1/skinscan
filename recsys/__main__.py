@@ -23,8 +23,10 @@ def main(argv: list[str] | None = None) -> int:
                           "hybrid: whole catalog by category, verified products ranked/labeled higher")
     rec.add_argument("--allow-signal-catalog-mismatch", action="store_true",
                      help="accept a run whose signal stores are bound to a different "
-                          "catalog than --catalog: every store-backed signal scores a "
-                          "neutral 0.5 and the ranking is blind. Warns instead of failing.")
+                          "catalog: mismatched stores are skipped with a warning, every "
+                          "store-backed signal scores a neutral 0.5, and the document is "
+                          "still written -- but the exit code is 3 because the ranking "
+                          "is blind (same as any skipped-store run)")
     args = parser.parse_args(argv)
 
     try:

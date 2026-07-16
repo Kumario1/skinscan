@@ -1667,7 +1667,8 @@ def cmd_label(rows, ccfg, yes: bool) -> dict | None:
             "azure_max_request_count": preflight["max_request_count"],
         })
     print(json.dumps(summary, indent=2))
-    print("next: .venv/bin/python -m src.recommendation.concern_stats")
+    print("next: python -m recsys.tools.build_concern_efficacy "
+          "--labels data/processed/review_concern_labels.jsonl (see recsys/README.md)")
     return summary
 
 

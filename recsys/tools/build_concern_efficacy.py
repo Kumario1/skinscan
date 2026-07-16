@@ -17,9 +17,10 @@ from ..contracts import sha256_file
 from .common import STORE_SCHEMA_VERSION, register_store, write_json
 
 # NOT a filter, and NOT the version this builder aggregates. The labels file is
-# the contract: build() takes the prompt version from --prompt-version, or reads
-# it out of the file itself (`derive_prompt_version`). This constant only stamps
-# fixtures that need *a* version string, so it cannot drift out of agreement with
+# the contract: build() takes the prompt version from --prompt-version, or
+# derives it from the file itself (`resolve_prompt_version`), erroring when the
+# file mixes versions. This constant only stamps fixtures that need *a* version
+# string, so it cannot drift out of agreement with
 # src/recommendation/concern_labels.py the way a filtering constant did: a
 # builder-local "p10" against a labeler writing "p11" silently discarded 33,775
 # of 33,825 paid labels, and recsys/ may not import from src/ to share one.
@@ -40,24 +41,35 @@ def _version_counts(records: list[dict]) -> dict[str, int]:
     return counts
 
 
-def derive_prompt_version(records: list[dict]) -> str | None:
-    """The prompt version of the newest usable label in an append-only ledger.
+def resolve_prompt_version(records: list[dict], explicit: str | None = None) -> str:
+    """The single prompt version this build aggregates, taken from the file.
 
-    The labels file is append-only (the labeler only ever appends), so the LAST
-    ok record is by construction what the most recent pass wrote — i.e. the
-    policy version currently in force. Older rows are superseded by definition:
-    a real ledger holds the current pass plus stale calibration rows from the
-    versions before it, and aggregating those together would mix policies.
-
-    Position, not a majority vote: right after a p12 calibration the newest 50
-    rows are p12 while thousands of p11 rows remain, and p12 IS the current
-    policy. build() reports what it discarded so that choice is never silent,
-    and --prompt-version overrides it.
+    A ledger's ok records normally all carry one prompt_version, and that is
+    the version — derived from the data, so a labeler bump can never race a
+    builder constant (a builder-local "p10" against a labeler writing "p11"
+    silently discarded 33,775 of 33,825 paid labels). A file that mixes
+    versions is ambiguous: each version is a different labeling policy, and
+    guessing one silently discards the rest, so it is a hard error unless
+    `explicit` (--prompt-version) names the one to build. An explicit version
+    matching zero ok records is that same silent discard asked for by name,
+    and errors too — the filter must never yield an empty aggregation.
     """
-    for record in reversed(records):
-        if record.get("status") == "ok" and record.get("prompt_version"):
-            return str(record["prompt_version"])
-    return None
+    counts = _version_counts(records)
+    if explicit is not None:
+        if not counts.get(explicit):
+            raise SystemExit(
+                f"--prompt-version {explicit!r} matches no ok records: the labels "
+                f"file holds {counts or '{}'} — refusing to build an empty store"
+            )
+        return explicit
+    if not counts:
+        raise SystemExit("the labels file holds no ok records — nothing to aggregate")
+    if len(counts) > 1:
+        raise SystemExit(
+            f"the labels file mixes prompt versions {counts}; each is a different "
+            f"labeling policy, so pass --prompt-version to select the one to build"
+        )
+    return next(iter(counts))
 
 
 def p3_gate_passed(result: dict) -> bool:
@@ -109,11 +121,12 @@ def _auc(labels: list[int], scores: list[float]) -> float | None:
 
 
 def _p3_bakeoff(records: list[dict], smoothing_m: float,
-                catalog_product_ids: frozenset[str] | None = None) -> dict | None:
+                catalog_product_ids: frozenset[str] | None = None,
+                *, prompt_version: str) -> dict | None:
     reviews = []
     outcomes = []
     for record in records:
-        if record.get("status") != "ok" or record.get("prompt_version") != PROMPT_VERSION:
+        if record.get("status") != "ok" or record.get("prompt_version") != prompt_version:
             continue
         product_id = str(record.get("product_id"))
         if catalog_product_ids is not None and product_id not in catalog_product_ids:
@@ -252,18 +265,30 @@ def build(
     smoothing_m: float = 20,
     sub_cell_min_n: int = 5,
     p3_evaluation: dict | None = None,
+    prompt_version: str | None = None,
 ) -> dict:
     records = [json.loads(line) for line in labels_path.read_text(encoding="utf-8").splitlines()
                if line.strip()]
+    prompt_version = resolve_prompt_version(records, prompt_version)
     p3 = (p3_evaluation if p3_evaluation is not None
-          else _p3_bakeoff(records, smoothing_m, catalog_product_ids))
-    if p3 is not None and not p3_gate_passed(p3):
+          else _p3_bakeoff(records, smoothing_m, catalog_product_ids,
+                           prompt_version=prompt_version))
+    if p3 is None:
+        # No bake-off is not a pass: a store the D-023 gate never examined must
+        # not register as if it had. Silently skipping here is how an empty or
+        # mislabeled ledger once shipped an active store.
+        raise SystemExit(
+            f"P3 bake-off has nothing to evaluate: no ok {prompt_version!r} record "
+            f"carries author_id and rating — pass --p3-eval with an offline D-023 "
+            f"P3 evaluation, or label with review metadata"
+        )
+    if not p3_gate_passed(p3):
         raise RuntimeError("P3 bake-off failed: no candidate beat the pooled champion on both metrics")
     global_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     product_counts: dict[tuple[str, str], dict[str, int]] = defaultdict(lambda: defaultdict(int))
     skin_counts: dict[tuple[str, str, str], dict[str, int]] = defaultdict(lambda: defaultdict(int))
     for record in records:
-        if record.get("status") != "ok" or record.get("prompt_version") != PROMPT_VERSION:
+        if record.get("status") != "ok" or record.get("prompt_version") != prompt_version:
             continue
         product_id = str(record["product_id"])
         if catalog_product_ids is not None and product_id not in catalog_product_ids:
@@ -306,6 +331,14 @@ def build(
             "by_skin_type": by_skin_type,
         }
 
+    if not products:
+        # Zero surviving cells means the store would say nothing about any
+        # product while registering as an active signal — every score would
+        # silently fall back to neutral. Refuse to write it.
+        raise SystemExit(
+            f"zero {prompt_version!r} label cells survived aggregation (catalog "
+            f"filter + reviewer_has_condition) — refusing to write an empty store"
+        )
     acne_n15 = sum(
         any(concern in ACNE_CONCERNS and entry["all"]["n"] >= 15
             for concern, entry in concerns.items())
@@ -315,34 +348,32 @@ def build(
         "schema_version": STORE_SCHEMA_VERSION,
         "kind": "concern_efficacy",
         "version": "v1",
-        "prompt_version": PROMPT_VERSION,
+        "prompt_version": prompt_version,
         "smoothing_m": smoothing_m,
         "sub_cell_min_n": sub_cell_min_n,
         "confidence_n": 20,
         "priors": dict(sorted((key, round(value, 6)) for key, value in priors.items())),
         "products": products,
+        "p3": p3,
     }
-    if p3 is not None:
-        payload["p3"] = p3
     write_json(out_path, payload)
     coverage = {
         "products": len(products),
         "catalog_products": catalog_products,
         "products_with_acne_cell_n15": acne_n15,
+        "p3_gate_passed": True,
     }
-    if p3 is not None:
-        coverage["p3_gate_passed"] = True
     register_store(
         data_root, name="concern_efficacy", kind="concern_efficacy", version="v1",
         store_path=out_path, builder=BUILDER,
         source={
             "labels_sha256": sha256_file(labels_path),
-            "prompt_version": PROMPT_VERSION,
+            "prompt_version": prompt_version,
             # concern_efficacy is catalog-bound (signals.CATALOG_BOUND_KINDS);
             # without this provenance load_providers skips it at inference.
             **({"catalog_sha256": sha256_file(catalog_path)}
                if catalog_path is not None else {}),
-            **({"p3": p3} if p3 is not None else {}),
+            "p3": p3,
         },
         coverage=coverage,
     )
@@ -357,8 +388,12 @@ def main(argv=None) -> int:
     parser.add_argument("--data-root", type=Path, required=True)
     parser.add_argument("--smoothing-m", type=float, default=20)
     parser.add_argument("--sub-cell-min-n", type=int, default=5)
+    parser.add_argument("--prompt-version", default=None,
+                        help="labeling-policy version to aggregate; default: derived "
+                             "from the labels file, erroring if the file mixes versions")
     parser.add_argument("--p3-eval", type=Path,
-                        help="optional D-023 P3 evaluation JSON; otherwise derive it when metadata is present")
+                        help="optional D-023 P3 evaluation JSON; otherwise derived from "
+                             "review metadata (author_id + rating), erroring without either")
     args = parser.parse_args(argv)
     catalog = json.loads(args.catalog.read_text(encoding="utf-8"))
     catalog_product_ids = frozenset(
@@ -375,6 +410,7 @@ def main(argv=None) -> int:
         sub_cell_min_n=args.sub_cell_min_n,
         p3_evaluation=(json.loads(args.p3_eval.read_text(encoding="utf-8"))
                        if args.p3_eval else None),
+        prompt_version=args.prompt_version,
     )
     print(coverage)
     return 0

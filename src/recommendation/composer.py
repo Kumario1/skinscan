@@ -175,6 +175,20 @@ def compose_regimen(
             matching = [active for active in product.drug_actives
                         if active.name == therapy_plan.primary.therapy]
             item["strength"] = matching[0].strength if matching else None
+        # D-033 relaxed eligibility to let verified prescription-strength rows
+        # through "while advising the user to see a doctor" -- this is that
+        # advice. Eligibility was this engine's only Rx control, so without the
+        # annotation a placed Rx product is indistinguishable from an OTC one
+        # in the output. `is not True`: otc_drug is optional, and a drug whose
+        # label has not proven it OTC is presented as a prescription -- unknown
+        # is data, never a favorable default (recsys/explain.is_prescription is
+        # the same rule).
+        if product.drug_actives and product.otc_drug is not True:
+            item["prescription"] = True
+            item["referral_note"] = (
+                "prescription — a doctor or dermatologist can advise on and "
+                "prescribe this"
+            )
         explanation.append(item)
 
     regimen: dict[str, list[RoutineInstruction]] = {"am": [], "pm": []}

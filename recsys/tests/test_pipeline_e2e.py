@@ -350,6 +350,98 @@ def test_an_otc_drug_row_is_not_offered_as_a_prescription(tmp_path):
     assert document["prescription_options"] == []
 
 
+MINTED_DRUG_PRODUCT_ID = "P427406"  # a seed-catalog cosmetic, not in the overlay
+
+
+def _derived_root_with_minted_drug_facts(tmp_path):
+    """A derived root whose overlay mints a drug identity onto a seed cosmetic.
+
+    The assertion carries DailyMed-cited drug_actives plus every usage fact the
+    strict gates check -- and never mentions otc_drug, which is an OPTIONAL
+    fact. The default overlay rides along unchanged so the other routines still
+    compose exactly as in the plain seed run.
+    """
+    import hashlib
+    import shutil
+    derived = tmp_path / "derived"
+    derived.mkdir()
+    (derived / "catalog_full.json").write_bytes(
+        (DATA / "catalog" / "seed_catalog.json").read_bytes()
+    )
+    shutil.copytree(DATA / "verification", derived / "verification")
+    spl = "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/x.xml"
+    body = b"minted prescription-strength label bytes"
+    digest = hashlib.sha256(body).hexdigest()
+    (derived / "verification" / "evidence" / digest).write_bytes(body)
+    approved = json.loads((derived / "verification" / "approved.json").read_text())
+    approved["products"].append({"product_id": MINTED_DRUG_PRODUCT_ID, "assertions": [{
+        "status": "approved", "reviewer_id": "reviewer-1", "reviewer_type": "agent",
+        "approved_at": "2026-07-13T00:00:00Z", "retrieved_at": "2026-07-13T00:00:00Z",
+        "source_url": "https://example.test/minted", "source_sha256": digest,
+        "facts": {
+            "drug_actives": [
+                {"name": "azelaic_acid", "strength": "20%", "source": spl}],
+            "label_source": spl, "label_verified_at": "2026-07-13",
+            "routine_roles": ["treatment"], "intended_areas": ["face"],
+            "exposure": "leave_on", "format": "gel",
+            "cadence": "pm", "cadence_source": "https://example.test/minted",
+        },
+    }]})
+    (derived / "verification" / "approved.json").write_text(json.dumps(approved))
+    return derived
+
+
+@pytest.mark.parametrize("mode", ["strict", "hybrid"])
+def test_an_overlay_minted_drug_row_with_unknown_otc_status_is_listed_never_placed(
+        tmp_path, mode):
+    """The overlay door accepts drug_actives without an otc_drug fact, so the
+    row reaches the pipeline as a drug of UNKNOWN OTC status. Unknown is data,
+    never a favorable default: the row must be treated as a prescription --
+    surfaced in prescription_options for a doctor conversation -- and must
+    never land in a routine step. Under `otc_drug is False` this exact row won
+    the treatment slot in all three routines, published with "prescription":
+    false and no doctor note."""
+    document = run(ANALYSIS, FIXTURES / "profile_complete.json",
+                   data_root=_derived_root_with_minted_drug_facts(tmp_path),
+                   generated_at="2026-07-14T00:00:00+00:00", eligibility_mode=mode)
+
+    placed = {s["product_id"] for r in document["routines"] for s in _steps(r)}
+    assert MINTED_DRUG_PRODUCT_ID not in placed, "an Rx row must never be a routine step"
+    vetoed = {v["product_id"] for v in document["veto_log"]["profile"]}
+    listed = [o for o in document["prescription_options"]
+              if o["actives"] == [{"name": "azelaic_acid", "strength": "20%"}]]
+    assert listed or MINTED_DRUG_PRODUCT_ID in vetoed, (
+        "a drug row that is not placed must be accounted for: listed as a "
+        "prescription option or vetoed by name, never silently dropped")
+    for option in listed:
+        assert "doctor" in option["note"]
+
+
+def test_the_pinned_retinoid_rows_draw_the_pregnancy_exclusion(tmp_path):
+    """RETINOL_PRODUCT_IDS and RETINYL_ESTER_ONLY_PRODUCT_ID check the gate
+    against the world: a human confirmed each of these labels carries a
+    retinoid, so a pregnant profile must draw retinoid_pregnancy_status_excluded
+    for every one of them, whatever K.retinoids happens to contain. Hybrid mode,
+    because the treatment-category rows only become candidates there (strict
+    requires verified drug_actives they do not have) and the pregnancy gate is
+    HARD in both modes. P421275's retinyl acetate parses to no canonical
+    active, so its veto can only come from the raw-INCI arm of the gate."""
+    profile = json.loads((FIXTURES / "profile_complete.json").read_text())
+    profile["pregnancy_status"] = "pregnant"
+    path = tmp_path / "profile.json"
+    path.write_text(json.dumps(profile))
+    document = run(ANALYSIS, path, generated_at="2026-07-14T00:00:00+00:00",
+                   eligibility_mode="hybrid")
+
+    pinned = RETINOL_PRODUCT_IDS | {RETINYL_ESTER_ONLY_PRODUCT_ID}
+    excluded = {v["product_id"] for v in document["veto_log"]["profile"]
+                if v["reason"] == "retinoid_pregnancy_status_excluded"}
+    for product_id in sorted(pinned):
+        assert product_id in excluded, product_id
+    placed = {s["product_id"] for r in document["routines"] for s in _steps(r)}
+    assert not (placed & pinned)
+
+
 def test_full_derived_data_root_uses_full_catalog_and_static_knowledge(tmp_path):
     derived = tmp_path / "derived"
     derived.mkdir()
