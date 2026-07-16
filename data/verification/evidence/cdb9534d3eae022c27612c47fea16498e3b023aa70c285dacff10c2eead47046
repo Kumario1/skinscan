@@ -1,0 +1,691 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet href="https://www.accessdata.fda.gov/spl/stylesheet/spl.xsl" type="text/xsl"?>
+<document xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:hl7-org:v3" xsi:schemaLocation="urn:hl7-org:v3 https://www.accessdata.fda.gov/spl/schema/spl.xsd">
+   <id root="55b03daa-b6d5-9edf-e063-6394a90ac4d1"/>
+   <code code="34390-5" codeSystem="2.16.840.1.113883.6.1" displayName="HUMAN OTC DRUG LABEL"/>
+   <effectiveTime value="20260703"/>
+   <setId root="55b03daa-b6d4-9edf-e063-6394a90ac4d1"/>
+   <versionNumber value="1"/>
+   <author>
+      <time/>
+      <assignedEntity>
+         <representedOrganization>
+            <id root="1.3.6.1.4.1.519.1" extension="554475230"/>
+            <name>Guangzhou Ariel Medical Technology Co., Ltd.</name>
+            <assignedEntity>
+               <assignedOrganization>
+                  <assignedEntity>
+                     <assignedOrganization>
+                        <id root="1.3.6.1.4.1.519.1" extension="554475230"/>
+                        <name>Guangzhou Ariel Medical Technology Co., Ltd.</name>
+                     </assignedOrganization>
+                     <performance>
+                        <actDefinition>
+                           <code code="C43360" displayName="manufacture" codeSystem="2.16.840.1.113883.3.26.1.1"/>
+                           <product>
+                              <manufacturedProduct classCode="MANU">
+                                 <manufacturedMaterialKind>
+                                    <code code="87815-002" codeSystem="2.16.840.1.113883.6.69"/>
+                                 </manufacturedMaterialKind>
+                              </manufacturedProduct>
+                           </product>
+                        </actDefinition>
+                     </performance>
+                     <performance>
+                        <actDefinition>
+                           <code code="C43360" displayName="manufacture" codeSystem="2.16.840.1.113883.3.26.1.1"/>
+                           <product>
+                              <manufacturedProduct classCode="MANU">
+                                 <manufacturedMaterialKind>
+                                    <code code="87815-003" codeSystem="2.16.840.1.113883.6.69"/>
+                                 </manufacturedMaterialKind>
+                              </manufacturedProduct>
+                           </product>
+                        </actDefinition>
+                     </performance>
+                  </assignedEntity>
+               </assignedOrganization>
+            </assignedEntity>
+         </representedOrganization>
+      </assignedEntity>
+   </author>
+   <component>
+      <structuredBody>
+         <component>
+            <section>
+               <id root="55b518f9-f3c2-46c2-e063-6394a90a848c"/>
+               <code code="48780-1" codeSystem="2.16.840.1.113883.6.1" displayName="SPL product data elements section"/>
+               <effectiveTime value="20260703"/>
+               <subject>
+                  <manufacturedProduct>
+                     <manufacturedProduct>
+                        <code code="87815-002" codeSystem="2.16.840.1.113883.6.69"/>
+                        <name>10% Azelaic Acid</name>
+                        <formCode code="C28944" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="CREAM"/>
+                        <asEntityWithGeneric>
+                           <genericMedicine>
+                              <name>Azelaic Acid Cream</name>
+                           </genericMedicine>
+                        </asEntityWithGeneric>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="6810070TYD" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CENTELLA ASIATICA LEAF</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="N8F53B3R4R" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>METHYLPROPANEDIOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="0022LFJ74Y" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>TARAXACUM OFFICINALE LEAF</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="936JST6JCN" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CETYL ALCOHOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="TR046Y3K1G" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>1,2-HEXANEDIOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="ZBP1YXW0H8" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>LAVANDULA ANGUSTIFOLIA (LAVENDER) OIL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="1I96OHX6EK" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>HYDROXYPROPYL BETADEX</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="3XUS85K0RA" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>BUTYLENE GLYCOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="G1L3HT4CMH" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>HYDROXYACETOPHENONE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="7E6SK9QDT8" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CYCLODEXTRINS</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="059QF0KO0R" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>WATER</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="TTV12P4NEE" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>XANTHAN GUM</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="GW89575KF9" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>SQUALANE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="344S277G0Z" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>ALLANTOIN</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="MDL271E3GR" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>SORBITAN OLIVATE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="ACTIB">
+                           <quantity>
+                              <numerator unit="g" value="10"/>
+                              <denominator unit="g" value="100"/>
+                           </quantity>
+                           <ingredientSubstance>
+                              <code code="F2VW3D43YT" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>AZELAIC ACID</name>
+                              <activeMoiety>
+                                 <activeMoiety>
+                                    <code code="F2VW3D43YT" codeSystem="2.16.840.1.113883.4.9"/>
+                                    <name>AZELAIC ACID</name>
+                                 </activeMoiety>
+                              </activeMoiety>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="09FUA47KNA" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CETEARYL GLUCOSIDE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="E107L85C40" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>DIPROPYLENE GLYCOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="14GUK8I73Z" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>POLICAPRAM</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="00YIU5438U" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CAPRYLYL GLYCOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="CQ2F5O6YIY" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>MADECASSOSIDE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="7M867G6T1U" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CENTELLA ASIATICA</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="48PS81XHK0" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>STEPHANIA TETRANDRA ROOT</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="2T13HF3266" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>O-CYMENE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="92RU3N3Y1O" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>DIMETHICONE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <asContent>
+                           <quantity>
+                              <numerator value="30" unit="g"/>
+                              <denominator value="1"/>
+                           </quantity>
+                           <containerPackagedProduct>
+                              <code code="87815-002-01" codeSystem="2.16.840.1.113883.6.69"/>
+                              <formCode code="C42794" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="TUBE"/>
+                           </containerPackagedProduct>
+                           <subjectOf>
+                              <characteristic>
+                                 <code code="SPLCMBPRDTP" codeSystem="2.16.840.1.113883.1.11.19255"/>
+                                 <value code="C112160" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="Type 0: Not a Combination Product" xsi:type="CV"/>
+                              </characteristic>
+                           </subjectOf>
+                           <subjectOf>
+                              <marketingAct>
+                                 <code code="C53292" codeSystem="2.16.840.1.113883.3.26.1.1"/>
+                                 <statusCode code="active"/>
+                                 <effectiveTime>
+                                    <low value="20260703"/>
+                                 </effectiveTime>
+                              </marketingAct>
+                           </subjectOf>
+                        </asContent>
+                     </manufacturedProduct>
+                     <subjectOf>
+                        <approval>
+                           <id extension="M006" root="2.16.840.1.113883.3.9421"/>
+                           <code code="C200263" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="OTC Monograph Drug"/>
+                           <author>
+                              <territorialAuthority>
+                                 <territory>
+                                    <code code="USA" codeSystem="2.16.840.1.113883.5.28"/>
+                                 </territory>
+                              </territorialAuthority>
+                           </author>
+                        </approval>
+                     </subjectOf>
+                     <subjectOf>
+                        <marketingAct>
+                           <code code="C53292" codeSystem="2.16.840.1.113883.3.26.1.1"/>
+                           <statusCode code="active"/>
+                           <effectiveTime>
+                              <low value="20260703"/>
+                           </effectiveTime>
+                        </marketingAct>
+                     </subjectOf>
+                     <consumedIn>
+                        <substanceAdministration>
+                           <routeCode code="C38304" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="TOPICAL"/>
+                        </substanceAdministration>
+                     </consumedIn>
+                  </manufacturedProduct>
+               </subject>
+               <subject>
+                  <manufacturedProduct>
+                     <manufacturedProduct>
+                        <code code="87815-003" codeSystem="2.16.840.1.113883.6.69"/>
+                        <name>14% Azelaic Acid</name>
+                        <formCode code="C28944" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="CREAM"/>
+                        <asEntityWithGeneric>
+                           <genericMedicine>
+                              <name>Azelaic Acid</name>
+                           </genericMedicine>
+                        </asEntityWithGeneric>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="344S277G0Z" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>ALLANTOIN</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="0022LFJ74Y" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>TARAXACUM OFFICINALE LEAF</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="6W41U3C9YN" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>4-HYDROXY-1-NAPHTHALENESULFONIC ACID</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="059QF0KO0R" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>WATER</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="ACTIB">
+                           <quantity>
+                              <numerator unit="g" value="14"/>
+                              <denominator unit="g" value="100"/>
+                           </quantity>
+                           <ingredientSubstance>
+                              <code code="F2VW3D43YT" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>AZELAIC ACID</name>
+                              <activeMoiety>
+                                 <activeMoiety>
+                                    <code code="F2VW3D43YT" codeSystem="2.16.840.1.113883.4.9"/>
+                                    <name>AZELAIC ACID</name>
+                                 </activeMoiety>
+                              </activeMoiety>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="H41B6Q1I9L" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>O-CYMEN-5-OL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="3XUS85K0RA" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>BUTYLENE GLYCOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="14GUK8I73Z" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>POLICAPRAM</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="TR046Y3K1G" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>1,2-HEXANEDIOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="G1L3HT4CMH" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>HYDROXYACETOPHENONE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="7E6SK9QDT8" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CYCLODEXTRIN</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="00YIU5438U" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CAPRYLYL GLYCOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="N8F53B3R4R" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>METHYLPROPANEDIOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="09FUA47KNA" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CETEARYL GLUCOSIDE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="E107L85C40" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>DIPROPYLENE GLYCOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="GW89575KF9" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>SQUALANE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="1I96OHX6EK" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>HYDROXYPROPYL BETADEX</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="92RU3N3Y1O" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>DIMETHICONE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="936JST6JCN" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CETYL ALCOHOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="7M867G6T1U" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>CENTELLA ASIATICA</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="ZBP1YXW0H8" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>LAVANDULA ANGUSTIFOLIA (LAVENDER) OIL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="CQ2F5O6YIY" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>MADECASSOSIDE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="48PS81XHK0" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>STEPHANIA TETRANDRA ROOT</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="2KR89I4H1Y" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>STEARYL ALCOHOL</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="MDL271E3GR" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>SORBITAN OLIVATE</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <ingredient classCode="IACT">
+                           <ingredientSubstance>
+                              <code code="TTV12P4NEE" codeSystem="2.16.840.1.113883.4.9"/>
+                              <name>XANTHAN GUM</name>
+                           </ingredientSubstance>
+                        </ingredient>
+                        <asContent>
+                           <quantity>
+                              <numerator value="30" unit="g"/>
+                              <denominator value="1"/>
+                           </quantity>
+                           <containerPackagedProduct>
+                              <code code="87815-003-01" codeSystem="2.16.840.1.113883.6.69"/>
+                              <formCode code="C42794" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="TUBE"/>
+                           </containerPackagedProduct>
+                           <subjectOf>
+                              <characteristic>
+                                 <code code="SPLCMBPRDTP" codeSystem="2.16.840.1.113883.1.11.19255"/>
+                                 <value code="C112160" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="Type 0: Not a Combination Product" xsi:type="CV"/>
+                              </characteristic>
+                           </subjectOf>
+                           <subjectOf>
+                              <marketingAct>
+                                 <code code="C53292" codeSystem="2.16.840.1.113883.3.26.1.1"/>
+                                 <statusCode code="active"/>
+                                 <effectiveTime>
+                                    <low value="20260703"/>
+                                 </effectiveTime>
+                              </marketingAct>
+                           </subjectOf>
+                        </asContent>
+                     </manufacturedProduct>
+                     <subjectOf>
+                        <approval>
+                           <id extension="M006" root="2.16.840.1.113883.3.9421"/>
+                           <code code="C200263" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="OTC Monograph Drug"/>
+                           <author>
+                              <territorialAuthority>
+                                 <territory>
+                                    <code code="USA" codeSystem="2.16.840.1.113883.5.28"/>
+                                 </territory>
+                              </territorialAuthority>
+                           </author>
+                        </approval>
+                     </subjectOf>
+                     <subjectOf>
+                        <marketingAct>
+                           <code code="C53292" codeSystem="2.16.840.1.113883.3.26.1.1"/>
+                           <statusCode code="active"/>
+                           <effectiveTime>
+                              <low value="20260703"/>
+                           </effectiveTime>
+                        </marketingAct>
+                     </subjectOf>
+                     <consumedIn>
+                        <substanceAdministration>
+                           <routeCode code="C38304" codeSystem="2.16.840.1.113883.3.26.1.1" displayName="TOPICAL"/>
+                        </substanceAdministration>
+                     </consumedIn>
+                  </manufacturedProduct>
+               </subject>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b07ee0-1a57-1175-e063-6394a90a08db">
+               <id root="55b07ee0-1a56-1175-e063-6394a90a08db"/>
+               <code code="34068-7" codeSystem="2.16.840.1.113883.6.1" displayName="DOSAGE &amp; ADMINISTRATION SECTION"/>
+               <text>
+                  <paragraph>Directions</paragraph>
+                  <paragraph>Cleanse face to remove dirt and impurities.</paragraph>
+                  <paragraph>Wash face and gently pat dry.</paragraph>
+                  <paragraph>Dispense cream onto hands and apply directly to acne-prone areas.</paragraph>
+                  <paragraph>Use twice daily (morning and evening).</paragraph>
+                  <paragraph/>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b08057-50f3-2033-e063-6394a90a8faf">
+               <id root="55b08057-50f2-2033-e063-6394a90a8faf"/>
+               <code code="34067-9" codeSystem="2.16.840.1.113883.6.1" displayName="INDICATIONS &amp; USAGE SECTION"/>
+               <text>
+                  <paragraph>For the treatment of acne.</paragraph>
+                  <paragraph/>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b017fd-94f1-b5eb-e063-6394a90a4f88">
+               <id root="55b017fd-94f0-b5eb-e063-6394a90a4f88"/>
+               <code code="55106-9" codeSystem="2.16.840.1.113883.6.1" displayName="OTC - ACTIVE INGREDIENT SECTION"/>
+               <text>
+                  <paragraph>Azelaic Acid 10%</paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b07a25-dcd6-779f-e063-6294a90a9353">
+               <id root="55b07a25-dcd5-779f-e063-6294a90a9353"/>
+               <code code="55105-1" codeSystem="2.16.840.1.113883.6.1" displayName="OTC - PURPOSE SECTION"/>
+               <text>
+                  <paragraph>Acne Treatment</paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b084c9-a555-c2e7-e063-6294a90aee8f">
+               <id root="55b084c9-a554-c2e7-e063-6294a90aee8f"/>
+               <code code="34071-1" codeSystem="2.16.840.1.113883.6.1" displayName="WARNINGS SECTION"/>
+               <text>
+                  <paragraph>For external use only.</paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b08057-50f5-2033-e063-6394a90a8faf">
+               <id root="55b08057-50f4-2033-e063-6394a90a8faf"/>
+               <code code="50570-1" codeSystem="2.16.840.1.113883.6.1" displayName="OTC - DO NOT USE SECTION"/>
+               <text>
+                  <paragraph>on broken skin; if allergic to any ingredients.</paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b07ba1-099c-6aa5-e063-6294a90a5a8b">
+               <id root="55b07ba1-099b-6aa5-e063-6294a90a5a8b"/>
+               <code code="50569-3" codeSystem="2.16.840.1.113883.6.1" displayName="OTC - ASK DOCTOR SECTION"/>
+               <text>
+                  <paragraph>Ask a doctor before use if: pregnant or nursing, or have any underlying medical condition.</paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b0734c-d246-41f1-e063-6394a90a7941">
+               <id root="55b0734c-d245-41f1-e063-6394a90a7941"/>
+               <code code="50567-7" codeSystem="2.16.840.1.113883.6.1" displayName="OTC - WHEN USING SECTION"/>
+               <text>
+                  <paragraph>When using this product: avoid contact with eyes. If contact occurs, rinse thoroughly with water.</paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b08057-50fb-2033-e063-6394a90a8faf">
+               <id root="55b08057-50fa-2033-e063-6394a90a8faf"/>
+               <code code="50566-9" codeSystem="2.16.840.1.113883.6.1" displayName="OTC - STOP USE SECTION"/>
+               <text>
+                  <paragraph>Stop use and ask a doctor if: significant facial swelling, large areas of red rash, intense itching or burning sensation.</paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b08c13-2670-c5d6-e063-6294a90afac5">
+               <id root="55b08c13-266f-c5d6-e063-6294a90afac5"/>
+               <code code="50565-1" codeSystem="2.16.840.1.113883.6.1" displayName="OTC - KEEP OUT OF REACH OF CHILDREN SECTION"/>
+               <text>
+                  <paragraph>Keep out of reach of children: if swallowed, get medical help or contact Poison Control Center right away.</paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b00d44-b60b-c08b-e063-6394a90af59d">
+               <id root="55b00d44-b60a-c08b-e063-6394a90af59d"/>
+               <code code="60561-8" codeSystem="2.16.840.1.113883.6.1" displayName="OTHER SAFETY INFORMATION"/>
+               <text>
+                  <paragraph>Store at room temperature (10°C–25°C). Do not expose to temperatures above 45°C. Keep away from light.</paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b07954-4e54-250c-e063-6394a90af43a">
+               <id root="55b07954-4e53-250c-e063-6394a90af43a"/>
+               <code code="51727-6" codeSystem="2.16.840.1.113883.6.1" displayName="INACTIVE INGREDIENT SECTION"/>
+               <text>
+                  <paragraph>Water, Butylene Glycol, Methylpropandiol, Dimethicone, Cetearyl Glucoside, Dipropylene Glycol, Sorbitan Olivate, Polyacrylate-6, Squalane, Cetyl Alcohol, Hydroxypropyl Cyclodextrin, 1,2-Hexanediol, 4-Hydroxyacetophenone, Hydroxyethylpiperazineethan Sulfate, Allantoin, Cyclodextrin, Caprylyl Glycine, Xanthan Gum, O-Cymene-5-ol, Madecassoside, Centella Asiatica Extract, Lavandula Angustifolia Oil, Centella Asiatica, Saurus Chinensis Leaf/Root Extract, Taraxacum Officinale Leaf Extract, Stephania Tetrandrae Extract.</paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b05f9d-3d74-cea6-e063-6394a90a9700">
+               <id root="55b05f9d-3d73-cea6-e063-6394a90a9700"/>
+               <code code="42229-5" codeSystem="2.16.840.1.113883.6.1" displayName="SPL UNCLASSIFIED SECTION"/>
+               <text>
+                  <paragraph>Distributed by: Ariel Biotech Inc</paragraph>
+                  <paragraph>1226 NORTH KING ST.NUM 968
+  <br/>
+WILMINGTON, DE 19801
+  <br/>
+USA
+ </paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+            </section>
+         </component>
+         <component>
+            <section ID="id_link_55b0b349-a754-2a53-e063-6294a90a103c">
+               <id root="55b0b349-a753-2a53-e063-6294a90a103c"/>
+               <code code="51945-4" codeSystem="2.16.840.1.113883.6.1" displayName="PACKAGE LABEL.PRINCIPAL DISPLAY PANEL"/>
+               <text>
+                  <paragraph>
+                     <renderMultiMedia referencedObject="img_55b0b2cd-1a57-6b38-e063-6394a90ad542"/>
+                     <renderMultiMedia referencedObject="img_55b0a6d5-8024-66b6-e063-6394a90a4f93"/>
+                  </paragraph>
+               </text>
+               <effectiveTime value="20260703"/>
+               <component>
+                  <observationMedia ID="img_55b0b2cd-1a57-6b38-e063-6394a90ad542">
+                     <text>14Azelaic Acid</text>
+                     <value mediaType="image/jpeg" xsi:type="ED">
+                        <reference value="14Azelaic Acid.jpg"/>
+                     </value>
+                  </observationMedia>
+               </component>
+               <component>
+                  <observationMedia ID="img_55b0a6d5-8024-66b6-e063-6394a90a4f93">
+                     <text>10Azelaic Acid</text>
+                     <value mediaType="image/jpeg" xsi:type="ED">
+                        <reference value="10Azelaic Acid.jpg"/>
+                     </value>
+                  </observationMedia>
+               </component>
+            </section>
+         </component>
+      </structuredBody>
+   </component>
+</document>

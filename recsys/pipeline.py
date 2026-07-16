@@ -89,12 +89,24 @@ def resolve_paths(
     engine used.
     """
     data_root = Path(data_root) if data_root else DEFAULT_DATA_ROOT
+    # The seed catalog is a 60-product fixture. It resolves only where it
+    # actually sits, so a data root that carries no catalog of its own fails
+    # here by name rather than degrading to the fixture and answering plausibly
+    # from the wrong 60 products.
+    full_path = data_root / "catalog_full.json"
+    seed_path = data_root / "catalog" / "seed_catalog.json"
     if catalog_path:
         catalog_path = Path(catalog_path)
-    elif (data_root / "catalog_full.json").exists():
-        catalog_path = data_root / "catalog_full.json"
+    elif full_path.exists():
+        catalog_path = full_path
+    elif seed_path.exists():
+        catalog_path = seed_path
     else:
-        catalog_path = data_root / "catalog" / "seed_catalog.json"
+        raise ContractViolation(
+            "catalog",
+            f"no catalog under data root {data_root}: looked for "
+            f"{full_path} and {seed_path}",
+        )
     static_root = data_root if (data_root / "knowledge").exists() else DEFAULT_DATA_ROOT
     drug_path = data_root / "catalog_drug.json"
     verification_root = (
@@ -321,7 +333,7 @@ def run(
         else "partial" if valid_routines else "unavailable"
     )
     document["routines"] = [
-        routine_to_dict(r, knowledge, profile) for r in valid_routines
+        routine_to_dict(r, knowledge, profile, quality_flags) for r in valid_routines
     ]
     document["unavailable_archetypes"] = unavailable
     document["prescription_options"] = rx_options

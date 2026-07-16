@@ -7,7 +7,6 @@
       "title": "Best overall",
       "rationale": "The highest-scoring safe routine across all signals: concern fit first, then review quality, popularity, and value.",
       "slots": ["cleanser", "treatment", "serum", "moisturizer", "spf"],
-      "weights": {"concern_fit": 0.25, "concern_efficacy": 0.25, "ingredient_analysis": 0.05, "review_quality": 0.25, "popularity": 0.15, "price_value": 0.05},
       "constraints": {}
     },
     {
@@ -31,7 +30,6 @@
       "title": "Minimal 3-step",
       "rationale": "The fewest steps that still address your top concern: cleanse, one treatment, moisturize (plus SPF in the morning).",
       "slots": ["cleanser", "treatment", "moisturizer"],
-      "weights": {"concern_fit": 0.25, "concern_efficacy": 0.25, "ingredient_analysis": 0.05, "review_quality": 0.25, "popularity": 0.15, "price_value": 0.05},
       "constraints": {"single_treatment_active": true, "spf_policy": "fold_or_add"}
     },
     {
@@ -39,7 +37,6 @@
       "title": "Comprehensive",
       "rationale": "A fully built-out routine where the treatment and serum target different concerns, split across morning and night.",
       "slots": ["cleanser", "treatment", "serum", "moisturizer", "spf"],
-      "weights": {"concern_fit": 0.25, "concern_efficacy": 0.25, "ingredient_analysis": 0.05, "review_quality": 0.25, "popularity": 0.15, "price_value": 0.05},
       "constraints": {"complementary_serum": true}
     }
   ]
