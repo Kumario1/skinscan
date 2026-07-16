@@ -352,9 +352,14 @@ def test_recsys_flag_adds_standalone_recommendations_artifact(
 
     recommendations = json.loads((output_dir / "recommendations.json").read_text())
     assert recommendations["schema_version"] == "recsys-1"
-    assert recommendations["status"] == "partial"
+    assert recommendations["status"] == "ok"
     assert recommendations["data_versions"]["signals"], "signal stores must have loaded"
-    assert len(recommendations["routines"]) == 3
+    assert len(recommendations["routines"]) == 1
+    assert set(recommendations["selected_products"]) == {
+        "cleanser", "moisturizer", "spf",
+    }
+    assert recommendations["care_decision"]["therapy_disposition"] == "active_treatment"
+    assert recommendations["treatment_fulfillment"]["status"] == "unfilled"
     import hashlib
     assert recommendations["inputs"]["analysis_sha256"] == hashlib.sha256(
         (output_dir / "analysis.json").read_bytes()
@@ -382,7 +387,9 @@ def test_recsys_eligibility_mode_reaches_the_standalone_engine(
     assert main(args) == 0
 
     recommendations = json.loads((output_dir / "recommendations.json").read_text())
-    assert recommendations["engine"]["eligibility_mode"] == "hybrid"
+    assert recommendations["engine"]["eligibility_mode"] == "strict"
+    assert recommendations["engine"]["requested_eligibility_mode"] == "hybrid"
+    assert any("disabled by D-029" in warning for warning in recommendations["warnings"])
     assert "prescription_options" in recommendations
 
 

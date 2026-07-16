@@ -14,9 +14,11 @@ python -m recsys recommend \
   --out runs/recsys/v3-pr17-valid-104/recommendations.json
 ```
 
-Output: 5 routine archetypes (best overall, budget, gentle/sensitive, minimal,
-comprehensive), each a safety-valid AM/PM routine with a per-product `why`
-built from the exact signal values the ranker used.
+Output: one selected, safety-valid AM/PM regimen with a per-product `why`
+built from the exact signal values the ranker used. A treatment enters that
+regimen only when it exactly implements the reviewed upstream therapy plan;
+otherwise the engine emits support care only and names why treatment was
+deferred.
 
 To publish both recommendation contracts atomically from the SA-RPN pipeline:
 
@@ -111,12 +113,10 @@ lives in the verification-overlay path, not in `catalog.py`:
 `source_sha256` against the stored evidence file. Anything short of the
 per-active citation rule falls back to the INCI rule.
 
-Prescriptions are **listed, never placed**. `prescription_options` surfaces the
-ones that fit the reported concerns so a user can raise them with a doctor
-(D-033); ranking one into a routine would assert it beats the cosmetics, and
-which therapy suits which concern stays D-029 clinician-gated. They are read out
-of the gated pool and then dropped from it, so no routine total can quietly
-include a product that has no retail price.
+Prescriptions are **listed, never placed**. `prescription_options` may surface
+options that exactly implement an active reviewed therapy plan so a user can
+raise them with a doctor (D-033). They are removed before routine ranking, so no
+routine total can quietly include a product that has no retail price.
 
 When Azure is configured, the labeler requires `TARGET_URL` (or
 `AZURE_OPENAI_ENDPOINT`), `AZURE_KEY` (or `AZURE_OPENAI_API_KEY`), the exact

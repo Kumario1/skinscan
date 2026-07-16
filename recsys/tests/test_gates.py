@@ -17,7 +17,12 @@ K = load_knowledge(Path(__file__).parents[1] / "data" / "knowledge")
 def product(pid="p1", category="treatment", actives=(), spf=None, price=None,
             inci=("Water",), **verified):
     role = "sunscreen" if category == "spf" else category
-    product_format = verified.pop("format", None)
+    product_format = verified.pop(
+        "format",
+        "cleanser" if category == "cleanser"
+        else "sunscreen" if category == "spf"
+        else "cream",
+    )
     defaults = {
         "intended_areas": ("face",),
         "routine_roles": (role,),
@@ -26,6 +31,7 @@ def product(pid="p1", category="treatment", actives=(), spf=None, price=None,
         "cadence_source": "https://example.test/label",
         "label_source": "https://example.test/label",
         "label_verified_at": "2026-07-14",
+        "contraindications_verified": True,
         "drug_actives": tuple(
             {"name": active, "strength": "verified", "source": "https://example.test/label"}
             for active in actives
@@ -42,23 +48,8 @@ def product(pid="p1", category="treatment", actives=(), spf=None, price=None,
 
 
 def test_soft_reason_prefixes_membership_is_pinned_exactly():
-    """Everything absent from this frozenset is a HARD veto that applies in both
-    eligibility modes, so adding one string to it silently converts a safety
-    veto into a ranking penalty -- adding "retinoid_pregnancy_status_excluded"
-    serves a retinoid to a pregnant user in hybrid. Exact equality is the only
-    assertion that catches an ADDITION; a membership or suffix test passes
-    either way. Changing this set is a safety decision, not a refactor: re-read
-    the HARD/SOFT contract in ARCHITECTURE.md before editing this list.
-    """
-    assert SOFT_REASON_PREFIXES == frozenset({
-        "intended_area_not_verified",
-        "role_not_verified",
-        "exposure_not_verified",
-        "cadence_unverified",
-        "treatment_active_unverified",
-        "treatment_label_unverified",
-        "spf_broad_spectrum_unverified",
-    })
+    """D-029 permits no evidence gap to become a ranking penalty."""
+    assert SOFT_REASON_PREFIXES == frozenset()
 
 
 def test_ingredient_and_profile_safety_reasons_are_never_classified_soft():
@@ -82,11 +73,7 @@ def test_ingredient_and_profile_safety_reasons_are_never_classified_soft():
         assert _reason_is_soft(reason) is False, reason
 
 
-def test_verification_quality_reasons_are_classified_soft():
-    """The other half of the table: these mean "we have not checked yet", which
-    hybrid is allowed to downgrade to a flag. Pinned so a rename that breaks the
-    prefix split fails here rather than by quietly turning hybrid into strict.
-    """
+def test_verification_quality_gaps_are_hard():
     for reason in (
         "intended_area_not_verified:face",
         "role_not_verified:treatment",
@@ -94,9 +81,34 @@ def test_verification_quality_reasons_are_classified_soft():
         "cadence_unverified",
         "treatment_active_unverified",
         "treatment_label_unverified",
+        "contraindications_unverified",
+        "format_unverified",
+        "amount_source_unverified",
         "spf_broad_spectrum_unverified",
     ):
-        assert _reason_is_soft(reason) is True, reason
+        assert _reason_is_soft(reason) is False, reason
+
+
+def test_treatment_requires_explicit_contraindication_evidence():
+    treatment = product(
+        actives=["azelaic_acid"], contraindications_verified=False,
+    )
+    assert "contraindications_unverified" in profile_gate_reasons(
+        treatment, "treatment", Profile(pregnancy_status="not_pregnant"), K
+    )
+
+
+def test_format_and_amount_source_are_hard_requirements():
+    profile = Profile(pregnancy_status="not_pregnant")
+    assert "format_unverified" in profile_gate_reasons(
+        product(format=None), "treatment", profile, K
+    )
+    assert "format_not_allowed_for_role:mist" in profile_gate_reasons(
+        product(format="mist"), "treatment", profile, K
+    )
+    assert "amount_source_unverified" in profile_gate_reasons(
+        product(amount="thin_layer", amount_source=None), "treatment", profile, K
+    )
 
 
 def test_an_unclassified_reason_defaults_to_hard():
@@ -214,8 +226,12 @@ def test_spf_gate():
 
 def test_price_cap():
     pricey = product(price=50.0)
+    unknown = product(price=None)
     profile = Profile(pregnancy_status="not_pregnant", max_price_usd=20.0)
     assert "price_above_profile_cap" in profile_gate_reasons(pricey, "treatment", profile, K)
+    assert "price_unknown_for_profile_cap" in profile_gate_reasons(
+        unknown, "treatment", profile, K
+    )
 
 
 def test_non_daily_products_are_vetoed():
@@ -254,10 +270,7 @@ def test_a_verified_non_daily_cadence_vetoes_in_both_modes():
         assert flags == {}, strict
 
 
-def test_an_unverified_cadence_is_still_only_a_quality_gap():
-    """The sibling of the above, to pin that the split is between "checked and
-    disqualifying" and "not checked" rather than between cadence values.
-    """
+def test_an_unverified_cadence_vetoes_in_every_mode():
     unknown_cadence = product(
         "c1", "treatment", actives=["salicylic_acid"], cadence=None, cadence_source=None
     )
@@ -265,8 +278,9 @@ def test_an_unverified_cadence_is_still_only_a_quality_gap():
         {"treatment": [unknown_cadence]}, Profile(pregnancy_status="not_pregnant"), K,
         strict=False,
     )
-    assert [p.product_id for p in kept["treatment"]] == ["c1"]
-    assert flags == {("c1", "treatment"): ["cadence_unverified"]}
+    assert kept["treatment"] == []
+    assert [v.reason for v in vetoes] == ["cadence_unverified"]
+    assert flags == {}
 
 
 def test_medication_and_pregnancy_contraindications_are_vetoed():
@@ -368,27 +382,17 @@ def test_apply_profile_gates_vetoes_hard_safety_reasons_in_hybrid_too():
         assert flags == {}, strict
 
 
-def test_apply_profile_gates_downgrades_soft_reasons_to_flags_only_in_hybrid():
-    """The documented mode difference, pinned end-to-end rather than by reading
-    the table: an unverified usage fact vetoes under strict (evidence-only) and
-    survives as a quality flag under hybrid (slotted by catalog category).
-    """
+def test_apply_profile_gates_never_downgrades_missing_evidence():
     unverified = product("u1", "moisturizer", actives=["glycerin"], exposure=None)
     profile = Profile(pregnancy_status="not_pregnant")
 
-    kept, vetoes, flags = apply_profile_gates(
-        {"moisturizer": [unverified]}, profile, K, strict=True
-    )
-    assert kept["moisturizer"] == []
-    assert [v.reason for v in vetoes] == ["exposure_not_verified:leave_on"]
-    assert flags == {}
-
-    kept, vetoes, flags = apply_profile_gates(
-        {"moisturizer": [unverified]}, profile, K, strict=False
-    )
-    assert [p.product_id for p in kept["moisturizer"]] == ["u1"]
-    assert vetoes == []
-    assert flags == {("u1", "moisturizer"): ["exposure_not_verified:leave_on"]}
+    for strict in (True, False):
+        kept, vetoes, flags = apply_profile_gates(
+            {"moisturizer": [unverified]}, profile, K, strict=strict
+        )
+        assert kept["moisturizer"] == []
+        assert [v.reason for v in vetoes] == ["exposure_not_verified:leave_on"]
+        assert flags == {}
 
 
 def test_a_hard_reason_vetoes_even_when_soft_reasons_accompany_it():
@@ -405,16 +409,13 @@ def test_a_hard_reason_vetoes_even_when_soft_reasons_accompany_it():
         {"moisturizer": [unsafe_and_unverified]}, profile, K, strict=False
     )
     assert kept["moisturizer"] == []
-    assert [v.reason for v in vetoes] == ["profile_allergy:fragrance"]
+    assert [v.reason for v in vetoes] == [
+        "exposure_not_verified:leave_on", "profile_allergy:fragrance"
+    ]
     assert flags == {}
 
 
-def test_quality_flags_carry_every_soft_reason_for_a_kept_product():
-    """A product can be partially verified -- routine_roles present, exposure and
-    cadence absent. explain.py labels that step "verified" from routine_roles
-    alone, so these flags are the only complete record of what was never
-    checked; they must carry every soft reason, not just the first.
-    """
+def test_multiple_evidence_gaps_all_veto():
     partial = product(
         "p9", "moisturizer", actives=["glycerin"],
         exposure=None, cadence=None, cadence_source=None,
@@ -422,11 +423,11 @@ def test_quality_flags_carry_every_soft_reason_for_a_kept_product():
     kept, vetoes, flags = apply_profile_gates(
         {"moisturizer": [partial]}, Profile(pregnancy_status="not_pregnant"), K, strict=False
     )
-    assert [p.product_id for p in kept["moisturizer"]] == ["p9"]
-    assert vetoes == []
-    assert flags == {("p9", "moisturizer"): [
+    assert kept["moisturizer"] == []
+    assert [v.reason for v in vetoes] == [
         "exposure_not_verified:leave_on", "cadence_unverified",
-    ]}
+    ]
+    assert flags == {}
 
 
 def test_duplicate_treatment_actives_only():

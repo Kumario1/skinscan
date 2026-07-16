@@ -26,10 +26,16 @@ def see_doctor_note(
     triage_level: str,
     referral_reasons: tuple[str, ...],
     observations: tuple[dict, ...],
+    therapy_disposition: str | None = None,
 ) -> str | None:
     parts: list[str] = []
     reasons = [_REFERRAL_PHRASES.get(r, r.replace("_", " ")) for r in referral_reasons]
-    if triage_level in ("derm_first", "abstain"):
+    if therapy_disposition in ("defer", "supportive_only"):
+        parts.append(
+            "Treatment is deferred; the routine below contains support only. "
+            "Please see a dermatologist before starting or stopping medicine."
+        )
+    elif triage_level in ("derm_first", "abstain"):
         parts.append(
             "Please see a dermatologist before starting new products"
             + (f" — the analysis flagged {', '.join(reasons)}." if reasons else ".")
@@ -97,11 +103,8 @@ def step_to_dict(
     quality_flags: dict[tuple[str, str], list[str]] | None = None,
 ) -> dict:
     product = step.scored.product
-    # The label reports the gates' own soft flags: a step is "verified" exactly
-    # when nothing about it went unverified. The old proxy ("verified" whenever
-    # routine_roles was set) disagreed with the flags whenever a product had a
-    # verified role but unverified exposure or cadence — carrying two flags and
-    # a "verified" label in the same document.
+    # Effective eligibility is strict. Keeping this projection makes old callers
+    # safe if they pass a quality-flags mapping, but emitted steps have no flags.
     flags = (quality_flags or {}).get((product.product_id, step.slot), [])
     verification = "category_derived" if flags else "verified"
     notes = list(step.notes)
@@ -160,27 +163,21 @@ def is_prescription(product) -> bool:
     return bool(product.drug_actives) and product.otc_drug is not True
 
 
-def prescription_options(products, targets, k: Knowledge) -> list[dict]:
-    """Prescription-strength products that fit the reported concerns.
+def prescription_options(products, therapy_primary: dict) -> list[dict]:
+    """Prescription-strength products that implement reviewed therapy intent.
 
     Surfaced for a doctor conversation rather than ranked into the routine
     (D-033: the app may surface prescription-strength options while advising the
     user to see a doctor to obtain them). Ranking them against cosmetics would
-    need a claim about prescription-strength efficacy, and which therapies are
-    indicated for which concern is D-029 clinician-gated -- so these are listed,
-    never placed. Only products already past every safety gate reach here.
+    need a claim about prescription-strength efficacy. Which therapies are
+    indicated for which concern is D-029 clinician-gated, so detected concerns
+    are not used or attributed here. Only exact plan matches that already passed
+    every safety gate reach this function.
     """
     seen: set = set()
     options: list[dict] = []
     for product in products:
         if not is_prescription(product):
-            continue
-        actives = set(product.actives)
-        targeted = sorted({
-            t.concern for t in targets
-            if actives & set(k.concern_actives.get(t.concern) or ())
-        })
-        if not targeted:
             continue
         strengths = tuple(sorted(
             (str(a.get("name")), str(a.get("strength"))) for a in product.drug_actives
@@ -193,7 +190,10 @@ def prescription_options(products, targets, k: Knowledge) -> list[dict]:
             "name": product.name,
             "format": product.format,
             "actives": [{"name": name, "strength": strength} for name, strength in strengths],
-            "targets": targeted,
+            "therapy_plan_match": {
+                key: therapy_primary[key]
+                for key in ("therapy", "strength_band", "exposure", "cadence")
+            },
             # States only what the row proves -- the strengths its label gives,
             # and that the label does not mark it OTC -- which is exactly what
             # is_prescription() decided on. This said "at a strength only a
@@ -211,7 +211,7 @@ def prescription_options(products, targets, k: Knowledge) -> list[dict]:
             "label_source": product.label_source,
             "note": "prescription — a doctor or dermatologist can advise on and prescribe this",
         })
-    options.sort(key=lambda item: (item["targets"], item["name"]))
+    options.sort(key=lambda item: item["name"])
     return options
 
 

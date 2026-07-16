@@ -166,8 +166,8 @@ def verify(analysis_path: Path, data_root: Path, mode: str, runs: int) -> dict:
     options = document["prescription_options"]
     placed = [s for s in all_steps if s["prescription"]]
     unpriced = [s for s in all_steps if s["price_usd"] is None]
-    check("prescription: every option is well-formed and targeted",
-          all(o["actives"] and o["targets"] and o["label_source"] and "doctor" in o["note"]
+    check("prescription: every option is well-formed and plan-matched",
+          all(o["actives"] and o["therapy_plan_match"] and o["label_source"] and "doctor" in o["note"]
               for o in options),
           ", ".join(o["name"] for o in options) or "none listed",
           population=options)
@@ -203,7 +203,7 @@ def main() -> int:
     parser.add_argument("--analysis", type=Path,
                         default=ROOT / "runs/e2e/rx_test_1/analysis.json")
     parser.add_argument("--data-root", type=Path, default=ROOT / "recsys/data/derived")
-    parser.add_argument("--mode", default="hybrid", choices=("strict", "hybrid"))
+    parser.add_argument("--mode", default="strict", choices=("strict", "hybrid"))
     parser.add_argument("--runs", type=int, default=3)
     args = parser.parse_args()
 

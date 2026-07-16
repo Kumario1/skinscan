@@ -57,13 +57,46 @@ def _steps(routine):
     return routine["am"] + routine["pm"] + routine["per_label"]
 
 
+def _reviewed_therapy_analysis(
+        tmp_path, therapy="azelaic_acid", strength="20%", *, profile=None):
+    data = json.loads(ANALYSIS.read_text())
+    data["decision"].update(
+        therapy_disposition="active_treatment",
+        policy_reviewed=True,
+        policy_version="test-reviewed:1",
+    )
+    data["policies"]["therapy"]["reviewed"] = True
+    data["policies"]["therapy"].update(
+        identity="test-reviewed:1", sha256="a" * 64,
+    )
+    data["therapy_plan"].update(
+        primary={
+            "therapy": therapy,
+            "strength_band": strength,
+            "exposure": "leave_on",
+            "cadence": "per_label",
+            "role": "treatment",
+            "cadence_source": "test-reviewed:1",
+        },
+        deferred_reasons=[],
+        policy_version="test-reviewed:1",
+    )
+    if profile is not None:
+        data["input_profile"] = profile
+    path = tmp_path / f"analysis-{therapy}-{strength}.json"
+    path.write_text(json.dumps(data))
+    return path
+
+
 def test_status_and_archetypes(document):
-    assert document["status"] == "partial"
-    assert [r["archetype"] for r in document["routines"]] == AVAILABLE_ARCHETYPE_IDS
-    unavailable = {item["archetype"]: item["reasons"]
-                   for item in document["unavailable_archetypes"]}
-    assert set(unavailable) == set(ARCHETYPE_IDS) - set(AVAILABLE_ARCHETYPE_IDS)
-    assert "required_role_missing:treatment" in unavailable["gentle_sensitive"]
+    assert document["status"] == "ok"
+    assert [r["archetype"] for r in document["routines"]] == ["best_overall"]
+    assert document["selected_regimen"] == document["routines"][0]
+    assert set(document["selected_products"]) == {"cleanser", "moisturizer", "spf"}
+    assert document["alternatives"] == {}
+    assert document["care_decision"]["therapy_disposition"] == "defer"
+    assert document["therapy_plan"]["primary"] is None
+    assert "safe to start" not in document["triage"]["see_doctor_note"]
 
 
 def test_every_product_exists_in_catalog(document):
@@ -129,26 +162,9 @@ def test_data_versions_match_disk(document):
     assert not any("catalog_sha256" in warning for warning in document["warnings"])
 
 
-def test_budget_archetype_fails_closed_when_verified_products_exceed_cap(document):
-    budget = next(item for item in document["unavailable_archetypes"]
-                  if item["archetype"] == "budget")
-    assert "required_role_missing:treatment" in budget["reasons"]
-
-
-def test_gentle_archetype_fails_closed_without_verified_gentle_treatment(document):
-    gentle = next(item for item in document["unavailable_archetypes"]
-                  if item["archetype"] == "gentle_sensitive")
-    assert gentle["reasons"] == ["required_role_missing:treatment"]
-
-
-def test_routines_are_diverse(document):
-    best = {s["product_id"] for r in document["routines"] if r["archetype"] == "best_overall"
-            for s in _steps(r)}
-    for routine in document["routines"]:
-        if routine["archetype"] == "best_overall":
-            continue
-        ids = {s["product_id"] for s in _steps(routine)}
-        assert ids != best, routine["archetype"]
+def test_public_output_contains_one_selected_regimen(document):
+    assert len(document["routines"]) == 1
+    assert len(document["selected_products"]) == len(set(document["selected_products"]))
 
 
 def test_determinism_byte_identical():
@@ -159,16 +175,29 @@ def test_determinism_byte_identical():
     assert a == b
 
 
-def test_pregnancy_unknown_excludes_retinoids():
-    document = run(ANALYSIS, FIXTURES / "profile_unknown.json",
+def test_unknown_intake_defers_primary_treatment(tmp_path):
+    analysis = _reviewed_therapy_analysis(tmp_path)
+    document = run(analysis, FIXTURES / "profile_unknown.json",
                    generated_at="2026-07-14T00:00:00+00:00")
-    catalog = _catalog_ids()
-    for routine in document["routines"]:
-        for step in _steps(routine):
-            actives = set(catalog[step["product_id"]]["actives"])
-            assert not (actives & KNOWN_RETINOIDS), step["product_id"]
-    reasons = {v["reason"] for v in document["veto_log"]["profile"]}
-    assert "retinoid_pregnancy_status_excluded" in reasons
+    assert document["care_decision"]["therapy_disposition"] == "active_treatment"
+    assert document["therapy_plan"]["primary"] is not None
+    assert document["treatment_fulfillment"]["status"] == "deferred"
+    assert all(step["slot"] not in {"treatment", "serum"}
+               for routine in document["routines"] for step in _steps(routine))
+
+
+def test_reviewed_plan_selects_only_the_exact_verified_therapy(tmp_path):
+    analysis = _reviewed_therapy_analysis(
+        tmp_path, "benzoyl_peroxide", "2.5%"
+    )
+    document = run(
+        analysis, FIXTURES / "profile_complete.json",
+        generated_at="2026-07-14T00:00:00+00:00",
+    )
+
+    assert document["care_decision"]["therapy_disposition"] == "active_treatment"
+    assert document["selected_products"]["treatment"] == "P188306"
+    assert len(document["routines"]) == 1
 
 
 def _hybrid():
@@ -176,29 +205,24 @@ def _hybrid():
                generated_at="2026-07-14T00:00:00+00:00", eligibility_mode="hybrid")
 
 
-def test_hybrid_widens_catalog_beyond_verified_only():
+def test_hybrid_request_is_compatibility_only_and_stays_strict():
     strict = run(ANALYSIS, FIXTURES / "profile_complete.json",
                  generated_at="2026-07-14T00:00:00+00:00")  # default strict
     hybrid = _hybrid()
     strict_products = {s["product_id"] for r in strict["routines"] for s in _steps(r)}
     hybrid_products = {s["product_id"] for r in hybrid["routines"] for s in _steps(r)}
-    # hybrid draws on more of the catalog than the evidence-verified-only pool
-    assert len(hybrid_products) > len(strict_products)
-    assert hybrid["engine"]["eligibility_mode"] == "hybrid"
+    assert hybrid_products == strict_products
+    assert hybrid["engine"]["eligibility_mode"] == "strict"
+    assert hybrid["engine"]["requested_eligibility_mode"] == "hybrid"
+    assert any("disabled by D-029" in warning for warning in hybrid["warnings"])
 
 
-def test_hybrid_labels_verified_vs_category_derived():
+def test_hybrid_never_emits_category_derived_products():
     hybrid = _hybrid()
-    seen = set()
     for routine in hybrid["routines"]:
         for step in _steps(routine):
-            assert step["verification"] in ("verified", "category_derived")
-            seen.add(step["verification"])
-            if step["verification"] == "category_derived":
-                assert any("category-derived" in n for n in step["notes"])
+            assert step["verification"] == "verified"
             assert step["prescription"] is False  # no Rx products in the seed catalog
-    # the seed catalog has both verified and (in hybrid) category-derived products
-    assert "category_derived" in seen
 
 
 def test_hybrid_keeps_hard_ingredient_safety():
@@ -253,9 +277,11 @@ def test_referral_only_path(tmp_path):
     path.write_text(json.dumps(data))
     document = run(path, FIXTURES / "profile_complete.json",
                    generated_at="2026-07-14T00:00:00+00:00")
-    assert document["status"] == "referral_only"
-    assert document["routines"] == []
+    assert document["status"] == "ok"
+    assert len(document["routines"]) == 1
+    assert set(document["selected_products"]) == {"cleanser", "moisturizer", "spf"}
     assert "dermatologist" in document["triage"]["see_doctor_note"]
+    assert "support only" in document["triage"]["see_doctor_note"]
     assert document["framing"]["cosmetic_only"] is True
 
 
@@ -274,6 +300,10 @@ def _derived_root_with_drug(tmp_path, **over):
         "inci_sha256": hashlib.sha256(b"[]").hexdigest(),
         "actives": ["azelaic_acid"], "otc_drug": False, "label_source": spl,
         "drug_actives": [{"name": "azelaic_acid", "strength": "20%", "source": spl}],
+        "label_verified_at": "2026-07-14", "routine_roles": ["treatment"],
+        "contraindications": [],
+        "intended_areas": ["face"], "exposure": "leave_on",
+        "cadence": "per_label", "cadence_source": spl,
     }
     row.update(over)
     (derived / "catalog_drug.json").write_text(json.dumps(
@@ -282,14 +312,20 @@ def _derived_root_with_drug(tmp_path, **over):
     return derived
 
 
-def test_prescription_options_are_listed_for_matching_concerns(tmp_path):
-    document = run(ANALYSIS, FIXTURES / "profile_complete.json",
+def test_prescription_options_are_listed_for_exact_reviewed_plan(tmp_path):
+    analysis = _reviewed_therapy_analysis(tmp_path)
+    document = run(analysis, FIXTURES / "profile_complete.json",
                    data_root=_derived_root_with_drug(tmp_path),
                    generated_at="2026-07-14T00:00:00+00:00", eligibility_mode="hybrid")
     options = document["prescription_options"]
     assert [o["name"] for o in options] == ["AZELEX"]
     assert options[0]["actives"] == [{"name": "azelaic_acid", "strength": "20%"}]
-    assert "acne_comedonal" in options[0]["targets"]
+    assert options[0]["therapy_plan_match"] == {
+        "therapy": "azelaic_acid",
+        "strength_band": "20%",
+        "exposure": "leave_on",
+        "cadence": "per_label",
+    }
     assert "doctor" in options[0]["note"]
     assert document["data_versions"]["drug_catalog"]["prescription"] == 1
     # D-033 surfaces prescription options; it does not rank them into a routine.
@@ -302,7 +338,8 @@ def test_a_prescription_is_never_placed_even_when_it_would_win_the_slot(tmp_path
     # if placement were merely a matter of ranking, an Rx would take the slot
     # here. It must stay listed, and the routine must stay honest about the gap.
     derived = _derived_root_with_drug(tmp_path)
-    document = run(ANALYSIS, FIXTURES / "profile_complete.json", data_root=derived,
+    analysis = _reviewed_therapy_analysis(tmp_path)
+    document = run(analysis, FIXTURES / "profile_complete.json", data_root=derived,
                    generated_at="2026-07-14T00:00:00+00:00", eligibility_mode="hybrid")
     placed = {s["product_id"] for r in document["routines"] for s in _steps(r)}
     assert not any(pid.startswith("dailymed:") for pid in placed)
@@ -313,38 +350,118 @@ def test_a_prescription_is_never_placed_even_when_it_would_win_the_slot(tmp_path
         assert all(p is not None for p in priced), routine["archetype"]
 
 
-def test_the_recommendation_tracks_the_concern_profile(tmp_path):
-    # Two real photos returned identical products, which looks like the engine
-    # ignoring its input; they simply shared all four concerns. Change the
-    # concerns and the treatment must change with them -- and an Rx is offered
-    # only for a concern its actives actually target.
+def test_reviewed_therapy_plan_not_concern_union_controls_treatment(tmp_path):
     derived = _derived_root_with_drug(tmp_path)  # AZELEX: azelaic acid 20%
-    analysis = json.loads(ANALYSIS.read_text())
+    azelaic = run(
+        _reviewed_therapy_analysis(tmp_path, "azelaic_acid"),
+        FIXTURES / "profile_complete.json", data_root=derived,
+        generated_at="2026-07-14T00:00:00+00:00",
+    )
+    salicylic = run(
+        _reviewed_therapy_analysis(tmp_path, "salicylic_acid"),
+        FIXTURES / "profile_complete.json", data_root=derived,
+        generated_at="2026-07-14T00:00:00+00:00",
+    )
 
-    def for_concerns(*keep):
-        data = dict(analysis, concerns=[c for c in analysis["concerns"]
-                                        if c["concern"] in keep])
-        path = tmp_path / ("an_" + "_".join(keep) + ".json")
-        path.write_text(json.dumps(data))
-        document = run(path, FIXTURES / "profile_complete.json", data_root=derived,
-                       generated_at="2026-07-14T00:00:00+00:00",
-                       eligibility_mode="hybrid")
-        treatments = {s["product_id"] for r in document["routines"] for s in _steps(r)
-                      if s["slot"] in ("treatment", "serum")}
-        return treatments, {o["name"] for o in document["prescription_options"]}
+    assert {o["name"] for o in azelaic["prescription_options"]} == {"AZELEX"}
+    assert salicylic["prescription_options"] == []
 
-    comedonal, comedonal_rx = for_concerns("acne_comedonal")
-    scarring, scarring_rx = for_concerns("acne_scarring")
 
-    assert comedonal and scarring
-    assert comedonal != scarring, "treatment must follow the concern"
-    # azelaic acid targets comedonal acne; nothing in knowledge maps it to scarring
-    assert comedonal_rx == {"AZELEX"}
-    assert scarring_rx == set(), "an Rx is never offered for a concern it does not target"
+def test_plan_match_rejects_unplanned_combination_active(tmp_path):
+    spl = "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/x.xml"
+    derived = _derived_root_with_drug(
+        tmp_path,
+        product_id="dailymed:x:1:azelaic_acid-20%-clindamycin-1%",
+        name="Unplanned Combination",
+        actives=["azelaic_acid", "clindamycin"],
+        drug_actives=[
+            {"name": "azelaic_acid", "strength": "20%", "source": spl},
+            {"name": "clindamycin", "strength": "1%", "source": spl},
+        ],
+    )
+    document = run(
+        _reviewed_therapy_analysis(tmp_path, "azelaic_acid", "20%"),
+        FIXTURES / "profile_complete.json", data_root=derived,
+        generated_at="2026-07-14T00:00:00+00:00",
+    )
+
+    assert document["prescription_options"] == []
+    assert document["care_decision"]["therapy_disposition"] == "active_treatment"
+    assert document["therapy_plan"]["primary"] is not None
+    assert document["treatment_fulfillment"] == {
+        "status": "unfilled",
+        "reasons": ["required_role_unfilled:treatment"],
+    }
+    assert document["status"] == "ok"
+    assert set(document["selected_products"]) == {"cleanser", "moisturizer", "spf"}
+    assert "support_only_treatment_deferred" in document["selected_regimen"]["notes"]
+
+
+def test_generic_reviewed_strength_band_accepts_a_verified_label_strength(tmp_path):
+    document = run(
+        _reviewed_therapy_analysis(
+            tmp_path, "azelaic_acid", "verified_otc_or_labeled"
+        ),
+        FIXTURES / "profile_complete.json",
+        data_root=_derived_root_with_drug(tmp_path),
+        generated_at="2026-07-14T00:00:00+00:00",
+    )
+
+    assert [option["name"] for option in document["prescription_options"]] == ["AZELEX"]
+    assert document["prescription_options"][0]["therapy_plan_match"][
+        "strength_band"
+    ] == "verified_otc_or_labeled"
+
+
+def test_reviewed_amount_must_match_the_verified_product_direction(tmp_path):
+    analysis_path = _reviewed_therapy_analysis(tmp_path)
+    data = json.loads(analysis_path.read_text())
+    data["therapy_plan"]["primary"].update(
+        amount="pea_sized", amount_source="test-reviewed:1",
+    )
+    analysis_path.write_text(json.dumps(data))
+
+    document = run(
+        analysis_path,
+        FIXTURES / "profile_complete.json",
+        data_root=_derived_root_with_drug(tmp_path, amount="thin_layer"),
+        generated_at="2026-07-14T00:00:00+00:00",
+    )
+
+    assert document["prescription_options"] == []
+    assert document["treatment_fulfillment"]["status"] == "unfilled"
+
+
+@pytest.mark.parametrize(
+    "band,listed",
+    [("adapalene_0.1%_bp_2.5%", True), ("garbage_band", False)],
+)
+def test_combination_plan_binds_therapy_and_strength_band(tmp_path, band, listed):
+    spl = "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/x.xml"
+    derived = _derived_root_with_drug(
+        tmp_path,
+        product_id="dailymed:x:1:adapalene-0.1%-benzoyl_peroxide-2.5%",
+        name="Adapalene BP Combination",
+        actives=["adapalene", "benzoyl_peroxide"],
+        drug_actives=[
+            {"name": "adapalene", "strength": "0.1%", "source": spl},
+            {"name": "benzoyl_peroxide", "strength": "2.5%", "source": spl},
+        ],
+    )
+    document = run(
+        _reviewed_therapy_analysis(
+            tmp_path, "adapalene_benzoyl_peroxide", band
+        ),
+        FIXTURES / "profile_complete.json", data_root=derived,
+        generated_at="2026-07-14T00:00:00+00:00",
+    )
+
+    assert bool(document["prescription_options"]) is listed
 
 
 def test_an_otc_drug_row_is_not_offered_as_a_prescription(tmp_path):
-    document = run(ANALYSIS, FIXTURES / "profile_complete.json",
+    analysis = _reviewed_therapy_analysis(tmp_path)
+    document = run(analysis, FIXTURES / "profile_complete.json",
                    data_root=_derived_root_with_drug(tmp_path, otc_drug=True),
                    generated_at="2026-07-14T00:00:00+00:00", eligibility_mode="hybrid")
     assert document["prescription_options"] == []
@@ -384,7 +501,7 @@ def _derived_root_with_minted_drug_facts(tmp_path):
             "label_source": spl, "label_verified_at": "2026-07-13",
             "routine_roles": ["treatment"], "intended_areas": ["face"],
             "exposure": "leave_on", "format": "gel",
-            "cadence": "pm", "cadence_source": "https://example.test/minted",
+            "cadence": "per_label", "cadence_source": "https://example.test/minted",
         },
     }]})
     (derived / "verification" / "approved.json").write_text(json.dumps(approved))
@@ -401,7 +518,8 @@ def test_an_overlay_minted_drug_row_with_unknown_otc_status_is_listed_never_plac
     never land in a routine step. Under `otc_drug is False` this exact row won
     the treatment slot in all three routines, published with "prescription":
     false and no doctor note."""
-    document = run(ANALYSIS, FIXTURES / "profile_complete.json",
+    analysis = _reviewed_therapy_analysis(tmp_path)
+    document = run(analysis, FIXTURES / "profile_complete.json",
                    data_root=_derived_root_with_minted_drug_facts(tmp_path),
                    generated_at="2026-07-14T00:00:00+00:00", eligibility_mode=mode)
 
@@ -417,27 +535,16 @@ def test_an_overlay_minted_drug_row_with_unknown_otc_status_is_listed_never_plac
         assert "doctor" in option["note"]
 
 
-def test_the_pinned_retinoid_rows_draw_the_pregnancy_exclusion(tmp_path):
-    """RETINOL_PRODUCT_IDS and RETINYL_ESTER_ONLY_PRODUCT_ID check the gate
-    against the world: a human confirmed each of these labels carries a
-    retinoid, so a pregnant profile must draw retinoid_pregnancy_status_excluded
-    for every one of them, whatever K.retinoids happens to contain. Hybrid mode,
-    because the treatment-category rows only become candidates there (strict
-    requires verified drug_actives they do not have) and the pregnancy gate is
-    HARD in both modes. P421275's retinyl acetate parses to no canonical
-    active, so its veto can only come from the raw-INCI arm of the gate."""
+def test_unplanned_retinoid_rows_never_enter_the_candidate_pool(tmp_path):
     profile = json.loads((FIXTURES / "profile_complete.json").read_text())
     profile["pregnancy_status"] = "pregnant"
     path = tmp_path / "profile.json"
     path.write_text(json.dumps(profile))
-    document = run(ANALYSIS, path, generated_at="2026-07-14T00:00:00+00:00",
+    analysis = _reviewed_therapy_analysis(tmp_path, "azelaic_acid")
+    document = run(analysis, path, generated_at="2026-07-14T00:00:00+00:00",
                    eligibility_mode="hybrid")
 
     pinned = RETINOL_PRODUCT_IDS | {RETINYL_ESTER_ONLY_PRODUCT_ID}
-    excluded = {v["product_id"] for v in document["veto_log"]["profile"]
-                if v["reason"] == "retinoid_pregnancy_status_excluded"}
-    for product_id in sorted(pinned):
-        assert product_id in excluded, product_id
     placed = {s["product_id"] for r in document["routines"] for s in _steps(r)}
     assert not (placed & pinned)
 
@@ -456,7 +563,7 @@ def test_full_derived_data_root_uses_full_catalog_and_static_knowledge(tmp_path)
         generated_at="2026-07-14T00:00:00+00:00",
     )
 
-    assert document["status"] == "partial"
+    assert document["status"] == "ok"
     assert document["data_versions"]["catalog"]["path"] == str(derived / "catalog_full.json")
     assert document["data_versions"]["verification"]["products"] == 14
 

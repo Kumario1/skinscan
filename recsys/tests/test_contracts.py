@@ -26,6 +26,152 @@ def test_loads_real_analysis_artifact():
     assert analysis.skin_tone_bucket == "medium"
     assert any(o["professional_review"] for o in analysis.safety_observations)
     assert analysis.analysis_sha256
+    assert analysis.therapy_disposition == "defer"
+    assert analysis.therapy_primary is None
+    assert set(analysis.therapy_support_roles) == {
+        "cleanser", "moisturizer", "sunscreen",
+    }
+
+
+def test_accepts_reviewed_primary_independently_of_care_policy_flag(tmp_path):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["decision"]["therapy_disposition"] = "active_treatment"
+    data["decision"]["policy_reviewed"] = False
+    data["policies"]["therapy"]["reviewed"] = True
+    data["policies"]["therapy"].update(
+        identity="synthetic-therapy-test:1", sha256="a" * 64,
+    )
+    data["therapy_plan"].update({
+        "policy_version": "synthetic-therapy-test:1",
+        "primary": {
+            "therapy": "benzoyl_peroxide",
+            "strength_band": "2.5%",
+            "exposure": "leave_on",
+            "cadence": "daily",
+            "cadence_source": "synthetic-test",
+            "role": "treatment",
+        },
+    })
+    path = tmp_path / "analysis.json"
+    path.write_text(json.dumps(data))
+
+    analysis = load_analysis(path)
+    assert analysis.policy_reviewed is False
+    assert analysis.therapy_policy_reviewed is True
+    assert analysis.therapy_primary["therapy"] == "benzoyl_peroxide"
+
+
+def test_rejects_primary_when_disposition_is_not_active(tmp_path):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["therapy_plan"].update({
+        "policy_version": "synthetic-therapy-test:1",
+        "primary": {
+            "therapy": "benzoyl_peroxide",
+            "strength_band": "2.5%",
+            "exposure": "leave_on",
+            "cadence": "daily",
+            "cadence_source": "synthetic-test",
+            "role": "treatment",
+        },
+    })
+    path = tmp_path / "analysis.json"
+    path.write_text(json.dumps(data))
+
+    with pytest.raises(ContractViolation, match="active_treatment"):
+        load_analysis(path)
+
+
+def test_rejects_primary_from_unreviewed_therapy_policy(tmp_path):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["decision"]["therapy_disposition"] = "active_treatment"
+    data["therapy_plan"].update({
+        "policy_version": "unreviewed:1",
+        "primary": {
+            "therapy": "benzoyl_peroxide",
+            "strength_band": "2.5%",
+            "exposure": "leave_on",
+            "cadence": "daily",
+            "cadence_source": "unreviewed:1",
+            "role": "treatment",
+        },
+    })
+    path = tmp_path / "analysis.json"
+    path.write_text(json.dumps(data))
+
+    with pytest.raises(ContractViolation, match="reviewed therapy policy"):
+        load_analysis(path)
+
+
+def test_rejects_primary_whose_policy_version_is_not_hash_bound_identity(tmp_path):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["decision"]["therapy_disposition"] = "active_treatment"
+    data["policies"]["therapy"].update(
+        reviewed=True, identity="reviewed-policy:1", sha256="b" * 64,
+    )
+    data["therapy_plan"].update({
+        "policy_version": "different-policy:1",
+        "primary": {
+            "therapy": "benzoyl_peroxide",
+            "strength_band": "2.5%",
+            "exposure": "leave_on",
+            "cadence": "daily",
+            "cadence_source": "different-policy:1",
+            "role": "treatment",
+        },
+    })
+    path = tmp_path / "analysis.json"
+    path.write_text(json.dumps(data))
+
+    with pytest.raises(ContractViolation, match="must match"):
+        load_analysis(path)
+
+
+def test_primary_amount_requires_a_named_source(tmp_path):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["decision"]["therapy_disposition"] = "active_treatment"
+    data["policies"]["therapy"].update(
+        reviewed=True, identity="reviewed-policy:1", sha256="b" * 64,
+    )
+    data["therapy_plan"].update({
+        "policy_version": "reviewed-policy:1",
+        "primary": {
+            "therapy": "benzoyl_peroxide",
+            "strength_band": "2.5%",
+            "exposure": "leave_on",
+            "cadence": "daily",
+            "cadence_source": "reviewed-policy:1",
+            "amount": "thin_layer",
+            "role": "treatment",
+        },
+    })
+    path = tmp_path / "analysis.json"
+    path.write_text(json.dumps(data))
+
+    with pytest.raises(ContractViolation, match="amount_source"):
+        load_analysis(path)
+
+
+def test_rejects_incomplete_or_duplicate_support_roles(tmp_path):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["therapy_plan"]["support_roles"] = ["cleanser", "cleanser", "sunscreen"]
+    path = tmp_path / "analysis.json"
+    path.write_text(json.dumps(data))
+
+    with pytest.raises(ContractViolation, match="support_roles"):
+        load_analysis(path)
+
+
+@pytest.mark.parametrize("triage", ["derm_first", "abstain"])
+def test_rejects_active_treatment_on_referral_only_triage(tmp_path, triage):
+    data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
+    data["decision"].update(
+        triage_level=triage, therapy_disposition="active_treatment",
+    )
+    path = tmp_path / "analysis.json"
+    path.write_text(json.dumps(data))
+
+    with pytest.raises(ContractViolation, match="remain deferred"):
+        load_analysis(path)
 
 
 def test_rejects_wrong_schema_version(tmp_path):
@@ -120,6 +266,18 @@ def test_profile_falls_back_to_analysis_input_profile():
     assert profile.acne_duration_weeks is None
     assert profile.painful_or_deep_lesions is None
     assert profile.prior_scarring is None
+
+
+def test_profile_preserves_missing_list_fields_as_unknown(tmp_path):
+    data = json.loads((FIXTURES / "profile_complete.json").read_text())
+    del data["allergies"]
+    data["current_actives"] = []
+    path = tmp_path / "profile.json"
+    path.write_text(json.dumps(data))
+
+    profile = resolve_profile(path, load_analysis(FIXTURES / "analysis_v3_sample.json"))
+    assert "allergies" in profile.unknown_fields
+    assert "current_actives" not in profile.unknown_fields
 
 
 @pytest.mark.parametrize("declared", [
