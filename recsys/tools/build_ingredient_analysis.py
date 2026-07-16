@@ -26,6 +26,7 @@ import json
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from hashlib import sha256
 from pathlib import Path
 
 from ..catalog import load_catalog
@@ -34,7 +35,10 @@ from .common import STORE_SCHEMA_VERSION, register_store, write_json
 
 PROMPT_VERSION = "p1"
 BUILDER = "recsys.tools.build_ingredient_analysis@1"
-DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free"
+# The model that produced every entry in the committed store. A different model
+# answers the same prompt differently, so it is part of the cache key and the
+# store's provenance -- see _refuse_provenance_drift.
+DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free"
 URL = "https://openrouter.ai/api/v1/chat/completions"
 IRRITANCY_TIERS = ("low", "medium", "high")
 
@@ -67,6 +71,32 @@ essential oils appear, and short concern-fit notes only where the INCI supports
 one of the allowed concern ids. Do not infer concentrations or make treatment
 claims. Use normalized lowercase ingredient names in arrays.
 """
+
+# PROMPT_VERSION is a cache-invalidation token: it must move whenever the text
+# the model actually sees moves, or labels written against an older prompt are
+# silently reused under the new one. Nothing links the two by construction, so
+# pin the fingerprint of the exact prompt each generation was built from and
+# check it on the money path. Editing SYSTEM_PROMPT or OUTPUT_SCHEMA without
+# bumping PROMPT_VERSION now fails loudly instead of quietly reusing the cache.
+PROMPT_FINGERPRINT = "ed0db6fa"  # fingerprint of the "p1" prompt
+
+
+def prompt_fingerprint() -> str:
+    """Fingerprint the exact bytes that determine the model's answer."""
+    payload = SYSTEM_PROMPT + json.dumps(OUTPUT_SCHEMA, sort_keys=True)
+    return sha256(payload.encode("utf-8")).hexdigest()[:8]
+
+
+def check_prompt_fingerprint() -> None:
+    """Refuse to run a prompt whose text has drifted from its version token."""
+    current = prompt_fingerprint()
+    if current != PROMPT_FINGERPRINT:
+        raise SystemExit(
+            f"SYSTEM_PROMPT/OUTPUT_SCHEMA changed (fingerprint {PROMPT_FINGERPRINT} "
+            f"-> {current}) but PROMPT_VERSION is still {PROMPT_VERSION!r}: every "
+            f"label cached under the old prompt would be silently reused. Bump "
+            f"PROMPT_VERSION (e.g. 'p2') and set PROMPT_FINGERPRINT = {current!r}."
+        )
 
 
 def read_cache(cache_path: Path) -> dict[tuple[str, str, str, str | None], dict]:
@@ -208,11 +238,61 @@ def label_product(product: dict, model: str, session=None, sleep=time.sleep,
     return label_products([product], model, session, sleep, retries)[0]
 
 
+def _head(items: list[tuple[str, str]], limit: int = 10) -> str:
+    """Name the first few affected products, for a log line or an error."""
+    if not items:
+        return ""
+    return ", e.g. " + ", ".join(product_id for product_id, _error in items[:limit])
+
+
+def _refuse_provenance_drift(out_path: Path, model: str,
+                             allow_model_change: bool) -> None:
+    """Refuse to replace a store whose labels came from a different prompt/model.
+
+    Unlike every other artifact here, this store cannot be rederived from the
+    raw dump: it is model output, and the provider is not deterministic even at
+    temperature 0 (the cache holds keys whose two answers disagree). Its
+    reproducibility contract is therefore narrower -- byte-identical from the
+    label cache, for the model and prompt it was built with. A run under a
+    different model silently rewrites all 60 labels with unrelated ones and
+    updates the registry sha to match, so the engine loads them without a
+    murmur. Overwriting is a deliberate relabel, not a rebuild; make it be typed.
+    """
+    if allow_model_change or not out_path.exists():
+        return
+    try:
+        existing = json.loads(out_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return  # unreadable/absent store is a fresh build, not a drift
+    stored_models = sorted({entry["model_id"] for entry in existing.get("products", {}).values()
+                            if "model_id" in entry})
+    stored_prompt = existing.get("prompt_version")
+    drift = []
+    if stored_models and stored_models != [model]:
+        drift.append(f"model_ids {stored_models} -> [{model!r}]")
+    if stored_prompt is not None and stored_prompt != PROMPT_VERSION:
+        drift.append(f"prompt_version {stored_prompt!r} -> {PROMPT_VERSION!r}")
+    if not drift:
+        return
+    raise SystemExit(
+        f"refusing to overwrite {out_path.name} ({'; '.join(drift)}): its labels "
+        f"are model output and are not reproducible across models, so replacing "
+        f"them relabels the catalog rather than rebuilding it. Pass "
+        f"--model {stored_models[0] if stored_models else model} to rebuild the "
+        f"committed store from cache, or --allow-model-change to relabel on purpose."
+    )
+
+
 def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
           model: str, max_new_labels: int = 100, concurrency: int = 1,
-          products_per_request: int = 10, min_coverage: float = 0.95) -> dict:
+          products_per_request: int = 10, min_coverage: float = 0.95,
+          allow_model_change: bool = False) -> dict:
+    check_prompt_fingerprint()
     products, _header = load_catalog(catalog_path)
     product_rows = [product.to_dict() for product in products]
+    # Before the cost guard: a drifted model is the reason the labels would be
+    # bought at all, and it is a provenance error, not a budgeting one.
+    _refuse_provenance_drift(out_path, model, allow_model_change)
     cache = read_cache(cache_path)
     uncached = sum(
         (product["product_id"], product["inci_sha256"], PROMPT_VERSION, model) not in cache
@@ -242,26 +322,8 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
                 append_cache(cache_path, entry)
                 cache[(product["product_id"], product["inci_sha256"],
                        PROMPT_VERSION, model)] = entry
-    # Free-tier rate limits fail whole batches transiently; the same products
-    # succeed on a later resume. Write the store from whatever is cached once
-    # coverage clears the floor, and only abort when coverage is genuinely low
-    # (a real, non-transient problem) rather than on any single failure.
-    covered = sum(
-        (product["product_id"], product["inci_sha256"], PROMPT_VERSION, model) in cache
-        for product in product_rows
-    )
-    coverage = covered / max(1, len(product_rows))
-    if failures:
-        head = ", ".join(product_id for product_id, _error in failures[:10])
-        if coverage < min_coverage:
-            raise RuntimeError(
-                f"ingredient analysis coverage {coverage:.1%} below {min_coverage:.0%} "
-                f"floor ({len(failures)} unlabeled, e.g. {head}); rerun resumes cache"
-            )
-        print(f"warning: {len(failures)} products still unlabeled at {coverage:.1%} "
-              f"coverage; writing store from cache, rerun resumes: {head}")
-
     entries = []
+    dropped = []
     for product in product_rows:
         key = (product["product_id"], product["inci_sha256"], PROMPT_VERSION, model)
         entry = cache.get(key)
@@ -271,10 +333,31 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
             # Lenient on the resume/read path: a cached entry that no longer
             # validates (e.g. CONCERNS changed between runs) is dropped rather
             # than aborting an otherwise no-op rebuild. Fresh labels stay strict
-            # via _entry on the WRITE path above.
+            # via _entry on the WRITE path above. A drop still costs coverage --
+            # it is a product missing from the store, however it went missing.
             entries.append(_entry(product, entry.get("model_id", model), entry))
-        except ValueError:
-            continue
+        except ValueError as exc:
+            dropped.append((product["product_id"], str(exc)))
+
+    # Coverage is measured on what reaches the STORE, not on what sits in the
+    # cache: an entry the read path drops is as absent from the store as one
+    # that was never labeled, and the engine scores both products at a neutral
+    # 0.5 with no warning. Free-tier rate limits fail whole batches transiently
+    # and the same products succeed on a later resume, so write the store from
+    # whatever survives once coverage clears the floor, and abort only when
+    # coverage is genuinely low. The floor is checked unconditionally -- a run
+    # with zero request failures can still be missing most of the catalog.
+    coverage = len(entries) / max(1, len(product_rows))
+    if coverage < min_coverage:
+        raise RuntimeError(
+            f"ingredient analysis coverage {coverage:.1%} below {min_coverage:.0%} "
+            f"floor ({len(failures)} unlabeled{_head(failures)}, {len(dropped)} "
+            f"dropped as invalid{_head(dropped)}); rerun resumes cache"
+        )
+    if failures or dropped:
+        print(f"warning: {len(entries)} of {len(product_rows)} products in store at "
+              f"{coverage:.1%} coverage ({len(failures)} unlabeled{_head(failures)}, "
+              f"{len(dropped)} dropped as invalid{_head(dropped)}); rerun resumes cache")
 
     payload = {
         "schema_version": STORE_SCHEMA_VERSION,
@@ -295,7 +378,8 @@ def build(catalog_path: Path, out_path: Path, data_root: Path, cache_path: Path,
         coverage={"products": len(entries), "catalog_products": len(product_rows)},
     )
     log = {"products_covered": len(entries), "cache_entries": len(cache),
-           "coverage": round(coverage, 4), "unlabeled": len(failures)}
+           "coverage": round(coverage, 4), "unlabeled": len(failures),
+           "dropped_invalid": len(dropped)}
     print(log)
     return log
 
@@ -312,14 +396,17 @@ def main(argv=None) -> int:
     parser.add_argument("--concurrency", type=int, default=1)
     parser.add_argument("--products-per-request", type=int, default=10)
     parser.add_argument("--min-coverage", type=float, default=0.95,
-                        help="write the store once this fraction of the catalog is "
-                             "cached, even if some products remain rate-limited")
+                        help="write the store once this fraction of the catalog "
+                             "reaches it, even if some products remain rate-limited")
+    parser.add_argument("--allow-model-change", action="store_true",
+                        help="relabel an existing store with a different model or "
+                             "prompt; its labels are not reproducible across models")
     args = parser.parse_args(argv)
     cache_path = args.cache or args.data_root / "cache" / "ingredient_analysis_cache.jsonl"
 
     build(args.catalog, args.out, args.data_root, cache_path, args.model,
           args.max_new_labels, args.concurrency, args.products_per_request,
-          args.min_coverage)
+          args.min_coverage, args.allow_model_change)
     return 0
 
 

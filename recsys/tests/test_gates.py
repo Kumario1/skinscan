@@ -2,7 +2,13 @@ from pathlib import Path
 
 from recsys.catalog import CatalogProduct
 from recsys.contracts import Profile
-from recsys.gates import duplicate_active_reasons, profile_gate_reasons
+from recsys.gates import (
+    SOFT_REASON_PREFIXES,
+    _reason_is_soft,
+    apply_profile_gates,
+    duplicate_active_reasons,
+    profile_gate_reasons,
+)
 from recsys.knowledge import load_knowledge
 
 K = load_knowledge(Path(__file__).parents[1] / "data" / "knowledge")
@@ -32,6 +38,73 @@ def product(pid="p1", category="treatment", actives=(), spf=None, price=None, in
         inci=tuple(inci), inci_sha256="", actives=tuple(actives),
         **defaults,
     )
+
+
+def test_soft_reason_prefixes_membership_is_pinned_exactly():
+    """Everything absent from this frozenset is a HARD veto that applies in both
+    eligibility modes, so adding one string to it silently converts a safety
+    veto into a ranking penalty -- adding "retinoid_pregnancy_status_excluded"
+    serves a retinoid to a pregnant user in hybrid. Exact equality is the only
+    assertion that catches an ADDITION; a membership or suffix test passes
+    either way. Changing this set is a safety decision, not a refactor: re-read
+    the HARD/SOFT contract in ARCHITECTURE.md before editing this list.
+    """
+    assert SOFT_REASON_PREFIXES == frozenset({
+        "intended_area_not_verified",
+        "role_not_verified",
+        "exposure_not_verified",
+        "cadence_unverified",
+        "treatment_active_unverified",
+        "treatment_label_unverified",
+        "spf_broad_spectrum_unverified",
+    })
+
+
+def test_ingredient_and_profile_safety_reasons_are_never_classified_soft():
+    """_reason_is_soft splits on ':' so a reason carrying a payload
+    ("profile_allergy:fragrance") is classified by its prefix alone. Every
+    ingredient/profile/price reason must fail that check -- if one ever passes,
+    it stops vetoing in hybrid and the product reaches the user.
+    """
+    for reason in (
+        "retinoid_pregnancy_status_excluded",
+        "profile_allergy:fragrance",
+        "duplicates_current_active:retinol",
+        "product_contraindication:warfarin",
+        "treatment_active_in_support_role:retinol",
+        "treatment_format_not_daily_leave_on:peel",
+        "cadence_not_daily",
+        "spf_below_30_or_unknown",
+        "spf_not_broad_spectrum",
+        "price_above_profile_cap",
+    ):
+        assert _reason_is_soft(reason) is False, reason
+
+
+def test_verification_quality_reasons_are_classified_soft():
+    """The other half of the table: these mean "we have not checked yet", which
+    hybrid is allowed to downgrade to a flag. Pinned so a rename that breaks the
+    prefix split fails here rather than by quietly turning hybrid into strict.
+    """
+    for reason in (
+        "intended_area_not_verified:face",
+        "role_not_verified:treatment",
+        "exposure_not_verified:leave_on",
+        "cadence_unverified",
+        "treatment_active_unverified",
+        "treatment_label_unverified",
+        "spf_broad_spectrum_unverified",
+    ):
+        assert _reason_is_soft(reason) is True, reason
+
+
+def test_an_unclassified_reason_defaults_to_hard():
+    """A reason added to profile_gate_reasons without touching the soft table
+    must veto in both modes. The default has to be the safe one -- that is what
+    makes forgetting to classify a new reason harmless.
+    """
+    assert _reason_is_soft("some_reason_nobody_has_classified_yet") is False
+    assert _reason_is_soft("some_reason_nobody_has_classified_yet:payload") is False
 
 
 def test_pregnancy_unknown_vetoes_retinoids():
@@ -128,6 +201,40 @@ def test_non_daily_products_are_vetoed():
     )
 
 
+def test_a_verified_non_daily_cadence_vetoes_in_both_modes():
+    """cadence_not_daily is emitted only from the elif -- cadence IS verified and
+    positively says something a daily AM/PM routine cannot honour ("weekly").
+    That is a checked fact, not the "we have not checked yet" gap the soft table
+    exists for, so hybrid must not downgrade it: doing so puts a label-verified
+    weekly exfoliant into a daily routine. Latent while every catalog row has a
+    null cadence, reachable the moment the overlay sets one.
+    """
+    weekly = product("w1", "treatment", actives=["salicylic_acid"], cadence="weekly")
+    profile = Profile(pregnancy_status="not_pregnant")
+    for strict in (True, False):
+        kept, vetoes, flags = apply_profile_gates(
+            {"treatment": [weekly]}, profile, K, strict=strict
+        )
+        assert kept["treatment"] == [], strict
+        assert [v.reason for v in vetoes] == ["cadence_not_daily"], strict
+        assert flags == {}, strict
+
+
+def test_an_unverified_cadence_is_still_only_a_quality_gap():
+    """The sibling of the above, to pin that the split is between "checked and
+    disqualifying" and "not checked" rather than between cadence values.
+    """
+    unknown_cadence = product(
+        "c1", "treatment", actives=["salicylic_acid"], cadence=None, cadence_source=None
+    )
+    kept, vetoes, flags = apply_profile_gates(
+        {"treatment": [unknown_cadence]}, Profile(pregnancy_status="not_pregnant"), K,
+        strict=False,
+    )
+    assert [p.product_id for p in kept["treatment"]] == ["c1"]
+    assert flags == {("c1", "treatment"): ["cadence_unverified"]}
+
+
 def test_medication_and_pregnancy_contraindications_are_vetoed():
     profile = Profile(
         pregnancy_status="pregnant", current_medications=("warfarin",)
@@ -169,6 +276,36 @@ def test_unstated_area_is_not_a_non_face_claim():
         )
 
 
+def test_a_stated_area_outside_the_known_vocabulary_is_still_a_non_face_claim():
+    """The non-face check must derive from the product's own areas rather than
+    intersect an enumerated list, because an enumerated list is a copy of the
+    area vocabulary that nothing keeps in sync: add "scalp" to the vocabulary,
+    forget this list, and a scalp product becomes eligible for a facial routine.
+    Any stated area that is not the face is a claim to somewhere that is not the
+    face, whether or not this module has heard of it.
+    """
+    profile = Profile(pregnancy_status="not_pregnant")
+    for areas in (("scalp",), ("hand",), ("scalp", "body"), ("underarm", "unknown")):
+        assert "intended_area_not_verified:face" in profile_gate_reasons(
+            product(category="moisturizer", intended_areas=areas), "moisturizer", profile, K
+        ), areas
+
+
+def test_contraindication_matching_folds_case_and_surrounding_whitespace():
+    """Declared conditions and product contraindications are both free text off
+    the evidence overlay -- there is no closed vocabulary to validate either
+    against -- so exact matching fails this HARD gate open on a capital letter.
+    """
+    sensitive = Profile(pregnancy_status="not_pregnant", sensitivity_conditions=("Sensitive ",))
+    assert "product_contraindication:sensitive" in profile_gate_reasons(
+        product(contraindications=("sensitive",)), "treatment", sensitive, K
+    )
+    medicated = Profile(pregnancy_status="not_pregnant", current_medications=("Warfarin",))
+    assert "product_contraindication:warfarin" in profile_gate_reasons(
+        product(contraindications=("WARFARIN",)), "treatment", medicated, K
+    )
+
+
 def test_treatment_requires_verified_drug_active_and_safe_format():
     profile = Profile(pregnancy_status="not_pregnant")
     assert "treatment_active_unverified" in profile_gate_reasons(
@@ -179,6 +316,83 @@ def test_treatment_requires_verified_drug_active_and_safe_format():
         product(actives=("salicylic_acid",), format="peel"),
         "treatment", profile, K,
     )
+
+
+def test_apply_profile_gates_vetoes_hard_safety_reasons_in_hybrid_too():
+    """Every other test in this file calls profile_gate_reasons directly and so
+    bypasses the strict/hybrid fork, which is the branch that actually decides
+    what reaches a user. Hybrid relaxes verification quality, never ingredient
+    safety: a retinoid must not survive for a pregnant user in either mode.
+    """
+    retinol = product("r1", "treatment", actives=["retinol"])
+    for strict in (True, False):
+        kept, vetoes, flags = apply_profile_gates(
+            {"treatment": [retinol]}, Profile(pregnancy_status="pregnant"), K, strict=strict
+        )
+        assert kept["treatment"] == [], strict
+        assert [v.reason for v in vetoes] == ["retinoid_pregnancy_status_excluded"], strict
+        assert flags == {}, strict
+
+
+def test_apply_profile_gates_downgrades_soft_reasons_to_flags_only_in_hybrid():
+    """The documented mode difference, pinned end-to-end rather than by reading
+    the table: an unverified usage fact vetoes under strict (evidence-only) and
+    survives as a quality flag under hybrid (slotted by catalog category).
+    """
+    unverified = product("u1", "moisturizer", actives=["glycerin"], exposure=None)
+    profile = Profile(pregnancy_status="not_pregnant")
+
+    kept, vetoes, flags = apply_profile_gates(
+        {"moisturizer": [unverified]}, profile, K, strict=True
+    )
+    assert kept["moisturizer"] == []
+    assert [v.reason for v in vetoes] == ["exposure_not_verified:leave_on"]
+    assert flags == {}
+
+    kept, vetoes, flags = apply_profile_gates(
+        {"moisturizer": [unverified]}, profile, K, strict=False
+    )
+    assert [p.product_id for p in kept["moisturizer"]] == ["u1"]
+    assert vetoes == []
+    assert flags == {("u1", "moisturizer"): ["exposure_not_verified:leave_on"]}
+
+
+def test_a_hard_reason_vetoes_even_when_soft_reasons_accompany_it():
+    """Hybrid splits one product's reasons into two lists. The hard one has to
+    win: a product that is both unverified AND unsafe must not be kept because
+    its soft reasons were filtered out of the blocking set first.
+    """
+    unsafe_and_unverified = product(
+        "x1", "moisturizer", actives=["glycerin"], exposure=None,
+        inci=["Water", "Glycerin", "Parfum (Fragrance)"],
+    )
+    profile = Profile(pregnancy_status="not_pregnant", allergies=("fragrance",))
+    kept, vetoes, flags = apply_profile_gates(
+        {"moisturizer": [unsafe_and_unverified]}, profile, K, strict=False
+    )
+    assert kept["moisturizer"] == []
+    assert [v.reason for v in vetoes] == ["profile_allergy:fragrance"]
+    assert flags == {}
+
+
+def test_quality_flags_carry_every_soft_reason_for_a_kept_product():
+    """A product can be partially verified -- routine_roles present, exposure and
+    cadence absent. explain.py labels that step "verified" from routine_roles
+    alone, so these flags are the only complete record of what was never
+    checked; they must carry every soft reason, not just the first.
+    """
+    partial = product(
+        "p9", "moisturizer", actives=["glycerin"],
+        exposure=None, cadence=None, cadence_source=None,
+    )
+    kept, vetoes, flags = apply_profile_gates(
+        {"moisturizer": [partial]}, Profile(pregnancy_status="not_pregnant"), K, strict=False
+    )
+    assert [p.product_id for p in kept["moisturizer"]] == ["p9"]
+    assert vetoes == []
+    assert flags == {("p9", "moisturizer"): [
+        "exposure_not_verified:leave_on", "cadence_unverified",
+    ]}
 
 
 def test_duplicate_treatment_actives_only():

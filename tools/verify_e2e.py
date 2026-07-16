@@ -22,14 +22,28 @@ sys.path.insert(0, str(ROOT))
 from recsys.catalog import load_catalog  # noqa: E402
 from recsys.contracts import load_analysis, resolve_profile  # noqa: E402
 from recsys.knowledge import load_knowledge  # noqa: E402
-from recsys.pipeline import run  # noqa: E402
+from recsys.pipeline import resolve_paths, run  # noqa: E402
 
 PINNED = "2026-07-15T00:00:00+00:00"
-results: list[tuple[str, bool, str]] = []
+PASS, FAIL, SKIP = "PASS", "FAIL", "SKIP"
+results: list[tuple[str, str, str]] = []
 
 
-def check(stage: str, ok: bool, detail: str = "") -> bool:
-    results.append((stage, bool(ok), detail))
+def check(stage: str, ok: bool, detail: str = "", population=None) -> bool:
+    """Record one stage. Pass `population` -- the collection the check quantifies
+    over -- and an empty one is reported SKIP rather than PASS.
+
+    all([]) is True and not [] is True, so a check over an empty population
+    cannot fail. Counting that as a pass is how this tool came to report 18/18
+    on a run with no prescriptions to check; in the overlay re-import that
+    collapses every routine to zero it would have reported 18/18 while the
+    engine produced nothing at all. A check that cannot fail is not evidence,
+    and must not be counted as if it were.
+    """
+    if population is not None and len(population) == 0:
+        results.append((stage, SKIP, detail or "empty population — nothing to check"))
+        return True
+    results.append((stage, PASS if ok else FAIL, detail))
     return bool(ok)
 
 
@@ -38,7 +52,19 @@ def _steps(routine: dict) -> list[dict]:
 
 
 def verify(analysis_path: Path, data_root: Path, mode: str, runs: int) -> dict:
-    knowledge = load_knowledge(ROOT / "recsys" / "data" / "knowledge")
+    # Resolve exactly where the engine resolves, by calling the same function it
+    # calls rather than by restating it here. What stops this harness checking a
+    # different catalog than the engine used is the assertion below, comparing
+    # the stores' bound sha against the engine's own reported
+    # data_versions.catalog.sha256 -- a copy of the resolution rules only added a
+    # second place to drift. static_root matters too: this hardcoded the
+    # knowledge root while the engine picks it up from the data root when one is
+    # present, so a knowledge/ landing under a data root would have had the
+    # harness grade the run against a different safety table than it ran with.
+    catalog_path, static_root, drug_path, _verification_root = resolve_paths(
+        data_root, None
+    )
+    knowledge = load_knowledge(static_root / "knowledge")
     analysis = load_analysis(analysis_path)
 
     # 1. inputs
@@ -49,16 +75,12 @@ def verify(analysis_path: Path, data_root: Path, mode: str, runs: int) -> dict:
     check("inputs: profile resolves (unknown-safe)", profile.source is not None,
           f"source={profile.source}, pregnancy={profile.pregnancy_status}")
 
-    # 2. catalogs -- resolved exactly as pipeline.py does, so this harness cannot
-    # silently check a different catalog than the engine used.
-    full = data_root / "catalog_full.json"
-    catalog_path = full if full.exists() else data_root / "catalog" / "seed_catalog.json"
+    # 2. catalogs
     cosmetics, _ = load_catalog(catalog_path)
     check("catalog: cosmetics load under the INCI contract", bool(cosmetics),
           f"{len(cosmetics)} products from {catalog_path.name}")
     # The drug catalog is optional, exactly as the pipeline treats it: present it
     # must load, absent the engine is cosmetics-only and that is a valid config.
-    drug_path = data_root / "catalog_drug.json"
     drug = []
     if drug_path.exists():
         drug, _ = load_catalog(drug_path)
@@ -112,16 +134,22 @@ def verify(analysis_path: Path, data_root: Path, mode: str, runs: int) -> dict:
           f"{len(routines)}/{len(knowledge.archetypes)} archetypes, status={document['status']}"
           + (f", unavailable: {unavailable[0]['reasons'][0]}" if not routines else ""))
 
+    # Every check from here quantifies over the steps the engine actually
+    # produced, so each carries its population: no routines means these checks
+    # have nothing to say, and saying nothing must not read as saying yes.
+    all_steps = [s for r in routines for s in _steps(r)]
+
     # 7. scoring is decomposable -- every number traceable to a named store
     decomposable = True
-    for routine in routines:
-        for step in _steps(routine):
-            why = step["why"]
-            if not why["signals"] or not any(s["evidence"] for s in why["signals"]):
-                decomposable = False
-    check("scoring: every step decomposes into named signals", decomposable)
+    for step in all_steps:
+        why = step["why"]
+        if not why["signals"] or not any(s["evidence"] for s in why["signals"]):
+            decomposable = False
+    check("scoring: every step decomposes into named signals", decomposable,
+          f"{len(all_steps)} steps", population=all_steps)
     check("explain: every step carries an evidence-backed why",
-          all(step["why"]["summary"] for r in routines for step in _steps(r)))
+          all(step["why"]["summary"] for step in all_steps),
+          f"{len(all_steps)} steps", population=all_steps)
 
     # 8. safety invariants, checked on the output rather than trusted
     catalog = {p.product_id: p for p in cosmetics + drug}
@@ -131,18 +159,25 @@ def verify(analysis_path: Path, data_root: Path, mode: str, runs: int) -> dict:
         for r in routines for s in r["am"]
     )
     check("safety: composer invariants hold (SPF AM, retinoid PM, no conflicts)",
-          safety_ok and not am_retinoid)
+          safety_ok and not am_retinoid, f"{len(routines)} routines",
+          population=routines)
 
     # 9. prescriptions: listed, never placed, never in a total
     options = document["prescription_options"]
-    placed = [s for r in routines for s in _steps(r) if s["prescription"]]
-    unpriced = [s for r in routines for s in _steps(r) if s["price_usd"] is None]
+    placed = [s for s in all_steps if s["prescription"]]
+    unpriced = [s for s in all_steps if s["price_usd"] is None]
     check("prescription: every option is well-formed and targeted",
           all(o["actives"] and o["targets"] and o["label_source"] and "doctor" in o["note"]
               for o in options),
-          ", ".join(o["name"] for o in options) or "none listed")
-    check("prescription: never placed into a routine", not placed)
-    check("prescription: no unpriced step distorts a total", not unpriced)
+          ", ".join(o["name"] for o in options) or "none listed",
+          population=options)
+    # These two quantify over the steps, not over the violations they look for:
+    # an empty `placed` is a real pass when there were steps to scan and a
+    # vacuous one when there were not.
+    check("prescription: never placed into a routine", not placed,
+          f"{len(all_steps)} steps scanned", population=all_steps)
+    check("prescription: no unpriced step distorts a total", not unpriced,
+          f"{len(all_steps)} steps scanned", population=all_steps)
 
     # 10. determinism, across processes rather than in-process
     out = Path("/tmp/_verify_e2e")
@@ -177,10 +212,20 @@ def main() -> int:
     verify(args.analysis, args.data_root, args.mode, args.runs)
 
     width = max(len(name) for name, _, _ in results)
-    for name, ok, detail in results:
-        print(f"  {'PASS' if ok else 'FAIL'}  {name.ljust(width)}  {detail}")
-    failed = [name for name, ok, _ in results if not ok]
-    print(f"\n{len(results) - len(failed)}/{len(results)} stages pass")
+    for name, status, detail in results:
+        print(f"  {status}  {name.ljust(width)}  {detail}")
+    failed = [name for name, status, _ in results if status == FAIL]
+    skipped = [name for name, status, _ in results if status == SKIP]
+    passed = len(results) - len(failed) - len(skipped)
+    summary = f"\n{passed}/{len(results)} stages pass"
+    if skipped:
+        # Counted apart from the passes on purpose: a skipped stage is a stage
+        # this run could not speak to, and folding it into the passes is what
+        # made a run that checked nothing indistinguishable from a clean one.
+        summary += f", {len(skipped)} skipped (empty population, checked nothing)"
+    print(summary)
+    if skipped:
+        print("SKIPPED: " + ", ".join(skipped))
     if failed:
         print("FAILED: " + ", ".join(failed))
     return 1 if failed else 0

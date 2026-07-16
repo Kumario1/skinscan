@@ -17,6 +17,7 @@ from .contracts import (
     REFERRAL_ONLY_TRIAGE,
     SCHEMA_VERSION,
     AnalysisInput,
+    ContractViolation,
     load_analysis,
     resolve_profile,
     sha256_file,
@@ -36,6 +37,22 @@ from .verification import apply_verification, load_verification_overlay
 
 DEFAULT_DATA_ROOT = Path(__file__).parent / "data"
 
+# load_providers() reports a store it declined to load by ending the warning with
+# SKIPPED_MARKER, and reports the catalog_sha256 mismatch case with
+# SIGNAL_CATALOG_MISMATCH. Matching on the message is a seam, not a contract:
+# signals.py should return these structurally (see the note in the review). Kept
+# here as named constants so the coupling is greppable from one place.
+SKIPPED_MARKER = "— skipped"
+SIGNAL_CATALOG_MISMATCH = "catalog_sha256 mismatch for store"
+
+
+def skipped_signal_warnings(warnings: list[str]) -> list[str]:
+    """The warnings that mean a signal store did not load. A skipped store does
+    not degrade the ranker gracefully -- it degenerates every store-backed signal
+    to a neutral 0.5, so the ranker scores blind while the run still reports a
+    status. Callers use this to refuse to publish such a run."""
+    return [w for w in warnings if w.endswith(SKIPPED_MARKER)]
+
 
 def select_targets(analysis: AnalysisInput) -> tuple[TargetConcern, ...]:
     findings = [c for c in analysis.concerns if c.severity >= 1]
@@ -50,8 +67,73 @@ def _git_commit() -> str | None:
             cwd=Path(__file__).parent, capture_output=True, text=True, timeout=10,
         )
         return result.stdout.strip() or None if result.returncode == 0 else None
-    except OSError:
+    except (OSError, subprocess.SubprocessError):
+        # TimeoutExpired derives from SubprocessError, NOT OSError: catching only
+        # OSError let a hung `git rev-parse` past timeout=10 kill the whole
+        # recommendation over a provenance nicety. The commit is optional; the
+        # recommendation is not.
         return None
+
+
+def resolve_paths(
+    data_root: str | Path | None = None,
+    catalog_path: str | Path | None = None,
+) -> tuple[Path, Path, Path, Path]:
+    """Resolve (catalog_path, static_root, drug_path, verification_root) from a
+    data root and an optional explicit catalog.
+
+    The single source of truth for where the engine reads its data. Exported so
+    that tools which check a run (tools/verify_e2e.py) resolve identically by
+    construction rather than by a copy-paste that can drift out of step with
+    this function -- the harness must never check a different catalog than the
+    engine used.
+    """
+    data_root = Path(data_root) if data_root else DEFAULT_DATA_ROOT
+    if catalog_path:
+        catalog_path = Path(catalog_path)
+    elif (data_root / "catalog_full.json").exists():
+        catalog_path = data_root / "catalog_full.json"
+    else:
+        catalog_path = data_root / "catalog" / "seed_catalog.json"
+    static_root = data_root if (data_root / "knowledge").exists() else DEFAULT_DATA_ROOT
+    drug_path = data_root / "catalog_drug.json"
+    verification_root = (
+        data_root / "verification"
+        if (data_root / "verification" / "approved.json").exists()
+        else static_root / "verification"
+    )
+    return catalog_path, static_root, drug_path, verification_root
+
+
+def _fail_on_signal_mismatch(
+    signal_warnings: list[str], catalog_path: Path, data_root: Path,
+    *, explicit: bool, allowed: bool,
+) -> None:
+    """Refuse to score blind against an explicitly supplied catalog.
+
+    A store is keyed by the sha256 of the catalog it was built against; on a
+    mismatch load_providers skips it with only a warning and every store-backed
+    signal falls back to a neutral 0.5. The run still reports 'partial' with
+    priced routines, and 'partial' is also what a healthy run reports -- so the
+    status cannot tell the two apart and nothing downstream can either.
+
+    Only when the catalog was named explicitly: resolved from a data root the
+    catalog and stores are one curated pair, but --catalog overrides half of that
+    pair and strands the other half. Pass allow_signal_catalog_mismatch=True to
+    take the old warn-and-continue behaviour deliberately.
+    """
+    mismatched = [w for w in signal_warnings if w.startswith(SIGNAL_CATALOG_MISMATCH)]
+    if not mismatched or not explicit or allowed:
+        return
+    raise ContractViolation(
+        "data_versions.signals",
+        f"{len(mismatched)} signal store(s) are bound to a different catalog than "
+        f"{catalog_path}, so every store-backed signal would score a neutral 0.5 "
+        f"and the ranker would be blind. Point --data-root at the data root the "
+        f"stores were built against (tried {data_root}), rebuild the stores for "
+        f"this catalog, or pass --allow-signal-catalog-mismatch to accept a blind "
+        f"ranking. Skipped: " + "; ".join(mismatched),
+    )
 
 
 def run(
@@ -61,15 +143,18 @@ def run(
     data_root: str | Path | None = None,
     generated_at: str | None = None,
     eligibility_mode: str = "strict",
+    allow_signal_catalog_mismatch: bool = False,
 ) -> dict:
+    # An explicitly supplied catalog is the operator overriding one half of a
+    # matched pair: the signal stores are keyed by the sha256 of the catalog they
+    # were built against, so pointing --catalog somewhere else strands every
+    # store. That is the difference between a checked answer and a blind one, so
+    # it is a hard failure rather than a warning. See _fail_on_signal_mismatch.
+    catalog_was_explicit = catalog_path is not None
     data_root = Path(data_root) if data_root else DEFAULT_DATA_ROOT
-    if catalog_path:
-        catalog_path = Path(catalog_path)
-    elif (data_root / "catalog_full.json").exists():
-        catalog_path = data_root / "catalog_full.json"
-    else:
-        catalog_path = data_root / "catalog" / "seed_catalog.json"
-    static_root = data_root if (data_root / "knowledge").exists() else DEFAULT_DATA_ROOT
+    catalog_path, static_root, drug_path, verification_root = resolve_paths(
+        data_root, catalog_path
+    )
 
     knowledge = load_knowledge(static_root / "knowledge")
     analysis = load_analysis(analysis_path)
@@ -80,18 +165,12 @@ def run(
         _dt.datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
         if generated_at else _dt.datetime.now(_dt.timezone.utc)
     )
-    verification_root = (
-        data_root / "verification"
-        if (data_root / "verification" / "approved.json").exists()
-        else static_root / "verification"
-    )
     overlay, verification_warnings, verification_meta = load_verification_overlay(
         verification_root, now=verification_now
     )
     # Drug rows ride in a catalog of their own: the signal stores are keyed by the
     # cosmetics catalog's sha256, so folding them into that file would strand
     # every store. Merge before the overlay so approved facts reach them too.
-    drug_path = data_root / "catalog_drug.json"
     drug_meta = None
     if drug_path.exists():
         drug_products, _ = load_catalog(drug_path)
@@ -105,6 +184,10 @@ def run(
     products = apply_verification(products, overlay)
     providers, store_meta, signal_warnings = load_providers(data_root, catalog_sha256)
     warnings = verification_warnings + signal_warnings
+    _fail_on_signal_mismatch(
+        signal_warnings, catalog_path, data_root,
+        explicit=catalog_was_explicit, allowed=allow_signal_catalog_mismatch,
+    )
 
     targets = select_targets(analysis)
     document: dict = {

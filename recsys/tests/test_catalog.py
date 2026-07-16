@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -6,9 +7,22 @@ import pytest
 from recsys.catalog import load_catalog
 from recsys.contracts import ContractViolation, SLOTS
 from recsys.inci import parse_ingredients
+from recsys.tools.common import DEFAULT_RAW_DIR
 
 DATA = Path(__file__).parents[1] / "data"
-RAW_DIR = Path("/Users/princekumar/Documents/skinscan/data/raw/sephora")
+
+# The dump is gitignored and lives at the repo root, so resolve it the same way
+# the build tools do -- relative to the checkout -- rather than hardcoding one
+# machine's home directory, which made the byte-identical claim untestable
+# anywhere else (CI green said nothing). SKINSCAN_RAW_DIR points the checks at a
+# dump outside the checkout: a git worktree has no data/raw/ of its own, so
+# without it these skip here and only ever run in the main checkout.
+RAW_DIR = Path(os.environ.get("SKINSCAN_RAW_DIR")
+               or Path(__file__).parents[2] / DEFAULT_RAW_DIR)
+needs_raw_dump = pytest.mark.skipif(
+    not RAW_DIR.exists(),
+    reason=f"Kaggle dump not present at {RAW_DIR} (set SKINSCAN_RAW_DIR)",
+)
 
 
 def test_parse_ingredients_real_dump_forms():
@@ -95,10 +109,33 @@ def test_catalog_rejects_stale_derived_inci_fields(tmp_path, field):
 
 
 @pytest.mark.raw_dump
-@pytest.mark.skipif(not RAW_DIR.exists(), reason="Kaggle dump not present")
+@needs_raw_dump
 def test_seed_rebuild_is_byte_identical(tmp_path):
     from recsys.tools.build_catalog import build
 
     out = tmp_path / "seed_catalog.json"
     build(RAW_DIR, out, DATA / "catalog" / "seed_ids.txt")
     assert out.read_bytes() == (DATA / "catalog" / "seed_catalog.json").read_bytes()
+
+
+@pytest.mark.raw_dump
+@needs_raw_dump
+def test_review_stats_rebuild_is_byte_identical(tmp_path):
+    # Committed, engine-read, and derived from 1.09M review rows -- but nothing
+    # pinned it, so a change in the aggregation could land invisibly. The full
+    # rebuild takes seconds, which is cheap enough to assert on every raw_dump run.
+    from recsys.tools.build_review_stats import build
+
+    out = tmp_path / "signals" / "review_stats.v1.json"
+    build(RAW_DIR, DATA / "catalog" / "seed_catalog.json", out, tmp_path)
+    assert out.read_bytes() == (DATA / "signals" / "review_stats.v1.json").read_bytes()
+
+
+@pytest.mark.raw_dump
+@needs_raw_dump
+def test_popularity_rebuild_is_byte_identical(tmp_path):
+    from recsys.tools.build_popularity import build
+
+    out = tmp_path / "signals" / "popularity.v1.json"
+    build(RAW_DIR, DATA / "catalog" / "seed_catalog.json", out, tmp_path)
+    assert out.read_bytes() == (DATA / "signals" / "popularity.v1.json").read_bytes()

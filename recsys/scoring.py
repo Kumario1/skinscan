@@ -1,6 +1,17 @@
 """Multi-signal scorer. Every final score is decomposable: it is exactly the
 weighted mean of the retained per-signal values, and the explanation builder
 reads the same SignalScore objects — there is no separate marketing-copy path.
+
+Missing data is never a hidden penalty or bonus. A provider that returns None
+has no data for this product, so it is retained by nothing: not the numerator,
+not the denominator, and not the emitted signal list. Its weight is redistributed
+across the signals that do have something to say, exactly as an absent *store*
+already behaves, and the product's `final` becomes precisely what its remaining
+signals say. Only an uncertainty note records the absence.
+
+Emitting a placeholder value here would break both invariants at once: it would
+make `final` disagree with the mean of the emitted signals, and it would publish
+a per-signal number the score never actually used.
 """
 from __future__ import annotations
 
@@ -9,7 +20,6 @@ from dataclasses import dataclass, field
 from .catalog import CatalogProduct
 from .signals import ScoringContext, SignalScore
 
-NEUTRAL_VALUE = 0.5
 VERIFIED_BONUS = 0.05  # ranking nudge for evidence-verified products (sort-only)
 
 
@@ -41,11 +51,19 @@ def score_products(
             weight = weights[provider.name]
             result = provider.score(product, slot, ctx)
             if result is None:
-                result = SignalScore(provider.name, NEUTRAL_VALUE, "no data", {"missing": True})
+                # No data for this product: drop the weight from the denominator
+                # so `final` stays the weighted mean of what we actually know.
+                # Substituting a "neutral" 0.5 while keeping the weight is not
+                # neutral — it is only neutral when the product's other signals
+                # already average 0.5, and otherwise drags good products down and
+                # lifts bad ones up. This mirrors the missing-*store* path above,
+                # where an absent provider's weight simply never enters the sum.
                 uncertainty.append(f"no_{provider.name}_data")
+                continue
             signals.append(result)
             acc += weight * result.value
             total_weight += weight
+        # No signal had anything to say: there is no weighted mean to report.
         final = round(acc / total_weight, 6) if total_weight else 0.0
         scored.append(ScoredCandidate(product, final, tuple(signals), tuple(uncertainty)))
     # Evidence-verified products (usage facts proven from a source) get a modest
