@@ -58,7 +58,8 @@ SUPPORT_ROLES = ("cleanser", "moisturizer", "sunscreen")
 # ponytail: third copy of the modeled-path table (import_dailymed.MODELED_STRENGTHS,
 # build_completeness_report.modeled); consolidate in schema.py if a fourth appears.
 PATH_SPECS = {
-    "azelaic_acid_10": (("azelaic_acid", "10%"),),
+    # azelaic_acid_10 dropped 2026-07-16: no drug product exists at 10% (Rx is
+    # 15/20%), so the path could never be filled and blocked coverage forever
     "benzoyl_peroxide_2_5": (("benzoyl_peroxide", "2.5%"),),
     "adapalene_0_1_benzoyl_peroxide_2_5": (
         ("adapalene", "0.1%"), ("benzoyl_peroxide", "2.5%"),
@@ -366,7 +367,7 @@ def cmd_select(paths: Paths, args) -> int:
         return quarantine.get(product_id, {}).get("quarantined_roles", {}).get(role, [])
 
     def pick(product_id: str, target: str) -> None:
-        role = target if target in SUPPORT_ROLES else "treatment"
+        role = target if target in SUPPORT_ROLES + ("serum",) else "treatment"
         picks.append((product_id, target, quarantined_for(product_id, role)))
         taken.add(product_id)
 
@@ -666,7 +667,7 @@ def cmd_rebuild(paths: Paths, args) -> int:
     union_quarantine = build_quarantine_report(products, truly_unmatched)["products"]
 
     def outcome(product_id: str, target: str) -> list[str]:
-        role = target if target in SUPPORT_ROLES else "treatment"
+        role = target if target in SUPPORT_ROLES + ("serum",) else "treatment"
         reasons = union_quarantine.get(product_id, {}).get(
             "quarantined_roles", {}).get(role, [])
         if product_id in truly_unmatched:
@@ -683,7 +684,7 @@ def cmd_rebuild(paths: Paths, args) -> int:
     for product_id, patch in overlay.items():
         if product_id not in manifest["products"]:
             roles = patch.get("routine_roles") or ["treatment"]
-            target = roles[0] if roles[0] in SUPPORT_ROLES else "treatment"
+            target = roles[0] if roles[0] in SUPPORT_ROLES + ("serum",) else "treatment"
             reasons = outcome(product_id, target)
             set_state(manifest, product_id, "quarantined" if reasons else "eligible",
                       batch="legacy", target=target, reasons=reasons)

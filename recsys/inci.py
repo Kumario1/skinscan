@@ -37,6 +37,12 @@ CANONICAL_ACTIVES: dict[str, str] = {
     "arbutin": "alpha_arbutin",
     "tranexamic acid": "tranexamic_acid",
     "kojic acid": "kojic_acid",
+    "iron oxide": "iron_oxides",
+    "iron oxides": "iron_oxides",
+    # Dedicated scar-care evidence only. Generic dimethicone/silicones are not
+    # aliases: they cannot prove a medical silicone sheet/gel formulation.
+    "medical grade silicone": "silicone_scar_care",
+    "silicone scar gel": "silicone_scar_care",
     "retinol": "retinol",
     # barrier / hydration
     "ceramides": "ceramides",
@@ -345,6 +351,12 @@ def parse_ingredients(raw: str) -> tuple[list[str], list[str]]:
     (sorted unique actives, sorted unique comedogenic flags)."""
     actives: set[str] = set()
     comedogenic: set[str] = set()
+    # Color-index spellings can be the whole ingredient ("CI 77491") and the
+    # ordinary tokenizer intentionally drops digits.  Detect the three iron
+    # oxide pigment IDs before tokenization so melasma sunscreen relevance is
+    # deterministic even when the words "iron oxide" are absent.
+    if re.search(r"\bci\s*7749[129]\b|\biron\s+oxides?\b", raw, re.I):
+        actives.add("iron_oxides")
     for token in raw.split(","):
         for cand in normalize_token(token):
             active = _lookup(cand, CANONICAL_ACTIVES, CANONICAL_IDS)

@@ -1,0 +1,80 @@
+{
+  "schema_version": "2",
+  "products": [
+    {
+      "product_id": "P454383",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://supergoop.com/products/everyday-sunscreen",
+          "retrieved_at": "2026-07-16T18:51:13Z",
+          "source_sha256": "308c9d78ececc30941c9e30009fb316e5e4a631276c8752f432468820bcd6574",
+          "facts": {
+            "routine_roles": ["sunscreen"],
+            "format": "lotion",
+            "exposure": "leave_on",
+            "cadence": "per_label",
+            "cadence_source": "https://supergoop.com/products/everyday-sunscreen",
+            "intended_areas": ["face", "body"],
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page"
+          }
+        },
+        {
+          "status": "proposed",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0428eebc-4ffb-4981-b738-2c9ecf2a6a2e.xml",
+          "retrieved_at": "2026-07-16T18:49:50Z",
+          "source_sha256": "18017378d37e1eacc196be655be99c2f7e0a223d6aa2f6f78b152a745a81c449",
+          "facts": {
+            "broad_spectrum": true,
+            "spf": 50,
+            "otc_drug": true,
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0428eebc-4ffb-4981-b738-2c9ecf2a6a2e.xml",
+            "label_verified_at": "2026-07-16",
+            "label_effective_date": "20260604",
+            "label_version": "9",
+            "source_set_id": "0428eebc-4ffb-4981-b738-2c9ecf2a6a2e"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P392235",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://tatcha.com/products/the-camellia-cleansing-oil-and-makeup-remover",
+          "retrieved_at": "2026-07-16T18:51:15Z",
+          "source_sha256": "27dcf2d0e5516e77efa8733fba929e804511fe6d95aed5d3040d2cb90c441664",
+          "facts": {
+            "routine_roles": ["cleanser"],
+            "format": "oil",
+            "exposure": "rinse_off",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P455364",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.theinkeylist.com/products/oat-cleansing-balm-150ml",
+          "retrieved_at": "2026-07-16T18:51:19Z",
+          "source_sha256": "28e4d69f5550ca82daf4f1f4a30d61278518b9f457a34c002e43fd0240f69c1b",
+          "facts": {
+            "routine_roles": ["cleanser"],
+            "format": "balm",
+            "exposure": "rinse_off",
+            "cadence": "am_pm",
+            "cadence_source": "https://www.theinkeylist.com/products/oat-cleansing-balm-150ml",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": ["daily_support"]
+          }
+        }
+      ]
+    }
+  ]
+}

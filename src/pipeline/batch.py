@@ -13,7 +13,7 @@ import time
 from typing import Callable, Mapping, Sequence
 
 from .provenance import (
-    catalog_bundle_identity, compute_replay_key, file_identity, sha256_file,
+    catalog_bundle_identity, compute_replay_key, file_identity, sha256_bytes, sha256_file,
 )
 
 
@@ -34,6 +34,14 @@ class PermanentBatchError(RuntimeError):
 
 class BatchInterrupted(BaseException):
     """Injected interruption used to prove checkpoint durability."""
+
+
+def _verified_image_bytes(path: Path, expected_sha256: str) -> bytes:
+    """Read once and verify the exact buffer a batch stage will process."""
+    raw = path.read_bytes()
+    if sha256_bytes(raw) != expected_sha256:
+        raise PermanentBatchError("source_image_sha256 does not match image_path bytes")
+    return raw
 
 
 @dataclass(frozen=True)
@@ -453,19 +461,18 @@ class E2EStageRunner:
         if stage == "identified":
             from .sarpn import (
                 SarpnHTTPStatusError, SarpnResponseError, SarpnTransportError,
-                infer_native_tiles, load_rgb,
+                infer_native_tiles, load_rgb_bytes,
             )
             try:
-                if sha256_file(image_path) != request.source_image_sha256:
-                    raise PermanentBatchError(
-                        "source_image_sha256 does not match image_path bytes"
-                    )
+                image_bytes = _verified_image_bytes(
+                    image_path, request.source_image_sha256
+                )
                 oracle_path = values.get("oracle_annotations_path")
                 if isinstance(oracle_path, str):
                     from .oracle import load_voc_oracle_observations
                     observations = load_voc_oracle_observations(oracle_path)
                 else:
-                    observations = infer_native_tiles(load_rgb(image_path), settings)
+                    observations = infer_native_tiles(load_rgb_bytes(image_bytes), settings)
             except SarpnHTTPStatusError as exc:
                 if 500 <= exc.status_code < 600:
                     raise TransientBatchError(str(exc)) from exc
@@ -479,9 +486,10 @@ class E2EStageRunner:
         observations = [_observation_from(item) for item in context["identified_observations"]]
         if stage == "regions_and_concerns":
             from .regions import locate_regions
-            from .sarpn import build_sarpn_concern_report, concern_to_dict, load_rgb
+            from .sarpn import build_sarpn_concern_report, concern_to_dict, load_rgb_bytes
             from .tone import estimate_tone
-            rgb = load_rgb(image_path)
+            image_bytes = _verified_image_bytes(image_path, request.source_image_sha256)
+            rgb = load_rgb_bytes(image_bytes)
             boxes = [item.box for item in observations]
             model = values.get("face_landmarker_path")
             region_result = locate_regions(
@@ -510,27 +518,77 @@ class E2EStageRunner:
             }
 
         if stage == "decision_and_recommendation":
-            from src.recommendation.decision import conservative_unreviewed_policy, decide_care
-            from src.recommendation.engine import recommend
+            from src.recommendation.lesion_care import (
+                MvpFixtureAuthorization, authorize_mvp_fixture_inputs,
+                build_care_pathways, build_lesion_findings, decide_exact_label_care,
+                exact_label_therapy_plan, load_lesion_care_policy,
+            )
             from src.recommendation.schema import UserProfile
-            from src.recommendation.therapy import load_therapy_policy, plan_therapy
-            from .e2e import _read_git_state, load_optional_catalog
+            from .e2e import _read_git_state
             from .provenance import build_provenance
             from .sarpn import sanitize_endpoint
 
-            report = _report_from(context["report"])
             profile_raw = values.get("profile", request.semantic_inputs.get("profile", {}))
             if not isinstance(profile_raw, Mapping):
                 raise PermanentBatchError("e2e.profile must be an object")
             profile = UserProfile.from_dict(profile_raw)
-            therapy_path_raw = values.get("therapy_policy_path")
-            therapy_path = Path(therapy_path_raw) if isinstance(therapy_path_raw, str) else None
-            therapy_policy = load_therapy_policy(therapy_path)
-            triage_policy = conservative_unreviewed_policy()
-            decision = decide_care(report, triage_policy)
-            plan = plan_therapy(decision, report, profile, therapy_policy)
-            if decision.therapy_disposition == "active_treatment" and plan.primary is None:
-                decision = replace(decision, therapy_disposition="defer")
+            normalized_profile = json.loads(json.dumps(
+                profile.to_dict(), sort_keys=True,
+            ))
+            root = Path(__file__).resolve().parents[2]
+            policy_raw = values.get("lesion_policy_path")
+            policy_path = Path(policy_raw) if isinstance(policy_raw, str) else (
+                root / "lesion_care_policy.proposed.json"
+            )
+            synthetic = values.get("mvp_synthetic") is True
+            profile_path_raw = values.get("profile_path")
+            fixture_manifest_raw = values.get("mvp_fixture_manifest_path")
+            image_bytes = _verified_image_bytes(image_path, request.source_image_sha256)
+            fixture_authorization = authorize_mvp_fixture_inputs(
+                Path(fixture_manifest_raw) if isinstance(fixture_manifest_raw, str) else None,
+                image_bytes=image_bytes,
+                profile_path=(
+                    Path(profile_path_raw) if isinstance(profile_path_raw, str) else None
+                ),
+                environment=(
+                    str(values["environment"]) if values.get("environment") else None
+                ),
+                dataset_name=str((values.get("dataset") or {}).get("name") or "unknown"),
+                split_proof=(values.get("dataset") or {}).get("split_proof"),
+                normalized_profile=normalized_profile,
+            ) if synthetic else MvpFixtureAuthorization(
+                False, None, ("mvp_synthetic_not_requested",)
+            )
+            policy = load_lesion_care_policy(
+                policy_path,
+                report_path=root / "LESION_CARE_EVIDENCE_REPORT.md",
+                environment=(
+                    str(values["environment"]) if values.get("environment") else None
+                ),
+                input_types=(
+                    ("synthetic_profile", "fixture_image")
+                    if synthetic and fixture_authorization.authorized else ()
+                ),
+                scope_prerequisite_reasons=(
+                    () if not synthetic or fixture_authorization.authorized
+                    else fixture_authorization.reasons
+                ),
+            )
+            updated_observations = [
+                _observation_from(item) for item in context["observations"]
+            ]
+            lesion_findings = build_lesion_findings(
+                updated_observations,
+                evidence_source=("annotation_oracle"
+                                 if isinstance(values.get("oracle_annotations_path"), str)
+                                 else "prediction"),
+            )
+            care_pathways = build_care_pathways(
+                lesion_findings, normalized_profile, policy,
+            )
+            decision = decide_exact_label_care(lesion_findings, care_pathways)
+            decision["policy_version"] = policy.identity
+            plan = exact_label_therapy_plan(care_pathways, policy)
             catalog_path_raw = values.get("catalog_path")
             from src.config import load_config
             runtime_config = load_config()
@@ -542,11 +600,6 @@ class E2EStageRunner:
             drug_raw = values.get("catalog_drug_path")
             drug_path = (Path(drug_raw) if isinstance(drug_raw, str)
                          else Path(runtime_config["paths"]["catalog_drug"]))
-            catalog, catalog_reason = load_optional_catalog(
-                catalog_path, tier2_path, drug_path
-            )
-            if catalog_reason is None and not catalog:
-                catalog_reason = "catalog is empty"
             provenance = build_provenance(
                 {
                     "source_image_sha256": request.source_image_sha256,
@@ -561,7 +614,7 @@ class E2EStageRunner:
                         "name": "unknown", "sample_id": request.sample_id,
                         "split": "unknown", "split_proof": None,
                     }),
-                    "input_profile": profile.to_dict(),
+                    "input_profile": normalized_profile,
                     "effective_config": {
                         "pipeline": (
                             "acnescu-voc-oracle"
@@ -589,15 +642,31 @@ class E2EStageRunner:
                                "classifier": {"state": "not_applicable", "sha256": None}},
                     "catalog": catalog_bundle_identity(catalog_path, tier2_path, drug_path),
                     "ranker": {"state": "none", "sha256": None},
-                    "policies": {
-                        "triage": {"identity": triage_policy.identifier,
-                                   "reviewed": False, "sha256": None},
-                        "therapy": {**file_identity(therapy_path),
-                                    "identity": therapy_policy.identifier,
-                                    "reviewed": therapy_policy.reviewed},
-                    },
+                    "policies": {"lesion_care": {
+                        "identity": policy.identity,
+                        "sha256": policy.sha256,
+                        "report_sha256": policy.report_sha256,
+                        "audit_approved": policy.audit_approved,
+                        "scope_authorized": policy.scope_authorized,
+                        "scope_reasons": list(policy.scope_reasons),
+                        "input_scope": (
+                            "synthetic_fixture"
+                            if synthetic and fixture_authorization.authorized
+                            else "unauthorized"
+                        ),
+                        "fixture_manifest_sha256": (
+                            fixture_authorization.manifest_sha256
+                        ),
+                        "fixture_image_sha256": fixture_authorization.image_sha256,
+                        "fixture_profile_sha256": fixture_authorization.profile_sha256,
+                        "fixture_normalized_profile_sha256": (
+                            fixture_authorization.normalized_profile_sha256
+                        ),
+                        "source_manifest_sha256": policy.manifest_sha256,
+                    }},
                 },
                 clock=lambda: datetime.now(timezone.utc), git_reader=_read_git_state,
+                schema_version="4",
             )
             analysis = {
                 **provenance,
@@ -609,35 +678,27 @@ class E2EStageRunner:
                              ),
                              "endpoint": sanitize_endpoint(settings.endpoint_url)},
                 "detections": list(context["observations"]),
+                "lesion_findings": lesion_findings,
+                "care_pathways": care_pathways,
                 "concerns": context["report"]["concerns"],
-                "clear_skin": report.clear_skin,
+                "clear_skin": context["report"]["clear_skin"],
                 "skin_tone": context["tone"],
                 "region_mapping": context["region_mapping"],
                 "safety_observations": context["safety_observations"],
-                "decision": decision.to_dict(), "therapy_plan": plan.to_dict(),
+                "decision": decision, "therapy_plan": plan,
                 "recommendation_status": "unavailable",
+                "recommendation_reason": "recsys_batch_selector_not_configured",
             }
-            routine = None
-            if catalog_reason:
-                analysis["recommendation_reason"] = catalog_reason
-            else:
-                recommendation = recommend(
-                    report, catalog, profile, triage_policy=triage_policy,
-                    therapy_policy=therapy_policy,
-                    collect_eligibility_details=bool(values.get("eligibility_debug", False)),
-                )
-                from .e2e import recommendation_artifacts
-                fields, routine, debug = recommendation_artifacts(recommendation, provenance)
-                analysis.update(fields)
-            return {"analysis": analysis, "routine": routine,
-                    "eligibility_debug": debug if not catalog_reason else None}
+            return {"analysis": analysis, "routine": None, "eligibility_debug": None}
 
         if stage == "rendered":
             from .regions import locate_regions
             from .sarpn import (
-                draw_detection_overlay, draw_lesion_sheet, draw_region_overlay, load_rgb,
+                draw_detection_overlay, draw_lesion_sheet, draw_region_overlay,
+                load_rgb_bytes,
             )
-            rgb = load_rgb(image_path)
+            image_bytes = _verified_image_bytes(image_path, request.source_image_sha256)
+            rgb = load_rgb_bytes(image_bytes)
             observations = [_observation_from(item) for item in context["observations"]]
             model = values.get("face_landmarker_path")
             region_result = locate_regions(

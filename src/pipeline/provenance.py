@@ -23,6 +23,10 @@ def sha256_file(path: str | Path) -> str:
     return digest.hexdigest()
 
 
+def sha256_bytes(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
+
+
 def canonical_json_bytes(value: object) -> bytes:
     return json.dumps(
         value,
@@ -121,11 +125,12 @@ def build_provenance(
     *,
     clock: Callable[[], object],
     git_reader: Callable[[], object],
+    schema_version: str = "3",
 ) -> dict[str, object]:
     """Build one envelope shared verbatim by analysis and routine artifacts."""
     code = _git(git_reader)
     normalized = dict(inputs)
-    normalized["schema_version"] = "3"
+    normalized["schema_version"] = schema_version
     normalized["code"] = code
     if "effective_config" in normalized:
         normalized["effective_config"] = sanitized_config(normalized["effective_config"])
@@ -150,7 +155,7 @@ def build_provenance(
         blockers.append(gate)
 
     envelope: dict[str, object] = {
-        "schema_version": "3",
+        "schema_version": schema_version,
         "generated_at": _now(clock),
         "source_image_sha256": semantic_inputs.get("source_image_sha256"),
         "dataset": semantic_inputs.get("dataset", {}),
@@ -173,7 +178,8 @@ def validate_artifact_freshness(
     current_inputs: Mapping[str, object] | None = None,
 ) -> list[str]:
     reasons: list[str] = []
-    if str(artifact.get("schema_version")) != "3":
+    artifact_schema = str(artifact.get("schema_version"))
+    if artifact_schema not in {"3", "4"}:
         return ["legacy_schema_not_comparable"]
     replay_key = artifact.get("replay_key")
     semantic_inputs = artifact.get("semantic_inputs")
@@ -204,7 +210,7 @@ def validate_artifact_freshness(
             reasons.append("envelope_config_sha256_mismatch")
     if current_inputs is not None:
         current = dict(current_inputs)
-        current.setdefault("schema_version", "3")
+        current.setdefault("schema_version", artifact_schema)
         if isinstance(semantic_inputs, Mapping) and "code" in semantic_inputs:
             current.setdefault("code", semantic_inputs["code"])
         if replay_key != compute_replay_key(current):

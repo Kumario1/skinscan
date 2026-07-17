@@ -1,0 +1,24 @@
+{
+  "schema_version": "skinscan-mvp-fixtures-1",
+  "authorized_environments": ["test"],
+  "dataset_names": ["fixture", "synthetic"],
+  "split_proofs": ["synthetic-test-fixture", "fixture"],
+  "image_sha256s": [
+    "15ac6670480316bb7f7ae83d3846ffcdc0a4c952a526186000283c378f32a7b0",
+    "3641d770996c5c09358956e0da15f4e03bb3b67099db9227fa6faff7dfac9e2b"
+  ],
+  "profile_authorizations": [
+    {
+      "raw_sha256": "a362655a68cda891c4841185801906961e22e198936ef3c1de9d55c2bc104a9e",
+      "normalized_sha256": "9a7b21cd69a0254a9b372473079f4ae19a7f2f0c30afe0e21890e821ddcfff4c"
+    },
+    {
+      "raw_sha256": "98148a01ad8da87339e01977d539813926d0d7b2b96f21d34ea1c1bbf72bbfc7",
+      "normalized_sha256": "196e888934136051a1beb499a6d7babd30e51bfcb4dba56dc82e7a7a9a1fe658"
+    },
+    {
+      "raw_sha256": "cf1ce100f13f85d89c75ffbfdfe048db7dbf9134270a72c25ac76ddce0ddae02",
+      "normalized_sha256": "ab380708a4267edc72df828d81330bea4d2122061013d98f16f7eea91a6c2e09"
+    }
+  ]
+}

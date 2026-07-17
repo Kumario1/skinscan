@@ -145,7 +145,7 @@ def test_concern_signal_falls_back_to_pooled_review_evidence():
     assert "4.4★ across 100 pooled reviews" in score.evidence
 
 
-def test_concern_signal_uses_general_acne_before_pooled_review_evidence():
+def test_exact_label_signal_does_not_fall_back_to_general_acne():
     provider = ConcernEfficacySignal(
         {"products": {"p1": {
             "acne_comedonal": {"all": {"n": 0}},
@@ -171,9 +171,8 @@ def test_concern_signal_uses_general_acne_before_pooled_review_evidence():
         category_prices={},
     ))
 
-    assert score.details["matches"][0]["ladder"] == "acne_general"
-    assert score.details["matches"][0]["cell_concern"] == "acne_general"
-    assert "80% of 10 reviewers" in score.evidence
+    assert score.details["matches"][0]["ladder"] == "pooled"
+    assert "4.4★ across 100 pooled reviews" in score.evidence
 
 
 def test_loaded_concern_signal_receives_pooled_review_store(tmp_path):

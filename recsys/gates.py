@@ -14,6 +14,7 @@ from .catalog import CatalogProduct
 from .contracts import Profile
 from .inci import allergy_matches, contains_retinoid
 from .knowledge import Knowledge
+from .signals import TargetLesion
 
 
 @dataclass(frozen=True)
@@ -26,13 +27,15 @@ class Veto:
         return {"product_id": self.product_id, "slot": self.slot, "reason": self.reason}
 
 
-# Compatibility export from the superseded hybrid engine. D-029 makes every
-# missing required fact a hard eligibility failure, so nothing is soft.
+# Compatibility export from the superseded hybrid engine. D-036 handles
+# missing non-safety facts by ranking (verification_status), not by softening
+# reasons — a reason emitted here is always a hard veto.
 SOFT_REASON_PREFIXES = frozenset()
 ALLOWED_FORMATS = {
     "cleanser": frozenset({"cleanser", "gel", "foam", "cream", "bar", "wash"}),
     "treatment": frozenset({"gel", "cream", "lotion", "serum", "suspension", "solution"}),
     "serum": frozenset({"serum", "gel", "solution", "suspension"}),
+    "scar_care": frozenset({"silicone_sheet", "silicone_gel"}),
     "moisturizer": frozenset({"cream", "lotion", "gel", "balm", "emulsion"}),
     "spf": frozenset({"sunscreen", "cream", "lotion", "gel", "fluid", "stick"}),
 }
@@ -71,7 +74,11 @@ def _normalize_condition(value: str) -> str:
 
 
 def profile_gate_reasons(
-    product: CatalogProduct, slot: str, profile: Profile, knowledge: Knowledge
+    product: CatalogProduct,
+    slot: str,
+    profile: Profile,
+    knowledge: Knowledge,
+    targets: tuple[TargetLesion, ...] = (),
 ) -> list[str]:
     reasons: list[str] = []
     actives = set(product.actives)
@@ -88,9 +95,10 @@ def profile_gate_reasons(
         reasons.append("intended_area_not_verified:face")
     if expected_role not in product.routine_roles:
         reasons.append(f"role_not_verified:{expected_role}")
-    if product.format is None:
-        reasons.append("format_unverified")
-    elif product.format not in ALLOWED_FORMATS.get(slot, frozenset()):
+    # D-036: an unknown format is a missing non-safety fact — it lowers
+    # verification_status and ranking, it does not remove the product. Only a
+    # KNOWN format that conflicts with the role stays a hard veto.
+    if product.format is not None and product.format not in ALLOWED_FORMATS.get(slot, frozenset()):
         reasons.append(f"format_not_allowed_for_role:{product.format}")
     expected_exposure = "rinse_off" if slot == "cleanser" else "leave_on"
     if product.exposure != expected_exposure:
@@ -124,11 +132,27 @@ def profile_gate_reasons(
     for duplicate in sorted(actives & set(profile.current_actives)):
         reasons.append(f"duplicates_current_active:{duplicate}")
     if slot in ("cleanser", "moisturizer", "spf"):
-        if not product.contraindications_verified and not product.daily_support_verified:
-            reasons.append("contraindications_unverified")
+        # D-036: unverified contraindications on a support role lower
+        # verification_status, never eligibility — the fact is structurally
+        # overlay-only, so gating on it reduced the pool to verified products.
+        # Declared contraindications still veto against the profile above, and
+        # treatments below still require explicit verified evidence.
         for active in sorted(actives & knowledge.treatment_actives):
             reasons.append(f"treatment_active_in_support_role:{active}")
     if slot == "treatment":
+        minimum_ages = {
+            spec.get("minimum_age_years")
+            for target in targets if "treatment" in target.required_roles
+            for spec in target.target_specs
+            if spec.get("active_id") in actives
+            and isinstance(spec.get("minimum_age_years"), int)
+        }
+        if minimum_ages:
+            minimum_age = max(minimum_ages)
+            if profile.age_years is None:
+                reasons.append("treatment_age_unknown")
+            elif profile.age_years < minimum_age:
+                reasons.append(f"treatment_age_below_minimum:{minimum_age}")
         if not product.contraindications_verified:
             reasons.append("contraindications_unverified")
         verified_drug_actives = {
@@ -139,6 +163,17 @@ def profile_gate_reasons(
             reasons.append("treatment_active_unverified")
         if product.format in ("mask", "peel", "scrub"):
             reasons.append(f"treatment_format_not_daily_leave_on:{product.format}")
+    if slot == "scar_care":
+        if "scar_care" not in product.evidence_roles:
+            reasons.append("scar_care_role_unverified")
+        if "silicone_scar_care" not in actives:
+            reasons.append("silicone_scar_formulation_unverified")
+        if not product.contraindications_verified:
+            reasons.append("scar_care_warnings_unverified")
+        if profile.wound_closed is not True:
+            reasons.append("closed_wound_not_confirmed")
+        if profile.scar_diagnosis_confirmed_by_clinician is not True:
+            reasons.append("raised_scar_diagnosis_not_confirmed")
     if slot == "spf":
         if product.spf is None or product.spf < knowledge.min_spf:
             reasons.append("spf_below_30_or_unknown")
@@ -159,6 +194,7 @@ def apply_profile_gates(
     profile: Profile,
     knowledge: Knowledge,
     strict: bool = True,
+    targets: tuple[TargetLesion, ...] = (),
 ) -> tuple[dict[str, list[CatalogProduct]], list[Veto], dict[tuple[str, str], list[str]]]:
     """Fail-closed eligibility. `strict` remains for source compatibility;
     D-029 permits no mode that relaxes required evidence."""
@@ -168,7 +204,9 @@ def apply_profile_gates(
     for slot, products in candidates_by_slot.items():
         kept[slot] = []
         for product in products:
-            reasons = profile_gate_reasons(product, slot, profile, knowledge)
+            reasons = profile_gate_reasons(
+                product, slot, profile, knowledge, targets=targets
+            )
             if reasons:
                 vetoes.extend(Veto(product.product_id, slot, r) for r in reasons)
             else:

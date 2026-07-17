@@ -1,0 +1,146 @@
+{
+  "products": [
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:38:43.771765Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://lgbeauty.com/products/the-true-cream-aqua-bomb",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "cream",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "moisturizer"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:32:25Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "9361d83914c604958187529ae517424cff3520465fc81561a43355867d2b45d6",
+          "source_url": "https://lgbeauty.com/products/the-true-cream-aqua-bomb",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P394639"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:38:43.771765Z",
+          "facts": {
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "exposure": "rinse_off",
+            "format": "balm",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:30:57Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "0e06eba0fc574cbd65822f743db185e67794cdaf552be170c2a8fc1d49690394",
+          "source_url": "https://www.clinique.com/product/20011/6424/skincare/makeup-removers/take-the-day-off-cleansing-balm",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P126301"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:38:43.771765Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://www.theinkeylist.com/products/salicylic-acid-cleanser",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "rinse_off",
+            "format": "cleanser",
+            "intended_areas": [
+              "face",
+              "body"
+            ],
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:31:20Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "4522b19ed3cb3d78d941c079ea1ddb154db1e6b6efcb6108dafceb412207219a",
+          "source_url": "https://www.theinkeylist.com/products/salicylic-acid-cleanser",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P443833"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:38:43.771765Z",
+          "facts": {
+            "cadence": "per_label",
+            "cadence_source": "https://supergoop.com/products/glow-stick-sunscreen",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "exposure": "leave_on",
+            "format": "stick",
+            "routine_roles": [
+              "sunscreen"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:31:03Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "b4af36232ee8876652a70c15be165ec6ce69a7d7b302e604425ba3e2ce8cf1ad",
+          "source_url": "https://supergoop.com/products/glow-stick-sunscreen",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P429953"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:38:43.771765Z",
+          "facts": {
+            "cadence": "per_label",
+            "cadence_source": "https://supergoop.com/products/mineral-setting-powder",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "exposure": "leave_on",
+            "format": "powder",
+            "intended_areas": [
+              "face",
+              "neck"
+            ],
+            "routine_roles": [
+              "sunscreen"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:31:23Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "92befeb7eb991b2b2815da7803360b18e291330b8f1d9556bb1f820f1acef232",
+          "source_url": "https://supergoop.com/products/mineral-setting-powder",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P467976"
+    }
+  ],
+  "schema_version": "2"
+}

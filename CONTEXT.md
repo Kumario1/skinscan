@@ -6,11 +6,23 @@ here.
 
 ## Terms
 
-**concern** — A cosmetic skin issue the system reports on, never a medical
+**concern** — A deprecated grouped cosmetic display summary, never a medical
 condition (D-002). Closed vocabulary: `acne_comedonal`, `acne_inflammatory`,
 `acne_cystic`, `acne_scarring`, `hyperpigmentation`, `dryness`
-(`docs/CONCERN_SCHEMA.md`). The CV
-pipeline currently produces only the acne concerns.
+(`docs/CONCERN_SCHEMA.md`). Schema 4 keeps it for one compatibility release,
+but care and product logic may not read it (D-038).
+
+**lesion finding** — One schema-4 entry for an exact detector label: count,
+regions, mean/max detector confidence, and evidence source. The closed ten-label
+vocabulary is `closed_comedo`, `open_comedo`, `papule`, `pustule`, `nodule`,
+`atrophic_scar`, `hypertrophic_scar`, `melasma`, `nevus`, and `other`.
+Confidence describes detector evidence quality, never diagnosis probability.
+
+**care pathway** — The product-independent policy result for one exact lesion
+finding. It carries retail active specifications and roles, separately
+channelled clinician options, unknown intake, reason/source IDs, and one of
+`not_detected`, `retail_eligible`, `clinician_only`, `deferred`,
+`monitoring_only`, or `unsupported` (D-038).
 
 **region** — A named area of the face a concern is localized to. Closed
 vocabulary: `forehead`, `nose`, `left_cheek`, `right_cheek`, `chin_jaw`,
@@ -22,11 +34,12 @@ not proof that products are therapeutically interchangeable; role, exposure,
 strength, and source must also match (D-006/D-029). The closed list lives in
 `docs/CATALOG_SCHEMA.md`.
 
-**ConcernReport** — The fixed JSON contract between the CV side (Stage 2) and the
+**ConcernReport** — The legacy grouped contract between the CV side and the
 decision side: one aggregated entry per concern with a `regions` list,
 severity, lesion count, raw score aggregate, and evidence, plus clear-skin and
-low-light meta flags (D-008,
-`docs/CONCERN_SCHEMA.md`). Neither side reaches around it.
+low-light meta flags (D-008, `docs/CONCERN_SCHEMA.md`). Schema 4 builds exact
+lesion findings directly from retained detections; ConcernReport remains a
+display/compatibility projection.
 
 **bridge** — The step that turns raw per-lesion model output into a ConcernReport;
 the join from the CV side to the rules side.
@@ -40,8 +53,10 @@ stays defined only as the dead end it is (README §8).
 **profile** — The exact, normalized safety intake used for an inference
 (D-021/D-029): unknown-capable skin/tone/pregnancy, age, allergies,
 sensitivity conditions, current actives/medications, treatment history,
-duration, pain/deep-lesion report, prior scarring, and optional budget. Unknown
-is data and is never collapsed to a favorable default.
+duration, pain/deep-lesion report, prior scarring, new/changing spot and
+separate symptom answers, acne-control state, scar duration/wound/confirmation
+state, pigment onset context, and optional budget. Unknown is data and is never
+collapsed to a favorable default.
 
 **tone bucket** — A coarse skin-tone band — `light`, `medium`, `deep`, or
 `unknown` — self-reported or estimated from the photo via ITA, used to
@@ -58,19 +73,21 @@ evidence and tolerability precede evidence completeness/budget; pooled
 `StatsRanker` review/popularity data is only a final deterministic tie-break.
 It never admits, repairs, schedules, or overrides safety.
 
-**care decision** — The concern-evidence result whose independent axes are
+**care decision** — The complete exact-label result whose independent axes are
 `triage_level`/referral reasons and `therapy_disposition`. A review referral
 does not inherently suppress eligible treatment. Raw detector confidence is
 not a calibrated probability (D-029).
 
-**therapy plan** — Product-independent intent from a reviewed policy: primary
-therapy class/strength/exposure/cadence, alternatives, support roles, course
-and review timing, or explicit deferral reasons. Repository defaults are
-unreviewed and therefore cannot fabricate a primary therapy.
+**therapy plan** — Product-independent intent. Schema 4 preserves plural exact
+lesion types and clinician options while retail active specifications remain in
+each care pathway; its legacy single `primary` is always null. Schema 3 keeps
+the reviewed single-primary compatibility shape.
 
 **routine role** — A closed functional position (`cleanser`, `treatment`,
-`moisturizer`, `sunscreen`) that a verified product may occupy. Category or an
-ingredient-list match does not prove a role.
+`moisturizer`, `sunscreen`/recsys `spf`, and dedicated `scar_care`) that an
+eligible product may occupy. Category or an ingredient-list match does not
+prove lesion coverage; exact active, exposure, role, and safety facts must also
+match.
 
 **eligibility** — A hard, role-specific veto over area, role, format, exposure,
 therapy/strength/label source, sunscreen claims, profile, and every carried
@@ -95,10 +112,10 @@ never selection or safety.
 reviews (count, average rating, % recommended) that feed both the report's
 per-product "why" line and a ranking baseline (D-015 / D-022).
 
-**concern-stats** — Per-product × concern efficacy aggregates mined from
+**concern-stats** — Legacy per-product × grouped-concern efficacy aggregates mined from
 review text via one-time LLM labeling (helped/worsened counts, smoothed help
-rate; D-023). Feeds concern-conditioned ranking (gates P2/P3 pending) and the
-report's per-concern evidence lines.
+rate; D-023). They may provide pooled ranking evidence, but cannot create an
+exact-label target or active match.
 
 ## Artifact map
 

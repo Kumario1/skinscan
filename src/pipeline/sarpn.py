@@ -167,7 +167,12 @@ class SarpnResponseError(SarpnAnalysisError):
 
 def load_rgb(path: str | Path) -> np.ndarray:
     """Load an image after EXIF orientation correction and convert it to RGB."""
-    with Image.open(path) as image:
+    return load_rgb_bytes(Path(path).read_bytes())
+
+
+def load_rgb_bytes(raw: bytes) -> np.ndarray:
+    """Decode one immutable byte buffer after EXIF orientation correction."""
+    with Image.open(BytesIO(raw)) as image:
         return np.asarray(ImageOps.exif_transpose(image).convert("RGB"))
 
 

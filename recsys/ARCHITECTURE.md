@@ -2,8 +2,9 @@
 
 Standalone rebuild of the SkinScan recommendation half. Design decisions:
 
-- **Coupling**: three file contracts only — reads `analysis.json` (schema 3) +
-  `profile.json`, writes `recommendations.json`. The **engine** imports nothing
+- **Coupling**: three file contracts only — reads `analysis.json` schema 4
+  (schema 3 is accepted for one migration release) + `profile.json`, and writes
+  `recommendations.json`. The **engine** imports nothing
   from `src/` — all 15 top-level modules, verified. The **tools** are not so
   clean: `tools/run_full_concern_pass.py` imports `src.config` and
   `src.recommendation.concern_labels`, reaching into three of its private
@@ -17,8 +18,11 @@ Standalone rebuild of the SkinScan recommendation half. Design decisions:
   versioned store, discovered through a registry. Signals are extensible:
   adding one = a build tool + a store file + a registry entry + one provider
   class in `signals.py`. Zero edits to pipeline/gates/composer.
-- **LLM/AI only in batch tools** (`recsys/tools/`), cached and versioned —
-  never at inference (enforced by `tests/test_no_network.py`).
+- **The default engine never calls an LLM.** Network code remains confined to
+  `recsys/tools/`, and `tests/test_no_network.py` enforces that boundary. D-037
+  adds one opt-in inference experiment there: Azure may choose IDs only from
+  the post-gate catalog pool, after which the engine composes and validates the
+  exact selection. Batch-derived LLM signals remain cached and versioned.
 - **Safety is structural, never score-driven**: hard vetoes with deterministic
   reason codes, session rules in the composer, D-002 cosmetic framing and
   doctor-referral passthrough in every output.
@@ -36,9 +40,10 @@ Standalone rebuild of the SkinScan recommendation half. Design decisions:
   user answers ──► profile.json ───────────────┘
 ```
 
-`analysis.json` carries the observed concerns, care decision, and reviewed
-therapy plan. recsys never sees the photo, never invents a treatment from a
-concern, never runs a model, and never calls the network. It answers one
+`analysis.json` carries all ten exact-label findings and independent care
+pathways. Grouped `concerns` are deprecated display data and schema-4 parsing
+deliberately ignores them. recsys never sees the photo, never invents a target
+from a grouped concern, and never calls the network in its deterministic path. It answers one
 question: **which products exactly implement the approved plan and are safe for
 this person?**
 
@@ -63,6 +68,13 @@ load + validate plan ─► generate_candidates ─► apply_gates ─►
 list prescriptions & drop them ─► score ─► compose ─► explain ─► emit
 ```
 
+The optional D-037 path inserts `Azure ID selection` between score and compose.
+It does not change candidate generation, hard gates, therapy intent, session
+rules, or validation, and a selector failure emits no routine rather than the
+deterministic winner. Its output schema is intentionally locked to cleanser,
+treatment, serum, moisturizer, and SPF; an upstream-required role outside that
+set makes the experiment unavailable before any network call.
+
 ## What each file does
 
 **The engine** (pure, deterministic, no network — enforced by
@@ -73,9 +85,9 @@ list prescriptions & drop them ─► score ─► compose ─► explain ─►
 | `contracts.py` | The I/O boundary. Parses `analysis.json`/`profile.json`, validates the care decision and therapy-plan shape, preserves missing intake fields as unknown, resolves profile precedence (file > analysis > unknown), and raises `contract_violation:<field>`. |
 | `catalog.py` | Product identity only — no scores. Enforces the INCI contract: `actives` must parse out of the ingredient list, or the row is rejected. Holds the one exception, for label-stated drug actives (see Prescriptions). |
 | `inci.py` | The deterministic ingredient parser. Turns an INCI string into canonical actives + comedogenic flags. Every safety gate keys off this, never off an LLM. |
-| `knowledge.py` | Loads the hand-authored tables in `data/knowledge/` — which actives target which concern, which are retinoids, which conflict, the five archetypes. |
-| `pipeline.py` | The orchestrator, and the only place the order above lives. It treats the reviewed therapy plan as the sole treatment intent, preserves that upstream intent when catalog fulfillment fails, reports fulfillment separately, retains a support-only regimen for deferred or unfillable treatment, and emits at most one selected regimen. It stamps the output with the sha256 of every input and data file it used. `emit` is `sort_keys=True` + atomic write; `--generated-at` pins the only non-deterministic field. |
-| `candidates.py` | Per-slot shortlist. Carrier slots begin with the whole catalog category. A treatment is admitted only when its verified active, strength, exposure, and cadence exactly match the upstream primary therapy plan; detected concerns never manufacture treatment intent. |
+| `knowledge.py` | Loads hand-authored tables in `data/knowledge/`, including the closed ten-label active map, retinoids, conflicts, and archetypes. |
+| `pipeline.py` | The sole SKU selector. It targets only `retail_eligible` exact-label pathways, reports every detected label in `lesion_coverage`, deduplicates products across labels, and emits at most one selected regimen. It stamps the output with the sha256 of every input and data file it used. `emit` is `sort_keys=True` + atomic write; `--generated-at` pins the only non-deterministic field. |
+| `candidates.py` | Per-slot shortlist. Treatments require an exact-label active and matching Drug Facts. Melasma SPF requires deterministic iron oxide. Hypertrophic-scar coverage requires the dedicated `scar_care` role, exact silicone evidence, and scar-specific safety intake. |
 | `gates.py` | Hard safety and role vetoes with deterministic reason codes. Scores never participate and never override a veto. D-035 permits approved `daily_support` evidence for support roles while leaving missing contraindications visible in verification status; treatments still require explicit contraindication evidence. |
 | `signals.py` | The pluggable scoring inputs. Each provider returns `SignalScore(value 0..1, evidence, details)` or `None` — and `None` means neutral 0.5 plus an uncertainty note, never a hidden penalty. Six weighted signals: concern fit, concern efficacy, ingredient analysis, review quality, popularity, price value. Adding one touches this file only. |
 | `scoring.py` | Weighted mean, weights per archetype. Every final score is decomposable back into named signals — tested, and visible in the output. |
@@ -85,8 +97,7 @@ list prescriptions & drop them ─► score ─► compose ─► explain ─►
 | `evaluate.py` | Golden-file harness. Pins a full document so any behaviour change shows up as a diff. |
 | `__main__.py` | The CLI. |
 
-**The tools** (`recsys/tools/` — the *only* place network/LLM code is allowed;
-all batch, cached, versioned, never at inference):
+**The tools** (`recsys/tools/` — the only place network/LLM code is allowed):
 
 | File | Does |
 |---|---|
@@ -96,6 +107,7 @@ all batch, cached, versioned, never at inference):
 | `build_ingredient_analysis.py` | LLM batch over INCI → irritancy/comedogenic store. |
 | `build_concern_efficacy.py` | Mined review labels → "helped X% of n reviewers with *this* concern". |
 | `run_full_concern_pass.py` | The budget-capped Azure pass that produces those labels. |
+| `llm_recommend.py` | Opt-in Azure catalog selector. Sends compact exact-lesion context plus every post-gate cosmetic candidate, returns product IDs only, uses a guarded HMAC cache, and emits no routine on failure. Grouped concerns are never included. |
 | `import_verification.py` | Copies **already-approved** assertions in. Never approves anything. |
 | `import_drug_catalog.py` | DailyMed drug rows → a recsys drug catalog (kept separate — see below). |
 | `common.py` | Deterministic JSON writing + the signal registry. |
@@ -191,10 +203,16 @@ modes), `inputs`
 (catalog/`drug_catalog`/signals/knowledge/verification sha256s), `framing`
 (D-002), `profile_used` (including `unknown_fields`), the preserved upstream
 `care_decision` and `therapy_plan`, `treatment_fulfillment`, `triage`, `status` (`ok` | `unavailable`),
-`target_concerns`, `selected_regimen`, `selected_products`, `alternatives`,
+`target_lesions`, `care_pathways`, `lesion_coverage`, `selected_regimen`, `selected_products`, `alternatives`,
 `prescription_options[]`, `veto_log`, and `warnings`. `routines[]` remains as a
-compatibility view containing zero or one selected regimen. Each step includes
-explicit `verification_status`, product identity, usage, and decomposable `why` data.
+compatibility view containing zero or one selected regimen;
+`unselected_archetypes[]` records other valid candidates without publishing
+them as routines. Each step includes
+explicit `verification_status`, product identity, usage, and decomposable `why`
+data. Optional selector steps additionally include canonical actives and full
+catalog INCI, and those runs include `selection` provenance
+(provider/model/deployment/prompt, cache status, candidate count, latency, and
+token/cost usage).
 
 ## Verifying it
 
@@ -206,6 +224,12 @@ python -m src.pipeline.e2e --image <photo.jpg> --out runs/e2e/<name> \
 python tools/verify_e2e.py --data-root recsys/data/derived
 python tools/verify_e2e.py --data-root recsys/data
 python tools/render_routine_html.py <recommendations.json>   # readable page
+
+# Optional experiment; requires Azure variables plus SKINSCAN_CACHE_SECRET.
+# Set AZURE_OPENAI_MODEL_IDENTITY to the immutable model/version behind an alias.
+python -m recsys.tools.llm_recommend \
+  --analysis <analysis.json> --profile <profile.json> \
+  --data-root recsys/data/derived --out llm-recommendations.json
 ```
 
 The effective eligibility mode is D-035 `hybrid`. `strict` remains accepted so

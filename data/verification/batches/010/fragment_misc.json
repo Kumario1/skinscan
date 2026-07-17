@@ -1,0 +1,25 @@
+{
+  "products": [],
+  "rejects": [
+    {
+      "product_id": "P393718",
+      "reason": "no noncomedogenic claim on manufacturer page (https://sundayriley.com/products/luna-sleeping-night-oil states 'Apply at night' but never claims non-comedogenic / won't clog pores; moisturizer target cannot clear quarantine)"
+    },
+    {
+      "product_id": "P456398",
+      "reason": "discontinued on manufacturer site: shiseido.com SPF 50+ lotion product pages (0730852162365, 0730852156777) return Page Not Found and 9990000000200 redirects to the sunscreen category, which lists only SPF 60+ lotion replacements; DailyMed SPL 7a98171f-bf21-40d4-bc78-883aa0b0c438 is still active but no manufacturer page exists to source routine_roles/cadence/comedogenic_claim"
+    },
+    {
+      "product_id": "P416563",
+      "reason": "no noncomedogenic claim on manufacturer page; also name mismatch: biossance.com sells 'Squalane + Vitamin C Rose Oil' (https://www.biossance.com/p/squalane-plus-vitamin-c-rose-oil/12766621/), not the catalog's 'Squalane + Vitamin C Rose Firming Oil' variant, and the old /products/squalane-vitamin-c-rose-firming-oil slug 404s"
+    },
+    {
+      "product_id": "P394624",
+      "reason": "no noncomedogenic claim on manufacturer page (belifusa.com 301s to lgbeauty.com; https://lgbeauty.com/products/the-true-cream-moisture-bomb has 50 ml variant and 'Can be used daily, morning and night' but never claims non-comedogenic / won't clog pores; moisturizer target cannot clear quarantine)"
+    },
+    {
+      "product_id": "P416815",
+      "reason": "manufacturer page unavailable: https://olehenriksen.com/products/find-your-balance-oil-control-cleanser returns 404 and the product is absent from olehenriksen.com sitemap_products_1.xml (product line appears discontinued)"
+    }
+  ]
+}

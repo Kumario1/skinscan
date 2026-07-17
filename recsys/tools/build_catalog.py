@@ -26,7 +26,20 @@ from ..contracts import sha256_file
 from ..inci import parse_ingredients
 from .common import DEFAULT_RAW_DIR, write_json
 
-BUILDER_VERSION = "recsys.tools.build_catalog@1"
+BUILDER_VERSION = "recsys.tools.build_catalog@2"
+
+# D-036: role facts derived from the dump's own taxonomy so the whole catalog
+# can enter eligibility. The marker string records provenance — a verification
+# overlay fact (with a real source URL) replaces these on import, and scoring
+# never counts a derived fact as evidence.
+DERIVED_SOURCE = "derived:kaggle-sephora-category"
+CATEGORY_CADENCE = {
+    "cleanser": "am_pm", "moisturizer": "am_pm", "spf": "am",
+    "treatment": "per_label", "serum": "per_label",
+}
+# The taxonomy is facial skincare throughout, except the one category that
+# names another body area — stating "neck" lets the face gate veto it honestly.
+NON_FACE_TERTIARY = {"Decollete & Neck Creams": "neck"}
 
 SEPHORA_CATEGORY_MAP: dict[tuple[str, str], str] = {
     ("Cleansers", "Face Wash & Cleansers"): "cleanser",
@@ -99,7 +112,13 @@ def row_to_product(raw: dict) -> dict | None:
     name = (raw.get("product_name") or "").strip()
     inci = _inci_tokens(raw.get("ingredients") or "")
     actives, _comedogenic = parse_ingredients(raw.get("ingredients") or "")
+    # Catalog schema 1 signal stores are hash-bound to files built before the
+    # iron-oxide parser existed. Keep that additive fact runtime-derived until
+    # the next catalog schema migration so a rebuild does not strand all stores.
+    actives = [active for active in actives if active != "iron_oxides"]
     spf = _parse_spf(name)
+    tertiary = (raw.get("tertiary_category") or "").strip()
+    area = NON_FACE_TERTIARY.get(tertiary, "face")
     return {
         "product_id": product_id,
         "name": name,
@@ -115,6 +134,11 @@ def row_to_product(raw: dict) -> dict | None:
             json.dumps(inci, ensure_ascii=False).encode("utf-8")
         ).hexdigest(),
         "actives": actives,
+        "routine_roles": ["sunscreen" if category == "spf" else category],
+        "exposure": "rinse_off" if category == "cleanser" else "leave_on",
+        "intended_areas": [area],
+        "cadence": CATEGORY_CADENCE[category],
+        "cadence_source": DERIVED_SOURCE,
     }
 
 

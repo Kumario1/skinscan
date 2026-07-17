@@ -1,4 +1,4 @@
-"""Honest v3 cohort preflight and deterministic release metrics."""
+"""Honest schema-3/4 cohort preflight and deterministic release metrics."""
 from __future__ import annotations
 
 import argparse
@@ -307,6 +307,12 @@ def evaluate_release(
     attempt_total = completed = failed = 0
     per_image_attempts: list[dict[str, object]] = []
     counterfactual_samples: list[dict[str, object]] = []
+    per_label_coverage: dict[str, Counter[str]] = {}
+    per_label_detected: Counter[str] = Counter()
+    per_label_referrals: Counter[str] = Counter()
+    per_label_safety_deferrals: dict[str, Counter[str]] = {}
+    verification_distribution: Counter[str] = Counter()
+    safety_deferrals: Counter[str] = Counter()
 
     for sample_id, analysis, routine, row in samples:
         prediction = _decision(analysis)
@@ -386,6 +392,57 @@ def evaluate_release(
             therapy_target_delivered += delivered
         for role, count in _selected_counts(routine).items():
             selected_counts.setdefault(role, []).append(count)
+        if isinstance(routine, Mapping):
+            for coverage in routine.get("lesion_coverage", []) or []:
+                if isinstance(coverage, Mapping):
+                    label, outcome = coverage.get("lesion_type"), coverage.get("status")
+                    if isinstance(label, str) and isinstance(outcome, str):
+                        per_label_coverage.setdefault(label, Counter())[outcome] += 1
+            selected_regimen = routine.get("selected_regimen") or {}
+            if isinstance(selected_regimen, Mapping):
+                for session in ("am", "pm", "per_label"):
+                    for step in selected_regimen.get(session, []) or []:
+                        if isinstance(step, Mapping):
+                            verification_distribution[str(
+                                step.get("verification_status") or "unverified"
+                            )] += 1
+        detected_labels = {
+            str(finding.get("lesion_type"))
+            for finding in analysis.get("lesion_findings", []) or []
+            if isinstance(finding, Mapping) and int(finding.get("count") or 0) > 0
+        }
+        for label in detected_labels:
+            per_label_detected[label] += 1
+        referral_reasons = {str(reason) for reason in prediction.get("referral_reasons", [])}
+        referral_labels: set[str] = set()
+        for reason in referral_reasons:
+            if reason.startswith("nodule_"):
+                referral_labels.add("nodule")
+            elif reason.startswith("scar_"):
+                referral_labels.update(detected_labels & {"atrophic_scar", "hypertrophic_scar"})
+            elif reason.startswith("pigment_"):
+                referral_labels.add("melasma")
+            elif reason.startswith("nevus_"):
+                referral_labels.add("nevus")
+            elif reason.startswith("unsupported_"):
+                referral_labels.add("other")
+            else:
+                referral_labels.update(label for label in detected_labels if label in reason)
+        for label in referral_labels & detected_labels:
+            per_label_referrals[label] += 1
+        for pathway in analysis.get("care_pathways", []) or []:
+            if not isinstance(pathway, Mapping) or pathway.get("status") != "deferred":
+                continue
+            label = str(pathway.get("lesion_type") or "unknown")
+            if label not in detected_labels:
+                continue
+            # A missing routine should not silently become "unfilled"; that is
+            # an execution failure checked below. Pathway deferrals are tracked
+            # independently from product coverage.
+            for reason in pathway.get("reason_codes", []) or []:
+                if "unknown" in str(reason) or "exclude" in str(reason):
+                    safety_deferrals[str(reason)] += 1
+                    per_label_safety_deferrals.setdefault(label, Counter())[str(reason)] += 1
         attempts = row.get("attempts", []) if isinstance(row, Mapping) else []
         attempt_total += len(attempts) if isinstance(attempts, list) else 0
         normalized_attempts = []
@@ -403,16 +460,16 @@ def evaluate_release(
         if routine is not None:
             freshness_failures += len(validate_artifact_freshness(routine))
         status = analysis.get("recommendation_status")
-        if status in {"complete", "partial", "invalid", "unavailable"}:
+        if status in {"complete", "partial", "invalid", "unavailable", "delegated_to_recsys"}:
             completed += 1
         else:
             failed += 1
-        if status != "complete":
+        if status not in {"complete", "delegated_to_recsys"}:
             failures.append(
                 f"{sample_id}:recommendation_not_complete:"
                 f"{status or 'missing'}"
             )
-        if status in {"complete", "partial"} and routine is None:
+        if status in {"complete", "partial", "delegated_to_recsys"} and routine is None:
             failures.append(f"{sample_id}:routine_artifact_missing")
         if status in {"invalid", "unavailable"} and routine is not None:
             failures.append(f"{sample_id}:routine_present_for_{status}_recommendation")
@@ -500,6 +557,29 @@ def evaluate_release(
                 role: {"sample_counts": counts, "max": max(counts)}
                 for role, counts in sorted(selected_counts.items())
             },
+            "per_label_rollout": {
+                label: {
+                    "detected_samples": per_label_detected[label],
+                    "outcomes": dict(sorted(per_label_coverage.get(label, {}).items())),
+                    "product_coverage_rate": wilson_interval(
+                        per_label_coverage.get(label, {}).get("covered_by_product", 0),
+                        per_label_detected[label],
+                    ),
+                    "unfilled_rate": wilson_interval(
+                        per_label_coverage.get(label, {}).get("unfilled", 0),
+                        per_label_detected[label],
+                    ),
+                    "referral_rate": wilson_interval(
+                        per_label_referrals[label], per_label_detected[label]
+                    ),
+                    "safety_deferrals": dict(sorted(
+                        per_label_safety_deferrals.get(label, {}).items()
+                    )),
+                }
+                for label in sorted(per_label_detected)
+            },
+            "verification_distribution": dict(sorted(verification_distribution.items())),
+            "safety_deferrals": dict(sorted(safety_deferrals.items())),
             "batch": {
                 "requested": len(samples), "completed": completed, "failed": failed,
                 "total_attempts": attempt_total,

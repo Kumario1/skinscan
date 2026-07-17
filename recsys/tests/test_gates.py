@@ -10,6 +10,7 @@ from recsys.gates import (
     profile_gate_reasons,
 )
 from recsys.knowledge import load_knowledge
+from recsys.signals import TargetLesion
 
 K = load_knowledge(Path(__file__).parents[1] / "data" / "knowledge")
 
@@ -97,29 +98,34 @@ def test_treatment_requires_explicit_contraindication_evidence():
     )
 
 
-def test_support_requires_explicit_contraindications_or_approved_daily_support():
+def test_unverified_contraindications_rank_support_but_still_gate_treatment():
+    """D-036: contraindications state is structurally overlay-only, so on a
+    support role it lowers verification_status instead of eligibility. The
+    treatment slot keeps the hard requirement."""
     profile = Profile(pregnancy_status="not_pregnant")
     unknown = product(
         category="moisturizer", contraindications_verified=False,
         daily_support_verified=False,
     )
-    approved = product(
-        category="moisturizer", contraindications_verified=False,
-        daily_support_verified=True,
-    )
 
-    assert "contraindications_unverified" in profile_gate_reasons(
+    assert "contraindications_unverified" not in profile_gate_reasons(
         unknown, "moisturizer", profile, K
     )
-    assert "contraindications_unverified" not in profile_gate_reasons(
-        approved, "moisturizer", profile, K
+    assert "contraindications_unverified" in profile_gate_reasons(
+        product(category="treatment", contraindications_verified=False),
+        "treatment", profile, K
     )
 
 
-def test_format_and_amount_source_are_hard_requirements():
+def test_only_a_known_conflicting_format_is_a_hard_requirement():
+    """D-036: format None is a missing non-safety fact (ranking, not a veto);
+    a stated format that conflicts with the role still vetoes, and a claimed
+    amount without a source still vetoes."""
     profile = Profile(pregnancy_status="not_pregnant")
-    assert "format_unverified" in profile_gate_reasons(
-        product(format=None), "treatment", profile, K
+    assert not any(
+        r.startswith("format") for r in profile_gate_reasons(
+            product(format=None), "treatment", profile, K
+        )
     )
     assert "format_not_allowed_for_role:mist" in profile_gate_reasons(
         product(format="mist"), "treatment", profile, K
@@ -382,6 +388,21 @@ def test_treatment_requires_verified_drug_active_and_safe_format():
         product(actives=("salicylic_acid",), format="peel"),
         "treatment", profile, K,
     )
+
+
+def test_exact_label_minimum_age_is_a_hard_treatment_gate():
+    adapalene = product(actives=("adapalene",))
+    target = TargetLesion(
+        "closed_comedo", 1, 0.9, ("adapalene",), ("treatment",),
+        ({"active_id": "adapalene", "strength": "0.1%", "formulation": "gel",
+          "minimum_age_years": 12},),
+    )
+    reasons = profile_gate_reasons(
+        adapalene, "treatment",
+        Profile(age_years=8, pregnancy_status="not_pregnant"), K,
+        targets=(target,),
+    )
+    assert "treatment_age_below_minimum:12" in reasons
 
 
 def test_apply_profile_gates_vetoes_hard_safety_reasons_in_hybrid_too():

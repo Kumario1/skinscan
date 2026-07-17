@@ -4,6 +4,7 @@ import base64
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from io import BytesIO
+import inspect
 import json
 import os
 from pathlib import Path
@@ -20,7 +21,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.pipeline.e2e import load_optional_catalog, main
+from src.pipeline.e2e import load_optional_catalog, main, run_pipeline
+from src.recommendation.lesion_care import authorize_mvp_fixture_inputs
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -180,6 +182,9 @@ def _args(image_path: Path, output_dir: Path, api: str, catalog_path: Path) -> l
         "--dataset-split", "smoke",
         "--split-proof", "synthetic-test-fixture",
         "--detector-sha256", "synthetic-detector-hash",
+        "--mvp-synthetic",
+        "--environment", "test",
+        "--mvp-fixture-manifest", str(ROOT / "configs/mvp_fixture_manifest.json"),
     ]
 
 
@@ -201,6 +206,10 @@ raise SystemExit(bool(loaded))
         [sys.executable, "-c", code], cwd=ROOT, capture_output=True, text=True,
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_run_pipeline_does_not_accept_caller_fixture_authorization():
+    assert "fixture_authorization" not in inspect.signature(run_pipeline).parameters
 
 
 def test_parser_default_profile_is_all_explicit_unknowns():
@@ -258,7 +267,9 @@ def test_analysis_keeps_decision_when_catalog_is_unavailable(tmp_path, fake_sarp
     assert not (output_dir / "routine.json").exists()
 
 
-def test_fixture_e2e_writes_complete_v3_artifact_set(tmp_path, fake_sarpn_server):
+def test_fixture_e2e_writes_schema4_analysis_without_legacy_selector(
+    tmp_path, fake_sarpn_server,
+):
     image_path = tmp_path / "face.jpg"
     catalog_path = tmp_path / "catalog.json"
     output_dir = tmp_path / "output"
@@ -268,7 +279,7 @@ def test_fixture_e2e_writes_complete_v3_artifact_set(tmp_path, fake_sarpn_server
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
 
     assert {path.name for path in output_dir.iterdir()} == {
-        "analysis.json", "routine.json", "detections.jpg",
+        "analysis.json", "detections.jpg",
         "region_overlay.jpg", "lesion_sheet.jpg",
     }
     for name in ("detections.jpg", "region_overlay.jpg", "lesion_sheet.jpg"):
@@ -279,7 +290,7 @@ def test_fixture_e2e_writes_complete_v3_artifact_set(tmp_path, fake_sarpn_server
 
     analysis_text = (output_dir / "analysis.json").read_text()
     analysis = json.loads(analysis_text)
-    assert analysis["schema_version"] == "3"
+    assert analysis["schema_version"] == "4"
     assert analysis["pipeline"] == {
         "identifier": "sa-rpn-native-tiles",
         "endpoint": "http://" + fake_sarpn_server.url.split("@", 1)[1].split("?", 1)[0],
@@ -290,19 +301,25 @@ def test_fixture_e2e_writes_complete_v3_artifact_set(tmp_path, fake_sarpn_server
     }
     assert analysis["region_mapping"]["method"] == "grid_fallback"
     assert "missing" in analysis["region_mapping"]["reason"].lower()
-    assert analysis["recommendation_status"] == "complete"
-    routine = json.loads((output_dir / "routine.json").read_text())
-    assert routine["schema_version"] == "3"
-    assert set(routine["selected_products"]) == {
-        "cleanser", "treatment", "moisturizer", "sunscreen",
-    }
-    assert all(not isinstance(value, list) for value in routine["selected_products"].values())
-    assert "routines" not in routine
-    assert "eligibility_rejections" not in routine
-    assert "validation_errors" not in routine
-    assert analysis["recommendation_summary"]["missing_roles"] == []
-    assert routine["replay_key"] == analysis["replay_key"]
-    assert routine["input_profile"] == analysis["input_profile"]
+    assert analysis["recommendation_status"] == "unavailable"
+    assert analysis["recommendation_reason"] == "recsys_not_enabled"
+    assert not (output_dir / "routine.json").exists()
+    assert len(analysis["lesion_findings"]) == 10
+    papule = next(row for row in analysis["lesion_findings"]
+                  if row["lesion_type"] == "papule")
+    assert papule["count"] == 1
+    pathway = next(row for row in analysis["care_pathways"]
+                   if row["lesion_type"] == "papule")
+    assert pathway["status"] == "retail_eligible"
+    lesion_policy = analysis["policies"]["lesion_care"]
+    assert lesion_policy["scope_authorized"] is True
+    assert lesion_policy["fixture_image_sha256"] == analysis["source_image_sha256"]
+    assert lesion_policy["fixture_profile_sha256"] == (
+        "a362655a68cda891c4841185801906961e22e198936ef3c1de9d55c2bc104a9e"
+    )
+    assert lesion_policy["fixture_normalized_profile_sha256"] == (
+        "9a7b21cd69a0254a9b372473079f4ae19a7f2f0c30afe0e21890e821ddcfff4c"
+    )
     semantic = analysis["semantic_inputs"]
     assert semantic["effective_config"].keys() >= {
         "severity", "class_min_scores", "regions", "tone", "face_landmarker",
@@ -331,6 +348,107 @@ def test_fixture_e2e_writes_complete_v3_artifact_set(tmp_path, fake_sarpn_server
     assert all("legacy" not in path for path in fake_sarpn_server.paths)
 
 
+def test_mvp_flag_cannot_authorize_an_unpinned_image(
+    tmp_path, fake_sarpn_server,
+):
+    image_path = tmp_path / "unregistered.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path, width=801)
+    _write_verified_catalog(catalog_path)
+
+    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    policy = analysis["policies"]["lesion_care"]
+    assert policy["scope_authorized"] is False
+    assert "fixture_image_hash_not_authorized" in policy["scope_reasons"]
+    papule = next(row for row in analysis["care_pathways"]
+                  if row["lesion_type"] == "papule")
+    assert papule["status"] == "deferred"
+    assert papule["retail_target_actives"] == []
+
+
+def test_mvp_authorization_binds_raw_and_resolved_profile_as_a_pair(tmp_path):
+    from src.pipeline.e2e import load_input_profile
+
+    image_path = tmp_path / "face.jpg"
+    _write_image(image_path, width=800)
+    adult_profile_path = ROOT / "tests/fixtures/profile_complete.json"
+    underage_profile_path = (
+        ROOT / "recsys/tests/fixtures/profile_underage.json"
+    )
+    adult_profile = load_input_profile(adult_profile_path)
+    authorization = authorize_mvp_fixture_inputs(
+        ROOT / "configs/mvp_fixture_manifest.json",
+        image_bytes=image_path.read_bytes(),
+        profile_path=underage_profile_path,
+        environment="test",
+        dataset_name="fixture",
+        split_proof="synthetic-test-fixture",
+        normalized_profile=adult_profile.to_dict(),
+    )
+    assert authorization.authorized is False
+    assert "fixture_profile_pair_not_authorized" in authorization.reasons
+
+
+def test_pipeline_hashes_and_decodes_one_immutable_image_buffer(
+    tmp_path, fake_sarpn_server, monkeypatch,
+):
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path, width=800)
+    _write_verified_catalog(catalog_path)
+    original_read_bytes = Path.read_bytes
+    image_reads = 0
+
+    def guarded_read_bytes(path):
+        nonlocal image_reads
+        if path == image_path:
+            image_reads += 1
+            if image_reads > 1:
+                return b"substituted after authorization"
+        return original_read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", guarded_read_bytes)
+    assert main(_args(
+        image_path, output_dir, fake_sarpn_server.url, catalog_path,
+    )) == 0
+    assert image_reads == 1
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    assert analysis["policies"]["lesion_care"]["scope_authorized"] is True
+
+
+def test_pipeline_snapshots_the_normalized_profile_once(
+    tmp_path, fake_sarpn_server, monkeypatch,
+):
+    from src.recommendation.schema import UserProfile
+
+    image_path = tmp_path / "face.jpg"
+    catalog_path = tmp_path / "catalog.json"
+    output_dir = tmp_path / "output"
+    _write_image(image_path, width=800)
+    _write_verified_catalog(catalog_path)
+    original_to_dict = UserProfile.to_dict
+    snapshots = 0
+
+    def unstable_to_dict(profile):
+        nonlocal snapshots
+        snapshots += 1
+        value = original_to_dict(profile)
+        if snapshots > 1:
+            value["age_years"] = 8
+        return value
+
+    monkeypatch.setattr(UserProfile, "to_dict", unstable_to_dict)
+    assert main(_args(
+        image_path, output_dir, fake_sarpn_server.url, catalog_path,
+    )) == 0
+    assert snapshots == 1
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    assert analysis["input_profile"]["age_years"] == 25
+
+
 def test_recsys_flag_adds_standalone_recommendations_artifact(
     tmp_path, fake_sarpn_server,
 ):
@@ -354,12 +472,16 @@ def test_recsys_flag_adds_standalone_recommendations_artifact(
     assert recommendations["schema_version"] == "recsys-1"
     assert recommendations["status"] == "ok"
     assert recommendations["data_versions"]["signals"], "signal stores must have loaded"
-    assert len(recommendations["routines"]) == 1
+    assert len(recommendations["routines"]) >= 1
     assert set(recommendations["selected_products"]) == {
-        "cleanser", "moisturizer", "spf",
+        "cleanser", "treatment", "moisturizer", "spf",
     }
     assert recommendations["care_decision"]["therapy_disposition"] == "active_treatment"
-    assert recommendations["treatment_fulfillment"]["status"] == "unfilled"
+    assert recommendations["treatment_fulfillment"]["status"] == "included"
+    assert recommendations["lesion_coverage"][0]["status"] == "covered_by_product"
+    routine = json.loads((output_dir / "routine.json").read_text())
+    assert routine["generated_by"] == "recsys"
+    assert routine["lesion_coverage"] == recommendations["lesion_coverage"]
     import hashlib
     assert recommendations["inputs"]["analysis_sha256"] == hashlib.sha256(
         (output_dir / "analysis.json").read_bytes()
@@ -511,15 +633,18 @@ def test_pipeline_emits_selected_regimen_not_category_menu(tmp_path, fake_sarpn_
     _write_image(image_path)
     _write_verified_catalog(catalog_path)
 
-    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path) + [
+        "--recsys", "--recsys-data-root", str(ROOT / "recsys/data"),
+    ]
+    assert main(args) == 0
 
     routine = json.loads((output_dir / "routine.json").read_text())
     assert "routines" not in routine
-    assert set(routine["selected_regimen"]) == {"am", "pm"}
-    selected = {item["product_id"] for item in routine["selected_products"].values()}
-    alternatives = {item["product_id"] for items in routine["alternatives"].values()
-                    for item in items}
-    assert selected.isdisjoint(alternatives)
+    assert set(routine["selected_regimen"]) >= {"am", "pm", "per_label"}
+    assert routine["generated_by"] == "recsys"
+    assert len(routine["selected_products"].values()) == len(
+        set(routine["selected_products"].values())
+    )
 
 
 def test_eligibility_debug_is_opt_in_and_stale_file_is_removed(
@@ -532,9 +657,7 @@ def test_eligibility_debug_is_opt_in_and_stale_file_is_removed(
     _write_verified_catalog(catalog_path)
     args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
     assert main(args + ["--eligibility-debug"]) == 0
-    debug = json.loads((output_dir / "eligibility_rejections.json").read_text())
-    assert debug["schema_version"] == "1"
-    assert "rejections" in debug
+    assert not (output_dir / "eligibility_rejections.json").exists()
     assert main(args) == 0
     assert not (output_dir / "eligibility_rejections.json").exists()
 
@@ -551,8 +674,10 @@ def test_routine_payload_carries_independent_decision_axes(tmp_path, fake_sarpn_
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
     analysis = json.loads((output_dir / "analysis.json").read_text())
     assert analysis["decision"]["triage_level"] == "routine"
-    assert analysis["decision"]["therapy_disposition"] == "defer"
-    assert analysis["recommendation_reason"] == "required_roles_unfilled"
+    assert analysis["decision"]["therapy_disposition"] == "active_treatment"
+    assert analysis["recommendation_reason"] == "recsys_not_enabled"
+    assert next(row for row in analysis["care_pathways"]
+                if row["lesion_type"] == "papule")["status"] == "retail_eligible"
     assert not (output_dir / "routine.json").exists()
 
 
@@ -658,10 +783,8 @@ def test_notes_warn_when_nevi_accompany_pigment_treatment(tmp_path):
     assert "mole" not in calm["notes"].lower(), calm["notes"]
 
 
-def test_routine_payload_reports_target_coverage(tmp_path, fake_sarpn_server):
-    """e2elogic finding (2026-07-13): a target active with zero matching
-    products (the old phantom-centella case) was invisible — the payload must
-    report how many recommended products actually carry each target."""
+def test_legacy_catalog_cannot_select_products(tmp_path, fake_sarpn_server):
+    """Only recsys may turn catalog rows into a routine."""
     image_path = tmp_path / "face.jpg"
     catalog_path = tmp_path / "catalog.json"
     output_dir = tmp_path / "output"
@@ -674,15 +797,8 @@ def test_routine_payload_reports_target_coverage(tmp_path, fake_sarpn_server):
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
     analysis = json.loads((output_dir / "analysis.json").read_text())
     assert analysis["recommendation_status"] == "unavailable"
-    assert analysis["recommendation_reason"] == "required_roles_unfilled"
-    assert analysis["recommendation_summary"]["selected_roles"] == []
-    # No eligible treatment product now defers therapy (primary cleared) rather
-    # than reporting a missing treatment role; support roles stay missing.
-    assert analysis["recommendation_summary"]["missing_roles"] == [
-        "cleanser", "moisturizer", "sunscreen",
-    ]
-    assert "no_eligible_treatment_product" in analysis["therapy_plan"]["deferred_reasons"]
-    assert analysis["decision"]["therapy_disposition"] == "defer"
+    assert analysis["recommendation_reason"] == "recsys_not_enabled"
+    assert analysis["decision"]["therapy_disposition"] == "active_treatment"
     assert not (output_dir / "routine.json").exists()
 
 
@@ -703,8 +819,9 @@ def test_catalog_failure_keeps_analysis_and_diagnostics(
 
     analysis = json.loads((output_dir / "analysis.json").read_text())
     assert analysis["recommendation_status"] == "unavailable"
-    expected = "missing" if catalog_case == "missing" else catalog_case
-    assert expected in analysis["recommendation_reason"].lower()
+    # The legacy catalog is provenance-only. It cannot invoke a selector or
+    # affect the care result when recsys is disabled.
+    assert analysis["recommendation_reason"] == "recsys_not_enabled"
     assert not (output_dir / "routine.json").exists()
     assert {path.name for path in output_dir.iterdir()} == {
         "analysis.json", "detections.jpg", "region_overlay.jpg", "lesion_sheet.jpg",
@@ -719,24 +836,32 @@ def test_recommendation_exception_does_not_erase_analysis(
     output_dir = tmp_path / "output"
     _write_image(image_path, width=800)
     _write_catalog(catalog_path)
+    real_run = subprocess.run
 
-    def fail_recommendation(*args, **kwargs):
-        raise RuntimeError("recommendation exploded")
+    def fail_recsys(command, **kwargs):
+        if "recsys" in command:
+            return SimpleNamespace(returncode=23, stderr="recommendation exploded")
+        return real_run(command, **kwargs)
 
-    monkeypatch.setattr("src.pipeline.e2e.recommend", fail_recommendation)
-    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    monkeypatch.setattr("src.pipeline.e2e.subprocess.run", fail_recsys)
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path) + [
+        "--recsys", "--recsys-data-root", str(ROOT / "recsys/data"),
+    ]
+    assert main(args) == 0
 
     analysis = json.loads((output_dir / "analysis.json").read_text())
     assert fake_sarpn_server.request_count == 1
-    assert analysis["recommendation_status"] == "unavailable"
-    assert "recommendation exploded" in analysis["recommendation_reason"]
+    assert analysis["recommendation_status"] == "delegated_to_recsys"
+    recsys = json.loads((output_dir / "recommendations.json").read_text())
+    assert recsys["status"] == "unavailable"
+    assert "recommendation exploded" in recsys["reason"]
     assert not (output_dir / "routine.json").exists()
     assert all((output_dir / name).exists() for name in (
         "analysis.json", "detections.jpg", "region_overlay.jpg", "lesion_sheet.jpg",
     ))
 
 
-def test_invalid_recommendation_keeps_analysis_and_refuses_routine(
+def test_invalid_recsys_result_keeps_analysis_and_refuses_routine(
     tmp_path, fake_sarpn_server, monkeypatch,
 ):
     import src.pipeline.e2e as e2e_module
@@ -746,18 +871,30 @@ def test_invalid_recommendation_keeps_analysis_and_refuses_routine(
     output_dir = tmp_path / "output"
     _write_image(image_path, width=800)
     _write_verified_catalog(catalog_path)
-    real_recommend = e2e_module.recommend
+    real_run = subprocess.run
 
-    def invalid(*args, **kwargs):
-        result = real_recommend(*args, **kwargs)
-        result.validation_errors.append("injected_whole_regimen_failure")
-        return result
+    def invalid(command, **kwargs):
+        if "recsys" not in command:
+            return real_run(command, **kwargs)
+        out = Path(command[command.index("--out") + 1])
+        out.write_text(json.dumps({
+            "schema_version": "recsys-1",
+            "status": "invalid",
+            "reason": "injected_whole_regimen_failure",
+            "routines": [],
+        }))
+        return SimpleNamespace(returncode=0, stderr="")
 
-    monkeypatch.setattr(e2e_module, "recommend", invalid)
-    assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
+    monkeypatch.setattr(e2e_module.subprocess, "run", invalid)
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path) + [
+        "--recsys", "--recsys-data-root", str(ROOT / "recsys/data"),
+    ]
+    assert main(args) == 0
     analysis = json.loads((output_dir / "analysis.json").read_text())
-    assert analysis["recommendation_status"] == "invalid"
-    assert analysis["recommendation_errors"] == ["injected_whole_regimen_failure"]
+    assert analysis["recommendation_status"] == "delegated_to_recsys"
+    recommendation = json.loads((output_dir / "recommendations.json").read_text())
+    assert recommendation["status"] == "invalid"
+    assert recommendation["reason"] == "injected_whole_regimen_failure"
     assert not (output_dir / "routine.json").exists()
 
 
@@ -848,7 +985,7 @@ def test_empty_catalog_is_treated_as_unavailable(tmp_path, fake_sarpn_server):
 
     analysis = json.loads((output_dir / "analysis.json").read_text())
     assert analysis["recommendation_status"] == "unavailable"
-    assert analysis["recommendation_reason"] == "catalog is empty"
+    assert analysis["recommendation_reason"] == "recsys_not_enabled"
     assert not (output_dir / "routine.json").exists()
 
 
@@ -896,7 +1033,7 @@ def test_main_replaces_prior_pipeline_output_dir(tmp_path, fake_sarpn_server):
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
     assert not (output_dir / "stale.jpg").exists()
     analysis = json.loads((output_dir / "analysis.json").read_text())
-    assert analysis["schema_version"] == "3"
+    assert analysis["schema_version"] == "4"
     assert analysis["recommendation_status"] == "unavailable"
 
 
@@ -1177,10 +1314,10 @@ def test_publish_conflict_message_is_truthful_when_backup_is_also_gone(
     assert "were preserved at" not in stderr
 
 
-# --- Findings 6+7: derm-escalation surfaces from the analysis, independent --
+# --- Findings 6+7: clinician escalation surfaces from analysis, independent -
 # --- of whether a catalog/routine is available. -----------------------------
 
-def test_main_surfaces_dermatologist_escalation_without_catalog(tmp_path, capsys):
+def test_main_surfaces_clinician_escalation_without_catalog(tmp_path, capsys):
     image_path = tmp_path / "face.jpg"
     output_dir = tmp_path / "output"
     missing_catalog_path = tmp_path / "missing-catalog.json"
@@ -1197,8 +1334,9 @@ def test_main_surfaces_dermatologist_escalation_without_catalog(tmp_path, capsys
     assert not (output_dir / "routine.json").exists()
 
     combined = "".join(capsys.readouterr())
-    assert "severe acne_cystic" in combined
-    assert "dermatologist" in combined
+    assert "nodule finding" in combined
+    assert "clinician assessment" in combined
+    assert "dermatologist" not in combined
 
 
 def test_main_surfaces_professional_review_safety_observation(tmp_path, capsys):
@@ -1242,5 +1380,7 @@ def test_main_surfaces_safety_when_required_products_are_unavailable(tmp_path, c
     assert exit_code == 0
 
     combined = "".join(capsys.readouterr())
-    assert "see a dermatologist" in combined
+    assert "nodule finding" in combined
+    assert "clinician assessment" in combined
+    assert "dermatologist" not in combined
     assert not (output_dir / "routine.json").exists()

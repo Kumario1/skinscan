@@ -33,6 +33,21 @@ def test_loads_real_analysis_artifact():
     }
 
 
+def test_schema3_migration_uses_only_embedded_exact_detector_labels():
+    analysis = load_analysis(FIXTURES / "analysis_v3_sample.json")
+    findings = {row.lesion_type: row for row in analysis.lesion_findings}
+    assert findings["closed_comedo"].count == 6
+    assert findings["open_comedo"].count == 2
+    assert findings["papule"].count == 13
+    assert findings["atrophic_scar"].count == 90
+    assert findings["melasma"].count == 6
+    assert findings["pustule"].count == 0
+    assert all(
+        row.evidence_source == "legacy_schema3_detector_labels"
+        for row in findings.values()
+    )
+
+
 def test_accepts_reviewed_primary_independently_of_care_policy_flag(tmp_path):
     data = json.loads((FIXTURES / "analysis_v3_sample.json").read_text())
     data["decision"]["therapy_disposition"] = "active_treatment"
@@ -100,6 +115,10 @@ def test_rejects_primary_from_unreviewed_therapy_policy(tmp_path):
 
     with pytest.raises(ContractViolation, match="reviewed therapy policy"):
         load_analysis(path)
+    # dev bypass: same document parses, primary intact, everything else enforced
+    analysis = load_analysis(path, allow_unreviewed=True)
+    assert analysis.therapy_policy_reviewed is False
+    assert analysis.therapy_primary["therapy"] == "benzoyl_peroxide"
 
 
 def test_rejects_primary_whose_policy_version_is_not_hash_bound_identity(tmp_path):

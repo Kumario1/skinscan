@@ -69,8 +69,11 @@ def verify(analysis_path: Path, data_root: Path, mode: str, runs: int) -> dict:
 
     # 1. inputs
     check("inputs: analysis loads + hashes",
-          bool(analysis.analysis_sha256) and bool(analysis.concerns),
-          f"{len(analysis.concerns)} concerns, triage={analysis.triage_level}")
+          bool(analysis.analysis_sha256) and any(
+              finding.count for finding in analysis.lesion_findings
+          ),
+          f"{sum(f.count > 0 for f in analysis.lesion_findings)} exact labels, "
+          f"triage={analysis.triage_level}")
     profile = resolve_profile(None, analysis)
     check("inputs: profile resolves (unknown-safe)", profile.source is not None,
           f"source={profile.source}, pregnancy={profile.pregnancy_status}")
@@ -107,16 +110,16 @@ def verify(analysis_path: Path, data_root: Path, mode: str, runs: int) -> dict:
 
     # 4. knowledge + overlay
     check("knowledge: safety tables present",
-          bool(knowledge.retinoids and knowledge.concern_actives and knowledge.archetypes),
+          bool(knowledge.retinoids and knowledge.lesion_actives and knowledge.archetypes),
           f"{len(knowledge.archetypes)} archetypes, {len(knowledge.retinoids)} retinoids")
     verification = document["data_versions"]["verification"]
     check("verification: overlay loads", bool(verification.get("products")),
           f"{verification.get('products')} verified products")
 
     # 5. targets
-    targets = document["target_concerns"]
-    check("targets: concerns selected by severity", bool(targets),
-          ", ".join(f"{t['concern']}:{t['severity']}" for t in targets))
+    targets = document["target_lesions"]
+    check("targets: exact retail pathways selected", bool(targets),
+          ", ".join(f"{t['lesion_type']}:{t['count']}" for t in targets))
 
     # 6. gates -- fail-closed reason codes
     vetoes = document["veto_log"]["profile"]
@@ -134,12 +137,15 @@ def verify(analysis_path: Path, data_root: Path, mode: str, runs: int) -> dict:
     # be able to mask one.
     routines = document["routines"]
     unavailable = document.get("unavailable_archetypes") or []
+    unselected = document.get("unselected_archetypes") or []
     therapy = document.get("therapy_plan") or {}
     care = document.get("care_decision") or {}
     deferred = bool(therapy.get("deferred_reasons")) or care.get("therapy_disposition") == "defer"
 
     def _has_treatment(routine):
-        return any(s["slot"] in ("treatment", "serum") for s in _steps(routine))
+        # Only the treatment slot is clinician-gated (D-029); serums are
+        # cosmetic and stay available in the deferral regime.
+        return any(s["slot"] == "treatment" for s in _steps(routine))
 
     if deferred:
         reason = (therapy.get("deferred_reasons") or ["therapy_deferred"])[0]
@@ -150,10 +156,15 @@ def verify(analysis_path: Path, data_root: Path, mode: str, runs: int) -> dict:
               not any(_has_treatment(r) for r in routines),
               f"{len(routines)} support-only routine(s)")
     else:
-        explained = len(routines) + sum(1 for u in unavailable if u.get("reasons"))
+        explained = (
+            len(routines)
+            + len(unselected)
+            + sum(1 for u in unavailable if u.get("reasons"))
+        )
         check("compose: every archetype is built or explained (none silently dropped)",
               explained >= len(knowledge.archetypes),
-              f"{len(routines)} built + {len(unavailable)} unavailable "
+              f"{len(routines)} selected + {len(unselected)} unselected + "
+              f"{len(unavailable)} unavailable "
               f"= {explained}/{len(knowledge.archetypes)}")
 
     # Every check from here quantifies over the steps the engine actually

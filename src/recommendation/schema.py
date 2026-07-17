@@ -20,7 +20,7 @@ REGIONS = {
     "forehead", "nose", "left_cheek", "right_cheek", "chin_jaw", "perioral",
 }
 CATEGORIES = ["cleanser", "treatment", "serum", "moisturizer", "spf"]
-ROUTINE_ROLES = {"cleanser", "treatment", "moisturizer", "sunscreen"}
+ROUTINE_ROLES = {"cleanser", "treatment", "serum", "moisturizer", "sunscreen"}
 PRODUCT_EXPOSURES = {
     "unknown", "rinse_off", "short_contact", "leave_on", "mask", "scrub", "peel",
 }
@@ -332,6 +332,11 @@ KNOWN_ACTIVE_IDS = {
     "panthenol", "centella", "allantoin", "madecassoside", "zinc",
     "gluconolactone", "willow_bark",
 }
+POLICY_CRITICAL_PROFILE_FIELDS = {
+    "age_years", "pregnancy_status", "allergies", "sensitivity_conditions",
+    "current_actives", "current_medications", "treatment_history",
+    "finding_duration_weeks", "painful_or_deep_lesions", "prior_scarring",
+}
 
 
 @dataclass
@@ -349,9 +354,25 @@ class UserProfile:
     current_medications: list[str] = field(default_factory=list)
     treatment_history: list[str] = field(default_factory=list)
     acne_duration_weeks: int | None = None
+    finding_duration_weeks: int | None = None
     painful_or_deep_lesions: bool | None = None
     prior_scarring: bool | None = None
+    spot_new_or_changing: bool | None = None
+    spot_bleeding_itching_or_painful: bool | None = None
+    spot_bleeding: bool | None = None
+    spot_itching: bool | None = None
+    spot_painful: bool | None = None
+    spot_other_symptoms: bool | None = None
+    active_acne_controlled: bool | None = None
+    scar_duration_months: int | None = None
+    pregnancy_or_hormonal_medication_onset: bool | None = None
+    abcde_change_present: bool | None = None
+    wound_closed: bool | None = None
+    scar_diagnosis_confirmed_by_clinician: bool | None = None
     max_price_usd: float | None = None
+    unknown_fields: set[str] = field(
+        default_factory=lambda: set(POLICY_CRITICAL_PROFILE_FIELDS), repr=False,
+    )
 
     def __post_init__(self) -> None:
         _closed("skin_type", self.skin_type, SKIN_TYPES)
@@ -372,18 +393,26 @@ class UserProfile:
                 and (not isinstance(self.age_years, int) or isinstance(self.age_years, bool)
                      or not 0 <= self.age_years <= 130)):
             raise ValueError("age_years: expected an integer 0..130 or null")
-        if (self.acne_duration_weeks is not None
-                and (not isinstance(self.acne_duration_weeks, int)
-                     or isinstance(self.acne_duration_weeks, bool)
-                     or self.acne_duration_weeks < 0)):
-            raise ValueError("acne_duration_weeks: expected a non-negative integer or null")
+        for field_name in (
+            "acne_duration_weeks", "finding_duration_weeks", "scar_duration_months",
+        ):
+            value = getattr(self, field_name)
+            if (value is not None and (not isinstance(value, int)
+                    or isinstance(value, bool) or value < 0)):
+                raise ValueError(f"{field_name}: expected a non-negative integer or null")
         if (self.max_price_usd is not None
                 and (not isinstance(self.max_price_usd, (int, float))
                      or isinstance(self.max_price_usd, bool)
                      or not math.isfinite(self.max_price_usd)
                      or self.max_price_usd < 0)):
             raise ValueError("max_price_usd: expected a finite non-negative number or null")
-        for field_name in ("painful_or_deep_lesions", "prior_scarring"):
+        for field_name in (
+            "painful_or_deep_lesions", "prior_scarring", "spot_new_or_changing",
+            "spot_bleeding_itching_or_painful", "spot_bleeding", "spot_itching",
+            "spot_painful", "spot_other_symptoms", "active_acne_controlled",
+            "pregnancy_or_hormonal_medication_onset", "abcde_change_present",
+            "wound_closed", "scar_diagnosis_confirmed_by_clinician",
+        ):
             value = getattr(self, field_name)
             if value is not None and not isinstance(value, bool):
                 raise ValueError(f"{field_name}: expected boolean or null")
@@ -397,6 +426,10 @@ class UserProfile:
         invalid_actives = set(self.current_actives) - KNOWN_ACTIVE_IDS
         if invalid_actives:
             raise ValueError(f"current_actives: unknown active IDs {sorted(invalid_actives)}")
+        if not isinstance(self.unknown_fields, set) or not all(
+            isinstance(item, str) for item in self.unknown_fields
+        ):
+            raise ValueError("unknown_fields: expected an internal string set")
 
     @classmethod
     def from_dict(cls, value: Mapping[str, object]) -> "UserProfile":
@@ -406,8 +439,23 @@ class UserProfile:
         unknown = set(value) - known
         if unknown:
             raise ValueError(f"profile: unknown fields {sorted(unknown)}")
+        raw = dict(value)
+        declared_unknowns = raw.pop("unknown_fields", [])
+        if not isinstance(declared_unknowns, (list, tuple, set)) or not all(
+            isinstance(item, str) for item in declared_unknowns
+        ):
+            raise ValueError("profile.unknown_fields: expected a string list")
         try:
-            return cls(**dict(value))
+            profile = cls(**raw)
+            profile.unknown_fields = set(declared_unknowns) | {
+                field_name for field_name in POLICY_CRITICAL_PROFILE_FIELDS
+                if field_name not in raw or raw.get(field_name) is None
+            }
+            # acne_duration_weeks is the compatibility intake name for the
+            # policy's finding_duration_weeks.
+            if raw.get("acne_duration_weeks") is not None:
+                profile.unknown_fields.discard("finding_duration_weeks")
+            return profile
         except TypeError as exc:
             raise ValueError(f"profile: invalid fields: {exc}") from exc
 
@@ -424,9 +472,27 @@ class UserProfile:
             "current_medications": list(self.current_medications),
             "treatment_history": list(self.treatment_history),
             "acne_duration_weeks": self.acne_duration_weeks,
+            "finding_duration_weeks": self.finding_duration_weeks,
             "painful_or_deep_lesions": self.painful_or_deep_lesions,
             "prior_scarring": self.prior_scarring,
+            "spot_new_or_changing": self.spot_new_or_changing,
+            "spot_bleeding_itching_or_painful": self.spot_bleeding_itching_or_painful,
+            "spot_bleeding": self.spot_bleeding,
+            "spot_itching": self.spot_itching,
+            "spot_painful": self.spot_painful,
+            "spot_other_symptoms": self.spot_other_symptoms,
+            "active_acne_controlled": self.active_acne_controlled,
+            "scar_duration_months": self.scar_duration_months,
+            "pregnancy_or_hormonal_medication_onset": (
+                self.pregnancy_or_hormonal_medication_onset
+            ),
+            "abcde_change_present": self.abcde_change_present,
+            "wound_closed": self.wound_closed,
+            "scar_diagnosis_confirmed_by_clinician": (
+                self.scar_diagnosis_confirmed_by_clinician
+            ),
             "max_price_usd": self.max_price_usd,
+            "unknown_fields": sorted(self.unknown_fields),
         }
 
 

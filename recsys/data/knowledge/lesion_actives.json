@@ -1,0 +1,30 @@
+{
+  "schema_version": "recsys-lesion-knowledge-1",
+  "actives": {
+    "closed_comedo": ["adapalene", "salicylic_acid"],
+    "open_comedo": ["adapalene", "salicylic_acid"],
+    "papule": ["benzoyl_peroxide", "adapalene"],
+    "pustule": ["benzoyl_peroxide", "adapalene"],
+    "nodule": [],
+    "atrophic_scar": [],
+    "hypertrophic_scar": [],
+    "melasma": ["iron_oxides"],
+    "nevus": [],
+    "other": []
+  },
+  "phrasing": {
+    "closed_comedo": "closed comedo findings",
+    "open_comedo": "open comedo findings",
+    "papule": "papule findings",
+    "pustule": "pustule findings",
+    "nodule": "nodule findings",
+    "atrophic_scar": "atrophic scar findings",
+    "hypertrophic_scar": "hypertrophic scar findings",
+    "melasma": "melasma-like pigment findings",
+    "nevus": "nevus findings",
+    "other": "unsupported findings"
+  },
+  "referral_emphasis": [
+    "nodule", "atrophic_scar", "hypertrophic_scar", "melasma", "nevus", "other"
+  ]
+}
