@@ -1,0 +1,30 @@
+{
+  "products": [
+    {
+      "product_id": "P439926",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.drunkelephant.com/collections/masks/a-passioni-retinol-cream-999DE00000100.html",
+          "retrieved_at": "2026-07-16T21:16:17Z",
+          "source_sha256": "8326557e04030f7b197048cc4605984ddcef8a988ed2fca8b70f66ff98c39e6c",
+          "facts": {
+            "routine_roles": ["serum"],
+            "cadence": "once_daily",
+            "cadence_source": "https://www.drunkelephant.com/collections/masks/a-passioni-retinol-cream-999DE00000100.html"
+          }
+        }
+      ]
+    }
+  ],
+  "rejects": [
+    {
+      "product_id": "P446938",
+      "reason": "no noncomedogenic claim on manufacturer page: https://www.drunkelephant.com/collections/moisturizers/lala-retro-nourishing-whipped-refillable-moisturizer-999DE00000115.html states role (moisturizer) and cadence (apply one pump morning and night, use daily) but never states non-comedogenic / won't clog pores; the only 'comedogenic' mention is a customer Q&A question whose brand reply avoids the claim"
+    },
+    {
+      "product_id": "P406712",
+      "reason": "instruction_cadence_unknown not clearable: manufacturer page https://www.drunkelephant.com/collections/serums/b-hydra-intensive-hydration-serum-with-hyaluronic-acid-856556004180.html How-to-use ('Apply one pump to a clean, dry face, neck, chest, hands...') states no usage frequency; the only 'daily' on the page is marketing copy ('this daily flood of hydration'), not a usage instruction"
+    }
+  ]
+}

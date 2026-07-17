@@ -1,0 +1,26 @@
+{
+  "products": [
+    {
+      "product_id": "P297516",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.origins.com/product/15342/11226/skincare/cleanse/face-wash-and-cleansers/checks-and-balances/frothy-face-wash",
+          "retrieved_at": "2026-07-16T20:53:04Z",
+          "source_sha256": "3f4824ffe7a09469d9758476e6dbad0cbbea58300767ce2a291d4de62543778c",
+          "facts": {
+            "routine_roles": ["cleanser"],
+            "cadence": "daily",
+            "cadence_source": "https://www.origins.com/product/15342/11226/skincare/cleanse/face-wash-and-cleansers/checks-and-balances/frothy-face-wash"
+          }
+        }
+      ]
+    }
+  ],
+  "rejects": [
+    {
+      "product_id": "P270594",
+      "reason": "no noncomedogenic claim on manufacturer page"
+    }
+  ]
+}

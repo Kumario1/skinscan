@@ -112,12 +112,12 @@ def test_concern_efficacy_shrinks_a_thin_cell_further_toward_neutral():
     assert 0.5 < thin < thick <= 1.0
 
 
-def test_concern_efficacy_falls_back_to_general_acne_then_pooled():
+def test_exact_label_efficacy_skips_grouped_general_acne_then_uses_pooled():
     general = {"products": {"p1": {"acne_general": {
         "all": {"n": 50, "smoothed": 0.8, "help_rate": 0.8}}}}}
     score = ConcernEfficacySignal(general, {"version": "v1"}).score(
         _product(), "treatment", _ctx())
-    assert score.details["matches"][0]["ladder"] == "acne_general"
+    assert score is None
 
     pooled = {"products": {"p1": {"n": 40, "smoothed": 4.0}}}
     score = ConcernEfficacySignal({"products": {}}, {"version": "v1"}, pooled).score(

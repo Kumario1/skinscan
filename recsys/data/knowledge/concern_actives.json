@@ -5,7 +5,7 @@
     "acne_inflammatory": ["benzoyl_peroxide", "salicylic_acid", "azelaic_acid", "niacinamide"],
     "acne_cystic": ["benzoyl_peroxide", "salicylic_acid"],
     "acne_scarring": ["retinol", "vitamin_c", "glycolic_acid", "lactic_acid"],
-    "hyperpigmentation": ["azelaic_acid", "vitamin_c", "niacinamide", "tranexamic_acid", "alpha_arbutin", "glycolic_acid", "kojic_acid"],
+    "hyperpigmentation": ["azelaic_acid", "vitamin_c", "niacinamide", "tranexamic_acid", "alpha_arbutin", "glycolic_acid", "kojic_acid", "lactic_acid", "mandelic_acid"],
     "dryness": ["hyaluronic_acid", "ceramides", "glycerin", "squalane", "panthenol"]
   },
   "phrasing": {

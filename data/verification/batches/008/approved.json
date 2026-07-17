@@ -1,0 +1,112 @@
+{
+  "products": [
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:47:08.109213Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://skinfix.com/products/lipid-peptide-cream",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "cream",
+            "routine_roles": [
+              "moisturizer"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:42:20Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "fd4e913851a3743ff1a34e913ec9a1dd41c112b3d9d5455172caa8ffda11132c",
+          "source_url": "https://skinfix.com/products/lipid-peptide-cream",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P442840"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:47:08.109213Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://www.kiehls.com/skincare/face-moisturizers/ultra-facial-cream-with-squalane/622.html",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "leave_on",
+            "format": "cream",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "moisturizer"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:42:24Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "8a145512021bf98b40ccb28b43508ca287ed1c00c30d2e96b3889937af560344",
+          "source_url": "https://www.kiehls.com/skincare/face-moisturizers/ultra-facial-cream-with-squalane/622.html",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P421996"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:47:08.109213Z",
+          "facts": {
+            "broad_spectrum": true,
+            "label_effective_date": "20260109",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/61e543e3-9ace-6440-e053-2991aa0a9647.xml",
+            "label_verified_at": "2026-07-16",
+            "label_version": "13",
+            "otc_drug": true,
+            "source_set_id": "61e543e3-9ace-6440-e053-2991aa0a9647",
+            "spf": 50
+          },
+          "retrieved_at": "2026-07-16T18:42:11Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "3326fa27972f33906b0d77c0feb8baca16b92156cfa191ca2fdd38fa2d3fd189",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/61e543e3-9ace-6440-e053-2991aa0a9647.xml",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P429953"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:47:08.109213Z",
+          "facts": {
+            "broad_spectrum": true,
+            "label_effective_date": "20260109",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/af5c9801-26ce-5c60-e053-2995a90ab457.xml",
+            "label_verified_at": "2026-07-16",
+            "label_version": "6",
+            "otc_drug": true,
+            "source_set_id": "af5c9801-26ce-5c60-e053-2995a90ab457",
+            "spf": 35
+          },
+          "retrieved_at": "2026-07-16T18:42:11Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "3aed13366b285a59bd1f27227d779473002f093873deb77ff2a8be1d72caddc3",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/af5c9801-26ce-5c60-e053-2995a90ab457.xml",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P467976"
+    }
+  ],
+  "schema_version": "2"
+}

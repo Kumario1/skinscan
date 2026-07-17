@@ -1,0 +1,52 @@
+{
+  "products": [
+    {
+      "product_id": "P481169",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://tatcha.com/products/the-silk-sunscreen-spf-50",
+          "retrieved_at": "2026-07-16T21:00:20Z",
+          "source_sha256": "2a8616e3ec997ecc1be5c8e375663f3eb065c802e05243f2060656587a1c98d6",
+          "facts": {
+            "routine_roles": ["sunscreen"],
+            "cadence": "per_label",
+            "cadence_source": "https://tatcha.com/products/the-silk-sunscreen-spf-50",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page"
+          }
+        },
+        {
+          "status": "proposed",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/7799042a-d2de-480e-a8a3-827b3dc27907.xml",
+          "retrieved_at": "2026-07-16T21:00:20Z",
+          "source_sha256": "3a1ead63262eccc7983484f4ffcb157801e14338bfe6885dc86d0ff58a6ff5ba",
+          "facts": {
+            "broad_spectrum": true,
+            "spf": 50,
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/7799042a-d2de-480e-a8a3-827b3dc27907.xml",
+            "label_verified_at": "2026-07-16",
+            "source_set_id": "7799042a-d2de-480e-a8a3-827b3dc27907",
+            "label_version": "3",
+            "label_effective_date": "20250331",
+            "otc_drug": true
+          }
+        }
+      ]
+    }
+  ],
+  "rejects": [
+    {
+      "product_id": "P469522",
+      "reason": "No current DailyMed SPL exists for Paula's Choice RESIST Youth-Extending Daily Hydrating Fluid SPF 50 (drug_name searches 'youth extending', 'daily hydrating fluid', 'hydrating fluid spf 50', 'youth-extending' and labeler search \"Paula's Choice\" return no matching label), so broad_spectrum/spf/label_source cannot be verified from a regulatory label. Additionally the manufacturer page (https://www.paulaschoice.com/resist-youth-extending-daily-hydrating-fluid-spf-50/780.html, fetched 2026-07-16, product/name/size match) makes no non-comedogenic / won't-clog-pores claim (only a customer testimonial), so noncomedogenic_claim_not_verified cannot be cleared."
+    },
+    {
+      "product_id": "P466154",
+      "reason": "Manufacturer page unavailable: supergoop.com PDP returns 404 on all known slugs (products/daily-dose-vitamin-c-spf-40, products/daily-dose-vitamin-c-serum-spf-40, products/daily-dose-vitamin-c-serum-spf-40-pbase, pages/daily-dose-vitamin-c; fetched 2026-07-16) and supergoop.com search suggest returns zero products for 'daily dose vitamin c' while returning results for other products, indicating Daily Dose Vitamin C + SPF 40 Sunscreen Serum has been removed from the manufacturer's catalog (discontinued). Page-sourced facts (routine role, cadence, noncomedogenic claim) cannot be verified."
+    },
+    {
+      "product_id": "P429516",
+      "reason": "Exact catalog product no longer sold by manufacturer: coola.com URL for Full Spectrum 360° Sun Silk Drops Organic Sunscreen SPF 30 returns 404, and the current coola.com product at products/face-spf-30-sun-silk-organic-sunscreen-drops is the renamed/reformulated 'Anti-Aging Sun Silk Drops' (SKU CL10479; no 'Full Spectrum 360°'/'Organic' branding anywhere on page; new 2025 DailyMed SPL bbb29d0c-ae1f-409e-8fd6-ff3ea34dc9c2 lists actives avobenzone/octisalate/octocrylene vs the old Full Spectrum 360 label 9a03c1f7-098e-035d-e053-2a95a90a1fef with avobenzone/homosalate/octisalate/octocrylene). Additionally neither the current page nor either SPL makes a non-comedogenic claim."
+    }
+  ]
+}

@@ -393,3 +393,18 @@ def test_a_path_that_omits_concerns_defaults_to_both_acne_subtypes(tmp_path):
 def test_an_explicitly_empty_concerns_list_falls_back_to_the_default(tmp_path):
     policy = _write_policy(tmp_path, [_path_spec(concerns=[])])
     assert policy.paths[0].concerns == ("acne_comedonal", "acne_inflammatory")
+
+
+DEV_POLICY = Path(__file__).parent.parent / "configs" / "therapy_policy.dev.json"
+
+
+def test_dev_default_policy_loads_reviewed_and_selects_bp_primary():
+    policy = load_therapy_policy(DEV_POLICY)
+    assert policy.reviewed is True
+    assert policy.reviewed_by == "dev-default"
+    assert [p.option.therapy for p in policy.paths] == ["benzoyl_peroxide"]
+    decision, report = _decision_report()
+    plan = plan_therapy(decision, report, _profile(), policy)
+    assert plan.primary.therapy == "benzoyl_peroxide"
+    assert plan.primary.strength_band == "2.5%"
+    assert plan.deferred_reasons == []

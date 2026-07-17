@@ -43,11 +43,12 @@ def verification_status(product: CatalogProduct, slot: str) -> str:
         facts.extend([product.spf_source == "verified", product.broad_spectrum is True])
     if all(facts):
         return "verified"
+    # D-036: the catalog build derives routine_roles/cadence_source from the
+    # dump taxonomy, so those fields no longer distinguish reviewed evidence
+    # from a derived default. Only overlay-set markers count as evidence.
     has_evidence = bool(
         product.evidence_grade
         or product.daily_support_verified
-        or product.routine_roles
-        or product.cadence_source
         or product.label_source
         or product.contraindications_verified
     )

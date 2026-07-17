@@ -8,12 +8,12 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
-from .contracts import CONCERNS, SLOTS, ContractViolation, sha256_file
+from .contracts import LESION_TYPE_SET, SLOTS, ContractViolation, sha256_file
 
 
 @dataclass(frozen=True)
 class Knowledge:
-    concern_actives: dict[str, frozenset[str]]
+    lesion_actives: dict[str, frozenset[str]]
     phrasing: dict[str, str]
     referral_emphasis: frozenset[str]
     retinoids: frozenset[str]
@@ -30,21 +30,21 @@ class Knowledge:
     default_weights: dict[str, float]
     file_sha256s: dict[str, str]
 
-
 def load_knowledge(knowledge_dir: str | Path) -> Knowledge:
     knowledge_dir = Path(knowledge_dir)
     paths = {name: knowledge_dir / f"{name}.json"
-             for name in ("concern_actives", "safety_rules", "archetypes")}
+             for name in ("lesion_actives", "safety_rules", "archetypes")}
     raw = {}
     for name, path in paths.items():
         if not path.exists():
             raise ContractViolation(f"knowledge.{name}", f"missing {path}")
         raw[name] = json.loads(path.read_text(encoding="utf-8"))
 
-    ca = raw["concern_actives"]
-    for concern in ca.get("actives", {}):
-        if concern not in CONCERNS:
-            raise ContractViolation("knowledge.concern_actives", f"unknown concern {concern!r}")
+    ca = raw["lesion_actives"]
+    if set(ca.get("actives", {})) != LESION_TYPE_SET:
+        raise ContractViolation(
+            "knowledge.lesion_actives", "must contain the exact ten-label vocabulary"
+        )
 
     sr = raw["safety_rules"]
     prefs = sr.get("session_preferences", {})
@@ -59,7 +59,7 @@ def load_knowledge(knowledge_dir: str | Path) -> Knowledge:
                 raise ContractViolation("knowledge.archetypes", f"{a.get('id')}: unknown slot {slot!r}")
 
     return Knowledge(
-        concern_actives={k: frozenset(v) for k, v in ca.get("actives", {}).items()},
+        lesion_actives={k: frozenset(v) for k, v in ca.get("actives", {}).items()},
         phrasing=dict(ca.get("phrasing") or {}),
         referral_emphasis=frozenset(ca.get("referral_emphasis") or []),
         retinoids=frozenset(sr.get("retinoids") or []),

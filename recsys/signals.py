@@ -33,23 +33,36 @@ class SignalScore:
 
 
 @dataclass(frozen=True)
-class TargetConcern:
-    concern: str
-    severity: int
+class TargetLesion:
+    lesion_type: str
+    count: int
     confidence: float
+    target_actives: tuple[str, ...] = ()
+    required_roles: tuple[str, ...] = ()
+    target_specs: tuple[dict, ...] = ()
+
+    @property
+    def concern(self) -> str:  # external-plugin compatibility
+        return self.lesion_type
+
+    @property
+    def severity(self) -> int:  # legacy signal compatibility
+        return max(1, self.count)
+
+
+TargetConcern = TargetLesion
 
 
 @dataclass(frozen=True)
 class ScoringContext:
-    targets: tuple[TargetConcern, ...]
+    targets: tuple[TargetLesion, ...]
     profile: Profile
     knowledge: Knowledge
     category_prices: dict[str, tuple[float, ...]]  # sorted asc, per category
 
 
-class ConcernFitSignal:
-    """Catalog actives x concern->actives knowledge map, weighted by target
-    severity. Built-in (no store)."""
+class LesionFitSignal:
+    """Catalog actives x exact-label targets, weighted by finding count."""
 
     name = "concern_fit"
     version = "v0"
@@ -59,13 +72,19 @@ class ConcernFitSignal:
             return None
         actives = set(product.actives)
         matched: dict[str, list[str]] = {}
-        total = sum(t.severity for t in ctx.targets) or 1
-        hit_weight = 0
+        total = sum(max(1, t.count) for t in ctx.targets) or 1
+        hit_weight = 0.0
         for t in ctx.targets:
-            overlap = sorted(actives & ctx.knowledge.concern_actives.get(t.concern, frozenset()))
+            pool = frozenset(t.target_actives) or ctx.knowledge.lesion_actives.get(
+                t.lesion_type, frozenset()
+            )
+            overlap = sorted(actives & pool)
             if overlap:
-                matched[t.concern] = overlap
-                hit_weight += t.severity
+                matched[t.lesion_type] = overlap
+                # Graded, not 0/1: weight by how much of the concern's active
+                # pool the product carries, so products stop tying at 1.0 and
+                # the ranking actually varies with the concern mix.
+                hit_weight += max(1, t.count) * len(overlap) / len(pool)
         if not matched:
             return SignalScore(self.name, 0.0, "no concern-targeting actives", {"matched": {}})
         by_active: dict[str, list[str]] = {}
@@ -78,6 +97,9 @@ class ConcernFitSignal:
             for active, phrases in sorted(by_active.items())
         )
         return SignalScore(self.name, round(hit_weight / total, 6), evidence, {"matched": matched})
+
+
+ConcernFitSignal = LesionFitSignal
 
 
 class PriceValueSignal:
@@ -202,24 +224,14 @@ class ConcernEfficacySignal:
         weighted = []
         for target in ctx.targets:
             ladder = "exact"
-            concern = target.concern
-            entry = product_cells.get(concern)
+            lesion_type = target.lesion_type
+            entry = product_cells.get(lesion_type)
             cell = None
             if entry:
                 cell = (entry.get("by_skin_type") or {}).get(ctx.profile.skin_type)
                 cell = cell or entry.get("all")
                 if not cell or not cell.get("n"):
                     cell = None
-            if cell is None and target.concern.startswith("acne_"):
-                ladder = "acne_general"
-                concern = "acne_general"
-                entry = product_cells.get(concern)
-                cell = None
-                if entry:
-                    cell = (entry.get("by_skin_type") or {}).get(ctx.profile.skin_type)
-                    cell = cell or entry.get("all")
-                    if not cell or not cell.get("n"):
-                        cell = None
             if cell:
                 n = int(cell["n"])
                 smoothed = float(cell["smoothed"])
@@ -230,15 +242,15 @@ class ConcernEfficacySignal:
                 if not pooled or not pooled.get("n"):
                     continue
                 ladder = "pooled"
-                concern = "pooled"
+                lesion_type = "pooled"
                 n = int(pooled["n"])
                 smoothed = (float(pooled["smoothed"]) - 1) / 4
                 adjusted = max(0.0, min(1.0, smoothed))
-            target_weight = target.severity * max(target.confidence, 0.01)
+            target_weight = max(1, target.count) * max(target.confidence, 0.01)
             weighted.append((adjusted, target_weight))
             matches.append({
-                "target": target.concern,
-                "cell_concern": concern,
+                "target": target.lesion_type,
+                "cell_lesion_type": lesion_type,
                 "ladder": ladder,
                 "n": n,
                 "help_rate": cell.get("help_rate") if cell else None,
@@ -252,7 +264,6 @@ class ConcernEfficacySignal:
             (
                 f"{m['help_rate']:.0%} of {m['n']} reviewers said it helped "
                 f"{ctx.knowledge.phrasing.get(m['target'], m['target'])}"
-                + (" (general-acne fallback)" if m["ladder"] == "acne_general" else "")
             ) if m["ladder"] != "pooled" else
             f"{m['smoothed'] * 4 + 1:.1f}★ across {m['n']} pooled reviews"
             for m in matches
@@ -284,7 +295,7 @@ def load_providers(
     ranking is visible in the document rather than silent.
     Returns (providers, store_meta, warnings)."""
     data_root = Path(data_root)
-    providers: list = [ConcernFitSignal(), PriceValueSignal()]
+    providers: list = [LesionFitSignal(), PriceValueSignal()]
     meta: list[dict] = []
     warnings: list[str] = []
     registry_path = data_root / "signals" / "registry.json"

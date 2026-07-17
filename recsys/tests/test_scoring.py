@@ -132,7 +132,9 @@ def test_verification_status_is_explicit_and_sort_only():
     weights = {"a": 0.5, "b": 0.5}
     scored = score_products(
         # p2 has some evidence; p1 has none. Completeness is a tier, not a score.
-        [product("p1"), product("p2", roles=("treatment",))],
+        # D-036: routine_roles is build-derived, so only overlay-set markers
+        # (label_source here) count as evidence.
+        [product("p1"), product("p2", label_source="https://example.test/label")],
         "treatment", providers, ctx(), weights,
     )
     assert [s.product.product_id for s in scored] == ["p2", "p1"]
@@ -153,7 +155,7 @@ def test_verified_candidate_precedes_partial_candidate():
             "source": "https://example.test/label",
         },),
     )
-    partial = product("partial", roles=("treatment",))
+    partial = product("partial", label_source="https://example.test/label")
     scored = score_products(
         [partial, full], "treatment", [FixedSignal("a", 0.5)], ctx(), {"a": 1.0},
     )
@@ -218,21 +220,24 @@ def test_deterministic_tiebreak_by_product_id():
     assert [s.product.product_id for s in scored] == ["p1", "p2"]
 
 
-def test_concern_fit_severity_weighting():
+def test_exact_lesion_fit_count_weighting():
     from recsys.signals import ConcernFitSignal
     targets = [
-        TargetConcern("acne_inflammatory", 4, 0.9),
-        TargetConcern("hyperpigmentation", 2, 0.8),
+        TargetConcern("papule", 4, 0.9),
+        TargetConcern("closed_comedo", 2, 0.8),
     ]
-    azelaic = product(actives=["azelaic_acid"])  # matches both concerns
+    adapalene = product(actives=["adapalene"])  # exact active for both labels
     dryness_only = product("p2", actives=["squalane"])  # matches neither
     fit = ConcernFitSignal()
-    both = fit.score(azelaic, "treatment", ctx(targets))
+    both = fit.score(adapalene, "treatment", ctx(targets))
     none = fit.score(dryness_only, "treatment", ctx(targets))
-    assert both.value == 1.0
-    assert "azelaic acid" in both.evidence
+    # Each exact label has a two-active pool and adapalene covers one active.
+    assert both.value == 0.5
+    assert "adapalene" in both.evidence
     assert none.value == 0.0
-    # partial match scales with severity: niacinamide targets both here too,
-    # vitamin_c only hyperpigmentation (severity 2 of total 6)
-    vitc = fit.score(product("p3", actives=["vitamin_c"]), "treatment", ctx(targets))
-    assert vitc.value == round(2 / 6, 6)
+    # More of both exact-label pools covered ranks strictly higher.
+    two = fit.score(
+        product("p4", actives=["adapalene", "salicylic_acid", "benzoyl_peroxide"]),
+        "treatment", ctx(targets)
+    )
+    assert two.value > both.value

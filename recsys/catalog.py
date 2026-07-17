@@ -111,7 +111,7 @@ class CatalogProduct:
 
     @classmethod
     def from_dict(cls, d: dict) -> "CatalogProduct":
-        if d.get("category") not in SLOTS:
+        if d.get("category") not in {*SLOTS, "scar_care"}:
             raise ContractViolation(
                 "catalog.category",
                 f"product {d.get('product_id')!r}: unknown {d.get('category')!r}",
@@ -130,7 +130,16 @@ class CatalogProduct:
         parsed_actives = (
             stated if stated is not None else tuple(parse_ingredients(",".join(inci))[0])
         )
-        if tuple(d.get("actives") or []) != parsed_actives:
+        declared_actives = tuple(d.get("actives") or [])
+        # Schema migration: iron-oxide CI parsing was added after existing
+        # catalogs were built.  It is a deterministic fact from the unchanged
+        # INCI bytes, so permit exactly that additive derivation without
+        # weakening stale-active rejection for any other difference.
+        additive_iron_migration = (
+            set(parsed_actives) - set(declared_actives) == {"iron_oxides"}
+            and set(declared_actives) == set(parsed_actives) - {"iron_oxides"}
+        )
+        if declared_actives != parsed_actives and not additive_iron_migration:
             raise ContractViolation(
                 "catalog.actives", f"product {d['product_id']!r}: stale or invalid"
             )

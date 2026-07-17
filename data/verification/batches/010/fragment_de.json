@@ -1,0 +1,86 @@
+{
+  "products": [
+    {
+      "product_id": "P426836",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.drunkelephant.com/collections/cleansers/beste-no.-9-jelly-cleanser-999DE00000101.html",
+          "retrieved_at": "2026-07-16T20:55:29Z",
+          "source_sha256": "e99470c5efe4234af04425880b0b468ed956393d515fdc18d84b88c98f128909",
+          "facts": {
+            "routine_roles": [
+              "cleanser"
+            ],
+            "cadence": "pm_daily",
+            "cadence_source": "https://www.drunkelephant.com/collections/cleansers/beste-no.-9-jelly-cleanser-999DE00000101.html"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P442566",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.drunkelephant.com/collections/cleansers/slaai-makeup-melting-butter-cleanser-856556004753.html",
+          "retrieved_at": "2026-07-16T20:55:29Z",
+          "source_sha256": "8d93fbe7c1dc76bc6e0675746060420f81004553ff4dfb368ed86d5c0bd8bb9a",
+          "facts": {
+            "routine_roles": [
+              "cleanser"
+            ],
+            "cadence": "pm_daily",
+            "cadence_source": "https://www.drunkelephant.com/collections/cleansers/slaai-makeup-melting-butter-cleanser-856556004753.html"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P400259",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.drunkelephant.com/collections/serums/c-firma-fresh-vitamin-c-day-serum-812343034358.html",
+          "retrieved_at": "2026-07-16T20:55:29Z",
+          "source_sha256": "9355e6eb20c0ec324a637402d7f74f7da8274d83a8921be1e8d15f1fd0e04b32",
+          "facts": {
+            "routine_roles": [
+              "serum"
+            ],
+            "cadence": "am_daily",
+            "cadence_source": "https://www.drunkelephant.com/collections/serums/c-firma-fresh-vitamin-c-day-serum-812343034358.html"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P392246",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.drunkelephant.com/collections/serums/t.l.c.-framboos-glycolic-resurfacing-night-serum-999DE00000104.html",
+          "retrieved_at": "2026-07-16T20:55:29Z",
+          "source_sha256": "7554ee30962eb1ed15235c2df1f88968b30f2a83a8d83974ce6d1bab742037fe",
+          "facts": {
+            "routine_roles": [
+              "serum"
+            ],
+            "cadence": "pm_daily",
+            "cadence_source": "https://www.drunkelephant.com/collections/serums/t.l.c.-framboos-glycolic-resurfacing-night-serum-999DE00000104.html"
+          }
+        }
+      ]
+    }
+  ],
+  "rejects": [
+    {
+      "product_id": "P432668",
+      "reason": "manufacturer page (now sold as 'D-Bronzi Bronzing Drops with Peptides', 30 mL) states no usage frequency anywhere \u2014 how-to says only 'Shake before use. Apply a drop or more to skin.'; instruction_cadence_unknown/instruction_cadence_source_missing not clearable"
+    },
+    {
+      "product_id": "P419221",
+      "reason": "Umbra Tinte Physical Daily Defense SPF 30 no longer sold on drunkelephant.com: absent from sitemap_0.xml and site search returns no product results; brand replaced it with 'Umbra Tinte Mineral Cream SPF 30' (different product/variant, DailyMed setid 6461d19a-16e7-43ac-943c-229fe2c6f76c). No manufacturer page for the catalog variant"
+    }
+  ]
+}

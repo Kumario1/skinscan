@@ -1,10 +1,13 @@
 {
-  "builder_version": "recsys.tools.build_catalog@1",
+  "builder_version": "recsys.tools.build_catalog@2",
   "products": [
     {
       "actives": [],
       "brand": "Caudalie",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": "mist",
       "inci": [
         "Vitis Vinifera (Grape) Fruit Water*",
@@ -12,9 +15,15 @@
         "Nitrogen."
       ],
       "inci_sha256": "10943d0a9749631c3fd93a88573c2340e6509d73e648e5f79852db7e16e841a2",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Grape Water Moisturizing Face Mist",
       "price_usd": 12.0,
       "product_id": "P12045",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "2.5 oz / 75 mL",
       "spf": null,
       "spf_source": null
@@ -22,15 +31,24 @@
     {
       "actives": [],
       "brand": "Shiseido",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": null,
       "inci": [
         "100% Cotton."
       ],
       "inci_sha256": "c893a62401039f6ad036572592a89c9f19b92f366d272f7036d1851e468454d7",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Facial Cotton",
       "price_usd": 13.0,
       "product_id": "P173726",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "165 sheets",
       "spf": null,
       "spf_source": null
@@ -41,7 +59,10 @@
         "hyaluronic_acid"
       ],
       "brand": "CLINIQUE",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": "oil",
       "inci": [
         "Water",
@@ -91,9 +112,15 @@
         "Titanium Dioxide (Ci 77891)."
       ],
       "inci_sha256": "3620dc26dfdd134c6f7b23f60448cdb5bcdca83b3b4be6794c1dcb2af7a5e5c6",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Acne Solutions All-Over Clearing Treatment Oil-Free",
       "price_usd": 26.0,
       "product_id": "P188306",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "1.7 oz/ 50 mL",
       "spf": null,
       "spf_source": null
@@ -106,7 +133,10 @@
         "squalane"
       ],
       "brand": "First Aid Beauty",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": "cream",
       "inci": [
         "Colloidal Oatmeal 0.50%",
@@ -134,9 +164,15 @@
         "Eucalyptus Globulus Leaf Oil."
       ],
       "inci_sha256": "55cf5ec5989f1d12e174f2bf7de0d7f7a4f38c6eb3ee69f6b2bec9a745e3d0d3",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Ultra Repair Cream Intense Hydration",
       "price_usd": 38.0,
       "product_id": "P248407",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "6 oz/ 170 g",
       "spf": null,
       "spf_source": null
@@ -153,7 +189,10 @@
         "willow_bark"
       ],
       "brand": "Dr. Dennis Gross Skincare",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": "peel",
       "inci": [
         "Step 1:",
@@ -213,9 +252,15 @@
         "Potassium Sorbate."
       ],
       "inci_sha256": "97acd45d85323811e606ec76a9a3b5acd5b889cfa28587e7f3c612660752f69c",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Alpha Beta Extra Strength Daily Peel Pads",
       "price_usd": 92.0,
       "product_id": "P269122",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "30 Treatments + 5 Bonus",
       "spf": null,
       "spf_source": null
@@ -230,7 +275,10 @@
         "vitamin_c"
       ],
       "brand": "Dr. Dennis Gross Skincare",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": "peel",
       "inci": [
         "Step 1:",
@@ -286,9 +334,15 @@
         "Potassium Sorbate."
       ],
       "inci_sha256": "40e3d30ca9343dd9f6097aad4de7f56a6cdf3b770728006e724e39da7753b1bc",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Alpha Beta Universal Daily Peel Pads",
       "price_usd": 92.0,
       "product_id": "P377533",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "30 Treatments + 5 Bonus",
       "spf": null,
       "spf_source": null
@@ -301,7 +355,10 @@
         "squalane"
       ],
       "brand": "belif",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": "cream",
       "inci": [
         "Water",
@@ -361,9 +418,15 @@
         "Linalool."
       ],
       "inci_sha256": "36fdb140d32f697461fa1e8206421e746dd7ebabfa2ccd4b7e6b8b68b13a1576",
+      "intended_areas": [
+        "face"
+      ],
       "name": "The True Cream Aqua Bomb",
       "price_usd": 38.0,
       "product_id": "P394639",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "1.68 oz/ 50 mL",
       "spf": null,
       "spf_source": null
@@ -376,7 +439,10 @@
         "vitamin_c"
       ],
       "brand": "Drunk Elephant",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": "serum",
       "inci": [
         "Water/Aqua/Eau",
@@ -414,9 +480,15 @@
         "Ethylhexylglycerin."
       ],
       "inci_sha256": "e4c602eca33cc9dce767b05a6d8e7d109da02af29d7682560ca8dbf77f0d4344",
+      "intended_areas": [
+        "face"
+      ],
       "name": "C-Firma Fresh Vitamin-C Day Serum",
       "price_usd": 78.0,
       "product_id": "P400259",
+      "routine_roles": [
+        "serum"
+      ],
       "size": ".94 oz/ 28 mL",
       "spf": null,
       "spf_source": null
@@ -426,7 +498,10 @@
         "salicylic_acid"
       ],
       "brand": "Murad",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": null,
       "inci": [
         "Salicylic Acid (1.5%)",
@@ -470,9 +545,15 @@
         "Fragrance (Parfum)."
       ],
       "inci_sha256": "85ceb8de2a4744328aebfabf142ada97b9a07254eb6bb14f862dab8b7aa2735b",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Acne Control Clarifying Cleanser",
       "price_usd": 36.0,
       "product_id": "P4016",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "6.75 oz",
       "spf": null,
       "spf_source": null
@@ -483,7 +564,10 @@
         "panthenol"
       ],
       "brand": "tarte",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": "gel",
       "inci": [
         "Water",
@@ -518,9 +602,15 @@
         "Linalool."
       ],
       "inci_sha256": "47f3da1f92324c93d36b54ebfc70f52cfcc45030ba05d91aff46b259c7e5ce7c",
+      "intended_areas": [
+        "face"
+      ],
       "name": "SEA Deep Dive Cleansing Gel",
       "price_usd": 12.0,
       "product_id": "P405096",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "1.7 oz/ 50 mL",
       "spf": null,
       "spf_source": null
@@ -530,7 +620,10 @@
         "glycerin"
       ],
       "brand": "SEPHORA COLLECTION",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": null,
       "inci": [
         "Water",
@@ -552,9 +645,15 @@
         "Tocopherol."
       ],
       "inci_sha256": "61434e82f06e1fd14cf6e4e3efa422360f68808988803363941c00aaa4fb97cf",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Cleansing & Exfoliating Wipes",
       "price_usd": 3.0,
       "product_id": "P409800",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "10 Wipes",
       "spf": null,
       "spf_source": null
@@ -567,7 +666,10 @@
         "vitamin_c"
       ],
       "brand": "Youth To The People",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": null,
       "inci": [
         "Water/Aqua/Eau",
@@ -607,9 +709,15 @@
         "Chlorophyllin-Copper Complex (CI 75810)."
       ],
       "inci_sha256": "f58235b96bccadab4aa3695d38627551841904ab74d50ed8bd40cf0396665b9a",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Superfood Antioxidant Cleanser",
       "price_usd": 39.0,
       "product_id": "P411387",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "8 oz/ 237 mL",
       "spf": null,
       "spf_source": null
@@ -619,7 +727,10 @@
         "glycerin"
       ],
       "brand": "Farmacy",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": "balm",
       "inci": [
         "Cetyl Ethylhexanoate",
@@ -657,9 +768,15 @@
         "Linalool."
       ],
       "inci_sha256": "d7c7e0b4fc9eb6c02c39a462f6c720072e375f7f4129b8552fc9485e55c0d1d2",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Green Clean Makeup Removing Cleansing Balm",
       "price_usd": 36.0,
       "product_id": "P417238",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "3.4 oz/ 100 mL",
       "spf": null,
       "spf_source": null
@@ -670,7 +787,10 @@
         "hyaluronic_acid"
       ],
       "brand": "Tatcha",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": "cream",
       "inci": [
         "Water",
@@ -704,9 +824,15 @@
         "Phenoxyethanol. *Hadasei-3."
       ],
       "inci_sha256": "bac2724a5e0244239fd2c7f668579716496e6ce5dc74823beafe0b3e99b2a205",
+      "intended_areas": [
+        "face"
+      ],
       "name": "The Water Cream Oil-Free Pore Minimizing Moisturizer",
       "price_usd": 70.0,
       "product_id": "P418218",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "1.7 oz/ 50 mL",
       "spf": null,
       "spf_source": null
@@ -716,7 +842,10 @@
         "salicylic_acid"
       ],
       "brand": "Peace Out",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Salicylic Acid 0.5%",
@@ -725,9 +854,15 @@
         "Hydrocolloid Polymer Technology."
       ],
       "inci_sha256": "2413e881badf58edb7978ba4d3501ecbf2c448888d363a65e46453a71d8f11cb",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Salicylic Acid Acne Healing Dots",
       "price_usd": 19.0,
       "product_id": "P421275",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "20 Healing Dots",
       "spf": null,
       "spf_source": null
@@ -738,7 +873,10 @@
         "glycolic_acid"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Aqua (Water)",
@@ -786,9 +924,15 @@
         "Caprylyl Glycol."
       ],
       "inci_sha256": "e57afef03401e9ad2eb91a5e584540742ea16b9630850ef880b268b33828d279",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Glycolic Acid 7% Exfoliating Toning Solution",
       "price_usd": 13.0,
       "product_id": "P427406",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "8 oz/ 240 mL",
       "spf": null,
       "spf_source": null
@@ -800,7 +944,10 @@
         "vitamin_c"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Ascorbic Acid",
@@ -820,9 +967,15 @@
         "BHT."
       ],
       "inci_sha256": "8b7593817f7a8e7b56636655a497e1ca78aed824452d98da28065826304b9951",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Vitamin C Suspension 23% + HA Spheres 2%",
       "price_usd": 7.8,
       "product_id": "P427410",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -832,7 +985,10 @@
         "azelaic_acid"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": "cream",
       "inci": [
         "Water",
@@ -854,9 +1010,15 @@
         "Chlorphenesin."
       ],
       "inci_sha256": "9925e36e0d0ceed56614d5f6821d8c9af40fa701aeebc0e097c4f7fa628ac090",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Azelaic Acid 10% Suspension Brightening Cream",
       "price_usd": 11.1,
       "product_id": "P427411",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -867,7 +1029,10 @@
         "lactic_acid"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": "serum",
       "inci": [
         "Water",
@@ -884,9 +1049,15 @@
         "Chlorphenesin."
       ],
       "inci_sha256": "4e4875e2e8b376fdec0b57b47e2df2e5276f654da667aa7b455ff55ea03d816d",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Alpha Arbutin 2% + HA Hyperpigmentation Serum",
       "price_usd": 11.1,
       "product_id": "P427412",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -897,7 +1068,10 @@
         "lactic_acid"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": "serum",
       "inci": [
         "Aqua (Water)",
@@ -918,9 +1092,15 @@
         "Caprylyl Glycol."
       ],
       "inci_sha256": "7536c9f5a9b27c2fa2517200b22e8aab5c9b26302b37045332bd90f019ad8023",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Lactic Acid 10% + HA 2% Exfoliating Serum",
       "price_usd": 8.9,
       "product_id": "P427413",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -932,7 +1112,10 @@
         "hyaluronic_acid"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Water",
@@ -983,9 +1166,15 @@
         "Chlorphenesin."
       ],
       "inci_sha256": "ab93fdef7b71ffea6bd547ceaa047196ea7475aa964e2894474fc68bb8369e43",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Natural Moisturizing Factors + HA",
       "price_usd": 6.5,
       "product_id": "P427414",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -993,15 +1182,24 @@
     {
       "actives": [],
       "brand": "The Ordinary",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": "oil",
       "inci": [
         "Rosa Canina Seed Oil."
       ],
       "inci_sha256": "e9aa2cf99b9d8926edb451f7a8f3f3bada99e5d6b71a24e3b5ee255e447b843b",
+      "intended_areas": [
+        "face"
+      ],
       "name": "100% Organic Cold-Pressed Rose Hip Seed Oil",
       "price_usd": 10.9,
       "product_id": "P427415",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -1011,7 +1209,10 @@
         "niacinamide"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": "serum",
       "inci": [
         "Aqua (Water)",
@@ -1027,9 +1228,15 @@
         "Chlorphenesin."
       ],
       "inci_sha256": "eb5d936ae0569aba7c15e0ce0a61d01f58914c45ce9a4b8df6d53b520de86263",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Niacinamide 10% + Zinc 1% Oil Control Serum",
       "price_usd": 6.0,
       "product_id": "P427417",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -1041,7 +1248,10 @@
         "panthenol"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": "serum",
       "inci": [
         "Water",
@@ -1064,9 +1274,15 @@
         "Caprylyl Glycol."
       ],
       "inci_sha256": "2e6b76b2a5b5ea420837a9143eee9ccf6dbdb0f16de3f8691f87a7700c96f201",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Hyaluronic Acid 2% + B5 Hydrating Serum",
       "price_usd": 15.7,
       "product_id": "P427419",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "2 oz/ 60 mL",
       "spf": null,
       "spf_source": null
@@ -1078,7 +1294,10 @@
         "hyaluronic_acid"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": "serum",
       "inci": [
         "Aqua (Water)",
@@ -1134,9 +1353,15 @@
         "Chlorphenesin."
       ],
       "inci_sha256": "eeca9fee25e267ca426b927c5c686696d029268beab6f44b91d9943d8b2b38ce",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Multi-Peptide + HA Serum",
       "price_usd": 30.8,
       "product_id": "P427420",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "2 oz / 60 mL",
       "spf": null,
       "spf_source": null
@@ -1147,7 +1372,10 @@
         "hyaluronic_acid"
       ],
       "brand": "Drunk Elephant",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Water/Aqua/Eau",
@@ -1211,9 +1439,15 @@
         "Symphytum Officinale Callus Culture Extract."
       ],
       "inci_sha256": "f55bf0b43ea5081027b2cfb67807c9ed839cc95afd519aba50f5a9e875b16a73",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Protini Polypeptide Firming Refillable Moisturizer",
       "price_usd": 68.0,
       "product_id": "P427421",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "1.69 oz/ 50 mL",
       "spf": null,
       "spf_source": null
@@ -1223,7 +1457,10 @@
         "glycerin"
       ],
       "brand": "Tatcha",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": null,
       "inci": [
         "Water",
@@ -1250,9 +1487,15 @@
         "Phenoxyethanol."
       ],
       "inci_sha256": "15b1fa86d5d4376c5a95d738427abf3038383dd53e5f08930fd534efead458a0",
+      "intended_areas": [
+        "face"
+      ],
       "name": "The Deep Cleanse Gentle Exfoliating Cleanser",
       "price_usd": 40.0,
       "product_id": "P427536",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "5 oz/ 150 mL",
       "spf": null,
       "spf_source": null
@@ -1260,7 +1503,10 @@
     {
       "actives": [],
       "brand": "Shiseido",
+      "cadence": "am",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "spf",
+      "exposure": "leave_on",
       "format": "stick",
       "inci": [
         "Avobenzone 2.5%",
@@ -1292,9 +1538,15 @@
         "Fragrance."
       ],
       "inci_sha256": "97a83b6229407df2f56779ff482b53132d1c7ed9b705213cb368078f4818a793",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Clear Sunscreen Stick SPF 50+",
       "price_usd": 30.0,
       "product_id": "P429242",
+      "routine_roles": [
+        "sunscreen"
+      ],
       "size": "0.7 oz/ 20 g",
       "spf": 50,
       "spf_source": "name_parse"
@@ -1302,7 +1554,10 @@
     {
       "actives": [],
       "brand": "Supergoop!",
+      "cadence": "am",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "spf",
+      "exposure": "leave_on",
       "format": "stick",
       "inci": [
         "C12-15 Alkyl Benzoate",
@@ -1327,9 +1582,15 @@
         "Octocrylene 10%"
       ],
       "inci_sha256": "43d4062c11b76ca07733865b73ed01fbdbf03f4a9fbccaa4af9c2d6746c1d661",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Glow Stick Sunscreen SPF 50 PA++++",
       "price_usd": 26.0,
       "product_id": "P429953",
+      "routine_roles": [
+        "sunscreen"
+      ],
       "size": "0.7 oz/ 20 g",
       "spf": 50,
       "spf_source": "name_parse"
@@ -1342,7 +1603,10 @@
         "retinol"
       ],
       "brand": "Drunk Elephant",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": "cream",
       "inci": [
         "Water/Aqua/Eau",
@@ -1410,9 +1674,15 @@
         "Ethylhexylglycerin."
       ],
       "inci_sha256": "29603dd6d45ac08d1e2620c79848435d02c8e1ea020298f8ce48c0fb3d64b0f7",
+      "intended_areas": [
+        "face"
+      ],
       "name": "A-Passioni Retinol Cream",
       "price_usd": 74.0,
       "product_id": "P439926",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -1422,7 +1692,10 @@
         "glycerin"
       ],
       "brand": "Supergoop!",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Avobenzone 2.5%",
@@ -1449,9 +1722,15 @@
         "Chlorphenesin."
       ],
       "inci_sha256": "31436b98f93db02d1a731c95599cce21a2c46a64acc5ee347c64dd4c70bc5534",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Superscreen Daily Moisturizer Sunscreen SPF 40 PA+++",
       "price_usd": 44.0,
       "product_id": "P439928",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "1.7 oz/ 50 mL",
       "spf": 40,
       "spf_source": "name_parse"
@@ -1466,7 +1745,10 @@
         "vitamin_c"
       ],
       "brand": "Youth To The People",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": "mask",
       "inci": [
         "Water/Aqua/Eau",
@@ -1503,9 +1785,15 @@
         "Limonene"
       ],
       "inci_sha256": "f6f3caa417c37ecd03b9b29e06c1fc6955b33adbc8eafe0f20df7d3a4e0bd839",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Superberry Hydrate + Glow Dream Night Mask with Vitamin C",
       "price_usd": 52.0,
       "product_id": "P440307",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "2 oz/ 59 mL",
       "spf": null,
       "spf_source": null
@@ -1518,7 +1806,10 @@
         "squalane"
       ],
       "brand": "Tatcha",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": "cream",
       "inci": [
         "Aqua/Water/Eau",
@@ -1570,9 +1861,15 @@
         "Violet 2 (Ci 60725)"
       ],
       "inci_sha256": "18a2943de868a3dddc52d523fb72b79114169ad109f9fb1076de2d830dbea565",
+      "intended_areas": [
+        "face"
+      ],
       "name": "The Dewy Skin Cream Plumping & Hydrating Moisturizer",
       "price_usd": 70.0,
       "product_id": "P441101",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "1.7 oz/ 50 mL",
       "spf": null,
       "spf_source": null
@@ -1586,7 +1883,10 @@
         "salicylic_acid"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Glycolic Acid",
@@ -1617,9 +1917,15 @@
         "Caprylyl Glycol."
       ],
       "inci_sha256": "f7981ef32ee7e32384ec42e7cecaa16f4992147594920d83fa74bf46398c111b",
+      "intended_areas": [
+        "face"
+      ],
       "name": "AHA 30% + BHA 2% Exfoliating Peeling Solution",
       "price_usd": 9.5,
       "product_id": "P442563",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -1631,7 +1937,10 @@
         "salicylic_acid"
       ],
       "brand": "The INKEY List",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": null,
       "inci": [
         "Aqua (Water)",
@@ -1662,9 +1971,15 @@
         "Hydrogenated Palm Glycerides Citrate."
       ],
       "inci_sha256": "10e57eb928fe7dab80d53511334096c29f30030a14cedba5967e75271392ee7a",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Salicylic Acid Acne + Pore Cleanser",
       "price_usd": 11.99,
       "product_id": "P443833",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "5 oz/ 150 mL",
       "spf": null,
       "spf_source": null
@@ -1677,7 +1992,10 @@
         "squalane"
       ],
       "brand": "The INKEY List",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": "serum",
       "inci": [
         "Water",
@@ -1713,9 +2031,15 @@
         "Phenoxyethanol."
       ],
       "inci_sha256": "9fa8231193e4ebe4cd7be4125582991b2071a3530cd96211ab6edd74f1906b50",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Retinol Anti-Aging Serum",
       "price_usd": 12.99,
       "product_id": "P443842",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -1726,7 +2050,10 @@
         "squalane"
       ],
       "brand": "The Ordinary",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": null,
       "inci": [
         "Squalane",
@@ -1751,9 +2078,15 @@
         "Chlorphenesin."
       ],
       "inci_sha256": "a21a096d8fa8683b90294689961feb8d391c5aebec32119c6bcc6865c9d26503",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Squalane Cleanser",
       "price_usd": 9.0,
       "product_id": "P444718",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "1.7 oz/ 50 mL",
       "spf": null,
       "spf_source": null
@@ -1765,7 +2098,10 @@
         "squalane"
       ],
       "brand": "The Ordinary",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Water",
@@ -1789,9 +2125,15 @@
         "Phenoxyethanol."
       ],
       "inci_sha256": "1bccf3d13bece999f0a0a524d16d776964d841679d6cb7f8f0f310bdde452750",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Salicylic Acid 2% Masque",
       "price_usd": 13.3,
       "product_id": "P448530",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "1.7 oz/ 50 mL",
       "spf": null,
       "spf_source": null
@@ -1799,7 +2141,10 @@
     {
       "actives": [],
       "brand": "Tower 28 Beauty",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Water",
@@ -1807,9 +2152,15 @@
         "Hypochlorous Acid."
       ],
       "inci_sha256": "b1ea8c0ab105ba658e4297fb5b0fae2bc9fd8b4873084771c04ec0a9615e7cf1",
+      "intended_areas": [
+        "face"
+      ],
       "name": "SOS Daily Rescue Facial Spray",
       "price_usd": 12.0,
       "product_id": "P448852",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "1 oz/ 30 mL",
       "spf": null,
       "spf_source": null
@@ -1817,7 +2168,10 @@
     {
       "actives": [],
       "brand": "Supergoop!",
+      "cadence": "am",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "spf",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Avobenzone",
@@ -1849,9 +2203,15 @@
         "Tocopherol."
       ],
       "inci_sha256": "856b8cc0014fb7fa0427bc0cee99cc9531f16f527ec25bad7420019ec44ed7a9",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Unseen Sunscreen SPF 40 PA+++",
       "price_usd": 48.0,
       "product_id": "P454380",
+      "routine_roles": [
+        "sunscreen"
+      ],
       "size": "2.5 oz/ 73.9 mL",
       "spf": 40,
       "spf_source": "name_parse"
@@ -1859,7 +2219,10 @@
     {
       "actives": [],
       "brand": "The INKEY List",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": "balm",
       "inci": [
         "Prunus Amygdalus Dulcis (Sweet Almond) Oil",
@@ -1884,9 +2247,15 @@
         "Helianthus Annuus (Sunflower) Seed Oil."
       ],
       "inci_sha256": "0c80f081e0659b00f2bb48a01e38ccfaa598c2117130b98569304cfb970e459c",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Oat Cleansing Balm",
       "price_usd": 11.99,
       "product_id": "P455364",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "5 oz/ 150 mL",
       "spf": null,
       "spf_source": null
@@ -1896,7 +2265,10 @@
         "glycerin"
       ],
       "brand": "The INKEY List",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Aqua (Water/Eau)",
@@ -1924,9 +2296,15 @@
         "Pentapeptide-48."
       ],
       "inci_sha256": "6530110e30b2f3c5957d4002b34a569c5b438299d8f0eeba319b661504c7f835",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Peptide Moisturizer",
       "price_usd": 15.99,
       "product_id": "P455369",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "1.7 oz/ 50 mL",
       "spf": null,
       "spf_source": null
@@ -1938,7 +2316,10 @@
         "niacinamide"
       ],
       "brand": "Supergoop!",
+      "cadence": "am",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "spf",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Avobenzone 3%",
@@ -1985,9 +2366,15 @@
         "Ferulic Acid."
       ],
       "inci_sha256": "123afb0daceb99732b492af3ee1fde4ba21c9d5a4d83c6be8f22a2ef4f7f8165",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Niacinamide",
       "price_usd": 38.0,
       "product_id": "P456218",
+      "routine_roles": [
+        "sunscreen"
+      ],
       "size": "1.7 oz Golden Hour / 50 mL",
       "spf": 40,
       "spf_source": "name_parse"
@@ -1998,7 +2385,10 @@
         "glycerin"
       ],
       "brand": "innisfree",
+      "cadence": "am",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "spf",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Water / Aqua / Eau",
@@ -2042,9 +2432,15 @@
         "Potassium Sorbate."
       ],
       "inci_sha256": "74d41622396586c12178829fe97f6962f32f1d92fa9cf64c499b25b05bb82b7c",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Daily UV Defense Invisible Broad Spectrum SPF 36 Sunscreen",
       "price_usd": 16.0,
       "product_id": "P456392",
+      "routine_roles": [
+        "sunscreen"
+      ],
       "size": "1.69 oz/ 50 mL",
       "spf": 36,
       "spf_source": "name_parse"
@@ -2058,7 +2454,10 @@
         "panthenol"
       ],
       "brand": "Dr. Jart+",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Step 1 Dr.Jart Hyaluronic Acid 1000 ppm Ampoule:",
@@ -2146,9 +2545,15 @@
         "Diatomaceous Earth."
       ],
       "inci_sha256": "0a199632746d4e16590bfbe353745b89f6f9f6712129aecc62698cef1e8753b3",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Cryo Rubber Masks",
       "price_usd": 15.0,
       "product_id": "P457008",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": null,
       "spf": null,
       "spf_source": null
@@ -2162,7 +2567,10 @@
         "willow_bark"
       ],
       "brand": "Glow Recipe",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": "toner",
       "inci": [
         "Opuntia Ficus-Indica (Cactus) Extract",
@@ -2189,9 +2597,15 @@
         "Fragrance/Parfum."
       ],
       "inci_sha256": "3092e9b288180144d6005098d74fb0da3af631f6602be5c0465f1cd267fff815",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Watermelon Glow PHA + BHA Pore-Tight Toner",
       "price_usd": 34.0,
       "product_id": "P458219",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "5.07 oz/ 150 mL",
       "spf": null,
       "spf_source": null
@@ -2202,7 +2616,10 @@
         "hyaluronic_acid"
       ],
       "brand": "Tatcha",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": "wash",
       "inci": [
         "Aqua/Water/Eau",
@@ -2230,9 +2647,15 @@
         "Alcohol."
       ],
       "inci_sha256": "3c909456ab6331c48d9f94988562d2f704e00f4734cd4a11d7594c8b3c038508",
+      "intended_areas": [
+        "face"
+      ],
       "name": "The Rice Wash Skin-Softening Cleanser",
       "price_usd": 40.0,
       "product_id": "P461537",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "4.0 oz/ 120 mL",
       "spf": null,
       "spf_source": null
@@ -2244,7 +2667,10 @@
         "niacinamide"
       ],
       "brand": "Glow Recipe",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Aqua/Water/Eau",
@@ -2274,9 +2700,15 @@
         "Benzyl Benzoate."
       ],
       "inci_sha256": "e2db5d1fa8c37cf9b6c77ba9b8e6755a695feab1d432c22627583cbda1f40bc4",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Watermelon Glow Niacinamide Dew Drops",
       "price_usd": 35.0,
       "product_id": "P466123",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "1.35 oz/ 40 mL",
       "spf": null,
       "spf_source": null
@@ -2289,7 +2721,10 @@
         "niacinamide"
       ],
       "brand": "Fenty Skin",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Water",
@@ -2334,9 +2769,15 @@
         "Red 33."
       ],
       "inci_sha256": "3be7efab1970b80879e59cb0ed88416a1fc26395708faf3b40d83739966ade6d",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Hydra Vizor Invisible Moisturizer Broad Spectrum SPF 30 Sunscreen with Niacinamide + Kalahari Melon",
       "price_usd": 39.0,
       "product_id": "P467249",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "1.7 oz/ 50 mL",
       "spf": 30,
       "spf_source": "name_parse"
@@ -2346,7 +2787,10 @@
         "ceramides"
       ],
       "brand": "Supergoop!",
+      "cadence": "am",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "spf",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Zinc Oxide 24.7%",
@@ -2370,9 +2814,15 @@
         "77499)."
       ],
       "inci_sha256": "58641646c57f9cc309f984556a149c8fede346d066a8f1b07d1c85b708ea1c95",
+      "intended_areas": [
+        "face"
+      ],
       "name": "(Re)setting 100% Mineral Powder Sunscreen SPF 35 PA+++",
       "price_usd": 35.0,
       "product_id": "P467976",
+      "routine_roles": [
+        "sunscreen"
+      ],
       "size": "0.15 oz/ 4.25 g",
       "spf": 35,
       "spf_source": "name_parse"
@@ -2383,7 +2833,10 @@
         "benzoyl_peroxide"
       ],
       "brand": "Paula's Choice",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "serum",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Benzoyl Peroxide 2.5%",
@@ -2402,9 +2855,15 @@
         "Phenoxyethanol."
       ],
       "inci_sha256": "df667864b8e1e01994ceccdff8f09e2968592adfdc13691c82adc29b1d2a6254",
+      "intended_areas": [
+        "face"
+      ],
       "name": "CLEAR Daily Skin Clearing Treatment with 2.5% Benzoyl Peroxide",
       "price_usd": 22.0,
       "product_id": "P469515",
+      "routine_roles": [
+        "serum"
+      ],
       "size": "2.25 oz/ 67 mL",
       "spf": null,
       "spf_source": null
@@ -2418,7 +2877,10 @@
         "panthenol"
       ],
       "brand": "Paula's Choice",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "moisturizer",
+      "exposure": "leave_on",
       "format": "oil",
       "inci": [
         "Water (Aqua)",
@@ -2457,9 +2919,15 @@
         "Ethylhexylglycerin."
       ],
       "inci_sha256": "adf262322073efa38bb0a89ef47a285dd847e1b8209d00def70747d0f1e35e44",
+      "intended_areas": [
+        "face"
+      ],
       "name": "CLEAR Oil-Free Moisturizer",
       "price_usd": 29.0,
       "product_id": "P469517",
+      "routine_roles": [
+        "moisturizer"
+      ],
       "size": "2 oz/ 60 mL",
       "spf": null,
       "spf_source": null
@@ -2471,7 +2939,10 @@
         "hyaluronic_acid"
       ],
       "brand": "Paula's Choice",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": null,
       "inci": [
         "Water (Aqua)",
@@ -2505,9 +2976,15 @@
         "Caprylyl Glycol."
       ],
       "inci_sha256": "fd1d2436c1527705bd28b51055f39246fec3f2fb5107bf8aecb58f4df5876e9d",
+      "intended_areas": [
+        "face"
+      ],
       "name": "RESIST Perfectly Balanced Foaming Cleanser",
       "price_usd": 22.0,
       "product_id": "P469520",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "6.4 oz/ 190 mL",
       "spf": null,
       "spf_source": null
@@ -2517,7 +2994,10 @@
         "glycerin"
       ],
       "brand": "Supergoop!",
+      "cadence": "am",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "spf",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Dimethicone",
@@ -2543,9 +3023,15 @@
         "Zinc Oxide 17.42%"
       ],
       "inci_sha256": "0e065e30e3c7e538e733cf5055ed467f8065ba8d802774fe054dc8dc1b394d70",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Mineral Mattescreen Sunscreen SPF 40 PA+++",
       "price_usd": 38.0,
       "product_id": "P476733",
+      "routine_roles": [
+        "sunscreen"
+      ],
       "size": "1.5 oz/ 45 mL",
       "spf": 40,
       "spf_source": "name_parse"
@@ -2557,7 +3043,10 @@
         "niacinamide"
       ],
       "brand": "Skinfix",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Water (Aqua)",
@@ -2591,9 +3080,15 @@
         "(only 0.005% Glycerin)."
       ],
       "inci_sha256": "df5fa5bd257e64d7bbd3a391332856e78212be531e01ec8b9e88bb5dfc5c69cf",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Acne+ 2% BHA and Azelaic Acid Acne Spot Treatment",
       "price_usd": 30.0,
       "product_id": "P479348",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "0.5 oz/ 15 mL",
       "spf": null,
       "spf_source": null
@@ -2605,7 +3100,10 @@
         "hyaluronic_acid"
       ],
       "brand": "The INKEY List",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": null,
       "inci": [
         "Water",
@@ -2627,9 +3125,15 @@
         "T-Butyl Alcohol."
       ],
       "inci_sha256": "8b21897ce804dfb2195dfe02c30d5b76511859c1038235b6baa358f7b38d3061",
+      "intended_areas": [
+        "face"
+      ],
       "name": "SuperSolutions 5% Benzoyl Peroxide Cleanser Acne Solution",
       "price_usd": 17.99,
       "product_id": "P502749",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "5 oz / 150 mL",
       "spf": null,
       "spf_source": null
@@ -2640,7 +3144,10 @@
         "squalane"
       ],
       "brand": "ROSE INC",
+      "cadence": "am",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "spf",
+      "exposure": "leave_on",
       "format": "serum",
       "inci": [
         "Water/Aqua/Eua",
@@ -2676,9 +3183,15 @@
         "Zinc Oxide 14%"
       ],
       "inci_sha256": "fd81136adbb9e47c809373d64e11ba90e13fbd2fd2962d96d7792e311c15ce15",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Mini Solar Power Luminous SPF 30 Serum",
       "price_usd": 18.0,
       "product_id": "P504283",
+      "routine_roles": [
+        "sunscreen"
+      ],
       "size": "0.34 oz / 10 mL",
       "spf": 30,
       "spf_source": "name_parse"
@@ -2694,7 +3207,10 @@
         "vitamin_c"
       ],
       "brand": "Farmacy",
+      "cadence": "per_label",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "treatment",
+      "exposure": "leave_on",
       "format": "toner",
       "inci": [
         "Water/Aqua/Eau",
@@ -2723,9 +3239,15 @@
         "Cellulose."
       ],
       "inci_sha256": "20691620426766f5e4ff15bba0bd2f7821414b7329b1100d96f5a2a2d7ae6780",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Brighten Up 3% TXA Dark Spot Toner with Azelaic Acid",
       "price_usd": 34.0,
       "product_id": "P504614",
+      "routine_roles": [
+        "treatment"
+      ],
       "size": "4 oz / 120 mL",
       "spf": null,
       "spf_source": null
@@ -2736,7 +3258,10 @@
         "squalane"
       ],
       "brand": "The INKEY List",
+      "cadence": "am",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "spf",
+      "exposure": "leave_on",
       "format": null,
       "inci": [
         "Water (Aqua / Eau)",
@@ -2782,9 +3307,15 @@
         "Saccharomyces Lysate."
       ],
       "inci_sha256": "00367512e59e6a7b0c32a11a4dac8f5581e39aa0cb6234b82a232bc7069ab15d",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Polyglutamic Acid Dewy Sunscreen SPF 30",
       "price_usd": 14.99,
       "product_id": "P505711",
+      "routine_roles": [
+        "sunscreen"
+      ],
       "size": "1.7 oz / 50 ml",
       "spf": 30,
       "spf_source": "name_parse"
@@ -2794,7 +3325,10 @@
         "glycerin"
       ],
       "brand": "fresh",
+      "cadence": "am_pm",
+      "cadence_source": "derived:kaggle-sephora-category",
       "category": "cleanser",
+      "exposure": "rinse_off",
       "format": null,
       "inci": [
         "Aqua (Water)",
@@ -2830,9 +3364,15 @@
         "Potassium Sorbate."
       ],
       "inci_sha256": "d9afc490a142d37ec90e400bdc56efb111c0c46c00fd5f854154b255e2f298f3",
+      "intended_areas": [
+        "face"
+      ],
       "name": "Soy Hydrating Gentle Face Cleanser",
       "price_usd": 39.0,
       "product_id": "P7880",
+      "routine_roles": [
+        "cleanser"
+      ],
       "size": "5 oz/ 150 mL",
       "spf": null,
       "spf_source": null

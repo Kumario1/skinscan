@@ -1,0 +1,26 @@
+{
+  "products": [
+    {
+      "product_id": "P427416",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://theordinary.com/en-us/caffeine-solution-5-egcg-eye-serum-100412.html",
+          "retrieved_at": "2026-07-16T21:14:25Z",
+          "source_sha256": "53e95895a0647f876278ea42c1f065e0427cbbdef080babdf0c9f8fcb29722ec",
+          "facts": {
+            "routine_roles": ["serum"],
+            "cadence": "am_pm",
+            "cadence_source": "https://theordinary.com/en-us/caffeine-solution-5-egcg-eye-serum-100412.html"
+          }
+        }
+      ]
+    }
+  ],
+  "rejects": [
+    {
+      "product_id": "P427414",
+      "reason": "Manufacturer page (https://theordinary.com/en-us/natural-moisturizing-factors-ha-moisturizer-100435.html, title 'Natural Moisturizing Factors + HA Moisturizer | The Ordinary') classifies the product as a moisturizer (breadcrumb 'Moisturizers', 'Step 3: Seal', FAQ says to apply after serums and treatments); catalog target role is serum and the page states no serum use, so routine_role_not_verified cannot be cleared. Page usage is also only 'Apply as needed' (no fixed frequency stated in How to Use)."
+    }
+  ]
+}

@@ -4,10 +4,13 @@ The fixed interface between the CV side and the rules side. The CV pipeline
 produces exactly this; the recommender consumes exactly this. See DECISIONS.md
 D-008.
 
-**The aggregated ConcernReport remains the v2 Stage 2→decision contract
-(D-026/D-027); public E2E artifacts are schema `"3"` (D-029).** Production
-`src.pipeline.e2e` embeds the aggregated shape below inside a v3 analysis
-artifact. The historical YOLOv8m + EfficientNetB0 two-stage
+> **Compatibility-only in schema 4.** Production `src.pipeline.e2e` now emits
+> exact `lesion_findings[]` and `care_pathways[]`; care and product code is
+> prohibited from reading `concerns`. This grouped shape remains serialized for
+> one migration release and for schema-3 replay only. See
+> `docs/LESION_CARE_SCHEMA.md` and D-038.
+
+The historical YOLOv8m + EfficientNetB0 two-stage
 pipeline (README §1-§4, evaluation-only, not called by the default CLI) still
 produces the older one-entry-per-(concern, region) shape through
 `src/recommendation/bridge.py` — see the "V1 aggregation" note under Field

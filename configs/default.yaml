@@ -42,7 +42,8 @@ sa_rpn:
 recommendation:
   concern_confidence_cutoff: 0.5    # below -> "possible, verify" (RULES.md §5)
   downrank_comedogenic: true
-  therapy_policy_path: null         # no production clinician-reviewed policy is bundled
+  therapy_policy_path: null         # deprecated schema-3 policy; no production policy is bundled
+  lesion_care_policy_path: lesion_care_policy.proposed.json  # audited synthetic-MVP policy; requires --mvp-synthetic
   triage_policy_status: unreviewed  # numeric nodule gates must come from external review
 
 evaluation:

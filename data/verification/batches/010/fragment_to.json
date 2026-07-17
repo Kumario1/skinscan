@@ -1,0 +1,54 @@
+{
+  "products": [
+    {
+      "product_id": "P444718",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://theordinary.com/en-us/squalane-face-cleanser-100446.html",
+          "retrieved_at": "2026-07-16T20:53:46Z",
+          "source_sha256": "66b9b6478adc35a79526f655e29c755cbc0039b0d3b6bed73ed114ff7f63c052",
+          "facts": {
+            "routine_roles": ["cleanser"],
+            "cadence": "daily",
+            "cadence_source": "https://theordinary.com/en-us/squalane-face-cleanser-100446.html",
+            "comedogenic_claim": "claimed_noncomedogenic"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P427420",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://theordinary.com/en-us/multi-peptide-ha-serum-100613.html?dwvar_100613_size=60ml&quantity=1",
+          "retrieved_at": "2026-07-16T20:55:30Z",
+          "source_sha256": "10b02c529ced4f48eb1520fdb71bb5e1ff35fd9dce68cf5bf0f7bc8e90c71eba",
+          "facts": {
+            "routine_roles": ["serum"],
+            "cadence": "am_pm",
+            "cadence_source": "https://theordinary.com/en-us/multi-peptide-ha-serum-100613.html?dwvar_100613_size=60ml&quantity=1"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P427413",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://theordinary.com/en-us/lactic-acid-10-ha-exfoliator-100426.html",
+          "retrieved_at": "2026-07-16T20:53:46Z",
+          "source_sha256": "b04dcb56e3c622c31d70cd02fa62fe949121ebb90f5fb9432cc92f602ae3b716",
+          "facts": {
+            "routine_roles": ["serum"],
+            "cadence": "pm_daily",
+            "cadence_source": "https://theordinary.com/en-us/lactic-acid-10-ha-exfoliator-100426.html"
+          }
+        }
+      ]
+    }
+  ],
+  "rejects": []
+}

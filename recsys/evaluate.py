@@ -32,7 +32,7 @@ def decisions(document: dict) -> dict:
         "framing": document["framing"],
         "triage": document["triage"],
         "profile_used": document["profile_used"],
-        "target_concerns": document["target_concerns"],
+        "target_lesions": document["target_lesions"],
         "warnings": document["warnings"],
         "routines": [
             {
@@ -50,6 +50,7 @@ def decisions(document: dict) -> dict:
             for routine in document["routines"]
         ],
         "unavailable_archetypes": document.get("unavailable_archetypes") or [],
+        "unselected_archetypes": document.get("unselected_archetypes") or [],
         "prescription_options": [
             option["name"] for option in document.get("prescription_options") or []
         ],

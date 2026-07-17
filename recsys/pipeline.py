@@ -7,6 +7,7 @@ import datetime as _dt
 import json
 import os
 import subprocess
+from dataclasses import dataclass, fields
 from pathlib import Path
 
 from . import ENGINE_VERSION
@@ -31,7 +32,7 @@ from .explain import (
 from .gates import apply_profile_gates
 from .knowledge import load_knowledge
 from .scoring import score_products
-from .signals import ScoringContext, TargetConcern, load_providers
+from .signals import ScoringContext, TargetLesion, load_providers
 from .verification import apply_verification, load_verification_overlay
 
 DEFAULT_DATA_ROOT = Path(__file__).parent / "data"
@@ -41,6 +42,28 @@ DEFAULT_DATA_ROOT = Path(__file__).parent / "data"
 # should return this structurally (see the note in the review). Kept here as a
 # named constant so the coupling is greppable from one place.
 SKIPPED_MARKER = "— skipped"
+SELECTABLE_SLOTS = (
+    "cleanser", "treatment", "serum", "scar_care", "moisturizer", "spf",
+)
+CATALOG_SELECTOR_SLOTS = (
+    "cleanser", "treatment", "serum", "moisturizer", "spf",
+)
+
+
+@dataclass(frozen=True)
+class CandidateSelection:
+    """Product IDs chosen by an optional post-gate catalog selector."""
+
+    product_ids: dict[str, str | None]
+    metadata: dict
+
+
+class SelectionUnavailable(RuntimeError):
+    """An optional selector could not return a usable catalog selection."""
+
+    def __init__(self, reason: str, metadata: dict | None = None):
+        super().__init__(reason)
+        self.metadata = dict(metadata or {})
 
 
 def skipped_signal_warnings(warnings: list[str]) -> list[str]:
@@ -51,10 +74,24 @@ def skipped_signal_warnings(warnings: list[str]) -> list[str]:
     return [w for w in warnings if w.endswith(SKIPPED_MARKER)]
 
 
-def select_targets(analysis: AnalysisInput) -> tuple[TargetConcern, ...]:
-    findings = [c for c in analysis.concerns if c.severity >= 1]
-    findings.sort(key=lambda c: (-c.severity, -c.confidence, c.concern))
-    return tuple(TargetConcern(c.concern, c.severity, c.confidence) for c in findings)
+def select_targets(analysis: AnalysisInput) -> tuple[TargetLesion, ...]:
+    """Select exact labels whose audited pathway permits retail matching."""
+    findings = {item.lesion_type: item for item in analysis.lesion_findings}
+    targets: list[TargetLesion] = []
+    for pathway in analysis.care_pathways:
+        finding = findings[pathway.lesion_type]
+        if finding.count < 1 or pathway.status != "retail_eligible":
+            continue
+        targets.append(TargetLesion(
+            lesion_type=pathway.lesion_type,
+            count=finding.count,
+            confidence=finding.max_detector_confidence or 0.0,
+            target_actives=pathway.retail_target_actives,
+            required_roles=pathway.required_product_roles,
+            target_specs=pathway.retail_target_specs,
+        ))
+    targets.sort(key=lambda item: (-item.count, -item.confidence, item.lesion_type))
+    return tuple(targets)
 
 
 def _primary_treatment_unknowns(profile) -> tuple[str, ...]:
@@ -76,6 +113,187 @@ def _mark_support_only(routines) -> None:
         ]
         if "support_only_treatment_deferred" not in routine.notes:
             routine.notes.append("support_only_treatment_deferred")
+
+
+def _profile_context(profile) -> dict:
+    context = {}
+    for item in fields(profile):
+        if item.name in {"source", "profile_sha256"}:
+            continue
+        value = getattr(profile, item.name)
+        if isinstance(value, (tuple, frozenset)):
+            value = sorted(value)
+        context[item.name] = value
+    return context
+
+
+def _selection_context(
+    analysis: AnalysisInput, profile, document: dict, can_treat: bool
+) -> dict:
+    """The complete user context a selector needs, without raw/image artifacts."""
+    return {
+        "profile": _profile_context(profile),
+        "lesion_findings": [
+            {
+                "lesion_type": finding.lesion_type,
+                "count": finding.count,
+            }
+            for finding in analysis.lesion_findings if finding.count
+        ],
+        "care_pathways": [
+            {
+                "lesion_type": pathway.lesion_type,
+                "status": pathway.status,
+                "retail_target_actives": list(pathway.retail_target_actives),
+                "required_product_roles": list(pathway.required_product_roles),
+                "reason_codes": list(pathway.reason_codes),
+                "policy_source_ids": list(pathway.policy_source_ids),
+                "required_answers": list(pathway.required_answers),
+            }
+            for pathway in getattr(analysis, "care_pathways", ())
+            if pathway.status != "not_detected"
+        ],
+        "decision": document["care_decision"],
+        "therapy_plan": document["therapy_plan"],
+        "safety_observations": [
+            {
+                "code": observation.get("code"),
+                "professional_review": observation.get("professional_review", False),
+            }
+            for observation in analysis.safety_observations
+        ],
+        "required_slots": list(dict.fromkeys([
+            "cleanser", "moisturizer", "spf",
+            *(["treatment"] if can_treat else []),
+        ])),
+    }
+
+
+def _selected_candidates(
+    result: CandidateSelection,
+    candidates: dict,
+    required_slots: list[str],
+    can_treat: bool,
+) -> tuple[dict | None, str | None]:
+    if not isinstance(result, CandidateSelection):
+        return None, "invalid_result_type"
+    if frozenset(result.product_ids) != frozenset(CATALOG_SELECTOR_SLOTS):
+        return None, "invalid_slot_set"
+    if not isinstance(result.metadata, dict):
+        return None, "invalid_metadata"
+
+    chosen = {slot: result.product_ids.get(slot) for slot in SELECTABLE_SLOTS}
+    for slot in required_slots:
+        if not isinstance(chosen.get(slot), str) or not chosen[slot]:
+            return None, f"required_slot_missing:{slot}"
+    if not can_treat and chosen.get("treatment") is not None:
+        return None, "treatment_not_allowed"
+
+    selected: dict = {}
+    non_null_ids: list[str] = []
+    for slot in SELECTABLE_SLOTS:
+        product_id = chosen[slot]
+        if product_id is None:
+            selected[slot] = []
+            continue
+        if not isinstance(product_id, str) or not product_id:
+            return None, f"invalid_product_id:{slot}"
+        match = [item for item in candidates.get(slot, [])
+                 if item.product.product_id == product_id]
+        if len(match) != 1:
+            return None, f"product_not_safe_for_slot:{slot}:{product_id}"
+        selected[slot] = match
+        non_null_ids.append(product_id)
+    if len(non_null_ids) != len(set(non_null_ids)):
+        return None, "duplicate_product"
+    return selected, None
+
+
+def _selection_unavailable(document: dict, reason: str, metadata: dict | None = None) -> dict:
+    reason = f"llm_selection_unavailable:{reason}"
+    selection = dict(metadata or {})
+    selection.update(status="unavailable", reason=reason)
+    document.update({
+        "status": "unavailable",
+        "reason": reason,
+        "routines": [],
+        "selected_regimen": None,
+        "selected_products": {},
+        "alternatives": {},
+        "unavailable_archetypes": [
+            {"archetype": "best_overall", "reasons": [reason]}
+        ],
+        "selection": selection,
+    })
+    for target in document["target_lesions"]:
+        target["selected_for_treatment"] = False
+    if document["treatment_fulfillment"]["status"] == "pending":
+        document["treatment_fulfillment"] = {
+            "status": "unfilled",
+            "reasons": [reason],
+        }
+    return document
+
+
+def _attach_selector_catalog_facts(routines: list[dict], products) -> None:
+    """Enrich only experimental output; keep the default artifact unchanged."""
+    by_id = {product.product_id: product for product in products}
+    for routine in routines:
+        for session in ("am", "pm", "per_label"):
+            for step in routine.get(session, []):
+                product = by_id[step["product_id"]]
+                step["actives"] = list(product.actives)
+                step["ingredients"] = list(product.inci)
+
+
+def _lesion_coverage(analysis: AnalysisInput, routine, can_treat: bool) -> list[dict]:
+    """Attribute selected SKUs to exact labels using active facts, never scores."""
+    findings = {item.lesion_type: item for item in analysis.lesion_findings}
+    selected_steps = list(routine.steps) if routine is not None else []
+    role_slots = {"treatment": "treatment", "sunscreen": "spf", "scar_care": "scar_care"}
+    coverage: list[dict] = []
+    for pathway in analysis.care_pathways:
+        finding = findings[pathway.lesion_type]
+        if finding.count < 1:
+            continue
+        if pathway.status == "monitoring_only":
+            status = "monitoring_only"
+            matched = []
+        elif pathway.status == "unsupported":
+            status = "unsupported"
+            matched = []
+        elif pathway.status == "clinician_only":
+            status = "clinician_only"
+            matched = []
+        elif pathway.status == "deferred" or (
+            "treatment" in pathway.required_product_roles and not can_treat
+        ):
+            status = "deferred"
+            matched = []
+        else:
+            target_actives = set(pathway.retail_target_actives)
+            required_slots = {
+                role_slots[role] for role in pathway.required_product_roles
+                if role in role_slots
+            }
+            matched = []
+            for step in selected_steps:
+                product = step.scored.product
+                active_overlap = sorted(set(product.actives) & target_actives)
+                if step.slot in required_slots and active_overlap:
+                    matched.append({
+                        "product_id": product.product_id,
+                        "slot": step.slot,
+                        "matched_actives": active_overlap,
+                    })
+            status = "covered_by_product" if matched else "unfilled"
+        coverage.append({
+            "lesion_type": pathway.lesion_type,
+            "status": status,
+            "products": matched,
+            "reason_codes": list(pathway.reason_codes),
+        })
+    return coverage
 
 
 def _git_commit() -> str | None:
@@ -143,6 +361,8 @@ def run(
     generated_at: str | None = None,
     eligibility_mode: str = "hybrid",
     allow_signal_catalog_mismatch: bool = False,
+    allow_unreviewed_policy: bool = False,
+    candidate_selector=None,
 ) -> dict:
     # The signal stores are keyed by the sha256 of the catalog they were built
     # against; scoring any other catalog with them strands every store, and a
@@ -158,22 +378,30 @@ def run(
     )
 
     knowledge = load_knowledge(static_root / "knowledge")
-    analysis = load_analysis(analysis_path)
+    analysis = load_analysis(analysis_path, allow_unreviewed=allow_unreviewed_policy)
+    if analysis.schema_version == "4" and profile_path is not None:
+        raise ContractViolation(
+            "profile",
+            "schema 4 binds the resolved synthetic fixture profile in analysis.json",
+        )
     profile = resolve_profile(profile_path, analysis)
     all_targets = select_targets(analysis)
     profile_unknowns = _primary_treatment_unknowns(profile)
-    can_treat = (
-        analysis.therapy_disposition == "active_treatment"
-        and analysis.therapy_primary is not None
-        and not profile_unknowns
+    treatment_requested = any("treatment" in target.required_roles for target in all_targets)
+    can_treat = treatment_requested and not profile_unknowns
+    if analysis.schema_version == "3":
+        can_treat = can_treat and analysis.therapy_primary is not None
+    therapy_primary = analysis.therapy_primary if analysis.schema_version == "3" and can_treat else None
+    selection_targets = tuple(
+        target for target in all_targets
+        if can_treat or "treatment" not in target.required_roles
     )
-    therapy_primary = analysis.therapy_primary if can_treat else None
     effective_disposition = analysis.therapy_disposition
     deferred_reasons = list(analysis.therapy_deferred_reasons)
-    if analysis.therapy_disposition == "active_treatment" and not can_treat:
+    if treatment_requested and not can_treat:
         effective_disposition = "defer"
         deferred_reasons.extend(f"required_profile_unknown:{name}" for name in profile_unknowns)
-        if analysis.therapy_primary is None:
+        if analysis.schema_version == "3" and analysis.therapy_primary is None:
             deferred_reasons.append("therapy_plan_primary_missing")
     products, catalog_header = load_catalog(catalog_path)
     catalog_sha256 = sha256_file(catalog_path)
@@ -208,7 +436,7 @@ def run(
 
     fulfillment_status = (
         "pending" if can_treat
-        else "deferred" if analysis.therapy_disposition == "active_treatment"
+        else "deferred" if treatment_requested
         else "not_requested"
     )
     document: dict = {
@@ -224,23 +452,7 @@ def run(
             "profile_sha256": profile.profile_sha256,
             "profile_source": profile.source,
         },
-        "profile_used": {
-            "skin_type": profile.skin_type,
-            "tone_bucket": profile.tone_bucket,
-            "tone_source": profile.tone_source,
-            "pregnancy_status": profile.pregnancy_status,
-            "age_years": profile.age_years,
-            "allergies": list(profile.allergies),
-            "sensitivity_conditions": list(profile.sensitivity_conditions),
-            "current_actives": list(profile.current_actives),
-            "current_medications": list(profile.current_medications),
-            "treatment_history": list(profile.treatment_history),
-            "acne_duration_weeks": profile.acne_duration_weeks,
-            "painful_or_deep_lesions": profile.painful_or_deep_lesions,
-            "prior_scarring": profile.prior_scarring,
-            "max_price_usd": profile.max_price_usd,
-            "unknown_fields": sorted(profile.unknown_fields),
-        },
+        "profile_used": _profile_context(profile),
         "care_decision": {
             "triage_level": analysis.triage_level,
             "referral_reasons": list(analysis.referral_reasons),
@@ -280,23 +492,38 @@ def run(
                 analysis.safety_observations, effective_disposition,
             ),
         },
-        "target_concerns": [
+        "target_lesions": [
             {
-                "concern": t.concern,
-                "severity": t.severity,
-                "selected_for_treatment": can_treat,
-                "referral_emphasis": t.concern in knowledge.referral_emphasis,
+                "lesion_type": t.lesion_type,
+                "count": t.count,
+                "retail_target_actives": list(t.target_actives),
+                "required_product_roles": list(t.required_roles),
+                "selected_for_treatment": can_treat and "treatment" in t.required_roles,
+                "referral_emphasis": t.lesion_type in knowledge.referral_emphasis,
             }
             for t in all_targets
         ],
+        "care_pathways": [
+            {
+                "lesion_type": pathway.lesion_type,
+                "status": pathway.status,
+                "clinician_options": list(pathway.clinician_options),
+                "reason_codes": list(pathway.reason_codes),
+                "policy_source_ids": list(pathway.policy_source_ids),
+                "required_answers": list(pathway.required_answers),
+            }
+            for pathway in analysis.care_pathways
+            if pathway.status != "not_detected"
+        ],
+        "lesion_coverage": _lesion_coverage(analysis, None, can_treat),
         "warnings": warnings,
     }
 
     candidates = generate_candidates(
-        products, all_targets, knowledge, therapy_primary=therapy_primary,
+        products, selection_targets, knowledge, therapy_primary=therapy_primary,
     )
     gated, profile_vetoes, quality_flags = apply_profile_gates(
-        candidates, profile, knowledge,
+        candidates, profile, knowledge, targets=selection_targets,
     )
     # Listed, never placed. Surfacing prescription-strength options with a
     # referral is D-033; ranking one into a routine would instead assert that it
@@ -307,8 +534,9 @@ def run(
     # out of every routine total.
     rx_options = (
         prescription_options(gated.get("treatment", []), therapy_primary)
-        if can_treat else []
+        if can_treat and therapy_primary is not None else []
     )
+    document["prescription_options"] = rx_options
     gated = {
         slot: [p for p in items if not is_prescription(p)] for slot, items in gated.items()
     }
@@ -321,20 +549,84 @@ def run(
         for category in {p.category for p in products}
     }
     ctx = ScoringContext(
-        targets=all_targets, profile=profile, knowledge=knowledge,
+        targets=selection_targets, profile=profile, knowledge=knowledge,
         category_prices=category_prices,
     )
 
+    if candidate_selector is None:
+        archetypes = knowledge.archetypes
+    else:
+        best_overall = next(
+            (archetype for archetype in knowledge.archetypes
+             if archetype.get("id") == "best_overall"),
+            None,
+        )
+        if best_overall is None:
+            return _selection_unavailable(document, "best_overall_archetype_missing")
+        archetypes = [best_overall]
+    scar_care_required = any(
+        "scar_care" in target.required_roles for target in selection_targets
+    )
+    if candidate_selector is not None and scar_care_required:
+        return _selection_unavailable(document, "unsupported_required_slot:scar_care")
+    required_active_slots = ({"scar_care"} if scar_care_required else set())
     archetype_scored = []
-    for archetype in knowledge.archetypes[:1]:
+    selected_ids: set[str] | None = None
+    for archetype in archetypes:
+        if scar_care_required and "scar_care" not in archetype.get("slots", []):
+            archetype = {**archetype, "slots": [*archetype["slots"], "scar_care"]}
         weights = archetype.get("weights") or knowledge.default_weights
         scored_by_slot = {
             slot: score_products(slot_products, slot, providers, ctx, weights)
             for slot, slot_products in gated.items()
         }
+        if candidate_selector is not None:
+            context = _selection_context(analysis, profile, document, can_treat)
+            missing_pool = next(
+                (slot for slot in context["required_slots"] if not scored_by_slot.get(slot)),
+                None,
+            )
+            if missing_pool is not None:
+                return _selection_unavailable(
+                    document, f"required_candidate_pool_empty:{missing_pool}"
+                )
+            try:
+                selector_versions = {
+                    **document["data_versions"],
+                    "policy": {
+                        "identity": analysis.therapy_policy_identity,
+                        "sha256": analysis.therapy_policy_sha256,
+                    },
+                }
+                result = candidate_selector(
+                    context, scored_by_slot, selector_versions
+                )
+            except SelectionUnavailable as exc:
+                return _selection_unavailable(document, str(exc), exc.metadata)
+            except Exception as exc:
+                return _selection_unavailable(
+                    document, f"selector_error:{type(exc).__name__}"
+                )
+            scored_by_slot, error = _selected_candidates(
+                result, scored_by_slot, context["required_slots"], can_treat
+            )
+            if error:
+                metadata = result.metadata if isinstance(result, CandidateSelection) else None
+                return _selection_unavailable(document, error, metadata)
+            selected_ids = {
+                product_id for product_id in result.product_ids.values()
+                if product_id is not None
+            }
+            document["selection"] = {
+                **result.metadata,
+                "status": "ok",
+                "product_ids": result.product_ids,
+            }
         archetype_scored.append((archetype, scored_by_slot))
 
-    routines = compose_all(archetype_scored, all_targets if can_treat else (), profile, knowledge)
+    routines = compose_all(
+        archetype_scored, all_targets, profile, knowledge, treatment_allowed=can_treat,
+    )
     if not can_treat:
         _mark_support_only(routines)
 
@@ -343,6 +635,7 @@ def run(
     for routine in routines:
         reasons = validate_routine(
             routine, profile, knowledge, has_targets=can_treat,
+            required_slots=required_active_slots,
         )
         if reasons:
             unavailable.append({
@@ -351,22 +644,44 @@ def run(
             })
         else:
             valid_routines.append(routine)
+    if candidate_selector is not None:
+        if not valid_routines:
+            return _selection_unavailable(
+                document, "regimen_validation_failed", document.get("selection")
+            )
+        if valid_routines[0].product_ids != frozenset(selected_ids or ()):
+            return _selection_unavailable(
+                document, "selected_product_not_composed", document.get("selection")
+            )
+        commit = getattr(candidate_selector, "selection_validated", None)
+        if commit is not None:
+            try:
+                commit(result)
+            except Exception as exc:
+                document["warnings"].append(
+                    f"selection cache write failed: {type(exc).__name__}"
+                )
     if can_treat and not valid_routines:
         document["treatment_fulfillment"] = {
             "status": "unfilled",
             "reasons": ["required_role_unfilled:treatment"],
         }
-        for target in document["target_concerns"]:
+        for target in document["target_lesions"]:
             target["selected_for_treatment"] = False
         document["triage"]["see_doctor_note"] = see_doctor_note(
             analysis.triage_level, analysis.referral_reasons,
             analysis.safety_observations, "defer",
         )
-        support_routines = compose_all(archetype_scored, (), profile, knowledge)
+        support_routines = compose_all(
+            archetype_scored, all_targets, profile, knowledge, treatment_allowed=False,
+        )
         _mark_support_only(support_routines)
         valid_routines = [
             routine for routine in support_routines
-            if not validate_routine(routine, profile, knowledge, has_targets=False)
+            if not validate_routine(
+                routine, profile, knowledge, has_targets=False,
+                required_slots=required_active_slots,
+            )
         ]
         routines.extend(support_routines)
         if valid_routines:
@@ -377,16 +692,26 @@ def run(
             "reasons": [],
         }
     document["status"] = "ok" if valid_routines else "unavailable"
-    serialized = [
-        routine_to_dict(r, knowledge, profile, quality_flags) for r in valid_routines[:1]
+    all_serialized = [
+        routine_to_dict(r, knowledge, profile, quality_flags) for r in valid_routines
     ]
+    serialized = all_serialized[:1]
+    if candidate_selector is not None:
+        _attach_selector_catalog_facts(serialized, products)
     document["routines"] = serialized
     document["selected_regimen"] = serialized[0] if serialized else None
     document["selected_products"] = (
         {step.slot: step.scored.product.product_id for step in valid_routines[0].steps}
         if valid_routines else {}
     )
+    document["lesion_coverage"] = _lesion_coverage(
+        analysis, valid_routines[0] if valid_routines else None, can_treat,
+    )
     document["alternatives"] = {}
+    document["unselected_archetypes"] = [
+        {"archetype": routine["archetype"], "reason": "single_regimen_contract"}
+        for routine in all_serialized[1:]
+    ]
     document["unavailable_archetypes"] = unavailable
     document["prescription_options"] = rx_options
     document["veto_log"] = {

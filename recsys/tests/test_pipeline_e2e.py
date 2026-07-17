@@ -91,7 +91,14 @@ def _reviewed_therapy_analysis(
 def test_status_and_archetypes(document):
     assert document["status"] == "ok"
     assert [r["archetype"] for r in document["routines"]] == ["best_overall"]
+    assert [row["archetype"] for row in document["unselected_archetypes"]] == [
+        "gentle_sensitive", "minimal", "comprehensive",
+    ]
+    # budget stays honestly unavailable: the seed catalog cannot fill it under its cap
+    assert "budget" in {u["archetype"] for u in document["unavailable_archetypes"]}
     assert document["selected_regimen"] == document["routines"][0]
+    # Schema-3 compatibility keeps only support products when therapy is
+    # deferred. A grouped concern can no longer manufacture a serum target.
     assert set(document["selected_products"]) == {"cleanser", "moisturizer", "spf"}
     assert document["alternatives"] == {}
     assert document["care_decision"]["therapy_disposition"] == "defer"
@@ -162,8 +169,9 @@ def test_data_versions_match_disk(document):
     assert not any("catalog_sha256" in warning for warning in document["warnings"])
 
 
-def test_public_output_contains_one_selected_regimen(document):
+def test_public_output_selects_the_first_valid_routine(document):
     assert len(document["routines"]) == 1
+    assert document["selected_regimen"] == document["routines"][0]
     assert len(document["selected_products"]) == len(set(document["selected_products"]))
 
 
@@ -182,8 +190,76 @@ def test_unknown_intake_defers_primary_treatment(tmp_path):
     assert document["care_decision"]["therapy_disposition"] == "active_treatment"
     assert document["therapy_plan"]["primary"] is not None
     assert document["treatment_fulfillment"]["status"] == "deferred"
-    assert all(step["slot"] not in {"treatment", "serum"}
+    # only the treatment slot is withheld on deferral; serums remain (D-029)
+    assert all(step["slot"] != "treatment"
                for routine in document["routines"] for step in _steps(routine))
+
+
+def _profile_file(tmp_path, **overrides):
+    profile = json.loads((FIXTURES / "profile_complete.json").read_text())
+    profile.update(overrides)
+    path = tmp_path / "profile-combo.json"
+    path.write_text(json.dumps(profile))
+    return path
+
+
+@pytest.mark.parametrize("overrides,status,reason", [
+    ({}, "included", None),
+    ({"age_years": 15}, "included", None),
+    ({"pregnancy_status": "pregnant"}, "included", None),  # BP is not a retinoid
+    ({"pregnancy_status": "unknown"}, "deferred",
+     "required_profile_unknown:pregnancy_status"),
+    ({"age_years": None}, "deferred", "required_profile_unknown:age_years"),
+    ({"acne_duration_weeks": None}, "deferred",
+     "required_profile_unknown:acne_duration_weeks"),
+    ({"painful_or_deep_lesions": None}, "deferred",
+     "required_profile_unknown:painful_or_deep_lesions"),
+    ({"prior_scarring": None}, "deferred", "required_profile_unknown:prior_scarring"),
+])
+def test_intake_combinations_gate_the_treatment_slot(tmp_path, overrides, status, reason):
+    analysis = _reviewed_therapy_analysis(tmp_path, "benzoyl_peroxide", "2.5%")
+    document = run(analysis, _profile_file(tmp_path, **overrides),
+                   generated_at="2026-07-14T00:00:00+00:00")
+    assert document["treatment_fulfillment"]["status"] == status
+    if status == "included":
+        assert document["selected_products"]["treatment"] == "P188306"
+    else:
+        assert reason in document["treatment_fulfillment"]["reasons"]
+        assert "treatment" not in document["selected_products"]
+
+
+def test_pregnant_profile_gets_treatment_but_never_a_retinoid(tmp_path):
+    analysis = _reviewed_therapy_analysis(tmp_path, "benzoyl_peroxide", "2.5%")
+    document = run(analysis, _profile_file(tmp_path, pregnancy_status="pregnant"),
+                   generated_at="2026-07-14T00:00:00+00:00")
+    assert document["selected_products"]["treatment"] == "P188306"
+    placed = {s["product_id"] for r in document["routines"] for s in _steps(r)}
+    assert not (placed & (RETINOL_PRODUCT_IDS | {RETINYL_ESTER_ONLY_PRODUCT_ID}))
+
+
+def test_bypass_flag_does_not_weaken_profile_or_pregnancy_gates(tmp_path):
+    # An unreviewed-policy analysis with a primary parses only under the flag,
+    # and the downstream safety gates still hold.
+    analysis_path = _reviewed_therapy_analysis(tmp_path, "benzoyl_peroxide", "2.5%")
+    data = json.loads(analysis_path.read_text())
+    data["policies"]["therapy"].update(reviewed=False, sha256=None)
+    analysis_path.write_text(json.dumps(data))
+
+    with pytest.raises(ContractViolation, match="reviewed therapy policy"):
+        run(analysis_path, FIXTURES / "profile_complete.json",
+            generated_at="2026-07-14T00:00:00+00:00")
+
+    unknown = run(analysis_path, _profile_file(tmp_path, pregnancy_status="unknown"),
+                  generated_at="2026-07-14T00:00:00+00:00",
+                  allow_unreviewed_policy=True)
+    assert unknown["treatment_fulfillment"]["status"] == "deferred"
+    placed = {s["product_id"] for r in unknown["routines"] for s in _steps(r)}
+    assert not (placed & (RETINOL_PRODUCT_IDS | {RETINYL_ESTER_ONLY_PRODUCT_ID}))
+
+    complete = run(analysis_path, FIXTURES / "profile_complete.json",
+                   generated_at="2026-07-14T00:00:00+00:00",
+                   allow_unreviewed_policy=True)
+    assert complete["selected_products"]["treatment"] == "P188306"
 
 
 def test_reviewed_plan_selects_only_the_exact_verified_therapy(tmp_path):
@@ -197,7 +273,10 @@ def test_reviewed_plan_selects_only_the_exact_verified_therapy(tmp_path):
 
     assert document["care_decision"]["therapy_disposition"] == "active_treatment"
     assert document["selected_products"]["treatment"] == "P188306"
-    assert len(document["routines"]) == 1
+    assert [r["archetype"] for r in document["routines"]] == ["best_overall"]
+    assert [row["archetype"] for row in document["unselected_archetypes"]] == (
+        AVAILABLE_ARCHETYPE_IDS[1:]
+    )
 
 
 def _hybrid():
@@ -417,7 +496,7 @@ def test_plan_match_rejects_unplanned_combination_active(tmp_path):
         "reasons": ["required_role_unfilled:treatment"],
     }
     assert document["status"] == "ok"
-    assert set(document["selected_products"]) == {"cleanser", "moisturizer", "spf"}
+    assert set(document["selected_products"]) == {"cleanser", "moisturizer", "serum", "spf"}
     assert "support_only_treatment_deferred" in document["selected_regimen"]["notes"]
 
 
@@ -573,6 +652,72 @@ def test_unplanned_retinoid_rows_never_enter_the_candidate_pool(tmp_path):
     assert not (placed & pinned)
 
 
+def _derived_root_with_serum_facts(tmp_path, product_ids=("P427417", "P443842")):
+    """Overlay mints the usage facts a serum needs to clear the gates
+    (routine_roles/format/exposure/cadence/intended_areas) — the shape a
+    verification batch produces — onto seed cosmetics."""
+    import hashlib
+    import shutil
+    derived = tmp_path / "derived-serum"
+    derived.mkdir()
+    (derived / "catalog_full.json").write_bytes(
+        (DATA / "catalog" / "seed_catalog.json").read_bytes()
+    )
+    shutil.copytree(DATA / "verification", derived / "verification")
+    approved = json.loads((derived / "verification" / "approved.json").read_text())
+    for pid in product_ids:
+        body = f"synthetic serum label {pid}".encode()
+        digest = hashlib.sha256(body).hexdigest()
+        (derived / "verification" / "evidence" / digest).write_bytes(body)
+        approved["products"].append({"product_id": pid, "assertions": [{
+            "status": "approved", "reviewer_id": "reviewer-1", "reviewer_type": "agent",
+            "approved_at": "2026-07-14T00:00:00Z", "retrieved_at": "2026-07-14T00:00:00Z",
+            "source_url": "https://example.test/serum", "source_sha256": digest,
+            "facts": {"routine_roles": ["serum"], "format": "serum",
+                      "exposure": "leave_on", "cadence": "am_pm",
+                      "cadence_source": "https://example.test/serum",
+                      "intended_areas": ["face"]},
+        }]})
+    (derived / "verification" / "approved.json").write_text(json.dumps(approved))
+    return derived
+
+
+def test_grouped_concern_cannot_create_serum_or_treatment_candidates():
+    from recsys.candidates import generate_candidates
+    from recsys.signals import TargetConcern
+    products, _ = load_catalog(DATA / "catalog" / "seed_catalog.json")
+    targets = (TargetConcern("acne_inflammatory", 3, 0.9),)
+    by_slot = generate_candidates(products, targets, K)
+    assert by_slot["serum"] == []
+    assert by_slot["treatment"] == []
+    assert not generate_candidates(products, (), K)["serum"]
+
+
+def test_verified_unrequested_serum_stays_out_of_the_routine(tmp_path):
+    analysis = _reviewed_therapy_analysis(tmp_path, "benzoyl_peroxide", "2.5%")
+    document = run(analysis, FIXTURES / "profile_complete.json",
+                   data_root=_derived_root_with_serum_facts(tmp_path),
+                   generated_at="2026-07-14T00:00:00+00:00")
+    serum_steps = [s for r in document["routines"] for s in _steps(r)
+                   if s["slot"] == "serum"]
+    assert serum_steps == []
+    assert document["selected_products"]["treatment"] == "P188306"
+
+
+def test_retinol_serum_is_not_a_candidate_for_pregnant_profiles(tmp_path):
+    analysis = _reviewed_therapy_analysis(tmp_path, "benzoyl_peroxide", "2.5%")
+    profile = json.loads((FIXTURES / "profile_complete.json").read_text())
+    profile["pregnancy_status"] = "pregnant"
+    path = tmp_path / "profile.json"
+    path.write_text(json.dumps(profile))
+    document = run(analysis, path,
+                   data_root=_derived_root_with_serum_facts(tmp_path),
+                   generated_at="2026-07-14T00:00:00+00:00")
+    placed = {s["product_id"] for r in document["routines"] for s in _steps(r)}
+    assert "P443842" not in placed
+    assert not any(s["slot"] == "serum" for r in document["routines"] for s in _steps(r))
+
+
 def test_full_derived_data_root_uses_full_catalog_and_static_knowledge(tmp_path):
     derived = tmp_path / "derived"
     derived.mkdir()
@@ -589,7 +734,7 @@ def test_full_derived_data_root_uses_full_catalog_and_static_knowledge(tmp_path)
 
     assert document["status"] == "ok"
     assert document["data_versions"]["catalog"]["path"] == str(derived / "catalog_full.json")
-    assert document["data_versions"]["verification"]["products"] == 14
+    assert document["data_versions"]["verification"]["products"] >= 18
 
 
 def test_a_data_root_without_a_catalog_names_what_is_missing(tmp_path):

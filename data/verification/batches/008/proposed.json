@@ -1,0 +1,90 @@
+{
+  "schema_version": "2",
+  "products": [
+    {
+      "product_id": "P442840",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://skinfix.com/products/lipid-peptide-cream",
+          "retrieved_at": "2026-07-16T18:42:20Z",
+          "source_sha256": "fd4e913851a3743ff1a34e913ec9a1dd41c112b3d9d5455172caa8ffda11132c",
+          "facts": {
+            "routine_roles": ["moisturizer"],
+            "format": "cream",
+            "exposure": "leave_on",
+            "cadence": "am_pm",
+            "cadence_source": "https://skinfix.com/products/lipid-peptide-cream",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": ["daily_support"]
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P421996",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.kiehls.com/skincare/face-moisturizers/ultra-facial-cream-with-squalane/622.html",
+          "retrieved_at": "2026-07-16T18:42:24Z",
+          "source_sha256": "8a145512021bf98b40ccb28b43508ca287ed1c00c30d2e96b3889937af560344",
+          "facts": {
+            "routine_roles": ["moisturizer"],
+            "format": "cream",
+            "exposure": "leave_on",
+            "cadence": "am_pm",
+            "cadence_source": "https://www.kiehls.com/skincare/face-moisturizers/ultra-facial-cream-with-squalane/622.html",
+            "intended_areas": ["face"],
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": ["daily_support"]
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P429953",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/61e543e3-9ace-6440-e053-2991aa0a9647.xml",
+          "retrieved_at": "2026-07-16T18:42:11Z",
+          "source_sha256": "3326fa27972f33906b0d77c0feb8baca16b92156cfa191ca2fdd38fa2d3fd189",
+          "facts": {
+            "broad_spectrum": true,
+            "spf": 50,
+            "otc_drug": true,
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/61e543e3-9ace-6440-e053-2991aa0a9647.xml",
+            "label_verified_at": "2026-07-16",
+            "label_effective_date": "20260109",
+            "label_version": "13",
+            "source_set_id": "61e543e3-9ace-6440-e053-2991aa0a9647"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P467976",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/af5c9801-26ce-5c60-e053-2995a90ab457.xml",
+          "retrieved_at": "2026-07-16T18:42:11Z",
+          "source_sha256": "3aed13366b285a59bd1f27227d779473002f093873deb77ff2a8be1d72caddc3",
+          "facts": {
+            "broad_spectrum": true,
+            "spf": 35,
+            "otc_drug": true,
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/af5c9801-26ce-5c60-e053-2995a90ab457.xml",
+            "label_verified_at": "2026-07-16",
+            "label_effective_date": "20260109",
+            "label_version": "6",
+            "source_set_id": "af5c9801-26ce-5c60-e053-2995a90ab457"
+          }
+        }
+      ]
+    }
+  ]
+}

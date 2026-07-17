@@ -1,0 +1,51 @@
+{
+  "products": [
+    {
+      "product_id": "P404322",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.katesomerville.com/products/skin-care-exfolikate-cleanser-facial-cleanser",
+          "retrieved_at": "2026-07-16T21:15:47Z",
+          "source_sha256": "5f60f24a915cbe43ad6cef4025ee538b0b69cedc363d033e244cd350e57a76b0",
+          "facts": {
+            "routine_roles": ["cleanser"],
+            "cadence": "am_pm",
+            "cadence_source": "https://www.katesomerville.com/products/skin-care-exfolikate-cleanser-facial-cleanser"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P411388",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.youthtothepeople.com/superfood-air-whip-moisture-cream/YTTP-10300.html",
+          "retrieved_at": "2026-07-16T21:17:56Z",
+          "source_sha256": "ac93171d9fc91dde431053aacd503e1d1d33ec716ea085a30d7a0a62fd1a438c",
+          "facts": {
+            "routine_roles": ["moisturizer"],
+            "cadence": "am_pm",
+            "cadence_source": "https://www.youthtothepeople.com/superfood-air-whip-moisture-cream/YTTP-10300.html",
+            "comedogenic_claim": "claimed_noncomedogenic"
+          }
+        }
+      ]
+    }
+  ],
+  "rejects": [
+    {
+      "product_id": "P12045",
+      "reason": "no noncomedogenic claim on manufacturer page (https://us.caudalie.com/p/320C-1/grape-water-moisturizing-face-mist.html states usage and moisturizing role but never states non-comedogenic / won't clog pores)"
+    },
+    {
+      "product_id": "P218700",
+      "reason": "size variant no longer sold: catalog is 1.7 oz / 50 mL but josiemaran.com offers The Original 100% Pure Organic Argan Oil only in 0.5 fl oz, 1 fl oz, and 3 fl oz; legacy slug /collections/argan-oil/products/100-pure-argan-oil redirects to homepage"
+    },
+    {
+      "product_id": "P443842",
+      "reason": "product page unavailable: theinkeylist.com/products/retinol-serum 301s to /collections/skin; original Retinol Anti-Aging Serum no longer listed (replaced by the different Starter Retinol Serum product)"
+    }
+  ]
+}

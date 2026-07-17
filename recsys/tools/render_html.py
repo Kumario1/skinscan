@@ -58,6 +58,17 @@ def render_step(s: dict) -> str:
     d = s.get("directions") or {}
     dir_bits = " · ".join(esc(d[k]) for k in ("amount", "cadence") if d.get(k))
     directions = f'<div class="why"><b>Directions:</b> {dir_bits}</div>' if dir_bits else ""
+    actives = ", ".join(str(item).replace("_", " ") for item in s.get("actives", []))
+    active_html = (
+        f'<div class="why"><b>Active ingredients:</b> {esc(actives)}</div>'
+        if actives else '<div class="why"><b>Active ingredients:</b> none identified</div>'
+    )
+    ingredients = ", ".join(str(item) for item in s.get("ingredients", []))
+    ingredient_html = (
+        f'<details><summary>Full ingredient list</summary><div class="why">'
+        f'{esc(ingredients)}</div></details>'
+        if ingredients else ""
+    )
     return f"""<div class="step">
       <span class="slot">{esc(s.get('slot'))}</span> {price}
       <h3>{esc(s.get('brand'))} — {esc(s.get('name'))}
@@ -65,6 +76,8 @@ def render_step(s: dict) -> str:
         <span class="badge b-info">{esc(s.get('usage'))}</span></h3>
       <div class="why">{esc(why.get('summary',''))}</div>
       {directions}
+      {active_html}
+      {ingredient_html}
       <details><summary>signals (score {why.get('score',0):.3f})</summary>
         <ul class="signals">{sig_items}</ul></details>
       {notes}
@@ -93,10 +106,10 @@ def render_routine(r: dict) -> str:
 
 def render(doc: dict) -> str:
     concerns = "".join(
-        f"<tr><td>{esc(c['concern'])}</td><td>{c['severity']}</td>"
+        f"<tr><td>{esc(c['lesion_type'])}</td><td>{c['count']}</td>"
         f"<td>{'yes' if c['selected_for_treatment'] else 'no'}</td>"
         f"<td>{'yes' if c.get('referral_emphasis') else 'no'}</td></tr>"
-        for c in doc.get("target_concerns", [])
+        for c in doc.get("target_lesions", [])
     )
     triage = doc.get("triage") or {}
     triage_html = ""
@@ -106,6 +119,11 @@ def render(doc: dict) -> str:
           {esc(triage.get('see_doctor_note',''))}<br>
           <small>Reasons: {reasons or '—'}</small></div>"""
     routines = "".join(render_routine(r) for r in doc.get("routines", []))
+    if not routines:
+        routines = (
+            '<div class="triage"><b>No recommendation available.</b><br>'
+            f'{esc(doc.get("reason", "The selector did not return a valid regimen."))}</div>'
+        )
     rx_opts = "".join(
         f"""<div class="step"><h3>{esc(p.get('name'))} <span class="badge b-rx">Rx</span>
         <span class="badge b-cat">{esc(p.get('format'))}</span></h3>
@@ -120,6 +138,39 @@ def render(doc: dict) -> str:
     ) or "<tr><td colspan=2>all unknown / defaults</td></tr>"
     warnings = "".join(f'<div class="notes">⚠ {esc(w)}</div>' for w in doc.get("warnings", []))
     eng = doc.get("engine") or {}
+    selection = doc.get("selection") or {}
+    selection_html = ""
+    if selection:
+        cache = (
+            "cache hit" if selection.get("cache_hit") is True
+            else "cache miss" if selection.get("cache_hit") is False
+            else "cache unavailable"
+        )
+        usage = selection.get("usage") or {}
+        usage_bits = []
+        if "input_tokens" in usage:
+            usage_bits.append(f'{esc(usage["input_tokens"])} input tokens')
+        if "output_tokens" in usage:
+            usage_bits.append(f'{esc(usage["output_tokens"])} output tokens')
+        if usage.get("estimated_cost_usd") is not None:
+            usage_bits.append(f'${usage["estimated_cost_usd"]:.6f}')
+        usage_text = " · " + " · ".join(usage_bits) if usage_bits else ""
+        latency_text = (
+            f' · {esc(selection["latency_ms"])} ms'
+            if selection.get("latency_ms") is not None else ""
+        )
+        deployment = selection.get("deployment") or selection.get("model", "")
+        model_identity = selection.get("model_identity") or selection.get("model", "")
+        response_model = selection.get("model") or model_identity
+        selection_html = (
+            '<div class="card"><b>Selection:</b> '
+            f'{esc(selection.get("source", "unknown"))} · '
+            f'{esc(selection.get("provider", ""))}/{esc(deployment)}'
+            f' ({esc(model_identity)}; response {esc(response_model)}) · '
+            f'{esc(selection.get("prompt_version", ""))} · {cache} · '
+            f'{esc(selection.get("candidate_count", "—"))} candidates'
+            f'{latency_text}{usage_text}</div>'
+        )
     return f"""<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SkinScan recommendations</title><style>{CSS}</style></head><body>
@@ -127,6 +178,7 @@ def render(doc: dict) -> str:
 <div class="framing">{esc((doc.get('framing') or {}).get('text',''))}</div>
 {triage_html}
 {warnings}
+{selection_html}
 <h2>Detected concerns</h2>
 <table><tr><th>concern</th><th>severity</th><th>treated</th><th>referral emphasis</th></tr>{concerns}</table>
 <h2>Profile used</h2>

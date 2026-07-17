@@ -17,9 +17,10 @@ from .contracts import SLOTS, Profile
 from .gates import duplicate_active_reasons, profile_gate_reasons
 from .knowledge import Knowledge
 from .scoring import ScoredCandidate
-from .signals import TargetConcern
+from .signals import TargetLesion
 
 CARRIER_ONLY_SLOTS = ("cleanser", "moisturizer", "spf")
+STEP_ORDER = (*SLOTS, "scar_care")
 
 
 @dataclass
@@ -219,14 +220,20 @@ def validate_routine(
     *,
     has_targets: bool,
     strict: bool = True,
+    required_slots: set[str] | None = None,
 ) -> list[str]:
     """Final fail-closed validation over the complete selected regimen.
     `strict` remains for source compatibility; D-029 permits no soft gate."""
     reasons: list[str] = []
     slots_present = {step.slot for step in routine.steps}
+    # A moisturizer folded as sun protection (fold_or_add) satisfies the spf
+    # requirement — the fold path already held it to the spf-slot gates.
+    if any("covers_spf" in step.notes for step in routine.steps):
+        slots_present.add("spf")
     required = {"cleanser", "moisturizer", "spf"}
     if has_targets:
         required.add("treatment")
+    required.update(required_slots or set())
     for slot in sorted(required - slots_present):
         reasons.append(f"required_role_missing:{slot}")
     for step in routine.steps:
@@ -289,13 +296,15 @@ def try_place(product: CatalogProduct, slot: str, steps: list[Step], k: Knowledg
 
 
 def _covered_concerns(
-    products: list[CatalogProduct], targets: tuple[TargetConcern, ...], k: Knowledge
+    products: list[CatalogProduct], targets: tuple[TargetLesion, ...], k: Knowledge
 ) -> set[str]:
     covered: set[str] = set()
     for t in targets:
-        wanted = k.concern_actives.get(t.concern, frozenset())
+        wanted = frozenset(t.target_actives) or k.lesion_actives.get(
+            t.lesion_type, frozenset()
+        )
         if any(set(p.actives) & wanted for p in products):
-            covered.add(t.concern)
+            covered.add(t.lesion_type)
     return covered
 
 
@@ -304,7 +313,7 @@ def _filter_candidates(
     slot: str,
     constraints: dict,
     selected: list[CatalogProduct],
-    targets: tuple[TargetConcern, ...],
+    targets: tuple[TargetLesion, ...],
     k: Knowledge,
     notes: list[str],
 ) -> list[ScoredCandidate]:
@@ -366,19 +375,33 @@ def _place_best(
 def compose_archetype(
     archetype: dict,
     scored_by_slot: dict[str, list[ScoredCandidate]],
-    targets: tuple[TargetConcern, ...],
+    targets: tuple[TargetLesion, ...],
     profile: Profile,
     k: Knowledge,
+    treatment_allowed: bool = True,
 ) -> ComposedRoutine:
     constraints = archetype.get("constraints") or {}
     routine = ComposedRoutine(archetype=archetype)
     slots = list(archetype["slots"])
+    if not treatment_allowed:
+        # Only the treatment slot is clinician-gated (D-029). Serums are
+        # cosmetic: detected concerns still earn a serum even when therapy
+        # is deferred.
+        slots = [s for s in slots if s != "treatment"]
     if not targets:
         slots = [s for s in slots if s in CARRIER_ONLY_SLOTS]
         routine.notes.append("clear_skin_maintenance")
 
+    # Fill the treatment slot first: the reviewed therapy is the routine's
+    # anchor and support products are fungible. Greedy-filling in display order
+    # lets a conflicting cleanser (vitamin C, am_pm — occupies both sessions)
+    # land first and block the therapy from every session; the therapy then
+    # reads as unfillable when only the cleanser choice was wrong. Display
+    # order is unaffected — steps re-sort canonically below.
+    fill_order = sorted(slots, key=lambda s: (s != "treatment", slots.index(s)))
+
     filtered: dict[str, list[ScoredCandidate]] = {}
-    for slot in slots:
+    for slot in fill_order:
         filtered[slot] = _filter_candidates(
             scored_by_slot.get(slot, []), slot, constraints,
             [s.scored.product for s in routine.steps], targets, k, routine.notes,
@@ -391,7 +414,12 @@ def compose_archetype(
 
     if constraints.get("spf_policy") == "fold_or_add" and "spf" not in slots:
         moisturizer = next((s for s in routine.steps if s.slot == "moisturizer"), None)
-        if moisturizer and (moisturizer.scored.product.spf or 0) >= k.min_spf:
+        # Folding makes the moisturizer the routine's sun protection, so it must
+        # clear the same gates a dedicated sunscreen would (broad spectrum,
+        # verified SPF) — an SPF-40 label alone is not sun-safety evidence.
+        if moisturizer and (moisturizer.scored.product.spf or 0) >= k.min_spf and not profile_gate_reasons(
+            moisturizer.scored.product, "spf", profile, k
+        ):
             moisturizer.notes.append("covers_spf")
             routine.notes.append("moisturizer_covers_spf")
         else:
@@ -410,7 +438,7 @@ def compose_archetype(
     if total_cap is not None:
         _reduce_to_budget(routine, filtered, total_cap, k)
 
-    routine.steps.sort(key=lambda s: SLOTS.index(s.slot))
+    routine.steps.sort(key=lambda s: STEP_ORDER.index(s.slot))
     return routine
 
 
@@ -456,9 +484,10 @@ def _reduce_to_budget(
 
 def compose_all(
     archetype_scored: list[tuple[dict, dict[str, list[ScoredCandidate]]]],
-    targets: tuple[TargetConcern, ...],
+    targets: tuple[TargetLesion, ...],
     profile: Profile,
     k: Knowledge,
+    treatment_allowed: bool = True,
 ) -> list[ComposedRoutine]:
     """Compose every archetype in order (best_overall first) and enforce the
     diversity guarantee: each later archetype differs from best_overall by at
@@ -466,7 +495,10 @@ def compose_all(
     routines: list[ComposedRoutine] = []
     best_ids: frozenset[str] | None = None
     for archetype, scored_by_slot in archetype_scored:
-        routine = compose_archetype(archetype, scored_by_slot, targets, profile, k)
+        routine = compose_archetype(
+            archetype, scored_by_slot, targets, profile, k,
+            treatment_allowed=treatment_allowed,
+        )
         if best_ids is None:
             best_ids = routine.product_ids
         elif routine.steps and routine.product_ids == best_ids:
@@ -478,7 +510,7 @@ def compose_all(
 def _diversify(
     routine: ComposedRoutine,
     scored_by_slot: dict[str, list[ScoredCandidate]],
-    targets: tuple[TargetConcern, ...],
+    targets: tuple[TargetLesion, ...],
     k: Knowledge,
 ) -> None:
     constraints = routine.archetype.get("constraints") or {}
@@ -497,7 +529,7 @@ def _diversify(
             original_id = step.scored.product.product_id
             routine.steps[routine.steps.index(step)] = replacement
             routine.notes.append(f"diversified_from_best_overall:{step.slot}")
-            routine.steps.sort(key=lambda s: SLOTS.index(s.slot))
+            routine.steps.sort(key=lambda s: STEP_ORDER.index(s.slot))
             # The swap can push the total back over the archetype's cap, and the
             # reducer that enforced it already ran back in compose_archetype.
             # Re-run it, holding out the product we just diversified away from so
