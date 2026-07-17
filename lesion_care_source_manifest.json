@@ -1,0 +1,1184 @@
+{
+  "schema_version": "lesion-care-source-manifest-1",
+  "research_id": "skinscan-lesion-care-us-2026-07-16",
+  "status": "ai_research_audit_approved_for_mvp_development_and_synthetic_testing",
+  "evidence_cutoff": "2026-07-16",
+  "retrieved_at": "2026-07-16T22:15:15Z",
+  "jurisdiction": "US",
+  "ai_research_audit": {
+    "review_type": "ai_research_audit",
+    "approved": true,
+    "reviewer_identity": "OpenAI Codex GPT-5 research-audit agent (AI, non-clinician, no medical credentials)",
+    "reviewer_type": "agent",
+    "reviewed_at": "2026-07-16T23:02:45Z",
+    "reviewed_commit": "94045f8940cdf73b1b708388900c1fffa9a5c3bf",
+    "report_sha256": "8e201d6d869a67e8635f29cc43452138e760561ae0e34d2b2b4b8ba1d6e4344d",
+    "policy_version": "2026-07-16-mvp.1",
+    "policy_sha256": "8d24399f076e7721a96b1fc6cf59174bb94390b655a15eb326c8d3a722ffbae1",
+    "decision": "approved_for_development_and_synthetic_testing_only",
+    "summary": "The evidence package is internally sufficient as a conservative specification for implementation and synthetic testing. It is not clinical approval or authorization for real-user or production use. Exact catalog coverage remains provisional because its input artifacts are not pinned to the reviewed commit.",
+    "exceptions": [
+      "No real-user, external-beta, or production use",
+      "Preserve all referral, abstention, contraindication, and unknown-input deferrals",
+      "Pin or regenerate catalog coverage inputs before relying on exact counts or SKUs"
+    ],
+    "mvp_development_changes_authorized": true,
+    "production_changes_authorized": false,
+    "real_user_use_authorized": false
+  },
+  "artifacts": [
+    {
+      "path": "LESION_CARE_EVIDENCE_REPORT.md",
+      "sha256": "8e201d6d869a67e8635f29cc43452138e760561ae0e34d2b2b4b8ba1d6e4344d",
+      "bytes": 60586
+    },
+    {
+      "path": "lesion_care_policy.proposed.json",
+      "sha256": "8d24399f076e7721a96b1fc6cf59174bb94390b655a15eb326c8d3a722ffbae1",
+      "bytes": 28899
+    }
+  ],
+  "searches": [
+    {
+      "query_id": "Q01",
+      "database_or_site": "PubMed",
+      "query": "2024 AAD acne guideline management benzoyl peroxide topical retinoid isotretinoin",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q02",
+      "database_or_site": "NICE",
+      "query": "NG198 acne recommendations referral scarring pregnancy 12 weeks",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q03",
+      "database_or_site": "FDA AccessData",
+      "query": "OTC acne monograph M006 benzoyl peroxide salicylic acid",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q04",
+      "database_or_site": "FDA AccessData",
+      "query": "Differin adapalene gel 0.1 percent 2024 label",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q05",
+      "database_or_site": "ACOG",
+      "query": "skin conditions pregnancy acne topical retinoids benzoyl peroxide salicylic acid azelaic acid",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q06",
+      "database_or_site": "AAD",
+      "query": "acne whiteheads blackheads papules pustules nodules lookalikes",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q07",
+      "database_or_site": "AAD and PubMed",
+      "query": "atrophic hypertrophic acne scar treatment silicone systematic review",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q08",
+      "database_or_site": "AAD and PubMed",
+      "query": "melasma treatment iron oxide sunscreen systematic review",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q09",
+      "database_or_site": "FDA",
+      "query": "OTC hydroquinone skin lightening safety communication",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q10",
+      "database_or_site": "AAD",
+      "query": "mole nevus ABCDE diagnosis treatment when problem",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q11",
+      "database_or_site": "FDA and USPSTF",
+      "query": "OTC mole removal warning skin cancer screening recommendation",
+      "searched_on": "2026-07-16"
+    },
+    {
+      "query_id": "Q12",
+      "database_or_site": "FDA",
+      "query": "chemical peel products professional supervision warning",
+      "searched_on": "2026-07-16"
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "S01",
+      "title": "Guidelines of care for the management of acne vulgaris",
+      "publisher": "Journal of the American Academy of Dermatology / PubMed",
+      "source_type": "clinical_practice_guideline",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/38300170/",
+      "publication_date": "2024-05",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/0f89baf2e84ba8a1e50604aea41c05d454c3e1b025f67e676871fe5a5003d9b7",
+      "snapshot_sha256": "0f89baf2e84ba8a1e50604aea41c05d454c3e1b025f67e676871fe5a5003d9b7",
+      "snapshot_bytes": 260921,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q01"
+      ],
+      "labels": [
+        "closed_comedo",
+        "open_comedo",
+        "papule",
+        "pustule",
+        "nodule"
+      ],
+      "recommendation_strength": "Strong recommendations for benzoyl peroxide and topical retinoids; conditional recommendations for salicylic acid and azelaic acid; strong isotretinoin recommendation in specified severe or refractory contexts.",
+      "exact_excerpt": "Strong recommendations are made for benzoyl peroxide, topical retinoids, topical antibiotics, and oral doxycycline.",
+      "conclusion": "Supports mechanism-specific acne therapy and escalation for severe, scarring, burdensome, or refractory disease.",
+      "uncertainty": "The accessible abstract does not provide every operational strength, cadence, or population detail; regulatory labels and NICE supply bounded operational facts.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S02",
+      "title": "Acne vulgaris: management — Recommendations (NG198)",
+      "publisher": "National Institute for Health and Care Excellence",
+      "source_type": "clinical_practice_guideline",
+      "url": "https://www.nice.org.uk/guidance/ng198/chapter/Recommendations",
+      "publication_date": "2021-06-25",
+      "last_updated": "2026-04-30",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/de62fcfcb356c5e276bbf3bb03ec1405b62637a37f0f975d8d662cd3b38277b8",
+      "snapshot_sha256": "de62fcfcb356c5e276bbf3bb03ec1405b62637a37f0f975d8d662cd3b38277b8",
+      "snapshot_bytes": 111815,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q02"
+      ],
+      "labels": [
+        "closed_comedo",
+        "open_comedo",
+        "papule",
+        "pustule",
+        "nodule",
+        "atrophic_scar"
+      ],
+      "recommendation_strength": "Current national clinical-practice recommendations, including first-line 12-week courses, do-not-use antibiotic monotherapy rules, referral criteria, pregnancy exclusions, and scar referral.",
+      "exact_excerpt": "Offer people with acne a 12-week course of 1 of the following first-line treatment options",
+      "conclusion": "Supplies operational care duration, combination strengths, review timing, referral criteria, and safety constraints.",
+      "uncertainty": "UK treatment availability and care pathways do not automatically establish US product availability or labeling.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S03",
+      "title": "OTC Monograph M006: Topical Acne Drug Products for OTC Human Use",
+      "publisher": "US Food and Drug Administration",
+      "source_type": "regulatory_monograph",
+      "url": "https://www.accessdata.fda.gov/drugsatfda_docs/omuf/monographs/OTC%20Monograph_M006-Topical%20Acne%20drug%20products%20for%20OTC%20Human%20Use%2011.23.2021.pdf",
+      "publication_date": "2021-11-23",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/33caa0d71f5648cffd08af2cdced3c9d2b2b20dcbf006068e6379ae399f0a80e",
+      "snapshot_sha256": "33caa0d71f5648cffd08af2cdced3c9d2b2b20dcbf006068e6379ae399f0a80e",
+      "snapshot_bytes": 59345,
+      "media_type": "application/pdf",
+      "query_ids": [
+        "Q03"
+      ],
+      "labels": [
+        "closed_comedo",
+        "open_comedo",
+        "papule",
+        "pustule"
+      ],
+      "recommendation_strength": "Legally operative US OTC monograph conditions, not a comparative clinical recommendation.",
+      "exact_excerpt": "Benzoyl peroxide, 2.5 to 10 percent.",
+      "conclusion": "Establishes permitted OTC acne-drug concentrations for benzoyl peroxide 2.5%-10% and salicylic acid 0.5%-2% and the applicable Drug Facts framework.",
+      "uncertainty": "Does not determine which eligible active is best for a particular person or detector label.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S04",
+      "title": "Adapalene gel 0.1% Drug Facts label",
+      "publisher": "US National Library of Medicine DailyMed (FDA-submitted label)",
+      "source_type": "regulatory_label",
+      "url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=330bc2b3-e064-4189-9c47-9c5a50aa4dde",
+      "publication_date": null,
+      "last_updated": "2026-06-01",
+      "retrieved_at": "2026-07-16T22:28:02Z",
+      "snapshot_path": "data/clinical_evidence/evidence/f2ba90bdaece79884d9e7bfdeb9e63e3c761d440cf160df9daace3b1ff031de2",
+      "snapshot_sha256": "f2ba90bdaece79884d9e7bfdeb9e63e3c761d440cf160df9daace3b1ff031de2",
+      "snapshot_bytes": 116230,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q04"
+      ],
+      "labels": [
+        "closed_comedo",
+        "open_comedo",
+        "papule",
+        "pustule"
+      ],
+      "recommendation_strength": "Product-specific FDA labeling, not comparative efficacy guidance.",
+      "exact_excerpt": "Adults and children 12 years of age and older: use once daily",
+      "conclusion": "Supports exact adapalene 0.1% identity, acne indication, age 12+ boundary, once-daily labeled use, and irritation/pregnancy consultation warnings.",
+      "uncertainty": "Does not authorize application-generated directions or settle nursing eligibility.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S05",
+      "title": "Skin Conditions During Pregnancy",
+      "publisher": "American College of Obstetricians and Gynecologists",
+      "source_type": "professional_association_patient_guidance",
+      "url": "https://www.acog.org/womens-health/faqs/skin-conditions-during-pregnancy",
+      "publication_date": null,
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/419675bce1cea242a81cc715af53b36619d894c730fa3960787a3736d9aae17d",
+      "snapshot_sha256": "419675bce1cea242a81cc715af53b36619d894c730fa3960787a3736d9aae17d",
+      "snapshot_bytes": 143634,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q05"
+      ],
+      "labels": [
+        "closed_comedo",
+        "open_comedo",
+        "papule",
+        "pustule",
+        "melasma"
+      ],
+      "recommendation_strength": "Professional-association patient guidance.",
+      "exact_excerpt": "it is generally recommended that use of these medications be avoided during pregnancy.",
+      "conclusion": "Supports pregnancy-specific avoidance of topical retinoids and identifies pregnancy-compatible topical ingredients for clinician-reviewed policy wording.",
+      "uncertainty": "Does not provide product-specific dosing and does not replace obstetric consultation.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S06",
+      "title": "Acne: Signs and symptoms",
+      "publisher": "American Academy of Dermatology",
+      "source_type": "professional_association_patient_guidance",
+      "url": "https://www.aad.org/public/diseases/acne/really-acne/symptoms",
+      "publication_date": null,
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/ffbbffa2cdd51bff85ad5bb0cb896e8365d277cfd8a9e8dfd2d970e881670b6f",
+      "snapshot_sha256": "ffbbffa2cdd51bff85ad5bb0cb896e8365d277cfd8a9e8dfd2d970e881670b6f",
+      "snapshot_bytes": 161052,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q06"
+      ],
+      "labels": [
+        "closed_comedo",
+        "open_comedo",
+        "papule",
+        "pustule",
+        "nodule"
+      ],
+      "recommendation_strength": "Morphology guidance, not treatment evidence.",
+      "exact_excerpt": "A whitehead forms when excess oil and dead skin cells build up and plug the opening of a pore.",
+      "conclusion": "Provides plain-language distinctions among whiteheads, blackheads, papules, pustules, nodules, and cysts.",
+      "uncertainty": "Does not validate photo-based classification or diagnosis.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S07",
+      "title": "Is that stubborn acne really acne?",
+      "publisher": "American Academy of Dermatology",
+      "source_type": "professional_association_patient_guidance",
+      "url": "https://www.aad.org/public/diseases/acne/really-acne/stubborn-acne",
+      "publication_date": null,
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/dc66acea4512cedee9ff014a3a7d7940902f66317f61f00098d82f03e67cdade",
+      "snapshot_sha256": "dc66acea4512cedee9ff014a3a7d7940902f66317f61f00098d82f03e67cdade",
+      "snapshot_bytes": 161100,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q06"
+      ],
+      "labels": [
+        "closed_comedo",
+        "open_comedo",
+        "papule",
+        "pustule",
+        "nodule",
+        "other"
+      ],
+      "recommendation_strength": "Professional-association differential-diagnosis guidance.",
+      "exact_excerpt": "Other skin conditions can look a lot like acne.",
+      "conclusion": "Documents acne lookalikes and the role of dermatologist diagnosis.",
+      "uncertainty": "Not a systematic differential-diagnosis review and not a model-validation study.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S08",
+      "title": "Acne scars: Consultation and treatment",
+      "publisher": "American Academy of Dermatology",
+      "source_type": "professional_association_patient_guidance",
+      "url": "https://www.aad.org/public/diseases/acne/derm-treat/scars/treatment",
+      "publication_date": "2023-12-08",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/f32004f01f832c27c094341e98dfe2af98ab7e87e6bed0abb595696d014ebcec",
+      "snapshot_sha256": "f32004f01f832c27c094341e98dfe2af98ab7e87e6bed0abb595696d014ebcec",
+      "snapshot_bytes": 164927,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q07"
+      ],
+      "labels": [
+        "atrophic_scar"
+      ],
+      "recommendation_strength": "Professional-association procedural guidance.",
+      "exact_excerpt": "Stopping acne breakouts can reduce inflammation and prevent new acne scars.",
+      "conclusion": "Supports controlling active acne, clinician scar-subtype assessment, and individualized depressed-scar procedures; selected mild scars may be discussed for a topical retinoid or salicylic acid.",
+      "uncertainty": "No single procedure, exact regimen, or effect size applies to all scar subtypes.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S09",
+      "title": "Scars: Diagnosis and treatment",
+      "publisher": "American Academy of Dermatology",
+      "source_type": "professional_association_patient_guidance",
+      "url": "https://www.aad.org/public/diseases/a-z/scars-treatment",
+      "publication_date": null,
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/72cf92f4e85afca63c416845f356df9c1190648dbfb7d9dc9405e88a37527672",
+      "snapshot_sha256": "72cf92f4e85afca63c416845f356df9c1190648dbfb7d9dc9405e88a37527672",
+      "snapshot_bytes": 151421,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q07"
+      ],
+      "labels": [
+        "hypertrophic_scar"
+      ],
+      "recommendation_strength": "Professional-association treatment and safety guidance.",
+      "exact_excerpt": "Silicone gel (sheet or ointment): Used since 1982, silicone can: Treat a raised scar",
+      "conclusion": "Supports clinician confirmation of raised-scar type and conditional silicone sheet or ointment use only on closed skin, often for months, with rash or breakdown as stop signals.",
+      "uncertainty": "Does not establish high-certainty comparative efficacy or an exact retail product specification.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S10",
+      "title": "Silicone gel sheeting for treating hypertrophic scars",
+      "publisher": "Cochrane Database of Systematic Reviews / PubMed",
+      "source_type": "systematic_review",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/34564840/",
+      "publication_date": "2021-09-26",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/101c3727a4b38ebc01c5f189df0799adfcca65bb38ba13fac247b07ba6145812",
+      "snapshot_sha256": "101c3727a4b38ebc01c5f189df0799adfcca65bb38ba13fac247b07ba6145812",
+      "snapshot_bytes": 252451,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q07"
+      ],
+      "labels": [
+        "hypertrophic_scar"
+      ],
+      "recommendation_strength": "Systematic review finding sparse, generally very-low-certainty randomized evidence.",
+      "exact_excerpt": "it is uncertain whether there is a difference in severity of scarring between the two groups",
+      "conclusion": "Does not support a confident automated silicone recommendation.",
+      "uncertainty": "Few small trials, limited comparisons, and very low certainty for most outcomes.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S11",
+      "title": "Melasma: Diagnosis and treatment",
+      "publisher": "American Academy of Dermatology",
+      "source_type": "professional_association_patient_guidance",
+      "url": "https://www.aad.org/public/diseases/a-z/melasma-treatment",
+      "publication_date": "2022-02-15",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/3390d004857f9fa68dbac9ccd308d4ccb8795d1268f885cb3c7f89b2abb3ab98",
+      "snapshot_sha256": "3390d004857f9fa68dbac9ccd308d4ccb8795d1268f885cb3c7f89b2abb3ab98",
+      "snapshot_bytes": 155455,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q08"
+      ],
+      "labels": [
+        "melasma"
+      ],
+      "recommendation_strength": "Professional-association diagnosis, photoprotection, and treatment guidance.",
+      "exact_excerpt": "For patients who have melasma, dermatologists often recommend using a sunscreen that contains: Zinc oxide Titanium dioxide Iron oxide",
+      "conclusion": "Supports diagnostic examination, broad-spectrum SPF 30+ and iron-oxide visible-light protection, clinician-directed pigment therapy, and a 3-12 month improvement horizon.",
+      "uncertainty": "Does not specify an optimal iron-oxide concentration or authorize diagnosis from a photograph.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S12",
+      "title": "Topical Treatments for Melasma and Their Mechanism of Action",
+      "publisher": "Journal of Clinical and Aesthetic Dermatology / PubMed",
+      "source_type": "systematic_review",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/35290681/",
+      "publication_date": "2022",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/aa3b49b70eb61667003fc509ac2359584427772960d93a500b6a24eb8eb189aa",
+      "snapshot_sha256": "aa3b49b70eb61667003fc509ac2359584427772960d93a500b6a24eb8eb189aa",
+      "snapshot_bytes": 133988,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q08"
+      ],
+      "labels": [
+        "melasma"
+      ],
+      "recommendation_strength": "Systematic review of 36 studies and 47 comparisons; evidence quality varied from very low to high.",
+      "exact_excerpt": "Evidence suggests sunscreen covering the ultraviolet (UV)- and visible light spectra increases treatment efficacy compared with UV-only protection.",
+      "conclusion": "Supports triple combination, hydroquinone, tretinoin, and visible-light-protective sunscreen as evidence-bearing options.",
+      "uncertainty": "Small heterogeneous trials, varied outcomes, and wide certainty range limit automatic regimen selection.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S13",
+      "title": "FDA works to protect consumers from potentially harmful OTC skin lightening products",
+      "publisher": "US Food and Drug Administration",
+      "source_type": "regulatory_safety_communication",
+      "url": "https://www.fda.gov/drugs/drug-safety-communications/fda-works-protect-consumers-potentially-harmful-otc-skin-lightening-products",
+      "publication_date": "2022-04-19",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/ec8881a2c34445da24e698217e58f52bc69c2953a52f2a890c0910431d94fcf9",
+      "snapshot_sha256": "ec8881a2c34445da24e698217e58f52bc69c2953a52f2a890c0910431d94fcf9",
+      "snapshot_bytes": 34373,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q09"
+      ],
+      "labels": [
+        "melasma"
+      ],
+      "recommendation_strength": "US regulatory status and safety communication.",
+      "exact_excerpt": "there are no FDA-approved or otherwise legally marketed OTC skin lightening products.",
+      "conclusion": "Supports blocking OTC hydroquinone skin-lightening products and treating hydroquinone as clinician-directed prescription therapy in the US.",
+      "uncertainty": "US-specific regulatory conclusion; does not compare clinician-prescribed therapies.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S14",
+      "title": "Moles: Diagnosis and treatment",
+      "publisher": "American Academy of Dermatology",
+      "source_type": "professional_association_patient_guidance",
+      "url": "https://www.aad.org/public/diseases/a-z/moles-treatment",
+      "publication_date": null,
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/6e7449ce21cda8b72cd972814d555676a3382cfb48f1aaceb311616cd2914e72",
+      "snapshot_sha256": "6e7449ce21cda8b72cd972814d555676a3382cfb48f1aaceb311616cd2914e72",
+      "snapshot_bytes": 144799,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q10"
+      ],
+      "labels": [
+        "nevus"
+      ],
+      "recommendation_strength": "Professional-association diagnosis and treatment guidance.",
+      "exact_excerpt": "Never try to remove a mole at home",
+      "conclusion": "Supports no treatment for most stable moles, clinician examination/removal when suspicious or bothersome, microscopy, and no home removal.",
+      "uncertainty": "Does not validate automated benign-versus-malignant classification.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S15",
+      "title": "Moles: Signs and symptoms",
+      "publisher": "American Academy of Dermatology",
+      "source_type": "professional_association_patient_guidance",
+      "url": "https://www.aad.org/public/diseases/a-z/moles-symptoms",
+      "publication_date": null,
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/535bd4b6e8faf3b2d05c3ff5e6ded4964e159fcbed4b3533b340237736d6c30e",
+      "snapshot_sha256": "535bd4b6e8faf3b2d05c3ff5e6ded4964e159fcbed4b3533b340237736d6c30e",
+      "snapshot_bytes": 142970,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q10"
+      ],
+      "labels": [
+        "nevus"
+      ],
+      "recommendation_strength": "Professional-association warning-sign guidance.",
+      "exact_excerpt": "If you see a mole or new spot on your skin that has any of the ABCDEs of melanoma",
+      "conclusion": "Supports ABCDE change wording and prompt review for concerning features.",
+      "uncertainty": "ABCDE does not identify every melanoma and cannot be reduced to a model-confidence threshold.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S16",
+      "title": "When is a mole a problem?",
+      "publisher": "American Academy of Dermatology",
+      "source_type": "professional_association_patient_guidance",
+      "url": "https://www.aad.org/public/diseases/a-z/when-is-a-mole-a-problem",
+      "publication_date": null,
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/f6591155dd0a9d613e830406d7f7289b96fc14207f46927e54a23fad83ebf665",
+      "snapshot_sha256": "f6591155dd0a9d613e830406d7f7289b96fc14207f46927e54a23fad83ebf665",
+      "snapshot_bytes": 148548,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q10"
+      ],
+      "labels": [
+        "nevus",
+        "other"
+      ],
+      "recommendation_strength": "Professional-association escalation guidance.",
+      "exact_excerpt": "If a mole looks different from the others, itches, bleeds, or is changing in any way, a dermatologist should examine it.",
+      "conclusion": "Supports clinician review for new, changing, bleeding, itching, painful, or otherwise concerning moles and no home remedies.",
+      "uncertainty": "Urgency still depends on clinical context.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S17",
+      "title": "Warning Letter: Ariella Naturals",
+      "publisher": "US Food and Drug Administration",
+      "source_type": "regulatory_enforcement",
+      "url": "https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/ariella-naturals-632509-08042022",
+      "publication_date": "2022-08-04",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/c4e8aa557153a8abb5630b9d713dcfb632fa969226a285e97fb1bff526ac724e",
+      "snapshot_sha256": "c4e8aa557153a8abb5630b9d713dcfb632fa969226a285e97fb1bff526ac724e",
+      "snapshot_bytes": 39169,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q11"
+      ],
+      "labels": [
+        "nevus"
+      ],
+      "recommendation_strength": "US regulatory enforcement statement.",
+      "exact_excerpt": "There are no over-the-counter (OTC) drugs that can be legally sold for mole or skin tag removal",
+      "conclusion": "Supports prohibiting OTC mole-removal matching because no lawful OTC mole-removal drug exists and self-treatment may delay cancer diagnosis or cause injury.",
+      "uncertainty": "A warning letter is product-specific enforcement evidence, used here only for the stated regulatory and safety principle.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S18",
+      "title": "FDA warns against purchasing or using chemical peel skin products without professional supervision",
+      "publisher": "US Food and Drug Administration",
+      "source_type": "regulatory_safety_warning",
+      "url": "https://www.fda.gov/drugs/drug-alerts-and-statements/fda-warns-against-purchasing-or-using-chemical-peel-skin-products-without-professional-supervision",
+      "publication_date": "2024-07-30",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/fa2e2a8bfe9ef8556a72dbfe1b9cad5c1d47773297d97b9eb1044ad0cb7e1b5a",
+      "snapshot_sha256": "fa2e2a8bfe9ef8556a72dbfe1b9cad5c1d47773297d97b9eb1044ad0cb7e1b5a",
+      "snapshot_bytes": 33462,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q12"
+      ],
+      "labels": [
+        "atrophic_scar",
+        "hypertrophic_scar",
+        "melasma"
+      ],
+      "recommendation_strength": "US regulatory safety warning.",
+      "exact_excerpt": "The agency has not approved any chemical peel products",
+      "conclusion": "Supports prohibiting unsupervised high-strength chemical peels and describing burns, infection, pigment change, and scarring as harms.",
+      "uncertainty": "Does not compare supervised procedures or establish which supervised procedure is effective.",
+      "decision": "included"
+    },
+    {
+      "source_id": "S19",
+      "title": "Skin Cancer: Screening",
+      "publisher": "US Preventive Services Task Force",
+      "source_type": "preventive_services_recommendation",
+      "url": "https://www.uspreventiveservicestaskforce.org/uspstf/recommendation/skin-cancer-screening",
+      "publication_date": "2023-04-18",
+      "retrieved_at": "2026-07-16T22:15:15Z",
+      "snapshot_path": "data/clinical_evidence/evidence/db6a0a91a569111ec8f48b3d0a440e3984f1c281f03c85f07e10fba804e5465e",
+      "snapshot_sha256": "db6a0a91a569111ec8f48b3d0a440e3984f1c281f03c85f07e10fba804e5465e",
+      "snapshot_bytes": 107961,
+      "media_type": "text/html",
+      "query_ids": [
+        "Q11"
+      ],
+      "labels": [
+        "nevus",
+        "other"
+      ],
+      "recommendation_strength": "I statement: insufficient evidence for clinician visual screening in asymptomatic adolescents and adults.",
+      "exact_excerpt": "The USPSTF concludes that the current evidence is insufficient to assess the balance of benefits and harms",
+      "conclusion": "Prevents the application from misrepresenting its nevus label as validated screening or using an asymptomatic-screening recommendation to reassure a symptomatic user.",
+      "uncertainty": "Does not apply to diagnosis of a symptomatic or changing lesion and does not evaluate this model.",
+      "decision": "included"
+    }
+  ],
+  "rejected_source_classes": [
+    {
+      "class": "retailer_or_marketplace_copy",
+      "reason": "Permitted only as a lead for product identity, never as clinical efficacy, safety, or exact-label support."
+    },
+    {
+      "class": "manufacturer_efficacy_claim",
+      "reason": "Excluded from clinical support; manufacturer evidence may later verify exact SKU ingredients, SPF, role, directions, and warnings only."
+    },
+    {
+      "class": "blogs_social_media_and_search_snippets",
+      "reason": "Insufficient provenance and extraction stability."
+    },
+    {
+      "class": "non_specific_skin_care_advice",
+      "reason": "Could not be mapped to one exact detector label and auditable management conclusion."
+    },
+    {
+      "class": "lower_level_study_when_current_synthesis_answered_question",
+      "reason": "Avoided selective citation and redundant source volume when a current guideline or systematic review supplied the needed conclusion."
+    }
+  ],
+  "rejected_sources": [
+    {
+      "rejection_id": "R01",
+      "title": "Differin (adapalene) gel 0.1% 2024 label PDF",
+      "url": "https://www.accessdata.fda.gov/drugsatfda_docs/label/2024/020380Orig1s021lbl.pdf",
+      "query_ids": [
+        "Q04"
+      ],
+      "considered_on": "2026-07-16",
+      "snapshot_path": "data/clinical_evidence/evidence/758513a761f11912b21530dc18e36e4e132981a248ae2f762bc50fc421540d26",
+      "snapshot_sha256": "758513a761f11912b21530dc18e36e4e132981a248ae2f762bc50fc421540d26",
+      "snapshot_bytes": 2471601,
+      "reason": "Replaced by S04, a current DailyMed Drug Facts label updated 2026-06-01; the PDF itself warns that it may not be the latest approved labeling.",
+      "decision": "rejected_replaced_by_more_current_primary_source"
+    },
+    {
+      "rejection_id": "R02",
+      "title": "Melasma Management: A Comprehensive Review of Treatments and Emerging Therapies",
+      "url": "https://staging.aad.org/dw/monthly/2026/march/feature-melasma-management",
+      "query_ids": [
+        "Q08"
+      ],
+      "considered_on": "2026-07-16",
+      "reason": "Professional feature rather than a formal clinical-practice guideline; relevant conclusions were already supported by S11 and S12.",
+      "decision": "rejected_redundant_lower_tier"
+    },
+    {
+      "rejection_id": "R03",
+      "title": "Efficacy of topical silicone gel in scar management: a systematic review and meta-analysis of randomised controlled trials",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/35367089/",
+      "query_ids": [
+        "Q07"
+      ],
+      "considered_on": "2026-07-16",
+      "reason": "Retained the directly applicable Cochrane review S10 as the higher-rigor synthesis and avoided double-counting overlapping small trials.",
+      "decision": "rejected_redundant_synthesis"
+    },
+    {
+      "rejection_id": "R04",
+      "title": "Acne: Overview",
+      "url": "https://www.aad.org/public/diseases/acne/really-acne/overview",
+      "query_ids": [
+        "Q06"
+      ],
+      "considered_on": "2026-07-16",
+      "reason": "Did not add a claim beyond the more specific morphology, differential-diagnosis, guideline, and regulatory sources S01-S07.",
+      "decision": "rejected_redundant"
+    }
+  ],
+  "product_evidence_sources": [
+    {
+      "product_id": "P188306",
+      "exact_variant": "Clinique Acne Solutions All-Over Clearing Treatment Oil-Free",
+      "target_labels": [
+        "papule",
+        "pustule"
+      ],
+      "coverage_status": "partial_coverage_approved_for_synthetic_mvp",
+      "verification_status": "partial",
+      "neutral_profile_gate": {
+        "eligible": true,
+        "reasons": []
+      },
+      "catalog_inci_sha256": "3620dc26dfdd134c6f7b23f60448cdb5bcdca83b3b4be6794c1dcb2af7a5e5c6",
+      "relevant_facts": {
+        "active": "benzoyl_peroxide",
+        "strength": "2.5%",
+        "routine_role": "treatment",
+        "format": "lotion",
+        "exposure": "leave_on",
+        "cadence": "per_label",
+        "amount": "thin_layer",
+        "contraindications": [
+          "sensitive"
+        ],
+        "otc_drug": true
+      },
+      "evidence_assertions": [
+        {
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+          "retrieved_at": "2026-07-14T18:13:41.489734Z",
+          "approved_at": "2026-07-14T18:15:15.692272Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "approval_scope": "catalog_evidence_only",
+          "snapshot_path": "data/clinical_evidence/product_evidence/f81949978b0534ebcd1c56e3a53d1fa5e7b2536aea7bfd9fbcff21e4266e28da",
+          "snapshot_sha256": "f81949978b0534ebcd1c56e3a53d1fa5e7b2536aea7bfd9fbcff21e4266e28da",
+          "snapshot_bytes": 38868,
+          "media_type": "text/xml",
+          "verified_facts": [
+            "benzoyl_peroxide 2.5%",
+            "OTC acne drug",
+            "treatment role",
+            "leave-on lotion",
+            "per-label cadence",
+            "thin-layer amount",
+            "contraindications"
+          ]
+        }
+      ],
+      "uncertainty": "Catalog evidence approval is separate from the AI research audit; the synthetic MVP path is approved while completeness remains partial."
+    },
+    {
+      "product_id": "P456218",
+      "exact_variant": "Supergoop! Glowscreen Sunscreen SPF 40 PA+++ with Hyaluronic Acid + Niacinamide",
+      "target_labels": [
+        "melasma"
+      ],
+      "coverage_status": "partial_coverage_approved_for_synthetic_mvp",
+      "verification_status": "partial",
+      "neutral_profile_gate": {
+        "eligible": true,
+        "reasons": []
+      },
+      "catalog_inci_sha256": "123afb0daceb99732b492af3ee1fde4ba21c9d5a4d83c6be8f22a2ef4f7f8165",
+      "relevant_catalog_inci_tokens": [
+        "Iron Oxides"
+      ],
+      "relevant_facts": {
+        "spf": 40,
+        "broad_spectrum": true,
+        "routine_role": "sunscreen",
+        "format": "cream",
+        "exposure": "leave_on",
+        "intended_areas": [
+          "face"
+        ],
+        "cadence": "per_label",
+        "otc_drug": true
+      },
+      "evidence_assertions": [
+        {
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/21569637-332a-461b-bf6c-33af6a83a155.xml",
+          "retrieved_at": "2026-07-14T18:21:17.942408Z",
+          "approved_at": "2026-07-14T18:21:56.405122Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "approval_scope": "catalog_evidence_only",
+          "snapshot_path": "data/clinical_evidence/product_evidence/ec588ae92b30d15eff5ca69d48730131defd6daa6336341ac6f4e43fe8f72093",
+          "snapshot_sha256": "ec588ae92b30d15eff5ca69d48730131defd6daa6336341ac6f4e43fe8f72093",
+          "snapshot_bytes": 39444,
+          "media_type": "text/xml",
+          "verified_facts": [
+            "SPF 40",
+            "broad spectrum",
+            "leave-on cream",
+            "per-label cadence"
+          ]
+        },
+        {
+          "source_url": "https://supergoop.com/products/glowscreen-spf-40",
+          "retrieved_at": "2026-07-14T18:21:17.942408Z",
+          "approved_at": "2026-07-14T18:21:56.405122Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "approval_scope": "catalog_evidence_only",
+          "snapshot_path": "data/clinical_evidence/product_evidence/6042206c437fdd22e2d07ad2ec26af697b741a1d70ff665bb9bde3e63088e92a",
+          "snapshot_sha256": "6042206c437fdd22e2d07ad2ec26af697b741a1d70ff665bb9bde3e63088e92a",
+          "snapshot_bytes": 1500667,
+          "media_type": "text/html",
+          "verified_facts": [
+            "exact manufacturer variant",
+            "face intended area",
+            "sunscreen role",
+            "claimed non-comedogenic"
+          ]
+        }
+      ],
+      "uncertainty": "Iron-oxide percentage is not stated; completeness remains partial and real-user authorization is absent."
+    },
+    {
+      "product_id": "P467976",
+      "exact_variant": "Supergoop! (Re)setting 100% Mineral Powder Sunscreen SPF 35 PA+++",
+      "target_labels": [],
+      "coverage_status": "blocked_known_incompatible_format",
+      "verification_status": "partial",
+      "neutral_profile_gate": {
+        "eligible": false,
+        "reasons": [
+          "format_not_allowed_for_role:powder"
+        ]
+      },
+      "catalog_inci_sha256": "58641646c57f9cc309f984556a149c8fede346d066a8f1b07d1c85b708ea1c95",
+      "relevant_catalog_inci_tokens": [
+        "May contain Iron Oxides (CI 77492"
+      ],
+      "relevant_facts": {
+        "spf": 35,
+        "broad_spectrum": true,
+        "routine_role": "sunscreen",
+        "format": "powder",
+        "exposure": "leave_on",
+        "intended_areas": [
+          "face",
+          "neck"
+        ],
+        "cadence": "per_label",
+        "otc_drug": true
+      },
+      "evidence_assertions": [
+        {
+          "source_url": "https://supergoop.com/products/mineral-setting-powder",
+          "retrieved_at": "2026-07-16T18:31:23Z",
+          "approved_at": "2026-07-16T18:38:43.771765Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "approval_scope": "catalog_evidence_only",
+          "snapshot_path": "data/clinical_evidence/product_evidence/92befeb7eb991b2b2815da7803360b18e291330b8f1d9556bb1f820f1acef232",
+          "snapshot_sha256": "92befeb7eb991b2b2815da7803360b18e291330b8f1d9556bb1f820f1acef232",
+          "snapshot_bytes": 3400080,
+          "media_type": "text/html",
+          "verified_facts": [
+            "exact manufacturer variant",
+            "powder format",
+            "face and neck intended areas",
+            "sunscreen role",
+            "per-label cadence"
+          ]
+        },
+        {
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/af5c9801-26ce-5c60-e053-2995a90ab457.xml",
+          "retrieved_at": "2026-07-16T18:42:11Z",
+          "approved_at": "2026-07-16T18:47:08.109213Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "approval_scope": "catalog_evidence_only",
+          "snapshot_path": "data/clinical_evidence/product_evidence/3aed13366b285a59bd1f27227d779473002f093873deb77ff2a8be1d72caddc3",
+          "snapshot_sha256": "3aed13366b285a59bd1f27227d779473002f093873deb77ff2a8be1d72caddc3",
+          "snapshot_bytes": 20640,
+          "media_type": "text/xml",
+          "verified_facts": [
+            "SPF 35",
+            "broad spectrum",
+            "OTC drug label"
+          ]
+        }
+      ],
+      "uncertainty": "None relevant to the gate: powder is a known incompatible primary sunscreen format and is therefore excluded."
+    },
+    {
+      "product_id": "P476733",
+      "exact_variant": "Supergoop! Mineral Mattescreen Sunscreen SPF 40 PA+++",
+      "target_labels": [
+        "melasma"
+      ],
+      "coverage_status": "partial_coverage_approved_for_synthetic_mvp",
+      "verification_status": "partial",
+      "neutral_profile_gate": {
+        "eligible": true,
+        "reasons": []
+      },
+      "catalog_inci_sha256": "0e065e30e3c7e538e733cf5055ed467f8065ba8d802774fe054dc8dc1b394d70",
+      "relevant_catalog_inci_tokens": [
+        "Iron Oxides (CI 77491)",
+        "Iron Oxides (CI 77492)",
+        "Iron Oxides (CI 77499)"
+      ],
+      "relevant_facts": {
+        "spf": 40,
+        "broad_spectrum": true,
+        "routine_role": "sunscreen",
+        "format": "lotion",
+        "exposure": "leave_on",
+        "intended_areas": [
+          "face"
+        ],
+        "cadence": "per_label",
+        "otc_drug": true
+      },
+      "evidence_assertions": [
+        {
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/08671d39-3be2-d666-e063-6294a90a6207.xml",
+          "retrieved_at": "2026-07-14T18:13:41.489734Z",
+          "approved_at": "2026-07-14T18:15:15.692272Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "approval_scope": "catalog_evidence_only",
+          "snapshot_path": "data/clinical_evidence/product_evidence/293660367c20a287ca9e7983d33ad784a3b3c3ec81e9e651cc9c7ca724d2066e",
+          "snapshot_sha256": "293660367c20a287ca9e7983d33ad784a3b3c3ec81e9e651cc9c7ca724d2066e",
+          "snapshot_bytes": 25064,
+          "media_type": "text/xml",
+          "verified_facts": [
+            "SPF 40",
+            "broad spectrum",
+            "leave-on lotion",
+            "per-label cadence"
+          ]
+        },
+        {
+          "source_url": "https://supergoop.com/products/smooth-and-poreless-mattescreen",
+          "retrieved_at": "2026-07-14T18:13:41.489734Z",
+          "approved_at": "2026-07-14T18:15:15.692272Z",
+          "reviewer_id": "claude-fable-5-catalog-loop",
+          "reviewer_type": "agent",
+          "approval_scope": "catalog_evidence_only",
+          "snapshot_path": "data/clinical_evidence/product_evidence/b9f85343d7a3688329a766f1dd33459ae9bebf5aa3bf27243511417f086ed652",
+          "snapshot_sha256": "b9f85343d7a3688329a766f1dd33459ae9bebf5aa3bf27243511417f086ed652",
+          "snapshot_bytes": 1548664,
+          "media_type": "text/html",
+          "verified_facts": [
+            "exact manufacturer variant",
+            "face intended area",
+            "sunscreen role",
+            "claimed non-comedogenic"
+          ]
+        }
+      ],
+      "uncertainty": "Iron-oxide percentage is not stated; completeness remains partial and real-user authorization is absent."
+    },
+    {
+      "product_id": "P481169",
+      "exact_variant": "Tatcha The Silk Sunscreen Mineral Broad Spectrum SPF 50 PA++++ with Hyaluronic Acid and Niacinamide",
+      "target_labels": [
+        "melasma"
+      ],
+      "coverage_status": "partial_coverage_approved_for_synthetic_mvp",
+      "verification_status": "partial",
+      "neutral_profile_gate": {
+        "eligible": true,
+        "reasons": []
+      },
+      "catalog_inci_sha256": "97c86607dfd25a52d90152a769e53781dfcc8efb18d4ee74d7c9904c1443cd8f",
+      "relevant_catalog_inci_tokens": [
+        "Iron Oxides (CI 77491"
+      ],
+      "relevant_facts": {
+        "spf": 50,
+        "broad_spectrum": true,
+        "routine_role": "sunscreen",
+        "format": null,
+        "exposure": "leave_on_catalog_derived",
+        "cadence": "per_label",
+        "otc_drug": true
+      },
+      "evidence_assertions": [
+        {
+          "source_url": "https://tatcha.com/products/the-silk-sunscreen-spf-50",
+          "retrieved_at": "2026-07-16T21:00:20Z",
+          "approved_at": "2026-07-16T21:10:44.336809Z",
+          "reviewer_id": "claude-catalog-loop-2026-07-16",
+          "reviewer_type": "agent",
+          "approval_scope": "catalog_evidence_only",
+          "snapshot_path": "data/clinical_evidence/product_evidence/2a8616e3ec997ecc1be5c8e375663f3eb065c802e05243f2060656587a1c98d6",
+          "snapshot_sha256": "2a8616e3ec997ecc1be5c8e375663f3eb065c802e05243f2060656587a1c98d6",
+          "snapshot_bytes": 1958889,
+          "media_type": "text/html",
+          "verified_facts": [
+            "exact manufacturer variant",
+            "sunscreen role",
+            "per-label cadence",
+            "claimed non-comedogenic"
+          ]
+        },
+        {
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/7799042a-d2de-480e-a8a3-827b3dc27907.xml",
+          "retrieved_at": "2026-07-16T21:00:20Z",
+          "approved_at": "2026-07-16T21:10:44.336809Z",
+          "reviewer_id": "claude-catalog-loop-2026-07-16",
+          "reviewer_type": "agent",
+          "approval_scope": "catalog_evidence_only",
+          "snapshot_path": "data/clinical_evidence/product_evidence/3a1ead63262eccc7983484f4ffcb157801e14338bfe6885dc86d0ff58a6ff5ba",
+          "snapshot_sha256": "3a1ead63262eccc7983484f4ffcb157801e14338bfe6885dc86d0ff58a6ff5ba",
+          "snapshot_bytes": 39443,
+          "media_type": "text/xml",
+          "verified_facts": [
+            "SPF 50",
+            "broad spectrum",
+            "OTC drug label"
+          ]
+        }
+      ],
+      "uncertainty": "Format is unknown and lowers completeness but does not veto under D-036; iron-oxide percentage is not stated; real-user authorization is absent."
+    }
+  ],
+  "product_coverage_audit": {
+    "audited_at": "2026-07-16T22:15:15Z",
+    "status": "provisional_dirty_worktree_snapshot",
+    "commit_pinned": false,
+    "reproducibility_exception": "Two derived catalog inputs are absent from clean commit 94045f8, and the committed verification overlay and concern-active file do not match the recorded hashes. Regenerate or pin these inputs before treating exact counts or SKU eligibility as fixed acceptance criteria.",
+    "method": "Load current full and drug catalogs, apply the approved verification overlay at the fixed audit timestamp, parse actives deterministically, and run current hard gates with a complete neutral coverage-audit profile. Presence counts are not eligibility claims.",
+    "inputs": [
+      {
+        "path": "recsys/data/derived/catalog_full.json",
+        "sha256": "e6c1d00309945aee0752c09f666e2f449d5a64caacaf6676306f583d3f9ba726"
+      },
+      {
+        "path": "recsys/data/derived/catalog_drug.json",
+        "sha256": "ad0e14f586a75af48e157af1daa715ac71898a07bf3b55ed4b2ed8ad3cad1a6e"
+      },
+      {
+        "path": "recsys/data/verification/approved.json",
+        "sha256": "cdfe6433ad5983b0992ca8c7057a75eff270b10779b0e8acd89d247726b9d5bf"
+      },
+      {
+        "path": "recsys/data/knowledge/concern_actives.json",
+        "sha256": "74e2202d03adafccfc263d6747766ef5171fd77626a31a7d9af696c20811d6a7"
+      },
+      {
+        "path": "recsys/data/knowledge/safety_rules.json",
+        "sha256": "c6c18809c6898db32f4d1ebdbb1e2b63dfc90759ab0c5b6ac1229d939c4d49ec"
+      }
+    ],
+    "inventory_products": 1667,
+    "overlay_products": 38,
+    "overlay_warnings": [],
+    "active_counts": {
+      "adapalene": {
+        "present": 4,
+        "drug_rows": 4,
+        "otc_rows": 1,
+        "prescription_rows": 3,
+        "neutral_profile_eligible_otc": 0
+      },
+      "benzoyl_peroxide": {
+        "present": 13,
+        "drug_rows": 8,
+        "otc_rows": 2,
+        "prescription_rows": 6,
+        "neutral_profile_eligible_otc": 1
+      },
+      "salicylic_acid": {
+        "present": 181,
+        "drug_rows": 0,
+        "otc_rows": 0,
+        "prescription_rows": 0,
+        "neutral_profile_eligible_otc": 0
+      },
+      "azelaic_acid": {
+        "present": 17,
+        "drug_rows": 1,
+        "otc_rows": 0,
+        "prescription_rows": 1,
+        "neutral_profile_eligible_otc": 0
+      },
+      "retinol": {
+        "present": 66,
+        "drug_rows": 0,
+        "otc_rows": 0,
+        "prescription_rows": 0,
+        "neutral_profile_eligible_otc": 0
+      },
+      "tretinoin": {
+        "present": 11,
+        "drug_rows": 11,
+        "otc_rows": 0,
+        "prescription_rows": 11,
+        "neutral_profile_eligible_otc": 0
+      }
+    },
+    "iron_oxide_sunscreen": {
+      "deterministic_tokens": [
+        "iron oxide",
+        "iron oxides",
+        "ferric oxide",
+        "ferrous oxide",
+        "CI 77491",
+        "CI 77492",
+        "CI 77499"
+      ],
+      "present": 34,
+      "spf_30_or_greater": 31,
+      "verified_spf_broad_spectrum_role_and_exposure": 4,
+      "neutral_profile_gate_eligible": 3,
+      "blocked_verified_candidate_reason": "format_not_allowed_for_role:powder"
+    },
+    "silicone_scar_care": {
+      "scar_named_products": 3,
+      "dedicated_verified_silicone_scar_products": 0,
+      "rule": "Do not infer scar-care efficacy from generic vehicle silicones such as dimethicone."
+    },
+    "exact_label_coverage": {
+      "closed_comedo": {
+        "status": "unfilled",
+        "products": [],
+        "reason": "No OTC adapalene or exact salicylic-acid acne-drug row clears the current treatment gates."
+      },
+      "open_comedo": {
+        "status": "unfilled",
+        "products": [],
+        "reason": "No OTC adapalene or exact salicylic-acid acne-drug row clears the current treatment gates."
+      },
+      "papule": {
+        "status": "partial_coverage_approved_for_synthetic_mvp",
+        "products": [
+          "P188306"
+        ]
+      },
+      "pustule": {
+        "status": "partial_coverage_approved_for_synthetic_mvp",
+        "products": [
+          "P188306"
+        ]
+      },
+      "nodule": {
+        "status": "unfilled_by_policy",
+        "products": [],
+        "reason": "Clinician-first; no retail target is allowed."
+      },
+      "atrophic_scar": {
+        "status": "unfilled_by_policy",
+        "products": [],
+        "reason": "Clinician-first and procedure discussion; no retail target is allowed."
+      },
+      "hypertrophic_scar": {
+        "status": "unfilled",
+        "products": [],
+        "reason": "No dedicated, verified silicone sheet or gel product is present."
+      },
+      "melasma": {
+        "status": "partial_coverage_approved_for_synthetic_mvp",
+        "products": [
+          "P456218",
+          "P476733",
+          "P481169"
+        ]
+      },
+      "nevus": {
+        "status": "unfilled_by_policy",
+        "products": [],
+        "reason": "Monitoring or referral only; no product target is allowed."
+      },
+      "other": {
+        "status": "unfilled_by_policy",
+        "products": [],
+        "reason": "Unsupported; no product target is allowed."
+      }
+    }
+  },
+  "validation_contract": {
+    "exact_labels": [
+      "closed_comedo",
+      "open_comedo",
+      "papule",
+      "pustule",
+      "nodule",
+      "atrophic_scar",
+      "hypertrophic_scar",
+      "melasma",
+      "nevus",
+      "other"
+    ],
+    "required_invariants": [
+      "policy JSON parses and contains each exact label once",
+      "production_eligible is false, mvp_synthetic_eligible is true, and ai_research_audit.approved is true",
+      "test_only is true and any runtime translation is confined to tests/fixtures",
+      "authorized environments are development and test; authorized inputs are synthetic profiles and fixture images only",
+      "real-user, external-beta, and production use remain unauthorized",
+      "nodule, atrophic_scar, hypertrophic_scar, nevus, and other have no retail target active",
+      "nevus and other have no required product role",
+      "every included, rejected-with-snapshot, and product-evidence snapshot exists and hashes to snapshot_sha256",
+      "exact-label coverage names all 10 labels and preserves every unfilled path",
+      "product coverage counts and SKU eligibility are marked provisional until their dirty-worktree inputs are pinned or regenerated",
+      "report and policy hash to the values recorded in artifacts"
+    ]
+  }
+}

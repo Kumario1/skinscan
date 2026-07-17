@@ -142,12 +142,19 @@ def test_one_selected_product_per_role_and_alternatives_are_disjoint():
     assert result.validation_errors == []
 
 
-def test_missing_verified_treatment_is_an_explicit_missing_role():
+def test_missing_verified_treatment_defers_to_support_only():
     products = [item for item in catalog() if item.category != "treatment"]
     result = run(active_report(), products)
     assert "treatment" not in result.selected_products
     assert result.decision.therapy_disposition == "defer"
-    assert result.eligibility_rejections["role:treatment"] == ["no_eligible_product"]
+    # Deferred disposition must not carry a primary therapy (recsys contract):
+    # the plan degrades to a complete support-only routine, and the deferral
+    # is surfaced through deferred_reasons instead of a missing role.
+    assert result.therapy_plan.primary is None
+    assert result.therapy_plan.alternatives == []
+    assert "no_eligible_treatment_product" in result.therapy_plan.deferred_reasons
+    assert result.eligibility_diagnostics.missing_roles == []
+    assert result.validation_errors == []
 
 
 def test_maintenance_uses_same_hard_spf_and_role_checks():

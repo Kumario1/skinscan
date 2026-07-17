@@ -1,0 +1,249 @@
+{
+  "kind": "popularity",
+  "percentile_basis": "full-dump same-category loves_count",
+  "products": {
+    "P12045": {
+      "category_percentile": 0.9652,
+      "loves": 140024
+    },
+    "P173726": {
+      "category_percentile": 0.9574,
+      "loves": 133163
+    },
+    "P188306": {
+      "category_percentile": 0.6059,
+      "loves": 17157
+    },
+    "P248407": {
+      "category_percentile": 0.9945,
+      "loves": 300432
+    },
+    "P269122": {
+      "category_percentile": 0.9786,
+      "loves": 234295
+    },
+    "P377533": {
+      "category_percentile": 0.9517,
+      "loves": 121149
+    },
+    "P394639": {
+      "category_percentile": 0.9927,
+      "loves": 265050
+    },
+    "P400259": {
+      "category_percentile": 0.9868,
+      "loves": 300467
+    },
+    "P4016": {
+      "category_percentile": 0.9021,
+      "loves": 56973
+    },
+    "P405096": {
+      "category_percentile": 0.8723,
+      "loves": 48796
+    },
+    "P409800": {
+      "category_percentile": 0.9872,
+      "loves": 266116
+    },
+    "P411387": {
+      "category_percentile": 1.0,
+      "loves": 404142
+    },
+    "P417238": {
+      "category_percentile": 0.9957,
+      "loves": 403801
+    },
+    "P418218": {
+      "category_percentile": 0.9963,
+      "loves": 373877
+    },
+    "P421275": {
+      "category_percentile": 0.9946,
+      "loves": 316297
+    },
+    "P427406": {
+      "category_percentile": 1.0,
+      "loves": 542743
+    },
+    "P427410": {
+      "category_percentile": 0.9444,
+      "loves": 132601
+    },
+    "P427411": {
+      "category_percentile": 0.9603,
+      "loves": 190367
+    },
+    "P427412": {
+      "category_percentile": 0.9577,
+      "loves": 190345
+    },
+    "P427413": {
+      "category_percentile": 0.9841,
+      "loves": 295071
+    },
+    "P427414": {
+      "category_percentile": 0.9735,
+      "loves": 258456
+    },
+    "P427415": {
+      "category_percentile": 0.9908,
+      "loves": 240783
+    },
+    "P427417": {
+      "category_percentile": 1.0,
+      "loves": 763168
+    },
+    "P427419": {
+      "category_percentile": 0.9974,
+      "loves": 720504
+    },
+    "P427420": {
+      "category_percentile": 0.9921,
+      "loves": 338410
+    },
+    "P427421": {
+      "category_percentile": 1.0,
+      "loves": 411372
+    },
+    "P427536": {
+      "category_percentile": 0.983,
+      "loves": 245976
+    },
+    "P429242": {
+      "category_percentile": 0.9691,
+      "loves": 74272
+    },
+    "P429953": {
+      "category_percentile": 0.9588,
+      "loves": 72075
+    },
+    "P439926": {
+      "category_percentile": 0.9683,
+      "loves": 214435
+    },
+    "P439928": {
+      "category_percentile": 0.8388,
+      "loves": 42616
+    },
+    "P440307": {
+      "category_percentile": 0.9839,
+      "loves": 248887
+    },
+    "P441101": {
+      "category_percentile": 0.9982,
+      "loves": 388775
+    },
+    "P442563": {
+      "category_percentile": 0.9973,
+      "loves": 533877
+    },
+    "P443833": {
+      "category_percentile": 0.9702,
+      "loves": 150051
+    },
+    "P443842": {
+      "category_percentile": 0.9656,
+      "loves": 200087
+    },
+    "P444718": {
+      "category_percentile": 0.9489,
+      "loves": 121486
+    },
+    "P448530": {
+      "category_percentile": 0.9651,
+      "loves": 164697
+    },
+    "P448852": {
+      "category_percentile": 0.9341,
+      "loves": 91499
+    },
+    "P454380": {
+      "category_percentile": 1.0,
+      "loves": 302951
+    },
+    "P455364": {
+      "category_percentile": 0.9532,
+      "loves": 127819
+    },
+    "P455369": {
+      "category_percentile": 0.9103,
+      "loves": 69215
+    },
+    "P456218": {
+      "category_percentile": 0.9897,
+      "loves": 231004
+    },
+    "P456392": {
+      "category_percentile": 0.9794,
+      "loves": 145749
+    },
+    "P457008": {
+      "category_percentile": 0.9223,
+      "loves": 93809
+    },
+    "P458219": {
+      "category_percentile": 0.9866,
+      "loves": 252846
+    },
+    "P461537": {
+      "category_percentile": 0.9787,
+      "loves": 190401
+    },
+    "P466123": {
+      "category_percentile": 0.9947,
+      "loves": 389213
+    },
+    "P467249": {
+      "category_percentile": 0.8993,
+      "loves": 64620
+    },
+    "P467976": {
+      "category_percentile": 0.9485,
+      "loves": 68453
+    },
+    "P469515": {
+      "category_percentile": 0.5423,
+      "loves": 13705
+    },
+    "P469517": {
+      "category_percentile": 0.6667,
+      "loves": 16079
+    },
+    "P469520": {
+      "category_percentile": 0.7447,
+      "loves": 27344
+    },
+    "P476733": {
+      "category_percentile": 0.7423,
+      "loves": 22699
+    },
+    "P479348": {
+      "category_percentile": 0.6944,
+      "loves": 26189
+    },
+    "P502749": {
+      "category_percentile": 0.3319,
+      "loves": 6148
+    },
+    "P504283": {
+      "category_percentile": 0.1134,
+      "loves": 1939
+    },
+    "P504614": {
+      "category_percentile": 0.0322,
+      "loves": 432
+    },
+    "P505711": {
+      "category_percentile": 0.0,
+      "loves": 164
+    },
+    "P7880": {
+      "category_percentile": 0.9915,
+      "loves": 282865
+    }
+  },
+  "schema_version": "recsys-store-1",
+  "signal_age": "snapshot-2023",
+  "version": "v1"
+}

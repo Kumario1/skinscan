@@ -23,7 +23,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Optional
 
-from .schema import CATEGORIES, Product
+from .schema import CATEGORIES, Product, excludes_face
 
 # --- vocabularies (from CATALOG_SCHEMA.md) ---------------------------------
 # normalized ingredient string -> canonical active ID. Keys are what
@@ -493,7 +493,7 @@ def apply_verification_overlay(
 
 def _quarantine_reasons(product: Product, role: str) -> list[str]:
     reasons: list[str] = []
-    if "face" not in product.intended_areas:
+    if excludes_face(product.intended_areas):
         reasons.append("intended_area_not_face")
     if role not in product.routine_roles:
         reasons.append("routine_role_not_verified")
@@ -508,8 +508,7 @@ def _quarantine_reasons(product: Product, role: str) -> list[str]:
     if not product.cadence_source:
         reasons.append("instruction_cadence_source_missing")
     if role == "treatment":
-        if product.otc_drug is not True:
-            reasons.append("otc_status_not_verified")
+        # D-033: OTC status no longer gates the treatment role
         if not product.drug_actives:
             reasons.append("drug_active_not_verified")
         if any(active.strength is None for active in product.drug_actives):
@@ -540,13 +539,16 @@ def build_quarantine_report(
     products: list[Product],
     unmatched_verification_ids: list[str] | None = None,
 ) -> dict[str, object]:
-    category_role = {
-        "cleanser": "cleanser", "treatment": "treatment", "serum": "treatment",
-        "moisturizer": "moisturizer", "spf": "sunscreen",
+    category_roles = {
+        "cleanser": ("cleanser",), "treatment": ("treatment",),
+        # a serum-category row can serve either role: cosmetic serum slot or
+        # drug treatment candidate — grade both so neither path fails open
+        "serum": ("serum", "treatment"),
+        "moisturizer": ("moisturizer",), "spf": ("sunscreen",),
     }
     rows: dict[str, object] = {}
     for product in sorted(products, key=lambda item: item.product_id):
-        roles = sorted(set(product.routine_roles) | {category_role[product.category]})
+        roles = sorted(set(product.routine_roles) | set(category_roles[product.category]))
         quarantined = {
             role: reasons
             for role in roles
@@ -566,13 +568,13 @@ def build_completeness_report(
     products: list[Product], *, support_minimum: int = 25
 ) -> dict[str, object]:
     """Report verified support-role inventory without weakening eligibility."""
-    roles = ("cleanser", "moisturizer", "sunscreen")
+    roles = ("cleanser", "moisturizer", "sunscreen", "serum")
     counts = {
         role: sum(not _quarantine_reasons(product, role) for product in products)
         for role in roles
     }
     modeled = {
-        "azelaic_acid_10": (("azelaic_acid", "10%"),),
+        # azelaic_acid_10 dropped 2026-07-16: unfillable (no 10% drug product)
         "benzoyl_peroxide_2_5": (("benzoyl_peroxide", "2.5%"),),
         "adapalene_0_1_benzoyl_peroxide_2_5": (
             ("adapalene", "0.1%"), ("benzoyl_peroxide", "2.5%")

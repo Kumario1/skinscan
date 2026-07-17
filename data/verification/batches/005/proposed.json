@@ -1,0 +1,107 @@
+{
+  "schema_version": "2",
+  "products": [
+    {
+      "product_id": "P394639",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://lgbeauty.com/products/the-true-cream-aqua-bomb",
+          "retrieved_at": "2026-07-16T18:32:25Z",
+          "source_sha256": "9361d83914c604958187529ae517424cff3520465fc81561a43355867d2b45d6",
+          "facts": {
+            "routine_roles": ["moisturizer"],
+            "format": "cream",
+            "exposure": "leave_on",
+            "cadence": "am_pm",
+            "cadence_source": "https://lgbeauty.com/products/the-true-cream-aqua-bomb",
+            "intended_areas": ["face"],
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": ["daily_support"]
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P126301",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.clinique.com/product/20011/6424/skincare/makeup-removers/take-the-day-off-cleansing-balm",
+          "retrieved_at": "2026-07-16T18:30:57Z",
+          "source_sha256": "0e06eba0fc574cbd65822f743db185e67794cdaf552be170c2a8fc1d49690394",
+          "facts": {
+            "routine_roles": ["cleanser"],
+            "format": "balm",
+            "exposure": "rinse_off",
+            "intended_areas": ["face"],
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P443833",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.theinkeylist.com/products/salicylic-acid-cleanser",
+          "retrieved_at": "2026-07-16T18:31:20Z",
+          "source_sha256": "4522b19ed3cb3d78d941c079ea1ddb154db1e6b6efcb6108dafceb412207219a",
+          "facts": {
+            "routine_roles": ["cleanser"],
+            "format": "cleanser",
+            "exposure": "rinse_off",
+            "cadence": "am_pm",
+            "cadence_source": "https://www.theinkeylist.com/products/salicylic-acid-cleanser",
+            "intended_areas": ["face", "body"],
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": ["daily_support"]
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P429953",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://supergoop.com/products/glow-stick-sunscreen",
+          "retrieved_at": "2026-07-16T18:31:03Z",
+          "source_sha256": "b4af36232ee8876652a70c15be165ec6ce69a7d7b302e604425ba3e2ce8cf1ad",
+          "facts": {
+            "routine_roles": ["sunscreen"],
+            "format": "stick",
+            "exposure": "leave_on",
+            "cadence": "per_label",
+            "cadence_source": "https://supergoop.com/products/glow-stick-sunscreen",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P467976",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://supergoop.com/products/mineral-setting-powder",
+          "retrieved_at": "2026-07-16T18:31:23Z",
+          "source_sha256": "92befeb7eb991b2b2815da7803360b18e291330b8f1d9556bb1f820f1acef232",
+          "facts": {
+            "routine_roles": ["sunscreen"],
+            "format": "powder",
+            "exposure": "leave_on",
+            "cadence": "per_label",
+            "cadence_source": "https://supergoop.com/products/mineral-setting-powder",
+            "intended_areas": ["face", "neck"],
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page"
+          }
+        }
+      ]
+    }
+  ]
+}

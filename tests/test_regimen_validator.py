@@ -101,3 +101,56 @@ def test_same_role_is_not_repeated_and_sunscreen_is_am_only():
     errors = validate_recommendation(rec, profile())
     assert "sunscreen_scheduled_pm" in errors
     assert any(error.startswith("role_repeated_in_slot") for error in errors)
+
+
+# --- scheduling invariants ----------------------------------------------------
+# Mutation testing showed the schedule checks were unpinned: the treatment-repeat
+# arithmetic in particular killed nothing (5 surviving mutants on one expression).
+
+def _scheduled(recommendation, slot, role, product_id):
+    """Schedule an extra step, as a mis-composition would."""
+    recommendation.selected_regimen[slot].append(
+        RoutineInstruction(role, slot, "once_daily", "a pea", f"synthetic://{product_id}"))
+    return recommendation
+
+
+def test_a_treatment_scheduled_in_both_slots_is_rejected():
+    """One SKU dosed morning AND night is a double dose, not thoroughness."""
+    rec = _scheduled(valid_recommendation(), "am", "treatment", "aza")
+    errors = validate_recommendation(rec, profile())
+    assert "treatment_repeated_across_slots" in errors
+
+
+def test_a_single_treatment_step_is_accepted():
+    rec = valid_recommendation()
+    treatment_steps = sum(
+        1 for slot in ("am", "pm") for step in rec.selected_regimen[slot]
+        if step.role == "treatment")
+    assert treatment_steps == 1
+    assert "treatment_repeated_across_slots" not in validate_recommendation(rec, profile())
+
+
+def test_sunscreen_scheduled_at_night_is_rejected():
+    rec = _scheduled(valid_recommendation(), "pm", "sunscreen", "spf")
+    assert "sunscreen_scheduled_pm" in validate_recommendation(rec, profile())
+
+
+def test_a_selected_sunscreen_that_is_never_scheduled_in_the_morning_is_rejected():
+    """SPF is non-negotiable (RULES.md 3): selecting one and not scheduling it
+    would silently drop sun protection from the routine."""
+    rec = valid_recommendation()
+    rec.selected_regimen["am"] = [s for s in rec.selected_regimen["am"] if s.role != "sunscreen"]
+    assert "required_sunscreen_not_scheduled_am" in validate_recommendation(rec, profile())
+
+
+def test_an_instruction_with_no_selected_product_is_rejected():
+    rec = _scheduled(valid_recommendation(), "am", "cleanser", "ghost")
+    rec.selected_products.pop("cleanser")
+    errors = validate_recommendation(rec, profile())
+    assert any(e.startswith("instruction_has_no_selected_product") for e in errors)
+
+
+def test_an_explanation_naming_the_wrong_product_is_rejected():
+    rec = valid_recommendation()
+    rec.explanation[0] = {**rec.explanation[0], "product_id": "not-the-one"}
+    assert "explanation_product_mismatch" in validate_recommendation(rec, profile())

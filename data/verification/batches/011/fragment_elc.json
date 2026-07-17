@@ -1,0 +1,37 @@
+{
+ "products": [
+  {
+   "product_id": "P139000",
+   "assertions": [
+    {
+     "status": "proposed",
+     "source_url": "https://www.clinique.com/product/1673/8279/skincare/cleansers-makeup-removers/all-about-cleantm-liquid-facial-soap",
+     "retrieved_at": "2026-07-16T21:14:40Z",
+     "source_sha256": "5763f95858725589384b206c555407230b61548399f4e1fbdb0d24469df9ea13",
+     "facts": {
+      "routine_roles": ["cleanser"],
+      "cadence": "twice_daily",
+      "cadence_source": "https://www.clinique.com/product/1673/8279/skincare/cleansers-makeup-removers/all-about-cleantm-liquid-facial-soap"
+     }
+    }
+   ]
+  },
+  {
+   "product_id": "P445827",
+   "assertions": [
+    {
+     "status": "proposed",
+     "source_url": "https://www.fresh.com/us/shop/skincare/cleansers/sugar-strawberry-exfoliating-face-wash-H00006952.html",
+     "retrieved_at": "2026-07-16T21:14:40Z",
+     "source_sha256": "e8e2b9f04b8a2eeaad4acf72e80cd219da2e2b63e8e26f656dfa52e452358f50",
+     "facts": {
+      "routine_roles": ["cleanser"],
+      "cadence": "daily",
+      "cadence_source": "https://www.fresh.com/us/shop/skincare/cleansers/sugar-strawberry-exfoliating-face-wash-H00006952.html"
+     }
+    }
+   ]
+  }
+ ],
+ "rejects": []
+}

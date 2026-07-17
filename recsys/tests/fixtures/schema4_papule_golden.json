@@ -1,0 +1,45 @@
+{
+  "status": "ok",
+  "target_lesions": [
+    {
+      "lesion_type": "papule",
+      "count": 1,
+      "required_product_roles": ["treatment"],
+      "retail_target_actives": ["benzoyl_peroxide", "adapalene"]
+    }
+  ],
+  "selected_products": {
+    "cleanser": "P417238",
+    "moisturizer": "P469517",
+    "spf": "P429242",
+    "treatment": "P188306"
+  },
+  "lesion_coverage": [
+    {
+      "lesion_type": "papule",
+      "status": "covered_by_product",
+      "products": [
+        {
+          "product_id": "P188306",
+          "slot": "treatment",
+          "matched_actives": ["benzoyl_peroxide"]
+        }
+      ]
+    }
+  ],
+  "selected_regimen": {
+    "archetype": "best_overall",
+    "am": [
+      {"slot": "cleanser", "product_id": "P417238"},
+      {"slot": "moisturizer", "product_id": "P469517"},
+      {"slot": "spf", "product_id": "P429242"}
+    ],
+    "pm": [
+      {"slot": "cleanser", "product_id": "P417238"},
+      {"slot": "moisturizer", "product_id": "P469517"}
+    ],
+    "per_label": [
+      {"slot": "treatment", "product_id": "P188306"}
+    ]
+  }
+}

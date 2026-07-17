@@ -1,0 +1,115 @@
+{
+  "framing": {
+    "cosmetic_only": true,
+    "not_medical_advice": true,
+    "text": "These are cosmetic, appearance-based suggestions only \u2014 not medical advice and not a diagnosis (SkinScan decision D-002). Concerns are described by how they look in a photo. Prescription-strength options exist for many of these concerns; a doctor or dermatologist can advise on and prescribe them."
+  },
+  "prescription_options": [],
+  "profile_used": {
+    "abcde_change_present": null,
+    "acne_duration_weeks": 16,
+    "active_acne_controlled": null,
+    "age_years": 25,
+    "allergies": [],
+    "current_actives": [],
+    "current_medications": [],
+    "finding_duration_weeks": null,
+    "max_price_usd": null,
+    "painful_or_deep_lesions": false,
+    "pregnancy_or_hormonal_medication_onset": null,
+    "pregnancy_status": "not_pregnant",
+    "prior_scarring": false,
+    "scar_diagnosis_confirmed_by_clinician": null,
+    "scar_duration_months": null,
+    "sensitivity_conditions": [],
+    "skin_type": "oily",
+    "spot_bleeding": null,
+    "spot_bleeding_itching_or_painful": null,
+    "spot_itching": null,
+    "spot_new_or_changing": null,
+    "spot_other_symptoms": null,
+    "spot_painful": null,
+    "tone_bucket": "medium",
+    "tone_source": "self_report",
+    "treatment_history": [],
+    "unknown_fields": [],
+    "wound_closed": null
+  },
+  "routines": [
+    {
+      "am": [
+        "cleanser:P417238",
+        "moisturizer:P469517",
+        "spf:P429242"
+      ],
+      "archetype": "best_overall",
+      "notes": [
+        "support_only_treatment_deferred"
+      ],
+      "per_label": [],
+      "pm": [
+        "cleanser:P417238",
+        "moisturizer:P469517"
+      ],
+      "safety_checks": {
+        "no_conflicting_actives_in_same_session": true,
+        "one_product_per_slot": true,
+        "retinoids_pm_only": true,
+        "spf_am_only": true
+      }
+    }
+  ],
+  "schema_version": "recsys-1",
+  "status": "ok",
+  "target_lesions": [],
+  "triage": {
+    "level": "routine_plus_review",
+    "professional_review_observations": [
+      {
+        "code": "nevus_observation"
+      }
+    ],
+    "referral_reasons": [
+      "high_count_or_severity_review",
+      "scarring_risk",
+      "persistent_pigment_concern"
+    ],
+    "see_doctor_note": "Treatment is deferred; the routine below contains support only. Please see a dermatologist before starting or stopping medicine. The analysis also noticed a spot it cannot assess (nevus_observation) \u2014 worth showing to a doctor."
+  },
+  "unavailable_archetypes": [
+    {
+      "archetype": "budget",
+      "reasons": [
+        "required_role_missing:spf"
+      ]
+    }
+  ],
+  "unselected_archetypes": [
+    {
+      "archetype": "gentle_sensitive",
+      "reason": "single_regimen_contract"
+    },
+    {
+      "archetype": "minimal",
+      "reason": "single_regimen_contract"
+    },
+    {
+      "archetype": "comprehensive",
+      "reason": "single_regimen_contract"
+    }
+  ],
+  "veto_reasons": {
+    "compose": [],
+    "profile": [
+      "format_not_allowed_for_role:balm",
+      "format_not_allowed_for_role:mist",
+      "format_not_allowed_for_role:oil",
+      "format_not_allowed_for_role:powder",
+      "format_not_allowed_for_role:serum",
+      "spf_broad_spectrum_unverified",
+      "treatment_active_in_support_role:benzoyl_peroxide",
+      "treatment_active_in_support_role:salicylic_acid"
+    ]
+  },
+  "warnings": []
+}

@@ -1,0 +1,24 @@
+{
+  "products": [
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-15T18:54:26.877618Z",
+          "facts": {
+            "routine_roles": [
+              "treatment"
+            ]
+          },
+          "retrieved_at": "2026-07-15T18:26:19Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "9c48a920fc2552528ca348351860cf97af57aa0d078fa69236cbfab834ce8271",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/66858a82-cfda-4ba9-aac7-cf65499f4b1a.xml",
+          "status": "approved"
+        }
+      ],
+      "product_id": "dailymed:66858a82-cfda-4ba9-aac7-cf65499f4b1a:21922-052:adapalene-0.1%+benzoyl_peroxide-2.5%"
+    }
+  ],
+  "schema_version": "2"
+}

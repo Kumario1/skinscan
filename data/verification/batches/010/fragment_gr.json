@@ -1,0 +1,36 @@
+{
+ "products": [
+  {
+   "product_id": "P460516",
+   "assertions": [
+    {
+     "status": "proposed",
+     "source_url": "https://www.glowrecipe.com/products/papaya-sorbet-enzyme-cleansing-balm",
+     "retrieved_at": "2026-07-16T20:56:42Z",
+     "source_sha256": "f07bb5d3a3fa4ba7d447fbd0168e1323142bbe23889ba9fa604a74a440b26619",
+     "facts": {
+      "routine_roles": [
+       "cleanser"
+      ],
+      "cadence": "am_pm",
+      "cadence_source": "https://www.glowrecipe.com/products/papaya-sorbet-enzyme-cleansing-balm"
+     }
+    }
+   ]
+  }
+ ],
+ "rejects": [
+  {
+   "product_id": "P466123",
+   "reason": "manufacturer page (glowrecipe.com/products/watermelon-glow-niacinamide-dew-drops) confirms the 40ml serum but states no usage frequency anywhere (how-to-use and FAQ give application steps only); instruction_cadence_unknown cannot be cleared"
+  },
+  {
+   "product_id": "P428819",
+   "reason": "size variant no longer sold: catalog row is 2 oz/60 mL but old slug returns 404 and the manufacturer's current Watermelon Glow Pink Juice Oil-Free Refillable Moisturizer is sold only in 50 mL full-size/refill and 25 mL mini (per glowrecipe.com product page JSON-LD offers and products.json)"
+  },
+  {
+   "product_id": "P479327",
+   "reason": "no noncomedogenic claim on manufacturer page: glowrecipe.com/products/plum-plump-hyaluronic-cream (Full-Size 50ml matches) makes no non-comedogenic / won't-clog-pores claim for this product (only cross-sell blurbs for other products mention non-comedogenic), so the moisturizer target cannot clear quarantine"
+  }
+ ]
+}

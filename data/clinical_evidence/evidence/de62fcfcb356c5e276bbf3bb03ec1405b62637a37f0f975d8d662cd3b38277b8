@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en-GB" class="no-js">
+<head>
+    <meta charset="utf-8" />
+    <meta content="IE=edge,chrome=1" name="X-UA-Compatible" />
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+    <title>Recommendations | Acne vulgaris: management   | Guidance | NICE</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://code.jquery.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Lora:ital,wght@0,600;1,600&display=swap" rel="stylesheet" />
+    
+        <link href="https://cdn.nice.org.uk/niceorg/css/app.min.css" rel="stylesheet" type="text/css" />
+        <link href="/css/guidance.nds.css?v=Nu20zV6TJ8gO5fQZtOs7BuXywXV_Uuhbw-ZqDMY0WNE" rel="stylesheet" type="text/css" />
+	
+    <meta content="This guideline covers management of acne vulgaris in primary and specialist care. It includes advice on topical and oral treatments (including antibiotics and retinoids), treatment using physical modalities, and the impact of acne vulgaris on mental health and wellbeing" name="Description" />
+    <meta content="NICE" name="DC.Publisher" />
+    <meta content="All content on this site is NICE copyright unless otherwise stated. You can download material for private research, study or in-house use only. Do not distribute or publish any material from this site without first obtaining NICE's permission. Where Crown copyright applies, see the Office of Public Sector Information (formerly HMSO) website for information." name="DC.Rights.Copyright" />
+    <meta content="eng" name="DC.Language" scheme="DCTERMS.ISO639-2T" />
+    <meta content="Health, well-being and care" name="DC.Subject" scheme="eGMS.IPSV" />
+    <meta content="Double-A" name="eGMS.accessibility" scheme="eGMS.WCAG10" />
+    <meta content="Recommendations | Acne vulgaris: management   | Guidance | NICE" name="DC.Title" />
+    <meta content="#f6f6f6" name="msapplication-TileColor" />
+    <meta content="//cdn.nice.org.uk/V3/Content/nice/favicon-144.png" name="msapplication-TileImage" />
+    <meta content="#333" name="theme-color" />
+    <link rel="shortcut icon" href="//cdn.nice.org.uk/V3/Content/nice/favicon.ico" />
+    <link rel="apple-touch-icon-precomposed" href="//cdn.nice.org.uk/V3/Content/nice/favicon-152.png">
+    <link rel="apple-touch-icon" href="//cdn.nice.org.uk/V3/Content/nice/favicon-152.png">
+    <link rel="apple-touch-icon-precomposed" sizes="120x120" href="//cdn.nice.org.uk/V3/Content/nice/favicon-120.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="//cdn.nice.org.uk/V3/Content/nice/favicon-120.png">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="//cdn.nice.org.uk/V3/Content/nice/favicon-152.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="//cdn.nice.org.uk/V3/Content/nice/favicon-152.png">
+
+    <script src="//cdn.nice.org.uk/cookie-banner/cookie-banner.min.js" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha384-1H217gwSVyLSIfaLxHbE7dRb3v4mYCKbpQvzx0cegeju1MVsGrX5xXxAvs/HgeFs" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-migrate-3.4.1.min.js" integrity="sha384-ez4i72z0XhJqm0ZRoQkpPN0bDV8Kw8PK3n8kjEZsWhRDrfICLd0AGghHJB+vytx0" crossorigin="anonymous"></script>
+    
+    
+        <script type="text/javascript" src="/js/bundle.min.js?v=XlB9Ac_hdUF7-wrUEZRr6MuI_Sh747Kgl-UskeXdc8g"></script>
+    
+
+    <meta name="theme-color" content="#333"><link href="/Media/Default/css/default.css" rel="stylesheet" type="text/css" /><script src="/Media/Default/js/default.js" type="text/javascript"></script>
+</head>
+<body data-spy="scroll" data-target=".aside-primary" class="">
+    <noscript>
+        <iframe src="//www.googletagmanager.com/ns.html?id=GTM-M55QTQ"
+                height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <script>
+        (function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                    j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                        '//www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-M55QTQ');
+    </script>
+
+    <div id="global-nav-header"></div>
+
+    <div id="printpane"></div>
+
+        <main>
+                <div class="container" aria-label="Page header">
+                    
+                    
+                    
+
+<nav aria-label="Breadcrumbs" role="navigation">
+    <p class="visually-hidden" id="breadcrumb-label">
+        You are here:
+    </p>
+    <ol class="breadcrumbs" aria-labelledby="breadcrumb-label" itemscope itemtype="http://schema.org/BreadcrumbList">
+        <li class="breadcrumbs__crumb" itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+            <a href="/" itemprop="item" data-track="guidancebreadcrumb">
+                <span itemprop="name">
+                    Home
+                </span>
+            </a>
+            <meta itemprop="position" content="1">
+        </li>
+            <li class="breadcrumbs__crumb" itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                <a href="/guidance" itemprop="item" data-track="guidancebreadcrumb">
+                    <span itemprop="name">
+                        NICE Guidance
+                    </span>
+                </a>
+                <meta itemprop="position" content="2">
+            </li>
+            <li class="breadcrumbs__crumb" itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                <a href="/guidance/conditions-and-diseases" itemprop="item" data-track="guidancebreadcrumb">
+                    <span itemprop="name">
+                        Conditions and diseases
+                    </span>
+                </a>
+                <meta itemprop="position" content="3">
+            </li>
+            <li class="breadcrumbs__crumb" itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                <a href="/guidance/conditions-and-diseases/skin-conditions" itemprop="item" data-track="guidancebreadcrumb">
+                    <span itemprop="name">
+                        Skin conditions
+                    </span>
+                </a>
+                <meta itemprop="position" content="4">
+            </li>
+            <li class="breadcrumbs__crumb" itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem">
+                <a href="/guidance/conditions-and-diseases/skin-conditions/acne" itemprop="item" data-track="guidancebreadcrumb">
+                    <span itemprop="name">
+                        Acne
+                    </span>
+                </a>
+                <meta itemprop="position" content="5">
+            </li>
+    </ol>
+</nav>
+
+					<div class="page-header mb--0  ">
+                        <h1 class="page-header__heading" id="content-start">
+                            Acne vulgaris: management  
+                        </h1>
+                        
+                        
+                        
+    
+    <ul class="page-header__metadata" aria-label="Product metadata">
+        <li>NICE guideline</li>
+
+			<li><span class="visually-hidden">Reference number: </span>NG198</li>
+				<li>
+
+							Published:&nbsp;
+							<time class="show show--ib-xs" datetime="2021-06-25">
+								25 June 2021
+							</time>
+										</li>
+				<li>
+
+							Last updated:&nbsp;
+							<time class="show show--ib-xs" datetime="2026-04-30">
+								30 April 2026
+							</time>
+										</li>
+    </ul>
+
+
+
+                        
+                    </div>
+                </div>
+            <div class="_ layout mt--f  " aria-label="Main page content">
+                <div class="_">
+                    <div class="content">
+                        
+    
+
+
+                        <div class="zone zone-content">
+                            
+                            
+
+
+
+
+
+<div class="container">
+        <nav class="horizontal-nav hide-print" aria-label="Sections within this product">
+        <ul class="horizontal-nav__list">
+                <li class="horizontal-nav__item">
+                    <a aria-current="true" class="horizontal-nav__link" href="/guidance/ng198">Guidance</a>
+                </li>
+                <li class="horizontal-nav__item">
+                    <a aria-current="false" class="horizontal-nav__link" href="/guidance/ng198/resources">Tools and resources</a>
+                </li>
+                <li class="horizontal-nav__item">
+                    <a aria-current="false" class="horizontal-nav__link" href="/guidance/ng198/informationforpublic">Information for the public</a>
+                </li>
+                <li class="horizontal-nav__item">
+                    <a aria-current="false" class="horizontal-nav__link" href="/guidance/ng198/evidence">Evidence</a>
+                </li>
+                <li class="horizontal-nav__item">
+                    <a aria-current="false" class="horizontal-nav__link" href="/guidance/ng198/history">History</a>
+                </li>
+        </ul>
+    </nav>
+
+
+    
+<div class="grid grid--loose">
+        <div data-g="12 sm:5 md:3" class="hide-print">
+            
+<a href="/guidance/ng198/resources/acne-vulgaris-management-pdf-66142088866501"
+   target="_blank"
+   class="btn btn--cta mr--0 mb--e mb--d-sm show-ib show-sm text-center"
+   data-track="guidancedownload"
+   data-track-category="guidance download"
+   data-track-action="clicked"
+   data-track-label="/guidance/ng198/resources/acne-vulgaris-management-pdf-66142088866501">
+    Download guidance (PDF)
+</a>
+
+
+
+            <nav class="stacked-nav" aria-label="Chapters">
+                <ul class="stacked-nav__list">
+                        <li class="stacked-nav__list-item">
+                            <a aria-current="false"
+                                href="/guidance/ng198">
+                                <span class="stacked-nav__content-wrapper">
+                                    Overview
+                                </span>
+                            </a>
+                        </li>
+                            <li class="stacked-nav__list-item">
+                                <a aria-current="true"
+                                    href="/guidance/ng198/chapter/Recommendations">
+                                    <span class="stacked-nav__content-wrapper">Recommendations</span>
+                                </a>
+                            </li>
+                            <li class="stacked-nav__list-item">
+                                <a aria-current="false"
+                                    href="/guidance/ng198/chapter/Recommendations-for-research">
+                                    <span class="stacked-nav__content-wrapper">Recommendations for research</span>
+                                </a>
+                            </li>
+                            <li class="stacked-nav__list-item">
+                                <a aria-current="false"
+                                    href="/guidance/ng198/chapter/Rationale-and-impact">
+                                    <span class="stacked-nav__content-wrapper">Rationale and impact</span>
+                                </a>
+                            </li>
+                            <li class="stacked-nav__list-item">
+                                <a aria-current="false"
+                                    href="/guidance/ng198/chapter/Context">
+                                    <span class="stacked-nav__content-wrapper">Context</span>
+                                </a>
+                            </li>
+                            <li class="stacked-nav__list-item">
+                                <a aria-current="false"
+                                    href="/guidance/ng198/chapter/Finding-more-information-and-committee-details">
+                                    <span class="stacked-nav__content-wrapper">Finding more information and committee details</span>
+                                </a>
+                            </li>
+                            <li class="stacked-nav__list-item">
+                                <a aria-current="false"
+                                    href="/guidance/ng198/chapter/Update-information">
+                                    <span class="stacked-nav__content-wrapper">Update information</span>
+                                </a>
+                            </li>
+                </ul>
+            </nav>
+        </div>
+    <div data-g="12 sm:7 md:9">
+
+        <div class="grid grid--loose">
+            <div data-g="12 ">
+                <div class="grid grid--loose grid--rev">
+                    <div data-g="12">
+
+
+                            <div class="hide-print">
+                                <div>
+									<nav class="in-page-nav in-page-nav--no-scroll"	aria-labelledby="on-this-page">
+                                        <h2 id="on-this-page" class="in-page-nav__title">On this page</h2>
+
+										<ol class="in-page-nav__list" aria-label="Jump links to section on this page">
+												<li class="in-page-nav__item">
+                                                    <a id="inpagenav-information-and-support-for-people-with-acne-vulgaris" href="#information-and-support-for-people-with-acne-vulgaris">
+                                                        1.1 Information and support for people with acne vulgaris
+                                                    </a>
+                                                </li>
+												<li class="in-page-nav__item">
+                                                    <a id="inpagenav-skin-care-advice" href="#skin-care-advice">
+                                                        1.2 Skin care advice
+                                                    </a>
+                                                </li>
+												<li class="in-page-nav__item">
+                                                    <a id="inpagenav-diet" href="#diet">
+                                                        1.3 Diet
+                                                    </a>
+                                                </li>
+												<li class="in-page-nav__item">
+                                                    <a id="inpagenav-referral-to-specialist-care" href="#referral-to-specialist-care">
+                                                        1.4 Referral to specialist care
+                                                    </a>
+                                                </li>
+												<li class="in-page-nav__item">
+                                                    <a id="inpagenav-managing-acne-vulgaris" href="#managing-acne-vulgaris">
+                                                        1.5 Managing acne vulgaris
+                                                    </a>
+                                                </li>
+												<li class="in-page-nav__item">
+                                                    <a id="inpagenav-relapse" href="#relapse">
+                                                        1.6 Relapse
+                                                    </a>
+                                                </li>
+												<li class="in-page-nav__item">
+                                                    <a id="inpagenav-maintenance" href="#maintenance">
+                                                        1.7 Maintenance
+                                                    </a>
+                                                </li>
+												<li class="in-page-nav__item">
+                                                    <a id="inpagenav-management-of-acne-related-scarring" href="#management-of-acne-related-scarring">
+                                                        1.8 Management of acne-related scarring
+                                                    </a>
+                                                </li>
+												<li class="in-page-nav__item">
+                                                    <a id="inpagenav-terms-used-in-this-guideline" href="#terms-used-in-this-guideline">
+                                                        Terms used in this guideline
+                                                    </a>
+                                                </li>
+                                        </ol>
+                                    </nav>
+                                </div>
+                            </div>
+
+                        <div class="mb--e js-in-page-nav-target">
+<div class="chapter" title="Recommendations" id="ng198-recommendations" xmlns="http://www.w3.org/1999/xhtml">
+  <h2 class="title" id="recommendations">Recommendations</h2>
+  <div class="panel panel--primary">
+    <p>People have the right to be involved in discussions and make informed decisions about their care, as described in <a class="link" href="https://www.nice.org.uk/what-nice-does/our-guidance/about-nice-guidelines/about-shared-decision-making" target="_top">NICE's information on making decisions about your care</a>.</p>
+    <p>
+      <a class="link" href="https://www.nice.org.uk/about/what-we-do/our-programmes/nice-guidance/nice-guidelines/using-NICE-guidelines-to-make-decisions" target="_top">Making decisions using NICE guidelines</a> explains how we use words to show the strength (or certainty) of our recommendations, and has information about prescribing medicines (including off-label use), professional guidelines, standards and laws (including on consent and mental capacity), and safeguarding.</p>
+  </div>
+  <p>Throughout this guideline, 'acne' in recommendations refers to 'acne vulgaris' unless otherwise stated. </p>
+  <div class="section" title="1.1 Information and support for people with acne vulgaris" id="ng198-information-and-support-for-people-with-acne-vulgaris">
+    <h3 class="title" id="information-and-support-for-people-with-acne-vulgaris">1.1 Information and support for people with acne vulgaris</h3>
+    <article id="ng198-1_1_1" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.1.1</h4>
+      <div class="recommendation__body">
+        <p>Give people with acne clear information tailored to their needs and concerns. Topics to cover include:</p>
+        <ul class="itemizedlist indented">
+          <li class="listitem">
+            <p>the possible reasons for their acne</p>
+          </li>
+          <li class="listitem">
+            <p>treatment options, including over the counter treatments if appropriate</p>
+          </li>
+          <li class="listitem">
+            <p>the benefits and drawbacks associated with treatments</p>
+          </li>
+          <li class="listitem">
+            <p>the potential impact of acne</p>
+          </li>
+          <li class="listitem">
+            <p>the importance of adhering to treatment (see also the <a class="link" href="https://www.nice.org.uk/guidance/cg76/chapter/Recommendations#providing-information" target="_top">section on providing information in the NICE guideline on medicines adherence</a>)</p>
+          </li>
+          <li class="listitem">
+            <p>relapses during or after treatment, including:</p>
+            <p>
+              <div class="itemizedlist">
+                <ul class="itemizedlist indented">
+                  <li class="listitem">
+                    <p>when and how to obtain further advice</p>
+                  </li>
+                  <li class="listitem">
+                    <p>treatment options should a relapse occur.<br /><br />See also the <a class="link" href="https://www.nice.org.uk/guidance/cg138" target="_top" data-original-url="https://www.nice.org.uk/guidance/cg138">NICE guideline on patient experience in adult NHS services</a> (particularly recommendations 1.5.11 to 1.5.19) for advice on how to tailor information and communication based on the person's needs.</p>
+                  </li>
+                </ul>
+              </div>
+            </p>
+          </li>
+        </ul>
+      </div>
+    </article>
+    <article id="ng198-1_1_2" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.1.2</h4>
+      <div class="recommendation__body">
+        <p>Include parents and carers in discussions if the person with acne would like them to be involved, or when support is needed (for example, for a person with cognitive impairment).</p>
+      </div>
+    </article>
+    <div class="panel">
+      <p>For a short explanation of why the committee made this recommendation and how it might affect practice, see the <a class="link" href="rationale-and-impact#information-and-support-for-people-with-acne-vulgaris-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#information-and-support-for-people-with-acne-vulgaris-2">rationale and impact section on information and support for people with acne vulgaris</a>.</p>
+      <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/a-information-and-support-pdf-9144159949" target="_top">evidence review A: information and support</a>.</p>
+    </div>
+  </div>
+  <div class="section" title="1.2 Skin care advice" id="ng198-skin-care-advice">
+    <h3 class="title" id="skin-care-advice">1.2 Skin care advice</h3>
+    <article id="ng198-1_2_1" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.2.1</h4>
+      <div class="recommendation__body">
+        <p>Advise people with acne to use a non-alkaline (skin pH neutral or slightly acidic) <a class="link" href="recommendations#synthetic-detergent-syndet" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#synthetic-detergent-syndet">synthetic detergent (syndet)</a> cleansing product twice daily on acne-prone skin.</p>
+      </div>
+    </article>
+    <article id="ng198-1_2_2" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.2.2</h4>
+      <div class="recommendation__body">
+        <p>Advise people with acne who use skin care products (for example, moisturisers) and sunscreens to avoid oil-based and <a class="link" href="recommendations#comedogenic" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#comedogenic">comedogenic</a> preparations.</p>
+      </div>
+    </article>
+    <article id="ng198-1_2_3" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.2.3</h4>
+      <div class="recommendation__body">
+        <p>Advise people with acne who use make-up to avoid oil-based and comedogenic products, and to remove make-up at the end of the day.</p>
+      </div>
+    </article>
+    <article id="ng198-1_2_4" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.2.4</h4>
+      <div class="recommendation__body">
+        <p>Advise people that persistent picking or scratching of acne lesions can increase the risk of scarring.</p>
+      </div>
+    </article>
+    <div class="panel">
+      <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#skin-care-advice-3" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#skin-care-advice-3">rationale and impact section on skin care advice</a>.</p>
+      <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/b-skin-care-advice-for-people-with-acne-vulgaris-pdf-9144159950" target="_top">evidence review B: skin care advice for people with acne vulgaris</a> and <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/l-risk-factors-for-scarring-due-to-acne-vulgaris-pdf-329189758168" target="_top">evidence review L: risk factors for scarring due to acne vulgaris</a>.</p>
+    </div>
+  </div>
+  <div class="section" title="1.3 Diet" id="ng198-diet">
+    <h3 class="title" id="diet">1.3 Diet</h3>
+    <article id="ng198-1_3_1" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.3.1</h4>
+      <div class="recommendation__body">
+        <p>Advise people that there is not enough evidence to support specific diets for treating acne.<br /><br />For general advice about a balanced diet and how it could contribute to wellbeing see <a class="link" href="https://www.gov.uk/government/publications/the-eatwell-guide" target="_top">Public Health England's Eatwell Guide</a>.</p>
+      </div>
+    </article>
+    <div class="panel">
+      <p>For a short explanation of why the committee made this recommendation and how it might affect practice, see the <a class="link" href="rationale-and-impact#diet-3" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#diet-3">rationale and impact section on diet</a>.</p>
+      <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/c-dietary-interventions-for-the-treatment-of-acne-vulgaris-pdf-9144159951" target="_top">evidence review C: dietary interventions for the treatment of acne vulgaris</a>.</p>
+    </div>
+  </div>
+  <div class="section" title="1.4 Referral to specialist care" id="ng198-referral-to-specialist-care">
+    <h3 class="title" id="referral-to-specialist-care">1.4 Referral to specialist care</h3>
+    <article id="ng198-1_4_1" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.4.1</h4>
+      <div class="recommendation__body">
+        <p>Urgently refer people with <a class="link" href="recommendations#acne-fulminans" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#acne-fulminans">acne fulminans</a> on the same day to the on-call hospital dermatology team, to be assessed within 24 hours.</p>
+      </div>
+    </article>
+    <article id="ng198-1_4_2" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.4.2</h4>
+      <div class="recommendation__body">
+        <p>Refer people to a <a class="link" href="recommendations#consultant-dermatologist-led-team" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#consultant-dermatologist-led-team">consultant dermatologist-led team</a> or a <a class="link" href="recommendations#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant">nationally accredited GP with an Extended Role (GPwER) working within a consultant dermatologist-agreed pathway</a> if any of the following apply: </p>
+        <ul class="itemizedlist indented">
+          <li class="listitem">
+            <p>there is diagnostic uncertainty about their acne</p>
+          </li>
+          <li class="listitem">
+            <p>they have <a class="link" href="recommendations#acne-conglobata" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#acne-conglobata">acne conglobata</a></p>
+          </li>
+          <li class="listitem">
+            <p>they have nodulo-cystic acne.</p>
+          </li>
+        </ul>
+      </div>
+    </article>
+    <article id="ng198-1_4_3" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.4.3</h4>
+      <div class="recommendation__body">
+        <p>Consider referring people to a consultant dermatologist-led team or a nationally accredited GPwER working within a consultant dermatologist-agreed pathway if they have:</p>
+        <ul class="itemizedlist indented">
+          <li class="listitem">
+            <p>
+              <a class="link" href="recommendations#mild-to-moderate-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#mild-to-moderate-acne">mild to moderate acne</a> that has not responded to 2 completed courses of treatment (see <a class="link" href="recommendations#first-line-treatment-options" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#first-line-treatment-options">table 1</a>)</p>
+          </li>
+          <li class="listitem">
+            <p>
+              <a class="link" href="recommendations#moderate-to-severe-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#moderate-to-severe-acne">moderate to severe acne</a> which has not responded to previous treatment that contains an oral antibiotic (see table 1)</p>
+          </li>
+          <li class="listitem">
+            <p>acne that is leading to scarring</p>
+          </li>
+          <li class="listitem">
+            <p>acne with persistent pigmentary changes.</p>
+          </li>
+        </ul>
+      </div>
+    </article>
+    <article id="ng198-1_4_4" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.4.4</h4>
+      <div class="recommendation__body">
+        <p>Consider referring people to a consultant dermatologist-led team or a nationally accredited GPwER working within a consultant dermatologist-agreed pathway if their acne of any severity is causing or contributing to persistent psychological distress or a mental health disorder.</p>
+      </div>
+    </article>
+    <article id="ng198-1_4_5" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.4.5</h4>
+      <div class="recommendation__body">
+        <p>Consider referral to mental health services if a person with acne experiences significant psychological distress or a mental health disorder, including those with a current or past history of:</p>
+        <ul class="itemizedlist indented">
+          <li class="listitem">
+            <p>suicidal ideation or self-harm</p>
+          </li>
+          <li class="listitem">
+            <p>a severe depressive or anxiety disorder</p>
+          </li>
+          <li class="listitem">
+            <p>body dysmorphic disorder.<br /><br />When considering referral, take into account the person's potential treatment options (for example, oral isotretinoin). Also see the <a class="link" href="https://www.nice.org.uk/guidance/ng134" target="_top" data-original-url="https://www.nice.org.uk/guidance/ng134">NICE guidelines on depression in children and young people</a> for advice on recognition, <a class="link" href="https://www.nice.org.uk/guidance/ng222" target="_top" data-original-url="https://www.nice.org.uk/guidance/ng222">depression in adults</a> for advice on recognition and assessment, and <a class="link" href="https://www.nice.org.uk/guidance/ng225" target="_top" data-original-url="https://www.nice.org.uk/guidance/ng225">self-harm</a> for advice on self-harm.</p>
+          </li>
+        </ul>
+      </div>
+    </article>
+    <article id="ng198-1_4_6" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.4.6</h4>
+      <div class="recommendation__body">
+        <p>Consider condition-specific management or referral to a specialist (for example a reproductive endocrinologist), if a medical disorder or medication (including self-administered anabolic steroids) is likely to be contributing to a person's acne.</p>
+      </div>
+    </article>
+    <div class="panel">
+      <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#referral-to-specialist-care-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#referral-to-specialist-care-2">rationale and impact section on referral to specialist care</a>.</p>
+      <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/d-referral-to-specialist-care-pdf-9144159952" target="_top">evidence review D: referral to specialist care</a>.</p>
+    </div>
+  </div>
+  <div class="section" title="1.5 Managing acne vulgaris" id="ng198-managing-acne-vulgaris">
+    <h3 class="title" id="managing-acne-vulgaris">1.5 Managing acne vulgaris</h3>
+    <p>The recommendations in this section cover <a class="link" href="recommendations#mild-to-moderate-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#mild-to-moderate-acne">mild to moderate</a> and <a class="link" href="recommendations#moderate-to-severe-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#moderate-to-severe-acne">moderate to severe acne</a>.</p>
+    <div class="section" title="First-line treatment options" id="ng198-first-line-treatment-options">
+      <h4 class="title" id="first-line-treatment-options">First-line treatment options</h4>
+      <article id="ng198-1_5_1" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.1</h5>
+        <div class="recommendation__body">
+          <p>Offer people with acne a 12-week course of 1 of the following first-line treatment options, taking account of the severity of their acne and the person's preferences, and after a discussion of the advantages and disadvantages of each option (see table 1):</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>a <a class="link" href="recommendations#fixed-combination-of-topical-adapalene-with-topical-benzoyl-peroxide" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#fixed-combination-of-topical-adapalene-with-topical-benzoyl-peroxide">fixed combination of topical adapalene with topical benzoyl peroxide</a> for any acne severity</p>
+            </li>
+            <li class="listitem">
+              <p>a <a class="link" href="recommendations#fixed-combination-of-topical-tretinoin-with-topical-clindamycin" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#fixed-combination-of-topical-tretinoin-with-topical-clindamycin">fixed combination of topical tretinoin with topical clindamycin</a> for any acne severity</p>
+            </li>
+            <li class="listitem">
+              <p>a <a class="link" href="recommendations#fixed-combination-of-topical-benzoyl-peroxide-with-topical-clindamycin" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#fixed-combination-of-topical-benzoyl-peroxide-with-topical-clindamycin">fixed combination of topical benzoyl peroxide with topical clindamycin</a> for <a class="link" href="recommendations#mild-to-moderate-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#mild-to-moderate-acne">mild to moderate</a> acne</p>
+            </li>
+            <li class="listitem">
+              <p>a fixed combination of topical adapalene with topical benzoyl peroxide, together with either <a class="link" href="recommendations#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant">oral lymecycline or oral doxycycline</a> for <a class="link" href="recommendations#moderate-to-severe-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#moderate-to-severe-acne">moderate to severe</a> acne</p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="recommendations#topical-azelaic-acid" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#topical-azelaic-acid">topical azelaic acid</a> with either oral lymecycline or oral doxycycline for moderate to severe acne.</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <div class="informaltable">
+        <table frame="all" border="1" id="ID0EEDAC">
+          <caption>
+            <strong>Table 1: Treatment choices for mild to moderate and moderate to severe acne vulgaris</strong>
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Acne severity</th>
+              <th scope="col">Treatment</th>
+              <th scope="col">Advantages</th>
+              <th scope="col">Disadvantages</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <p>Any severity </p>
+              </td>
+              <td>
+                <p>
+                  <a class="link" href="recommendations#fixed-combination-of-topical-adapalene-with-topical-benzoyl-peroxide" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#fixed-combination-of-topical-adapalene-with-topical-benzoyl-peroxide">Fixed combination of topical adapalene with topical benzoyl peroxide</a>, applied once daily in the evening</p>
+              </td>
+              <td>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist">
+                    <li class="listitem">
+                      <p>Topical</p>
+                    </li>
+                    <li class="listitem">
+                      <p>Does not contain antibiotics</p>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+              <td>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist">
+                    <li class="listitem">
+                      <p>Not for use during pregnancy</p>
+                    </li>
+                    <li class="listitem">
+                      <p>Use with caution during breastfeeding (see <a class="link" href="recommendations#factors-to-take-into-account-when-choosing-a-treatment-option" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#factors-to-take-into-account-when-choosing-a-treatment-option">recommendation 1.5.8</a>)</p>
+                    </li>
+                    <li class="listitem">
+                      <p>Can cause skin irritation (see <a class="link" href="recommendations#factors-to-take-into-account-when-choosing-a-treatment-option" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#factors-to-take-into-account-when-choosing-a-treatment-option">recommendation 1.5.7</a>), photosensitivity, and bleaching of hair and fabrics </p>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>Any severity</p>
+              </td>
+              <td>
+                <p>
+                  <a class="link" href="recommendations#fixed-combination-of-topical-tretinoin-with-topical-clindamycin" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#fixed-combination-of-topical-tretinoin-with-topical-clindamycin">Fixed combination of topical tretinoin with topical clindamycin</a>, applied once daily in the evening</p>
+              </td>
+              <td>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist">
+                    <li class="listitem">
+                      <p>Topical</p>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+              <td>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist">
+                    <li class="listitem">
+                      <p>Not for use during pregnancy or breastfeeding (see recommendation 1.5.8)</p>
+                    </li>
+                    <li class="listitem">
+                      <p>Can cause skin irritation (see recommendation 1.5.7), and photosensitivity</p>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>
+                  <a class="link" href="recommendations#mild-to-moderate-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#mild-to-moderate-acne">Mild to moderate</a>
+                </p>
+              </td>
+              <td>
+                <p>
+                  <a class="link" href="recommendations#fixed-combination-of-topical-benzoyl-peroxide-with-topical-clindamycin" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#fixed-combination-of-topical-benzoyl-peroxide-with-topical-clindamycin">Fixed combination of topical benzoyl peroxide with topical clindamycin</a>, applied once daily in the evening</p>
+              </td>
+              <td>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist">
+                    <li class="listitem">
+                      <p>Topical</p>
+                    </li>
+                    <li class="listitem">
+                      <p>Can be used with caution during pregnancy and breastfeeding.</p>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+              <td>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist">
+                    <li class="listitem">
+                      <p>Can cause skin irritation (see recommendation 1.5.7), photosensitivity, and bleaching of hair and fabrics </p>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>
+                  <a class="link" href="recommendations#moderate-to-severe-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#moderate-to-severe-acne">Moderate to severe</a>
+                </p>
+              </td>
+              <td>
+                <p>Fixed combination of topical adapalene with topical benzoyl peroxide, applied once daily in the evening, plus either <a class="link" href="recommendations#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant">oral lymecycline or oral doxycycline</a> taken once daily</p>
+              </td>
+              <td>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist">
+                    <li class="listitem">
+                      <p>Oral component may be effective in treating affected areas that are difficult to reach with topical treatment (such as the back)</p>
+                    </li>
+                    <li class="listitem">
+                      <p>Treatment with adequate courses of standard therapy with systemic antibiotics and topical therapy is a Medicines and Healthcare products Regulatory Agency (MHRA) requirement for subsequent oral isotretinoin, which is only recommended for severe acne (see recommendation 1.5.10 and the <a class="link" href="https://www.gov.uk/drug-safety-update/isotretinoin-changes-to-prescribing-guidance-and-additional-risk-minimisation-measures" target="_top">MHRA guidance on changes to prescribing guidance and additional risk minimisation measures for isotretinoin</a>)</p>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+              <td>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist">
+                    <li class="listitem">
+                      <p>Not for use in pregnancy, during breastfeeding (see recommendation 1.5.8), or under the age of 12 </p>
+                    </li>
+                    <li class="listitem">
+                      <p>Topical adapalene and topical benzoyl peroxide can cause skin irritation (see recommendation 1.5.7), photosensitivity, and bleaching of hair and fabrics</p>
+                    </li>
+                    <li class="listitem">
+                      <p>Oral antibiotics may cause systemic side effects and antimicrobial resistance</p>
+                    </li>
+                    <li class="listitem">
+                      <p>Oral tetracyclines can cause photosensitivity</p>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>Moderate to severe</p>
+              </td>
+              <td>
+                <p>
+                  <a class="link" href="recommendations#topical-azelaic-acid" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#topical-azelaic-acid">Topical azelaic acid</a> applied twice daily, plus either oral lymecycline or oral doxycycline taken once daily</p>
+              </td>
+              <td>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist">
+                    <li class="listitem">
+                      <p>Oral component may be effective in treating affected areas that are difficult to reach with topical treatment (such as the back)</p>
+                    </li>
+                    <li class="listitem">
+                      <p>Treatment with adequate courses of standard therapy with systemic antibiotics and topical therapy is an MHRA requirement for subsequent oral isotretinoin, which is only recommended for severe acne (see recommendation 1.5.10 and the <a class="link" href="https://www.gov.uk/drug-safety-update/isotretinoin-changes-to-prescribing-guidance-and-additional-risk-minimisation-measures" target="_top">MHRA guidance on changes to prescribing guidance and additional risk minimisation measures for isotretinoin</a>)</p>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+              <td>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist">
+                    <li class="listitem">
+                      <p>Not for use in pregnancy, during breastfeeding (see recommendation 1.5.8), or under the age of 12 </p>
+                    </li>
+                    <li class="listitem">
+                      <p>Oral antibiotics may cause systemic side effects and resistance</p>
+                    </li>
+                    <li class="listitem">
+                      <p>Oral tetracyclines can cause photosensitivity </p>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <article id="ng198-1_5_2" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.2</h5>
+        <div class="recommendation__body">
+          <p>Consider <a class="link" href="recommendations#topical-benzoyl-peroxide" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#topical-benzoyl-peroxide">topical benzoyl peroxide</a> monotherapy as an alternative treatment to the options in table 1, if:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>these treatments are contraindicated, <strong>or</strong></p>
+            </li>
+            <li class="listitem">
+              <p>the person wishes to avoid using a topical retinoid, or an antibiotic (topical or oral).</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_3" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.3</h5>
+        <div class="recommendation__body">
+          <p>For people with moderate to severe acne who cannot tolerate or have contraindications to oral lymecycline or oral doxycycline, consider replacing these medicines in the combination treatments in table 1 with trimethoprim or with an oral macrolide (for example, erythromycin).</p>
+        </div>
+      </article>
+      <div class="panel">
+        <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#first-line-treatment-options-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#first-line-treatment-options-2">rationale and impact section on first-line treatment options</a>.</p>
+        <p>Full details of the evidence and the committee's discussion are in: </p>
+        <div class="itemizedlist">
+          <ul class="itemizedlist">
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/e1-management-options-for-mild-to-moderate-acne-network-metaanalyses-pdf-9144159953" target="_top">evidence review E1: management options for mild to moderate acne – network meta-analyses</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f1-management-options-for-moderate-to-severe-acne-network-metaanalyses-pdf-9144159955" target="_top">evidence review F1: management options for moderate to severe acne – network meta-analyses</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/e2-management-options-for-mild-to-moderate-acne-pairwise-comparisons-pdf-9144159954" target="_top">evidence review E2: management options for mild to moderate acne – pairwise comparisons</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f2-management-options-for-moderate-to-severe-acne-pairwise-comparisons-pdf-9144159956" target="_top">evidence review F2: management options for moderate to severe acne – pairwise comparisons</a>.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="section" title="Factors to take into account during consultations" id="ng198-factors-to-take-into-account-during-consultations">
+      <h4 class="title" id="factors-to-take-into-account-during-consultations">Factors to take into account during consultations</h4>
+      <article id="ng198-1_5_4" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.4</h5>
+        <div class="recommendation__body">
+          <p>Take into account that acne of any severity can cause psychological distress and mental health disorders.</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_5" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.5</h5>
+        <div class="recommendation__body">
+          <p>Discuss the importance of completing the course of treatment, because positive effects can take 6 to 8 weeks to become noticeable (see also the <a class="link" href="https://www.nice.org.uk/guidance/cg76/chapter/Recommendations#supporting-adherence" target="_top">section on supporting adherence in the NICE guideline on medicines adherence</a>).</p>
+        </div>
+      </article>
+      <div class="panel">
+        <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#factors-to-take-into-account-during-consultations-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#factors-to-take-into-account-during-consultations-2">rationale and impact section on factors to take into account during consultations</a>.</p>
+        <p>Full details of the committee's discussion are in: </p>
+        <div class="itemizedlist">
+          <ul class="itemizedlist">
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/d-referral-to-specialist-care-pdf-9144159952" target="_top">evidence review D: referral to specialist care</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/e1-management-options-for-mild-to-moderate-acne-network-metaanalyses-pdf-9144159953" target="_top">evidence review E1: management options for mild to moderate acne – network meta-analyses</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f1-management-options-for-moderate-to-severe-acne-network-metaanalyses-pdf-9144159955" target="_top">evidence review F1: management options for moderate to severe acne – network meta-analyses</a>.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="section" title="Factors to take into account when choosing a treatment option" id="ng198-factors-to-take-into-account-when-choosing-a-treatment-option">
+      <h4 class="title" id="factors-to-take-into-account-when-choosing-a-treatment-option">Factors to take into account when choosing a treatment option</h4>
+      <article id="ng198-1_5_6" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.6</h5>
+        <div class="recommendation__body">
+          <p>Take into account that the risk of scarring increases with the severity and duration of acne.</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_7" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.7</h5>
+        <div class="recommendation__body">
+          <p>To reduce the risk of skin irritation associated with topical treatments, such as benzoyl peroxide or retinoids, start with alternate-day or short-contact application (for example washing off after an hour). If tolerated, progress to using a standard application.</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_8" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.8</h5>
+        <div class="recommendation__body">
+          <p>When discussing treatment choices with a person with childbearing potential, cover:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>that topical retinoids and oral tetracyclines are contraindicated during pregnancy and when planning a pregnancy <strong>and</strong></p>
+            </li>
+            <li class="listitem">
+              <p>that they will need to use effective contraception, or choose an alternative treatment to these options.</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_9" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.9</h5>
+        <div class="recommendation__body">
+          <p>If a person receiving treatment for acne wishes to use hormonal contraception, consider using the combined oral contraceptive pill in preference to the progestogen-only pill (if oral isotretinoin treatment is likely to be used, also see <a class="link" href="recommendations#oral-isotretinoin-treatment" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#oral-isotretinoin-treatment">recommendations 1.5.19 and 1.5.20</a>).</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_10" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.10</h5>
+        <div class="recommendation__body">
+          <p>If clinical judgement indicates a person may need treatment with oral isotretinoin for their acne in future:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>be aware that oral isotretinoin should not be used unless adequate courses of standard therapy with systemic antibiotics and topical therapy have been tried, in line with the <a class="link" href="https://www.gov.uk/drug-safety-update/isotretinoin-changes-to-prescribing-guidance-and-additional-risk-minimisation-measures" target="_top">Medicines and Healthcare products Regulatory Agency (MHRA) guidance on changes to prescribing guidance and additional risk minimisation measures for isotretinoin</a> <strong>and</strong></p>
+            </li>
+            <li class="listitem">
+              <p>take this into account when choosing any initial treatment option.</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_11" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.11</h5>
+        <div class="recommendation__body">
+          <p>Do not use the following to treat acne:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>monotherapy with a topical antibiotic</p>
+            </li>
+            <li class="listitem">
+              <p>monotherapy with an oral antibiotic</p>
+            </li>
+            <li class="listitem">
+              <p>a combination of a topical antibiotic and an oral antibiotic.</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <div class="panel">
+        <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#factors-to-take-into-account-when-choosing-a-treatment-option-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#factors-to-take-into-account-when-choosing-a-treatment-option-2">rationale and impact section on factors to take into account when choosing a treatment option</a>.</p>
+        <p>Full details of the evidence and the committee's discussion are in: </p>
+        <div class="itemizedlist">
+          <ul class="itemizedlist">
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/e1-management-options-for-mild-to-moderate-acne-network-metaanalyses-pdf-9144159953" target="_top">evidence review E1: management options for mild to moderate acne – network meta-analyses</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f1-management-options-for-moderate-to-severe-acne-network-metaanalyses-pdf-9144159955" target="_top">evidence review F1: management options for moderate to severe acne – network meta-analyses</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/e2-management-options-for-mild-to-moderate-acne-pairwise-comparisons-pdf-9144159954" target="_top">evidence review E2: management options for mild to moderate acne – pairwise comparisons</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f2-management-options-for-moderate-to-severe-acne-pairwise-comparisons-pdf-9144159956" target="_top">evidence review F2: management options for moderate to severe acne – pairwise comparisons</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/l-risk-factors-for-scarring-due-to-acne-vulgaris-pdf-329189758168" target="_top">evidence review L: risk factors for scarring due to acne vulgaris</a>.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="section" title="Factors to take into account at review" id="ng198-factors-to-take-into-account-at-review">
+      <h4 class="title" id="factors-to-take-into-account-at-review">Factors to take into account at review</h4>
+      <article id="ng198-1_5_12" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.12</h5>
+        <div class="recommendation__body">
+          <p>Review first-line treatment at 12 weeks and:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>assess whether the person's acne has improved, and whether they have any side effects</p>
+            </li>
+            <li class="listitem">
+              <p>in people whose treatment includes an oral antibiotic, if their acne has completely cleared consider stopping the antibiotic but continuing the topical treatment</p>
+            </li>
+            <li class="listitem">
+              <p>in people whose treatment includes an oral antibiotic, if their acne has improved but not completely cleared, consider continuing the oral antibiotic, alongside the topical treatment, for up to 12 more weeks.</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_13" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.13</h5>
+        <div class="recommendation__body">
+          <p>Only continue a treatment option that includes an antibiotic (topical or oral) for more than 6 months in exceptional circumstances. Review at 3‑monthly intervals, and stop the antibiotic as soon as possible.</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_14" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.14</h5>
+        <div class="recommendation__body">
+          <p>Be aware that the use of antibiotic treatments is associated with a risk of antimicrobial resistance (see the <a class="link" href="https://www.nice.org.uk/guidance/ng15" target="_top" data-original-url="https://www.nice.org.uk/guidance/ng15/">NICE guideline on antimicrobial stewardship</a>).</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_15" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.15</h5>
+        <div class="recommendation__body">
+          <p>If a person's acne has cleared, consider maintenance options (also see the <a class="link" href="recommendations#maintenance" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#maintenance">section on maintenance</a>).</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_16" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.16</h5>
+        <div class="recommendation__body">
+          <p>If acne fails to respond adequately to a 12‑week course of a first-line treatment option and at review the severity is:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>
+                <a class="link" href="recommendations#mild-to-moderate-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#mild-to-moderate-acne">mild to moderate</a>: offer another option from the table of treatment choices (see <a class="link" href="recommendations#first-line-treatment-options" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#first-line-treatment-options">table 1</a>)</p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="recommendations#moderate-to-severe-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#moderate-to-severe-acne">moderate to severe</a>, and the treatment did not include an oral antibiotic: offer another option which includes an oral antibiotic from the table of treatment choices (see table 1)</p>
+            </li>
+            <li class="listitem">
+              <p>moderate to severe, and the treatment included an oral antibiotic: consider referral to a <a class="link" href="recommendations#consultant-dermatologist-led-team" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#consultant-dermatologist-led-team">consultant dermatologist-led team</a> or a <a class="link" href="recommendations#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant">nationally accredited GPwER working within a consultant dermatologist-agreed pathway</a>.</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_17" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.17</h5>
+        <div class="recommendation__body">
+          <p>If mild to moderate acne fails to respond adequately to 2 different 12‑week courses of treatment options, consider referral to a consultant dermatologist-led team or a nationally accredited GPwER working within a consultant dermatologist agreed pathway.</p>
+        </div>
+      </article>
+      <div class="panel">
+        <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#factors-to-take-into-account-at-review-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#factors-to-take-into-account-at-review-2">rationale and impact section on factors to take into account at review</a>. </p>
+        <p>Full details of the evidence and the committee's discussion are in: </p>
+        <div class="itemizedlist">
+          <ul class="itemizedlist">
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/e1-management-options-for-mild-to-moderate-acne-network-metaanalyses-pdf-9144159953" target="_top">evidence review E1: management options for mild to moderate acne – network meta-analyses</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f1-management-options-for-moderate-to-severe-acne-network-metaanalyses-pdf-9144159955" target="_top">evidence review F1: management options for moderate to severe acne – network meta-analyses</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/e2-management-options-for-mild-to-moderate-acne-pairwise-comparisons-pdf-9144159954" target="_top">evidence review E2: management options for mild to moderate acne – pairwise comparisons</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f2-management-options-for-moderate-to-severe-acne-pairwise-comparisons-pdf-9144159956" target="_top">evidence review F2: management options for moderate to severe acne – pairwise comparisons</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/h-management-options-for-refractory-acne-pdf-329189758164" target="_top">evidence review H: management options for refractory acne</a>.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="section" title="Oral isotretinoin treatment" id="ng198-oral-isotretinoin-treatment">
+      <h4 class="title" id="oral-isotretinoin-treatment">Oral isotretinoin treatment</h4>
+      <article id="ng198-1_5_18" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.18</h5>
+        <div class="recommendation__body">
+          <p>Consider oral isotretinoin for people older than 12 years who have a severe form of acne that is resistant to adequate courses of standard therapy with systemic antibiotics and topical therapy (<a class="link" href="recommendations#first-line-treatment-options" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#first-line-treatment-options">table 1</a>). For example:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>nodulo-cystic acne</p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="recommendations#acne-conglobata" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#acne-conglobata">acne conglobata</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>
+                <a class="link" href="recommendations#acne-fulminans" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#acne-fulminans">acne fulminans</a>
+              </p>
+            </li>
+            <li class="listitem">
+              <p>acne at risk of permanent scarring.</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_19" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.19</h5>
+        <div class="recommendation__body">
+          <p>If a person with acne is likely to benefit from oral isotretinoin treatment:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>Follow the <a class="link" href="https://www.gov.uk/drug-safety-update/isotretinoin-changes-to-prescribing-guidance-and-additional-risk-minimisation-measures" target="_top">MHRA guidance on changes to prescribing guidance and additional risk minimisation measures for isotretinoin</a>. This includes:</p>
+              <p>
+                <div class="itemizedlist">
+                  <ul class="itemizedlist indented">
+                    <li class="listitem">
+                      <p>guidance on roles and responsibilities of referrers (usually the primary care clinician) and prescribers initiating, continuing and monitoring isotretinoin treatment </p>
+                    </li>
+                    <li class="listitem">
+                      <p>requirements for counselling people about potential mental health and sexual function side effects</p>
+                    </li>
+                    <li class="listitem">
+                      <p>requirements for assessing and monitoring mental health and sexual function</p>
+                    </li>
+                    <li class="listitem">
+                      <p>use of compulsory regulatory documents to minimise risk.<br /><br />See the <a class="link" href="https://www.gov.uk/government/publications/report-of-the-commission-on-human-medicines-isotretinoin-implementation-advisory-expert-working-group" target="_top">Commission on Human Medicines Isotretinoin Implementation Advisory Expert Working Group report</a> for more detail. <strong>[2023, amended 2026]</strong></p>
+                    </li>
+                  </ul>
+                </div>
+              </p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_20" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.20</h5>
+        <div class="recommendation__body">
+          <p>When making a referral to the consultant dermatologist-led team or the nationally accredited GPwER working within a consultant dermatologist-agreed pathway for the consideration of isotretinoin treatment:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>fully inform the person (and their family and carers, as appropriate) about the potential risks of isotretinoin treatment as well as the expected benefits </p>
+            </li>
+            <li class="listitem">
+              <p>provide details of the person's current and past medical history (including all current and previous mental health issues), and any relevant social and family history. <strong>[2023, amended 2026]</strong></p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_21" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.21</h5>
+        <div class="recommendation__body">
+          <p>When considering oral isotretinoin for acne take into account the person's psychological wellbeing (see <a class="link" href="recommendations#referral-to-specialist-care" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#referral-to-specialist-care">recommendation 1.4.5</a>), and refer them to mental health services before starting treatment if appropriate. See also <a class="link" href="https://www.gov.uk/drug-safety-update/isotretinoin-changes-to-prescribing-guidance-and-additional-risk-minimisation-measures" target="_top">MHRA guidance on changes to prescribing guidance and additional risk minimisation measures for isotretinoin</a>.</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_22" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.22</h5>
+        <div class="recommendation__body">
+          <p>If a person for whom oral isotretinoin treatment is being considered has the potential to become pregnant:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>explain that isotretinoin can cause serious harm to a developing baby if taken during pregnancy <strong>and</strong></p>
+            </li>
+            <li class="listitem">
+              <p>inform them that they will need to follow the MHRA pregnancy prevention programme as detailed on the <a class="link" href="https://assets.publishing.service.gov.uk/media/6983692920fe1bb69ac24413/Oral_isotretinoin_Ack-risk-form-2026-01_eform2.pdf" target="_top">isotretinoin acknowledgement of risk form</a>.</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_23" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.23</h5>
+        <div class="recommendation__body">
+          <p>Prescribe oral isotretinoin for acne treatment (see recommendation 1.5.18) at a standard daily dose of 0.5 to 1 mg/kg.</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_24" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.24</h5>
+        <div class="recommendation__body">
+          <p>Consider a reduced daily dose of isotretinoin (less than 0.5 mg/kg) for people at increased risk of, or experiencing, adverse effects.</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_25" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.25</h5>
+        <div class="recommendation__body">
+          <p>When giving isotretinoin as a course of treatment for acne:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>continue until a total cumulative dose of 120 to 150 mg/kg is reached, <strong>but</strong></p>
+            </li>
+            <li class="listitem">
+              <p>if there has been an adequate response and no new acne lesions for 4 to 8 weeks, consider discontinuing treatment sooner.</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_26" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.26</h5>
+        <div class="recommendation__body">
+          <p>If a person is taking oral isotretinoin for acne:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>review their psychological wellbeing during treatment, and monitor them regularly for symptoms or signs of developing or worsening mental health problems or sexual dysfunction</p>
+            </li>
+            <li class="listitem">
+              <p>tell them to seek medical advice if they feel their mental health or sexual function is affected or is worsening, and to stop their treatment and seek urgent medical advice if these problems are severe. <strong>[2023]</strong></p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <div class="panel">
+        <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#oral-isotretinoin-treatment-3" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#oral-isotretinoin-treatment-3">rationale and impact section on oral isotretinoin treatment</a>.</p>
+        <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f1-management-options-for-moderate-to-severe-acne-network-metaanalyses-pdf-9144159955" target="_top">evidence review F1: management options for moderate to severe acne – network meta-analyses</a> and <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f2-management-options-for-moderate-to-severe-acne-pairwise-comparisons-pdf-9144159956" target="_top">evidence review F2: management options for moderate to severe acne – pairwise comparisons</a>. </p>
+      </div>
+    </div>
+    <div class="section" title="Use of oral corticosteroids in addition to oral isotretinoin" id="ng198-use-of-oral-corticosteroids-in-addition-to-oral-isotretinoin">
+      <h4 class="title" id="use-of-oral-corticosteroids-in-addition-to-oral-isotretinoin">Use of oral corticosteroids in addition to oral isotretinoin</h4>
+      <article id="ng198-1_5_27" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.27</h5>
+        <div class="recommendation__body">
+          <p>If an acne flare (acute significant worsening of acne) occurs after starting oral isotretinoin, consider adding a course of oral prednisolone.</p>
+        </div>
+      </article>
+      <article id="ng198-1_5_28" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.28</h5>
+        <div class="recommendation__body">
+          <p>When a person with acne fulminans is started on oral isotretinoin, consider adding a course of oral prednisolone to prevent an acne flare.</p>
+        </div>
+      </article>
+      <p>See <a class="link" href="https://www.nice.org.uk/guidance/ng243/chapter/Recommendations#managing-glucocorticoid-withdrawal-to-prevent-adrenal-insufficiency" target="_top">recommendations on managing glucocorticoid withdrawal in NICE's guideline on adrenal insufficiency</a>.</p>
+      <div class="panel">
+        <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#use-of-oral-corticosteroids-in-addition-to-oral-isotretinoin-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#use-of-oral-corticosteroids-in-addition-to-oral-isotretinoin-2">rationale and impact section on use of oral corticosteroids in addition to oral isotretinoin</a>.</p>
+        <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/j-addition-of-oral-corticosteroids-to-oral-isotretinoin-for-the-treatment-of-severe-inflammatory-acne-vulgaris-pdf-329189758166" target="_top">evidence review J: addition of oral corticosteroids to oral isotretinoin for the treatment of severe inflammatory acne vulgaris</a>.</p>
+      </div>
+    </div>
+    <div class="section" title="Physical treatments" id="ng198-physical-treatments">
+      <h4 class="title" id="physical-treatments">Physical treatments</h4>
+      <article id="ng198-1_5_29" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.29</h5>
+        <div class="recommendation__body">
+          <p>Consider photodynamic therapy for people aged 18 and over with moderate to severe acne if other treatments are ineffective, not tolerated or contraindicated.</p>
+        </div>
+      </article>
+      <div class="panel">
+        <p>For a short explanation of why the committee made this recommendation and how it might affect practice, see the <a class="link" href="rationale-and-impact#physical-treatments-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#physical-treatments-2">rationale and impact section on physical treatments</a>.</p>
+        <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f1-management-options-for-moderate-to-severe-acne-network-metaanalyses-pdf-9144159955" target="_top">evidence review F1: management options for moderate to severe acne – network meta-analyses</a> and <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/f2-management-options-for-moderate-to-severe-acne-pairwise-comparisons-pdf-9144159956" target="_top">evidence review F2: management options for moderate to severe acne – pairwise comparisons</a>.</p>
+      </div>
+    </div>
+    <div class="section" title="Use of intralesional corticosteroids" id="ng198-use-of-intralesional-corticosteroids">
+      <h4 class="title" id="use-of-intralesional-corticosteroids">Use of intralesional corticosteroids</h4>
+      <article id="ng198-1_5_30" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.30</h5>
+        <div class="recommendation__body">
+          <p>Consider treating severe inflammatory cysts with intralesional injection of triamcinolone acetonide (0.1 ml of triamcinolone acetonide per cm of cyst diameter, at 0.6 mg/ml diluted in 0.9% sodium chloride). This should be done by a member of a <a class="link" href="recommendations#consultant-dermatologist-led-team" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#consultant-dermatologist-led-team">consultant dermatologist-led team</a> or a <a class="link" href="recommendations#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant">nationally accredited GPwER working within a consultant dermatologist-agreed pathway</a>.<br /><br />In June 2021 this was an off-label use for triamcinolone acetonide. See <a class="link" href="https://www.nice.org.uk/about/what-we-do/our-programmes/nice-guidance/nice-guidelines/making-decisions-using-nice-guidelines#prescribing-medicines" target="_top">NICE's information on prescribing medicines</a> for more information.</p>
+        </div>
+      </article>
+      <div class="panel">
+        <p>For a short explanation of why the committee made this recommendation and how it might affect practice, see the <a class="link" href="rationale-and-impact#use-of-intralesional-corticosteroids-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#use-of-intralesional-corticosteroids-2">rationale and impact section on use of intralesional corticosteroids</a>.</p>
+        <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/k-intralesional-corticosteroids-for-the-treatment-of-individual-acne-vulgaris-lesions-pdf-329189758167" target="_top">evidence review K: intralesional corticosteroids for the treatment of individual acne vulgaris lesions</a>.</p>
+      </div>
+    </div>
+    <div class="section" title="Treatment options for people with polycystic ovary syndrome" id="ng198-treatment-options-for-people-with-polycystic-ovary-syndrome">
+      <h4 class="title" id="treatment-options-for-people-with-polycystic-ovary-syndrome">Treatment options for people with polycystic ovary syndrome</h4>
+      <article id="ng198-1_5_31" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.31</h5>
+        <div class="recommendation__body">
+          <p>For people with polycystic ovary syndrome and acne:</p>
+          <ul class="itemizedlist indented">
+            <li class="listitem">
+              <p>treat their acne using a first-line treatment option (see <a class="link" href="recommendations#first-line-treatment-options" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#first-line-treatment-options">recommendation 1.5.1 and table 1</a>)</p>
+            </li>
+            <li class="listitem">
+              <p>if the chosen first-line treatment is not effective, consider adding ethinylestradiol with cyproterone acetate (co-cyprindiol) or an alternative combined oral contraceptive pill to their treatment</p>
+            </li>
+            <li class="listitem">
+              <p>for those using co-cyprindiol, review at 6 months and discuss continuation or alternative treatment options.</p>
+            </li>
+          </ul>
+        </div>
+      </article>
+      <article id="ng198-1_5_32" class="numbered-paragraph recommendation">
+        <h5 class="recommendation__number">1.5.32</h5>
+        <div class="recommendation__body">
+          <p>Consider referring people with acne and polycystic ovary syndrome with additional features of hyperandrogenism to an appropriate specialist (for example, a reproductive endocrinologist).</p>
+        </div>
+      </article>
+      <div class="panel">
+        <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#treatment-options-for-people-with-polycystic-ovary-syndrome-3" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#treatment-options-for-people-with-polycystic-ovary-syndrome-3">rationale and impact section on treatment options for people with polycystic ovary syndrome</a>.</p>
+        <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/g-management-options-for-people-with-acne-vulgaris-and-polycystic-ovary-syndrome-pdf-9144159957" target="_top">evidence review G: management options for people with acne vulgaris and polycystic ovary syndrome</a>.</p>
+      </div>
+    </div>
+  </div>
+  <div class="section" title="1.6 Relapse" id="ng198-relapse">
+    <h3 class="title" id="relapse">1.6 Relapse</h3>
+    <article id="ng198-1_6_1" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.6.1</h4>
+      <div class="recommendation__body">
+        <p>If acne responds adequately to a course of an appropriate first-line treatment (see <a class="link" href="recommendations#first-line-treatment-options" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#first-line-treatment-options">recommendation 1.5.3 and table 1</a>) but then relapses, consider either:</p>
+        <ul class="itemizedlist indented">
+          <li class="listitem">
+            <p>another 12‑week course of the same treatment, <strong>or</strong></p>
+          </li>
+          <li class="listitem">
+            <p>an alternative 12‑week treatment (see table 1).</p>
+          </li>
+        </ul>
+      </div>
+    </article>
+    <article id="ng198-1_6_2" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.6.2</h4>
+      <div class="recommendation__body">
+        <p>If acne relapses after an adequate response to oral isotretinoin and is currently <a class="link" href="recommendations#mild-to-moderate-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#mild-to-moderate-acne">mild to moderate</a>, offer an appropriate treatment option (see <a class="link" href="recommendations#first-line-treatment-options" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#first-line-treatment-options">table 1</a>).</p>
+      </div>
+    </article>
+    <article id="ng198-1_6_3" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.6.3</h4>
+      <div class="recommendation__body">
+        <p>If acne relapses after an adequate response to oral isotretinoin and is currently <a class="link" href="recommendations#moderate-to-severe-acne" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#moderate-to-severe-acne">moderate to severe</a>, offer either:</p>
+        <ul class="itemizedlist indented">
+          <li class="listitem">
+            <p>a 12-week course of an appropriate treatment option (see <a class="link" href="recommendations#first-line-treatment-options" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#first-line-treatment-options">table 1</a>), <strong>or</strong></p>
+          </li>
+          <li class="listitem">
+            <p>re-referral, if the person is no longer under the care of the <a class="link" href="recommendations#consultant-dermatologist-led-team" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#consultant-dermatologist-led-team">consultant dermatologist-led team</a> or the <a class="link" href="recommendations#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant">nationally accredited GPwER working within a consultant dermatologist-agreed pathway</a>.</p>
+          </li>
+        </ul>
+      </div>
+    </article>
+    <article id="ng198-1_6_4" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.6.4</h4>
+      <div class="recommendation__body">
+        <p>If acne relapses after a second course of oral isotretinoin and is currently moderate to severe, further care should be decided by the consultant dermatologist-led team or the nationally accredited GPwER working within a consultant dermatologist-agreed pathway. If the person is no longer under their care, offer re-referral.</p>
+      </div>
+    </article>
+    <div class="panel">
+      <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#relapse-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#relapse-2">rationale and impact section on relapse</a>.</p>
+      <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/h-management-options-for-refractory-acne-pdf-329189758164" target="_top">evidence review H: management options for refractory acne</a>.</p>
+    </div>
+  </div>
+  <div class="section" title="1.7 Maintenance" id="ng198-maintenance">
+    <h3 class="title" id="maintenance">1.7 Maintenance</h3>
+    <article id="ng198-1_7_1" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.7.1</h4>
+      <div class="recommendation__body">
+        <p>Encourage continued appropriate skin care (see <a class="link" href="recommendations#skin-care-advice" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#skin-care-advice">recommendations 1.2.1 to 1.2.4</a>).</p>
+      </div>
+    </article>
+    <article id="ng198-1_7_2" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.7.2</h4>
+      <div class="recommendation__body">
+        <p>Explain to the person with acne that, after completion of treatment, maintenance treatment is not always necessary.</p>
+      </div>
+    </article>
+    <article id="ng198-1_7_3" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.7.3</h4>
+      <div class="recommendation__body">
+        <p>Consider maintenance treatment in people with a history of frequent relapse after treatment.</p>
+      </div>
+    </article>
+    <article id="ng198-1_7_4" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.7.4</h4>
+      <div class="recommendation__body">
+        <p>Consider a <a class="link" href="recommendations#fixed-combination-of-topical-adapalene-with-topical-benzoyl-peroxide" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#fixed-combination-of-topical-adapalene-with-topical-benzoyl-peroxide">fixed combination of topical adapalene and topical benzoyl peroxide</a> as maintenance treatment for acne. If this is not tolerated, or if 1 component of the combination is contraindicated, consider topical monotherapy with <a class="link" href="recommendations#topical-adapalene" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#topical-adapalene">adapalene</a>, <a class="link" href="recommendations#topical-azelaic-acid" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#topical-azelaic-acid">azelaic acid</a>, or <a class="link" href="recommendations#topical-benzoyl-peroxide" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#topical-benzoyl-peroxide">benzoyl peroxide</a> (see also <a class="link" href="recommendations#factors-to-take-into-account-when-choosing-a-treatment-option" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#factors-to-take-into-account-when-choosing-a-treatment-option">recommendation 1.5.7 on starting topical treatment</a>).</p>
+      </div>
+    </article>
+    <article id="ng198-1_7_5" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.7.5</h4>
+      <div class="recommendation__body">
+        <p>Review maintenance treatments for acne after 12 weeks to decide if they should continue.</p>
+      </div>
+    </article>
+    <div class="panel">
+      <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#maintenance-2" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#maintenance-2">rationale and impact section on maintenance</a>.</p>
+      <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/i-maintenance-treatment-for-acne-vulgaris-pdf-329189758165" target="_top">evidence review I: maintenance treatment for acne vulgaris</a>.</p>
+    </div>
+  </div>
+  <div class="section" title="1.8 Management of acne-related scarring" id="ng198-management-of-acne-related-scarring">
+    <h3 class="title" id="management-of-acne-related-scarring">1.8 Management of acne-related scarring</h3>
+    <article id="ng198-1_8_1" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.8.1</h4>
+      <div class="recommendation__body">
+        <p>If a person has acne-related scarring, discuss their concerns and provide information in a way that suits their needs. Topics to cover include:</p>
+        <ul class="itemizedlist indented">
+          <li class="listitem">
+            <p>possible reasons for their scars</p>
+          </li>
+          <li class="listitem">
+            <p>treatment of ongoing acne to help prevent further scarring (see <a class="link" href="recommendations#managing-acne-vulgaris" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#managing-acne-vulgaris">recommendations 1.5.1 to 1.5.3</a> and <a class="link" href="recommendations#oral-isotretinoin-treatment" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#oral-isotretinoin-treatment">recommendation 1.5.18</a>)</p>
+          </li>
+          <li class="listitem">
+            <p>possible treatment options for acne-related scarring</p>
+          </li>
+          <li class="listitem">
+            <p>the way their acne scars may change over time</p>
+          </li>
+          <li class="listitem">
+            <p>psychological distress.</p>
+          </li>
+        </ul>
+      </div>
+    </article>
+    <article id="ng198-1_8_2" class="numbered-paragraph recommendation">
+      <h4 class="recommendation__number">1.8.2</h4>
+      <div class="recommendation__body">
+        <p>If a person's acne-related scarring is severe and persists a year after their acne has cleared:</p>
+        <ul class="itemizedlist indented">
+          <li class="listitem">
+            <p>refer the person to a <a class="link" href="recommendations#consultant-dermatologist-led-team" target="_top" rel="internal" data-chapter="recommendations" data-original-url="#consultant-dermatologist-led-team">consultant dermatologist-led team</a> with expertise in scarring management</p>
+          </li>
+          <li class="listitem">
+            <p>in a consultant dermatologist-led team setting, consider CO<sub>2</sub> laser treatment (alone or after a session of punch elevation) or glycolic acid peel.</p>
+          </li>
+        </ul>
+      </div>
+    </article>
+    <div class="panel">
+      <p>For a short explanation of why the committee made these recommendations and how they might affect practice, see the <a class="link" href="rationale-and-impact#managing-acne-related-scarring" target="_top" rel="internal" data-chapter="rationale-and-impact" data-original-url="#managing-acne-related-scarring">rationale and impact section on managing acne-related scarring</a>.</p>
+      <p>Full details of the evidence and the committee's discussion are in <a class="link" href="https://www.nice.org.uk/guidance/ng198/evidence/m-management-of-acne-vulgarisassociated-scarring-pdf-329189758169" target="_top">evidence review M: management of acne vulgaris-associated scarring</a>. </p>
+    </div>
+  </div>
+  <div class="section" title="Terms used in this guideline" id="ng198-terms-used-in-this-guideline">
+    <h3 class="title" id="terms-used-in-this-guideline">Terms used in this guideline</h3>
+    <div class="section" title="Acne conglobata" id="ng198-acne-conglobata">
+      <h4 class="title" id="acne-conglobata">Acne conglobata</h4>
+      <p>A severe form of nodulo-cystic acne with interconnecting sinuses and abscesses.</p>
+    </div>
+    <div class="section" title="Acne fulminans" id="ng198-acne-fulminans">
+      <h4 class="title" id="acne-fulminans">Acne fulminans</h4>
+      <p>A very serious form of acne conglobata associated with systemic symptoms.</p>
+    </div>
+    <div class="section" title="Comedogenic" id="ng198-comedogenic">
+      <h4 class="title" id="comedogenic">Comedogenic</h4>
+      <p>An ingredient that is likely to block skin pores.</p>
+    </div>
+    <div class="section" title="Consultant dermatologist-led team" id="ng198-consultant-dermatologist-led-team">
+      <h4 class="title" id="consultant-dermatologist-led-team">Consultant dermatologist-led team</h4>
+      <p>This team may include associate specialists, junior doctors and other healthcare professionals with appropriate dermatology expertise, skills and training.</p>
+    </div>
+    <div class="section" title="Fixed combination of topical adapalene with topical benzoyl peroxide" id="ng198-fixed-combination-of-topical-adapalene-with-topical-benzoyl-peroxide">
+      <h4 class="title" id="fixed-combination-of-topical-adapalene-with-topical-benzoyl-peroxide">Fixed combination of topical adapalene with topical benzoyl peroxide</h4>
+      <p>Formulation with either of these 2 concentrations:</p>
+      <div class="itemizedlist">
+        <ul class="itemizedlist">
+          <li class="listitem">
+            <p>0.1% adapalene with 2.5% benzoyl peroxide</p>
+          </li>
+          <li class="listitem">
+            <p>0.3% adapalene with 2.5% benzoyl peroxide.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="section" title="Fixed combination of topical benzoyl peroxide with topical clindamycin" id="ng198-fixed-combination-of-topical-benzoyl-peroxide-with-topical-clindamycin">
+      <h4 class="title" id="fixed-combination-of-topical-benzoyl-peroxide-with-topical-clindamycin">Fixed combination of topical benzoyl peroxide with topical clindamycin</h4>
+      <p>Formulation with either of these 2 concentrations:</p>
+      <div class="itemizedlist">
+        <ul class="itemizedlist">
+          <li class="listitem">
+            <p>3% benzoyl peroxide with 1% clindamycin</p>
+          </li>
+          <li class="listitem">
+            <p>5% benzoyl peroxide with 1% clindamycin.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="section" title="Fixed combination of topical tretinoin with topical clindamycin" id="ng198-fixed-combination-of-topical-tretinoin-with-topical-clindamycin">
+      <h4 class="title" id="fixed-combination-of-topical-tretinoin-with-topical-clindamycin">Fixed combination of topical tretinoin with topical clindamycin</h4>
+      <p>Formulation with:</p>
+      <div class="itemizedlist">
+        <ul class="itemizedlist">
+          <li class="listitem">
+            <p>0.025% tretinoin with 1% clindamycin.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="section" title="Mild to moderate acne" id="ng198-mild-to-moderate-acne">
+      <h4 class="title" id="mild-to-moderate-acne">Mild to moderate acne</h4>
+      <p>Acne severity varies along a continuum. For mild to moderate acne, this includes people who have 1 or more of:</p>
+      <div class="itemizedlist">
+        <ul class="itemizedlist">
+          <li class="listitem">
+            <p>any number of non-inflammatory lesions (comedones)</p>
+          </li>
+          <li class="listitem">
+            <p>up to 34 inflammatory lesions (with or without non-inflammatory lesions)</p>
+          </li>
+          <li class="listitem">
+            <p>up to 2 nodules.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="section" title="Moderate to severe acne" id="ng198-moderate-to-severe-acne">
+      <h4 class="title" id="moderate-to-severe-acne">Moderate to severe acne</h4>
+      <p>Acne severity varies along a continuum. For moderate to severe acne this includes people who have either or both of:</p>
+      <div class="itemizedlist">
+        <ul class="itemizedlist">
+          <li class="listitem">
+            <p>35 or more inflammatory lesions (with or without non-inflammatory lesions)</p>
+          </li>
+          <li class="listitem">
+            <p>3 or more nodules.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="section" title="Nationally accredited GP with an Extended Role (GPwER) working within a consultant dermatologist-agreed pathway" id="ng198-nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant">
+      <h4 class="title" id="nationally-accredited-gp-with-an-extended-role-gpwer-working-within-a-consultant">Nationally accredited GP with an Extended Role (GPwER) working within a consultant dermatologist-agreed pathway</h4>
+      <p>GPs with an interest in dermatology can apply to be nationally accredited as a GPwER in dermatology through the <a class="link" href="https://www.bad.org.uk/education-training/gps/become-a-gpwer-in-dermatology/" target="_top">British Association of Dermatologists</a> (BAD). The BAD also administers the process of transition of existing GPs with a Special Interest (GPwSI) in dermatology to the new system. From October 2023, prescriptions for isotretinoin can be initiated by nationally accredited GPwERs working within a consultant dermatologist-agreed pathway who have expertise in the use of systemic retinoids for the treatment of severe acne, and a full understanding of the risks of isotretinoin treatment and monitoring requirements. Prescriptions can also be initiated by GPwSIs who are currently prescribing isotretinoin within a consultant dermatologist-agreed pathway if they were signed off locally before the introduction of GPwER accreditation in 2018. See the <a class="link" href="https://www.gov.uk/government/publications/report-of-the-commission-on-human-medicines-isotretinoin-implementation-advisory-expert-working-group" target="_top">Commission on Human Medicines Isotretinoin Implementation Advisory Expert Working Group report</a> for details of all clinicians who can prescribe isotretinoin either within a consultant dermatologist-agreed pathway or under consultant dermatologist supervision.</p>
+    </div>
+    <div class="section" title="Oral lymecycline or oral doxycycline" id="ng198-oral-lymecycline-or-oral-doxycycline">
+      <h4 class="title" id="oral-lymecycline-or-oral-doxycycline">Oral lymecycline or oral doxycycline</h4>
+      <p>Formulation of either:</p>
+      <div class="itemizedlist">
+        <ul class="itemizedlist">
+          <li class="listitem">
+            <p>408 mg lymecycline daily</p>
+          </li>
+          <li class="listitem">
+            <p>100 mg doxycycline daily.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="section" title="Synthetic detergent (syndet)" id="ng198-synthetic-detergent-syndet">
+      <h4 class="title" id="synthetic-detergent-syndet">Synthetic detergent (syndet)</h4>
+      <p>A synthetic detergent (syndet) is a blend of synthetic surfactants and is formulated to have neutral to slightly acidic pH similar to the skin. It is widely available in both solid and liquid forms as a skin cleansing product.</p>
+    </div>
+    <div class="section" title="Topical adapalene" id="ng198-topical-adapalene">
+      <h4 class="title" id="topical-adapalene">Topical adapalene</h4>
+      <p>Formulation with:</p>
+      <div class="itemizedlist">
+        <ul class="itemizedlist">
+          <li class="listitem">
+            <p>0.1% adapalene.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="section" title="Topical azelaic acid" id="ng198-topical-azelaic-acid">
+      <h4 class="title" id="topical-azelaic-acid">Topical azelaic acid</h4>
+      <p>Formulation with either of these 2 concentrations:</p>
+      <div class="itemizedlist">
+        <ul class="itemizedlist">
+          <li class="listitem">
+            <p>15% azelaic acid</p>
+          </li>
+          <li class="listitem">
+            <p>20% azelaic acid.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="section" title="Topical benzoyl peroxide" id="ng198-topical-benzoyl-peroxide">
+      <h4 class="title" id="topical-benzoyl-peroxide">Topical benzoyl peroxide</h4>
+      <p>Formulation with:</p>
+      <div class="itemizedlist">
+        <ul class="itemizedlist">
+          <li class="listitem">
+            <p>5% benzoyl peroxide.</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>                        </div>
+
+
+
+
+                    </div>
+
+                </div>
+
+                
+
+            </div>
+
+                <div data-g="12" class="hide-print">
+                    <hr class="mt--c" />
+                    <div class="prev-next">
+                        <nav aria-label="Previous and next pages">
+                                <a class="prev-next__link" href="/guidance/ng198/chapter/Recommendations-for-research" rel="next">
+                                    <span class="prev-next__link-intro">Next page</span>
+                                    <span class="prev-next__link-text">Recommendations for research</span>
+                                </a>
+                                <a class="prev-next__link" href="/guidance/ng198" rel="prev">
+                                    <span class="prev-next__link-intro">Previous page</span>
+                                    <span class="prev-next__link-text">Overview</span>
+                                </a>
+                        </nav>
+                    </div>
+                </div>
+        </div>
+    </div>
+</div>
+
+</div>
+                        </div>
+                    </div>
+                    
+                    
+                </div>
+            </div>
+			<div class="back-to-top">
+	<nav aria-labelledby="back-to-top-link" class="back-to-top__nav">
+		<a href="#top" id="backToTop" class="back-to-top__anchor">
+			<div class="container">
+				<svg width="1em"
+					 height="1em"
+					 viewBox="0 0 512 512"
+					 fill="none"
+					 xmlns="http://www.w3.org/2000/svg"
+					 class="icon"
+					 aria-hidden="true"
+					 focusable="false">
+					<path d="M478.152 338.576c0 10.091-3.525 18.661-10.576 25.712l-21.424 21.424c-7.243 7.243-15.909 10.864-26 10.864-10.283 0-18.853-3.621-25.712-10.864L255.576 247.136 116.712 385.712c-6.859 7.243-15.429 10.864-25.712 10.864s-18.853-3.621-25.712-10.864l-21.424-21.424C36.621 357.429 33 348.859 33 338.576c0-10.091 3.621-18.757 10.864-26l186-186c7.051-7.051 15.621-10.576 25.712-10.576 9.909 0 18.576 3.525 26 10.576l185.712 186c7.243 7.243 10.864 15.909 10.864 26Z"
+						  fill="currentColor"></path>
+				</svg>
+				Back to top
+			</div>
+		</a>
+	</nav>
+</div>
+
+        </main>
+
+    <div id="global-nav-footer"></div>
+
+    <script>
+        var global_nav_config = {
+            service: "guidance",
+            header: {
+                cookie: false,
+                skipLinkId: "content-start",
+                search: {
+                    url: "/search",
+                    autocomplete: "/autocomplete?ajax=ajax",
+                },
+                auth: {
+                    environment: "live"
+                }
+            }
+        };
+    </script>
+    <!--[if lt IE 9]>
+        <script src="https://cdn.nice.org.uk/global-nav/global-nav.ie8.min.js" type="text/javascript"></script>
+    <![endif]-->
+    <script src="https://cdn.nice.org.uk/global-nav/global-nav.min.js" type="text/javascript"></script>
+
+    <script src="//cdn.nice.org.uk/V2/Scripts/twitter.bootstrap.min.js" type="text/javascript"></script>
+    <script src="/Themes/NICE.Bootstrap/scripts/niceorg/NICE.TopScroll.js" type="text/javascript"></script>
+    <script src="//cdn.nice.org.uk/V2/Scripts/NICE.bootstrap.min.js" type="text/javascript"></script>
+        <script src="https://cdn.nice.org.uk/niceorg/js/app.js" async></script>
+    
+</body>
+</html>

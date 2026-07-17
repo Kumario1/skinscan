@@ -179,6 +179,50 @@ def test_product_role_and_validation_violations_are_counted(tmp_path):
     assert report["metrics"]["selected_product_count_per_role"]["treatment"]["max"] == 1
 
 
+def test_schema4_rollout_metrics_are_exact_label_and_verification_aware(tmp_path):
+    analysis = artifact("sample")
+    analysis["lesion_findings"] = [
+        {"lesion_type": "papule", "count": 2},
+        {"lesion_type": "melasma", "count": 1},
+    ]
+    analysis["care_pathways"] = [
+        {"lesion_type": "papule", "status": "retail_eligible", "reason_codes": []},
+        {
+            "lesion_type": "melasma",
+            "status": "deferred",
+            "reason_codes": [
+                "required_intake_unknown:pregnancy_or_hormonal_medication_onset"
+            ],
+        },
+    ]
+    analysis["decision"]["referral_reasons"] = ["pigment_diagnosis_confirmation"]
+    run = write_run(tmp_path, analysis)
+    routine = routine_from(analysis)
+    routine["lesion_coverage"] = [
+        {"lesion_type": "papule", "status": "covered_by_product"},
+        {"lesion_type": "melasma", "status": "deferred"},
+    ]
+    routine["selected_regimen"] = {
+        "am": [],
+        "pm": [{"role": "treatment", "verification_status": "partial"}],
+        "per_label": [],
+    }
+    (run / "routine.json").write_text(json.dumps(routine))
+    row = {"sample_id": "sample", "oracle": {"nodule_present": False}}
+
+    report = evaluate_release(
+        [run], write_manifest(tmp_path, [row]), generated_at="time"
+    )
+    rollout = report["metrics"]["per_label_rollout"]
+    assert rollout["papule"]["product_coverage_rate"] == wilson_interval(1, 1)
+    assert rollout["papule"]["unfilled_rate"] == wilson_interval(0, 1)
+    assert rollout["melasma"]["referral_rate"] == wilson_interval(1, 1)
+    assert rollout["melasma"]["safety_deferrals"] == {
+        "required_intake_unknown:pregnancy_or_hormonal_medication_onset": 1
+    }
+    assert report["metrics"]["verification_distribution"] == {"partial": 1}
+
+
 def test_report_is_deterministic_apart_from_injected_timestamp(tmp_path):
     analysis = artifact("sample")
     run = write_run(tmp_path, analysis)

@@ -212,6 +212,12 @@ def test_production_stage_runner_resume_makes_no_second_sarpn_request(tmp_path):
                 "catalog_path": str(catalog),
                 "therapy_policy_path": str(ROOT / "tests/fixtures/therapy_policy_synthetic.json"),
                 "profile": json.loads((ROOT / "tests/fixtures/profile_complete.json").read_text()),
+                "profile_path": str(ROOT / "tests/fixtures/profile_complete.json"),
+                "mvp_synthetic": True,
+                "environment": "test",
+                "mvp_fixture_manifest_path": str(
+                    ROOT / "configs/mvp_fixture_manifest.json"
+                ),
                 "dataset": {"name": "synthetic", "sample_id": "face", "split": "smoke",
                             "split_proof": "fixture"},
                 "detector_sha256": "synthetic-detector",
@@ -235,10 +241,14 @@ def test_production_stage_runner_resume_makes_no_second_sarpn_request(tmp_path):
                             monotonic=lambda: 1)
         assert summary.exit_code == 0
         assert server.request_count == 1
-        routine = json.loads((req.artifact_dir / "routine.json").read_text())
-        assert "eligibility_rejections" not in routine
-        assert "validation_errors" not in routine
-        assert (req.artifact_dir / "eligibility_rejections.json").exists()
+        analysis = json.loads((req.artifact_dir / "analysis.json").read_text())
+        assert analysis["schema_version"] == "4"
+        assert analysis["recommendation_status"] == "unavailable"
+        assert analysis["recommendation_reason"] == "recsys_batch_selector_not_configured"
+        assert not (req.artifact_dir / "routine.json").exists()
+        # No batch selector means there are no candidates or eligibility
+        # rejections to serialize.
+        assert not (req.artifact_dir / "eligibility_rejections.json").exists()
 
         semantic["e2e"]["eligibility_debug"] = False
         summary = run_batch([req], manifest, real, sleeper=lambda _: None,

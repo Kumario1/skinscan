@@ -653,3 +653,227 @@ Agent catalog approval does not satisfy D-029's separate qualified-clinician
 release gates for triage, calibration, therapy policy, or medical instructions,
 and it is not release certification. This decision replaces the operational
 human-only wording for catalog evidence without weakening those clinical gates.
+
+## D-033 — OTC status no longer gates treatment eligibility (2026-07-14)
+
+Owner decision. The treatment role previously required `otc_drug: true`, which
+made two modeled paths unfillable by any real product: azelaic acid 10% exists
+only as cosmetics (Rx starts at 15%), and every adapalene 0.1% + benzoyl
+peroxide 2.5% combination is prescription-only. Per the amended D-002, the app
+may surface prescription-strength options while advising the user to see a
+doctor to obtain them.
+
+Consequence: `otc_status_not_verified` is removed from both the storage-time
+quarantine and the request-time eligibility check. Everything else still
+gates: exact active + strength match against the therapy policy, per-active
+source URLs, `label_source`, `label_verified_at`, cadence, and exposure.
+`otc_drug` remains a recorded fact so presentation can distinguish OTC from
+prescription products. Therapy policy itself (which paths exist) remains
+D-029 clinician-gated.
+
+## D-034 — Intended area vetoes only a stated non-face area (2026-07-15)
+
+**LOCKED.** Owner decision. Eligibility previously required `intended_areas` to
+include `"face"` — a fact OTC drug labels do not carry. P188306's SPL states its
+target as "cover the entire affected area" and names the face nowhere, so the
+gate was unsatisfiable from the very evidence the loop is built to trust, and
+every path to passing it ran through inventing the fact: `import_dailymed`
+stamped `intended_areas=["face"]` on every base row, and the recsys overlay
+carried a hand-written assertion, never present in `approved-combined.json`,
+sourced from Clinique's Swiss "Anti-Blemish Solutions" page — a salicylic-acid
+reformulation that is not the US benzoyl peroxide 2.5% product at all. A gate
+that can only be satisfied by fabricating its input is not fail-closed; it just
+moves the failure somewhere quieter.
+
+Consequence: `intended_area_not_face` (src) and `intended_area_not_verified:face`
+(recsys) now fire only when a product names its areas and the face is not among
+them — a neck or body product still loses a facial role, and a co-stated face
+still passes. Unknown and empty stay open: absence of evidence is not evidence
+of another area. This is not a licence to assert `"face"` without a source — the
+loop must still reject a product whose area genuinely is elsewhere, and
+`import_verification` now refuses to drop a fact the committed overlay asserts
+unless `--allow-fact-loss` says so. D-029's clinician gates are untouched.
+
+Because the gate no longer needs the fiction, `import_dailymed` no longer
+invents it: drug base rows now carry `intended_areas: []` (unstated), matching
+the "storage normalization, never verification" rule the v2 migration already
+follows, and the 35 rows already frozen into `data/verification/dailymed-pool.json`
+were healed in place — the pool is append-only and never re-parses its SPLs, so
+a fabricated fact there would otherwise outlive the code that wrote it. This
+changes no eligibility (verified by rebuild: identical states, reasons, and
+`eligible_by_role`); it only stops the catalog asserting an area no label
+states, which a reader downstream cannot tell from a verified one.
+
+## D-035 — Verification ranks safe catalog candidates; it does not admit them (2026-07-16)
+
+**LOCKED. Owner decision.** Production v3 considers the whole catalog rather
+than limiting recommendation candidates to fully verified products. A
+product's overall verification state is not an eligibility gate. Every
+candidate carries an explicit `verification_status` (`verified`, `partial`, or
+`unverified`), and ranking prefers more completely verified products after
+therapeutic fit and safety.
+
+Hard safety and role compatibility remain mandatory before ranking. A product
+is excluded when the requested role lacks required facts or violates them,
+including treatment active and strength, contraindications, profile or
+cross-product active conflicts, usable sourced instructions, and SPF and
+broad-spectrum facts where sunscreen is required. Format, exposure, and a
+stated non-face intended area remain hard role vetoes. Missing non-safety
+verification facts lower `verification_status` and ranking; they do not by
+themselves remove the product from the candidate pool.
+
+**Support-role exception.** For cleanser, moisturizer, and sunscreen only, an
+approved, hash-bound `daily_support` evidence role is sufficient suitability
+evidence even when the source did not assert a contraindications fact. The
+contraindications state remains unknown and lowers `verification_status`; it is
+never presented as verified-none. Deterministic INCI/allergy, current-active,
+profile-conflict, exposure/format, and SPF gates still apply. Treatment and
+prescription candidates continue to require an explicit approved
+contraindications fact, including an empty list only when the reviewed source
+supports that assertion.
+
+The v3 hybrid order is therefore:
+
+```text
+whole catalog → hard safety/role eligibility → therapeutic fit
+              → verification completeness → concern/general ranking
+              → one regimen → validation
+```
+
+This amends:
+
+- **D-005:** the ranker may reorder every safety- and role-approved catalog
+  candidate; "rule-approved" no longer means fully verified.
+- **D-029:** hard eligibility gates safety-critical and role-compatible facts,
+  not overall catalog verification. Full verification of every recommended SKU
+  is no longer an external release gate; authoritative evidence for mandatory
+  safety facts remains required.
+- **D-030:** an unfilled role means no product passed the hard safety/role gate,
+  not merely that no fully verified product existed.
+- **D-032:** proposed, stale, or absent verification does not automatically make
+  a product ineligible. It cannot supply a missing mandatory safety fact or
+  count as verified evidence, and it lowers the product's verification status.
+- **D-033:** `label_source` and `label_verified_at` contribute to verification
+  status but are not standalone admission gates. Exact treatment active,
+  strength, cadence, exposure, contraindication, and conflict checks remain.
+
+Rules out: treating verification as a safety override; allowing ranking to
+repair a product missing mandatory safety facts; presenting partial or
+unverified products as verified; and dropping whole-regimen validation.
+
+## D-036 — Catalog facts derive from the source taxonomy; missing non-safety facts rank, never gate (2026-07-16)
+
+**Owner decision.** D-035 promised the whole catalog enters ranking, but in
+practice only overlay-verified products carried the role facts the hard gates
+require (routine_roles, exposure, cadence, format, support-role
+contraindications), so the effective candidate pool was the verified set and
+every patient received the same routine.
+
+Two amendments close that gap:
+
+1. **The catalog build derives role facts from the dump's own taxonomy.** A
+   Sephora category is a role claim by the retailer: it yields
+   `routine_roles`, `exposure` (rinse_off for cleansers, leave_on otherwise),
+   `intended_areas` (face, except categories naming another area), and a
+   category-default `cadence` whose `cadence_source` is the marker
+   `derived:kaggle-sephora-category`. A verification overlay fact with a real
+   source replaces a derived one on import, and scoring never counts derived
+   fields as evidence — `verification_status` "partial"/"verified" still
+   requires overlay-set markers, so verified products keep outranking derived
+   ones at equal fit.
+
+2. **Missing non-safety facts stop vetoing.** An unknown `format` and (on
+   support roles only) unverified contraindications lower
+   `verification_status` instead of eligibility. A KNOWN format that conflicts
+   with the role still vetoes, declared contraindications still veto against
+   the profile, and treatments still require explicit verified actives,
+   strength, and contraindications — the acne-condition slot keeps every hard
+   gate.
+
+Consequences settled with this decision: the composer fills the treatment slot
+first (the reviewed therapy anchors the routine; support products are chosen
+around it, so a conflicting cleanser can no longer block the therapy), and a
+moisturizer folded as sun protection must pass the spf-slot gates and then
+satisfies the spf requirement in validation.
+
+Rules out: counting derived facts as verification evidence; deriving facts the
+taxonomy cannot honestly state (drug actives, contraindications, SPF broad
+spectrum); and relaxing any treatment, pregnancy, allergy, conflict, or SPF
+safety gate.
+
+## D-037 — Azure may optionally select IDs from the post-gate catalog (2026-07-16)
+
+**LOCKED experiment boundary.** The deterministic recommender remains the
+default and remains network-free. An opt-in tool may send Azure a compact
+normalized profile, aggregate exact-lesion findings, care-pathway,
+decision/therapy facts, and every
+post-gate cosmetic candidate in the five locked experiment roles: cleanser,
+treatment, serum, moisturizer, and SPF. If upstream policy requires another
+role, the experiment is unavailable without making an Azure call. It never sends the photo, lesion sheet, raw
+detections, full analysis document, XML, veto log, or raw catalog INCI. Azure
+returns product IDs only; names, actives, full ingredients, directions, and
+evidence are joined from the catalog.
+
+The model cannot admit a product, create therapy intent, choose a prescription
+for a routine, or bypass composition. Its exact IDs are the only candidates
+given to the composer; any wrong-role ID, missing required role, cross-product
+conflict, API failure, or whole-regimen validation failure emits no routine and
+does not fall back to the deterministic winner.
+
+Cross-user reuse is guarded rather than loose. The cache key HMACs exact safety
+intake and therapy/policy facts, exact-label counts/path statuses, skin/tone buckets,
+model/prompt/data versions, and the sorted safe candidate pool. Cache rows hold
+only the HMAC, product IDs, and provider provenance. Every hit is checked
+against the current safe pool and revalidated as a complete regimen. Validated
+misses alone are appended to the cache.
+
+The configured model identity, Azure deployment, and reasoning effort are
+separate key material. The authoritative care-policy identity and hash are also
+keyed but never sent in the Azure prompt. When a deployment alias is repointed,
+its configured `AZURE_OPENAI_MODEL_IDENTITY` must change with it.
+
+The first experiment sends all safe candidates and records count, latency,
+tokens, estimated cost when prices are configured, and cache status. A smaller
+top-N pool is deferred until real usage shows it is needed.
+
+Rules out: model-invented products or ingredient facts; LLM safety or therapy
+decisions; reusing recommendations across profiles with different safety
+intake; sending facial artifacts to the selector; and silently substituting a
+different product when the model's selection fails validation.
+
+## D-038 — Schema 4 is exact-label and the research gate is synthetic-MVP only (2026-07-16)
+
+**Owner-approved MVP boundary.** The ten detector labels are now the care and
+product contract. `analysis.json` schema 4 always carries all ten
+`lesion_findings` and `care_pathways`; grouped `concerns` remain display-only
+for one migration release and neither care policy nor recsys reads them.
+Detector confidence is evidence quality, with diagnosis probability left null.
+
+The qualified-clinician production gate in the original plan is replaced for
+this synthetic, no-user MVP by a high-reasoning AI research audit bound to the
+evidence-report and policy hashes. That audit authorizes only development/test
+environments with both a synthetic profile and fixture image. Production and
+real-user inputs remain ineligible and fail closed. This does not represent a
+clinical approval and cannot be promoted by changing a CLI flag alone. Runtime
+authorization additionally requires a test-environment fixture manifest that
+is itself digest-pinned before parsing and hash-pins the image bytes, raw
+profile file, and normalized resolved profile as approved pairs. One immutable
+image buffer is authorized, decoded, processed, rendered, and recorded; recsys
+independently rechecks every policy/audit artifact and input pair and rejects
+schema-4 profile overrides.
+The analysis policy loader also pins the approved policy, report, and source
+manifest digests rather than treating a caller-supplied self-consistent artifact
+set as a new trust root. One normalized profile snapshot feeds authorization,
+care, and provenance.
+
+Referral and product axes are independent. Prescriptions and procedures remain
+clinician options, while recsys is the sole SKU selector. A selected product
+covers a label only when its deterministic INCI or Drug Facts active matches
+that exact label and all role, exposure, pregnancy, allergy, interaction, and
+SPF gates pass. `nevus` and `other` can never receive treatment products;
+missing relevant products are reported as `unfilled`.
+
+Rules out: reading a grouped concern to choose care or products; treating a
+detector score as diagnosis probability; allowing the AI audit for production
+or real users; substituting an unrelated active for catalog gaps; or restoring
+the older in-process product selector.

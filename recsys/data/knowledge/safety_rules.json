@@ -1,0 +1,45 @@
+{
+  "schema_version": "recsys-knowledge-1",
+  "_provenance": "retinoids/treatment_actives/active_conflicts copied from src/recommendation/eligibility.py (D-005/D-029 lineage); do not edit from memory",
+  "_retinoid_authority": "This file is the ONLY place a retinoid is named. inci.RETINOID_MARKERS is derived from retinoids + retinoid_inci_stems at import, so the pregnancy gate's two arms (actives & knowledge.retinoids, contains_retinoid over raw INCI) cannot disagree. A new retinoid goes in `retinoids` if it is a canonical active id, and in `retinoid_inci_stems` only if it is a label spelling that never parses to one. Drug rows carry inci: [], so for them `retinoids` is the whole gate. Every entry in `retinoids` must also appear in treatment_actives, session_preferences.pm_pinned_actives and gentle.excluded_actives; recsys/tests/test_inci.py enforces this.",
+  "retinoids": [
+    "adapalene", "isotretinoin", "retinal", "retinol", "tazarotene",
+    "tretinoin", "trifarotene"
+  ],
+  "retinoid_inci_stems": ["retinaldehyde", "retinoate", "retinoic", "retinyl"],
+  "_prescription_actives_authority": "Drug-catalog actives a profile may truthfully declare in current_actives that are neither canonical INCI actives nor retinoids. contracts.DECLARABLE_ACTIVE_IDS derives from CANONICAL_ACTIVES + retinoids + this list, so the profile vocabulary cannot lag the actives import_drug_catalog mints into product.actives (the duplicate-active gate intersects the two; a declarable gap silences it for exactly the users on the most dangerous actives). sulfur is OTC, not Rx, but rides here for the same reason: it is in the drug catalog and never parses out of a cosmetic INCI. recsys/tests/test_contracts.py checks this list covers the committed DailyMed pool.",
+  "prescription_actives": [
+    "clascoterone", "clindamycin", "dapsone", "erythromycin", "minocycline",
+    "sulfacetamide_sodium", "sulfur"
+  ],
+  "treatment_actives": [
+    "adapalene", "azelaic_acid", "benzoyl_peroxide", "glycolic_acid",
+    "isotretinoin", "lactic_acid", "mandelic_acid", "retinal", "retinol",
+    "salicylic_acid", "tazarotene", "tretinoin", "trifarotene"
+  ],
+  "active_conflicts": [
+    ["benzoyl_peroxide", "retinol"],
+    ["benzoyl_peroxide", "adapalene"],
+    ["benzoyl_peroxide", "vitamin_c"],
+    ["glycolic_acid", "retinol"],
+    ["glycolic_acid", "adapalene"]
+  ],
+  "pregnancy_excluded_statuses": ["pregnant", "trying", "nursing", "unknown"],
+  "session_preferences": {
+    "_comment": "pm_pinned may never appear in AM; am_pinned never in PM; preferences flip when a conflict forces it",
+    "pm_pinned_actives": [
+      "adapalene", "isotretinoin", "retinal", "retinol", "tazarotene",
+      "tretinoin", "trifarotene"
+    ],
+    "am_preferred_actives": ["vitamin_c", "benzoyl_peroxide"],
+    "pm_preferred_actives": ["glycolic_acid", "lactic_acid", "mandelic_acid"]
+  },
+  "gentle": {
+    "excluded_actives": [
+      "adapalene", "benzoyl_peroxide", "glycolic_acid", "isotretinoin",
+      "retinal", "retinol", "tazarotene", "tretinoin", "trifarotene"
+    ],
+    "allowlist_treatment_actives": ["azelaic_acid", "niacinamide", "gluconolactone", "centella", "allantoin", "madecassoside", "zinc", "panthenol"]
+  },
+  "min_spf": 30
+}

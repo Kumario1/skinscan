@@ -1,0 +1,112 @@
+{
+  "products": [
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:18:04.131949Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://theordinary.com/en-us/niacinamide-10-zinc-1-serum-100436.html",
+            "exposure": "leave_on",
+            "format": "serum",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "serum"
+            ]
+          },
+          "retrieved_at": "2026-07-16T17:59:14Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "09cd2186e866dc53977ffd6bdf8527f158345b77d706dd5eda799a243d7e1773",
+          "source_url": "https://theordinary.com/en-us/niacinamide-10-zinc-1-serum-100436.html",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P427417"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:18:04.131949Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://theordinary.com/en-us/azelaic-acid-suspension-10-exfoliator-100407.html",
+            "exposure": "leave_on",
+            "format": "suspension",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "serum"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:00:15Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "66007051596787473b988e64f50473c7a36d58f2ce06fed57c94621a908e0890",
+          "source_url": "https://theordinary.com/en-us/azelaic-acid-suspension-10-exfoliator-100407.html",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P427411"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:18:04.131949Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://theordinary.com/en-us/alpha-arbutin-2-ha-serum-100401.html",
+            "exposure": "leave_on",
+            "format": "serum",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "serum"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:00:16Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "3d25cf4c621762f86429cff20753e18512246909d8368e9ffcb93aad5553a43d",
+          "source_url": "https://theordinary.com/en-us/alpha-arbutin-2-ha-serum-100401.html",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P427412"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:18:04.131949Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://theordinary.com/en-us/salicylic-acid-2-anhydrous-solution-exfoliator-100442.html",
+            "contraindications": [
+              "sensitive"
+            ],
+            "exposure": "leave_on",
+            "format": "solution",
+            "intended_areas": [
+              "face"
+            ],
+            "routine_roles": [
+              "serum"
+            ]
+          },
+          "retrieved_at": "2026-07-16T17:59:18Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "84cec47c22d3694ec987de57002d1c70798d56c6bd3008e1eb3745b9b0178340",
+          "source_url": "https://theordinary.com/en-us/salicylic-acid-2-anhydrous-solution-exfoliator-100442.html",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P479732"
+    }
+  ],
+  "schema_version": "2"
+}
