@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from collections.abc import Mapping
 
-from .schema import Product, TherapyOption, UserProfile
+from .schema import Product, TherapyOption, UserProfile, excludes_face
 
 
 RETINOIDS = {"adapalene", "retinol", "retinal", "tretinoin"}
@@ -71,7 +71,7 @@ def check_eligibility(
 
     if product.is_legacy:
         reject("catalog_schema_legacy", "catalog_schema_version")
-    if "face" not in product.intended_areas:
+    if excludes_face(product.intended_areas):
         reject("intended_area_not_face", "intended_areas")
     if role not in product.routine_roles:
         reject("routine_role_not_verified", "routine_roles")
@@ -88,8 +88,8 @@ def check_eligibility(
 
     carried = _carried(product)
     if role == "treatment":
-        if product.otc_drug is not True:
-            reject("otc_status_not_verified", "otc_drug")
+        # D-033: OTC status is recorded but no longer gates eligibility;
+        # active/strength/label verification below still applies.
         if therapy is None:
             reject("therapy_missing_for_treatment_role", "therapy")
         else:

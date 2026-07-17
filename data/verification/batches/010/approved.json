@@ -1,0 +1,237 @@
+{
+ "products": [
+  {
+   "assertions": [
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "cadence": "pm",
+      "cadence_source": "https://www.drunkelephant.com/collections/cleansers/beste-no.-9-jelly-cleanser-999DE00000101.html",
+      "routine_roles": [
+       "cleanser"
+      ]
+     },
+     "retrieved_at": "2026-07-16T20:55:29Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "e99470c5efe4234af04425880b0b468ed956393d515fdc18d84b88c98f128909",
+     "source_url": "https://www.drunkelephant.com/collections/cleansers/beste-no.-9-jelly-cleanser-999DE00000101.html",
+     "status": "approved"
+    }
+   ],
+   "product_id": "P426836"
+  },
+  {
+   "assertions": [
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "cadence": "pm",
+      "cadence_source": "https://www.drunkelephant.com/collections/cleansers/slaai-makeup-melting-butter-cleanser-856556004753.html",
+      "routine_roles": [
+       "cleanser"
+      ]
+     },
+     "retrieved_at": "2026-07-16T20:55:29Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "8d93fbe7c1dc76bc6e0675746060420f81004553ff4dfb368ed86d5c0bd8bb9a",
+     "source_url": "https://www.drunkelephant.com/collections/cleansers/slaai-makeup-melting-butter-cleanser-856556004753.html",
+     "status": "approved"
+    }
+   ],
+   "product_id": "P442566"
+  },
+  {
+   "assertions": [
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "cadence": "am",
+      "cadence_source": "https://www.drunkelephant.com/collections/serums/c-firma-fresh-vitamin-c-day-serum-812343034358.html",
+      "routine_roles": [
+       "serum"
+      ]
+     },
+     "retrieved_at": "2026-07-16T20:55:29Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "9355e6eb20c0ec324a637402d7f74f7da8274d83a8921be1e8d15f1fd0e04b32",
+     "source_url": "https://www.drunkelephant.com/collections/serums/c-firma-fresh-vitamin-c-day-serum-812343034358.html",
+     "status": "approved"
+    }
+   ],
+   "product_id": "P400259"
+  },
+  {
+   "assertions": [
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "cadence": "pm",
+      "cadence_source": "https://www.drunkelephant.com/collections/serums/t.l.c.-framboos-glycolic-resurfacing-night-serum-999DE00000104.html",
+      "routine_roles": [
+       "serum"
+      ]
+     },
+     "retrieved_at": "2026-07-16T20:55:29Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "7554ee30962eb1ed15235c2df1f88968b30f2a83a8d83974ce6d1bab742037fe",
+     "source_url": "https://www.drunkelephant.com/collections/serums/t.l.c.-framboos-glycolic-resurfacing-night-serum-999DE00000104.html",
+     "status": "approved"
+    }
+   ],
+   "product_id": "P392246"
+  },
+  {
+   "assertions": [
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "cadence": "daily",
+      "cadence_source": "https://www.origins.com/product/15342/11226/skincare/cleanse/face-wash-and-cleansers/checks-and-balances/frothy-face-wash",
+      "routine_roles": [
+       "cleanser"
+      ]
+     },
+     "retrieved_at": "2026-07-16T20:53:04Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "3f4824ffe7a09469d9758476e6dbad0cbbea58300767ce2a291d4de62543778c",
+     "source_url": "https://www.origins.com/product/15342/11226/skincare/cleanse/face-wash-and-cleansers/checks-and-balances/frothy-face-wash",
+     "status": "approved"
+    }
+   ],
+   "product_id": "P297516"
+  },
+  {
+   "assertions": [
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "cadence": "am_pm",
+      "cadence_source": "https://www.glowrecipe.com/products/papaya-sorbet-enzyme-cleansing-balm",
+      "routine_roles": [
+       "cleanser"
+      ]
+     },
+     "retrieved_at": "2026-07-16T20:56:42Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "f07bb5d3a3fa4ba7d447fbd0168e1323142bbe23889ba9fa604a74a440b26619",
+     "source_url": "https://www.glowrecipe.com/products/papaya-sorbet-enzyme-cleansing-balm",
+     "status": "approved"
+    }
+   ],
+   "product_id": "P460516"
+  },
+  {
+   "assertions": [
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "cadence": "per_label",
+      "cadence_source": "https://tatcha.com/products/the-silk-sunscreen-spf-50",
+      "comedogenic_claim": "claimed_noncomedogenic",
+      "evidence_grade": "manufacturer_product_page",
+      "routine_roles": [
+       "sunscreen"
+      ]
+     },
+     "retrieved_at": "2026-07-16T21:00:20Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "2a8616e3ec997ecc1be5c8e375663f3eb065c802e05243f2060656587a1c98d6",
+     "source_url": "https://tatcha.com/products/the-silk-sunscreen-spf-50",
+     "status": "approved"
+    },
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "broad_spectrum": true,
+      "label_effective_date": "20250331",
+      "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/7799042a-d2de-480e-a8a3-827b3dc27907.xml",
+      "label_verified_at": "2026-07-16",
+      "label_version": "3",
+      "otc_drug": true,
+      "source_set_id": "7799042a-d2de-480e-a8a3-827b3dc27907",
+      "spf": 50
+     },
+     "retrieved_at": "2026-07-16T21:00:20Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "3a1ead63262eccc7983484f4ffcb157801e14338bfe6885dc86d0ff58a6ff5ba",
+     "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/7799042a-d2de-480e-a8a3-827b3dc27907.xml",
+     "status": "approved"
+    }
+   ],
+   "product_id": "P481169"
+  },
+  {
+   "assertions": [
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "cadence": "daily",
+      "cadence_source": "https://theordinary.com/en-us/squalane-face-cleanser-100446.html",
+      "comedogenic_claim": "claimed_noncomedogenic",
+      "routine_roles": [
+       "cleanser"
+      ]
+     },
+     "retrieved_at": "2026-07-16T20:53:46Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "66b9b6478adc35a79526f655e29c755cbc0039b0d3b6bed73ed114ff7f63c052",
+     "source_url": "https://theordinary.com/en-us/squalane-face-cleanser-100446.html",
+     "status": "approved"
+    }
+   ],
+   "product_id": "P444718"
+  },
+  {
+   "assertions": [
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "cadence": "am_pm",
+      "cadence_source": "https://theordinary.com/en-us/multi-peptide-ha-serum-100613.html?dwvar_100613_size=60ml&quantity=1",
+      "routine_roles": [
+       "serum"
+      ]
+     },
+     "retrieved_at": "2026-07-16T20:55:30Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "10b02c529ced4f48eb1520fdb71bb5e1ff35fd9dce68cf5bf0f7bc8e90c71eba",
+     "source_url": "https://theordinary.com/en-us/multi-peptide-ha-serum-100613.html?dwvar_100613_size=60ml&quantity=1",
+     "status": "approved"
+    }
+   ],
+   "product_id": "P427420"
+  },
+  {
+   "assertions": [
+    {
+     "approved_at": "2026-07-16T21:10:44.336809Z",
+     "facts": {
+      "cadence": "pm",
+      "cadence_source": "https://theordinary.com/en-us/lactic-acid-10-ha-exfoliator-100426.html",
+      "routine_roles": [
+       "serum"
+      ]
+     },
+     "retrieved_at": "2026-07-16T20:53:46Z",
+     "reviewer_id": "claude-catalog-loop-2026-07-16",
+     "reviewer_type": "agent",
+     "source_sha256": "b04dcb56e3c622c31d70cd02fa62fe949121ebb90f5fb9432cc92f602ae3b716",
+     "source_url": "https://theordinary.com/en-us/lactic-acid-10-ha-exfoliator-100426.html",
+     "status": "approved"
+    }
+   ],
+   "product_id": "P427413"
+  }
+ ],
+ "schema_version": "2"
+}

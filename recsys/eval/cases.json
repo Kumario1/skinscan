@@ -1,0 +1,12 @@
+{
+  "schema_version": "recsys-eval-1",
+  "cases": [
+    {
+      "id": "v3-complete-profile",
+      "analysis": "../tests/fixtures/analysis_v3_sample.json",
+      "profile": "../tests/fixtures/profile_complete.json",
+      "generated_at": "2026-07-14T00:00:00+00:00",
+      "golden": "golden/v3-complete-profile.json"
+    }
+  ]
+}

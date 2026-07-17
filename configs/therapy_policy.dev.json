@@ -1,0 +1,21 @@
+{
+  "policy_id": "skinscan-dev-default",
+  "version": "1",
+  "reviewed": true,
+  "reviewed_by": "dev-default",
+  "test_only": true,
+  "paths": [
+    {
+      "therapy": "benzoyl_peroxide",
+      "strength_band": "2.5%",
+      "exposure": "leave_on",
+      "cadence": "per_label",
+      "role": "treatment",
+      "reason": "first_line_otc_benzoyl_peroxide",
+      "cadence_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0d0cfec0-5d18-c347-e063-6394a90a912c.xml",
+      "concerns": ["acne_comedonal", "acne_inflammatory"],
+      "course_weeks": 8,
+      "review_at_weeks": 4
+    }
+  ]
+}

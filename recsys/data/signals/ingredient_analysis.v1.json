@@ -1,0 +1,948 @@
+{
+  "kind": "ingredient_analysis",
+  "products": {
+    "P12045": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "10943d0a9749631c3fd93a88573c2340e6509d73e648e5f79852db7e16e841a2",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P173726": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "c893a62401039f6ad036572592a89c9f19b92f366d272f7036d1851e468454d7",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P188306": {
+      "actives_beyond_table": [
+        "acetyl glucosamine",
+        "bisabolol",
+        "caffeine",
+        "cholesterol",
+        "linoleic acid",
+        "poria cocos sclerotium extract",
+        "saccharomyces lysate extract",
+        "tocopheryl acetate"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "3620dc26dfdd134c6f7b23f60448cdb5bcdca83b3b4be6794c1dcb2af7a5e5c6",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P248407": {
+      "actives_beyond_table": [
+        "colloidal oatmeal, feverfew extract, green tea extract, licorice root extract, ceramide np, allantoin, ceramides, glycerin, squalane, dimethicone, shea butter, caprylic/capric triglyceride, cetearyl alcohol, glyceryl stearate, glyceryl stearate se, stearic acid, c12-15 alkyl benzoate, xanthan gum, phenoxyethanol, caprylyl glycol, disodium edta, sodium hydroxide],"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "55cf5ec5989f1d12e174f2bf7de0d7f7a4f38c6eb3ee69f6b2bec9a745e3d0d3",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P269122": {
+      "actives_beyond_table": [
+        "achillea millefolium extract",
+        "adenosine",
+        "alcohol denat.",
+        "anthemis nobilis flower extract",
+        "benzoic acid",
+        "camellia sinensis leaf extract",
+        "chamomilla recutita flower extract",
+        "citric acid",
+        "copper pca",
+        "disodium edta",
+        "lecithin",
+        "leuconostoc/radish root ferment filtrate",
+        "malic acid",
+        "menthone glycerin acetal",
+        "octoxynol-9",
+        "phospholipids",
+        "potassium sorbate",
+        "resveratrol",
+        "sodium benzoate",
+        "sodium pca",
+        "soy isoflavones",
+        "tetrasodium edta",
+        "tocopheryl acetate",
+        "ubiquinone",
+        "zinc pca"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "97acd45d85323811e606ec76a9a3b5acd5b889cfa28587e7f3c612660752f69c",
+      "irritancy_tier": "high",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P377533": {
+      "actives_beyond_table": [
+        "resveratrol"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "40e3d30ca9343dd9f6097aad4de7f56a6cdf3b770728006e724e39da7753b1bc",
+      "irritancy_tier": "high",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P394639": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "36fdb140d32f697461fa1e8206421e746dd7ebabfa2ccd4b7e6b8b68b13a1576",
+      "irritancy_tier": "high",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P400259": {
+      "actives_beyond_table": [
+        "ferulic_acid,"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "e4c602eca33cc9dce767b05a6d8e7d109da02af29d7682560ca8dbf77f0d4344",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P4016": {
+      "actives_beyond_table": [
+        "betaine",
+        "camellia oleifera leaf extract",
+        "caprylyl glycol",
+        "chlorphenesin",
+        "cimicifuga racemosa root extract",
+        "citric acid",
+        "cocamidopropyl dimethylamine",
+        "disodium edta",
+        "glyceryl stearate",
+        "hydrolyzed corn starch",
+        "hydrolyzed corn starch octenylsuccinate",
+        "inositol",
+        "methyl gluceth-20",
+        "phenoxyethanol",
+        "polysorbate 80",
+        "prunus armeniaca (apricot) kernel oil",
+        "silver citrate",
+        "taurine",
+        "trehalose",
+        "urea",
+        "ze mays (corn) starch"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "85ceb8de2a4744328aebfabf142ada97b9a07254eb6bb14f862dab8b7aa2735b",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P405096": {
+      "actives_beyond_table": [
+        "phyllanthus emblica fruit extract",
+        "sodium glycolate",
+        "tocopherol"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "47f3da1f92324c93d36b54ebfc70f52cfcc45030ba05d91aff46b259c7e5ce7c",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P409800": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "61434e82f06e1fd14cf6e4e3efa422360f68808988803363941c00aaa4fb97cf",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P411387": {
+      "actives_beyond_table": [
+        "tetrahexyldecyl ascorbate (vitamin c) (note: lipid-soluble vitamin c derivative, distinct from ascorbic acid)",
+        "tocopheryl acetate (vitamin e)"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "f58235b96bccadab4aa3695d38627551841904ab74d50ed8bd40cf0396665b9a",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P417238": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "d7c7e0b4fc9eb6c02c39a462f6c720072e375f7f4129b8552fc9485e55c0d1d2",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P418218": {
+      "actives_beyond_table": [
+        "butylene glycol",
+        "diglycerin",
+        "ethylhexylglycerin",
+        "lecithin",
+        "phenoxyethanol",
+        "propanediol",
+        "sodium citrate"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "bac2724a5e0244239fd2c7f668579716496e6ce5dc74823beafe0b3e99b2a205",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P421275": {
+      "actives_beyond_table": [
+        "retinyl_acetate (vitamin a)"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "2413e881badf58edb7978ba4d3501ecbf2c448888d363a65e46453a71d8f11cb",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427406": {
+      "actives_beyond_table": [
+        "1",
+        "2-hexanediol",
+        "alanine",
+        "aloe_barbadensis_leaf_water",
+        "aminomethyl_propanol",
+        "arginine",
+        "aspartic_acid",
+        "caprylyl_glycol",
+        "centaurea_cyanus_flower_water",
+        "citric_acid",
+        "dextrin",
+        "fructose",
+        "gellan_gum",
+        "glucose",
+        "glutamic_acid",
+        "glycine",
+        "hexyl_nicotinate",
+        "hexylene_glycol",
+        "histidine",
+        "isoleucine",
+        "panax_ginseng_root_extract",
+        "pca",
+        "phenylalanine",
+        "polysorbate_20",
+        "potassium_sorbate",
+        "proline",
+        "propanediol",
+        "rosa_damascena_flower_water",
+        "serine",
+        "sodium_benzoate",
+        "sodium_chloride",
+        "sodium_lactate",
+        "sodium_pca",
+        "sucrose",
+        "tasmannia_lanceolata_fruit/leaf_extract",
+        "threonine",
+        "triethanolamine",
+        "trisodium_ethylenediamine_disuccinate",
+        "urea",
+        "valine"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "e57afef03401e9ad2eb91a5e584540742ea16b9630850ef880b268b33828d279",
+      "irritancy_tier": "high",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427410": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "8b7593817f7a8e7b56636655a497e1ca78aed824452d98da28065826304b9951",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427411": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "9925e36e0d0ceed56614d5f6821d8c9af40fa701aeebc0e097c4f7fa628ac090",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427412": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "4e4875e2e8b376fdec0b57b47e2df2e5276f654da667aa7b455ff55ea03d816d",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427413": {
+      "actives_beyond_table": [
+        "sodium_hyaluronate_crosspolymer,"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "7536c9f5a9b27c2fa2517200b22e8aab5c9b26302b37045332bd90f019ad8023",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427414": {
+      "actives_beyond_table": [
+        "arginine, aspartic acid, glycine, alanine, serine, valine, isoleucine, proline, threonine, histidine, phenylalanine, glucose, maltose, fructose, trehalose, sodium pca, pca, sodium lactate, urea, linoleic acid, oleic acid, phytosteryl canola glycerides, palmitic acid, stearic acid, lecithin, triolein, tocopherol, citric acid, trisodium ethylenediamine disuccinate, pentylene glycol, triethanolamine, sodium hydroxide, phenoxyethanol, chlorphenesin],",
+        "comedogenic_ingredients_ge_3",
+        "concern_fit_notes",
+        "fragrance_or_essential_oils",
+        "irritancy_tier"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "ab93fdef7b71ffea6bd547ceaa047196ea7475aa964e2894474fc68bb8369e43",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427415": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "e9aa2cf99b9d8926edb451f7a8f3f3bada99e5d6b71a24e3b5ee255e447b843b",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427417": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "eb5d936ae0569aba7c15e0ce0a61d01f58914c45ce9a4b8df6d53b520de86263",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427419": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "2e6b76b2a5b5ea420837a9143eee9ccf6dbdb0f16de3f8691f87a7700c96f201",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427420": {
+      "actives_beyond_table": [
+        "acacia senegal gum",
+        "acetyl hexapeptide-8",
+        "acetylarginyltryptophyl diphenylglycine",
+        "alanine",
+        "allantoin",
+        "arginine",
+        "aspartic acid",
+        "butylene glycol",
+        "caprylyl glycol",
+        "carbomer",
+        "chlorphenesin",
+        "citric acid",
+        "dipeptide diamino butyroyl benzylamide diacetate",
+        "ethoxydiglycol",
+        "ethylhexylglycerin",
+        "fructose",
+        "glucose",
+        "glycine",
+        "histidine",
+        "hydroxypropyl cyclodextrin",
+        "isoleucine",
+        "lactococcus ferment lysate",
+        "maltose",
+        "palmitoyl tetrapeptide-7",
+        "palmitoyl tripeptide-1",
+        "palmitoyl tripeptide-38",
+        "pca",
+        "peg-40 hydrogenated castor oil",
+        "pentapeptide-18",
+        "pentylene glycol",
+        "phenoxyethanol",
+        "phenylalanine",
+        "polysorbate 20",
+        "ppg-26-buteth-26",
+        "proline",
+        "serine",
+        "sodium benzoate",
+        "sodium chloride",
+        "sodium hyaluronate",
+        "sodium hyaluronate crosspolymer",
+        "sodium hydroxide",
+        "sodium lactate",
+        "sodium pca",
+        "threonine",
+        "trehalose",
+        "trisodium ethylenediamine disuccinate",
+        "urea",
+        "valine",
+        "xanthan gum"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "eeca9fee25e267ca426b927c5c686696d029268beab6f44b91d9943d8b2b38ce",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427421": {
+      "actives_beyond_table": [
+        "bacillus/folic acid ferment filtrate extract",
+        "copper palmitoyl heptapeptide-14",
+        "heptapeptide-15 palmitate",
+        "nymphaea alba root extract",
+        "palmitoyl tetrapeptide-7",
+        "palmitoyl tripeptide-1",
+        "sclerocarya birrea seed oil",
+        "sh-oligopeptide-1",
+        "sh-oligopeptide-2",
+        "sh-polypeptide-1",
+        "sh-polypeptide-11",
+        "sh-polypeptide-9",
+        "symphytum officinale callus culture extract."
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "f55bf0b43ea5081027b2cfb67807c9ed839cc95afd519aba50f5a9e875b16a73",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P427536": {
+      "actives_beyond_table": [
+        "butylene glycol",
+        "coco-betaine",
+        "ethylhexylglycerin",
+        "phenoxyethanol",
+        "polyglyceryl-10 dioleate",
+        "polyglyceryl-2 sesquicaprylate",
+        "potassium hydroxide",
+        "sodium chloride",
+        "sodium cocoyl glutamate",
+        "sodium lauroyl hydrolyzed silk",
+        "tetrasodium edta"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "15b1fa86d5d4376c5a95d738427abf3038383dd53e5f08930fd534efead458a0",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P429242": {
+      "actives_beyond_table": [
+        "avobenzone 2.5% (uva1 filter)",
+        "homosalate 10.0% (uvb filter)",
+        "octisalate 5.0% (uvb filter)",
+        "octocrylene 10.0% (uvb filter)"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "97a83b6229407df2f56779ff482b53132d1c7ed9b705213cb368078f4818a793",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P429953": {
+      "actives_beyond_table": [
+        "tocopherol, avobenzone, octisalate, octocrylene, diethylhexyl syringylidenemalonate (uv filter)"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "43d4062c11b76ca07733865b73ed01fbdbf03f4a9fbccaa4af9c2d6746c1d661",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P439926": {
+      "actives_beyond_table": [
+        "tetrahexyldecyl ascorbate (vitamin c ester) (antioxidant) (brightening) (collagen support) (photoprotection support)"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "29603dd6d45ac08d1e2620c79848435d02c8e1ea020298f8ce48c0fb3d64b0f7",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P439928": {
+      "actives_beyond_table": [
+        "avobenzone 2.5% (uv filter) - note: concentration provided in inci but not used for efficacy claims; homosalate 8% (uv filter); octisalate 5% (uv filter)"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "31436b98f93db02d1a731c95599cce21a2c46a64acc5ee347c64dd4c70bc5534",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P440307": {
+      "actives_beyond_table": [
+        "comedogenic_ingredients",
+        "concern_fit_notes",
+        "has_fragrance_or_essential_oils",
+        "irritancy_tier",
+        "isopropyl myristate (rated 4/5), cetyl alcohol (rated 2/5 but can be problematic in some formulations; however, standard comedogenic rating is 2, so not included), stearic acid (rated 2/5), glyceryl stearate (rated 2/5), glyceryl stearate citrate (rated 2/5), glyceryl laurate (not typically rated; low concern), xanthan gum (rated 0-1/5), carbomer (rated 0/5), phenoxyethanol (rated 0/5), ethylhexylglycerin (rated 0/5), squalane (rated 0-1/5), allantoin (rated 0/5), panthenol (rated 0/5), hyaluronic acid (rated 0/5), glycerin (rated 0/5), betaine (rated 0/5), tocopheryl acetate (rated 2/5), tocopherol (rated 2/5), limonene (rated 1/5 but is a fragrance component and sensitizer; comedogenic low), citrus aurantium dulcis peel oil (rated 1/5; low comedogenic but high sensitization risk), gamma-undecalactone and gamma-decalactone (fragrance; not comedogenic), plant extracts (generally low comedogenicity) (only isopropyl myristate is consistently rated >=3/5)",
+        "moderate (due to presence of fragrance components: citrus aurantium dulcis peel oil, limonene, gamma-undecalactone, gamma-decalactone; these are known sensitizers and can cause irritation, especially in leave-on products like a night mask; other ingredients are generally low irritancy)",
+        "tetrahexyldecyl ascorbate (vitamin c) (note: vitamin c is already in recognized actives; if referring to the ester form, it is still vitamin c and thus not beyond)",
+        "tocopheryl acetate (vitamin e) (note: vitamin e is not in already_recognized_actives; however, tocopherol is also present and both are forms of vitamin e; since vitamin e is not listed in already_recognized_actives, tocopheryl acetate qualifies as beyond) (note: tocopherol is also present and is vitamin e; since vitamin e is not in already_recognized_actives, both tocopheryl acetate and tocopherol qualify as beyond) (deduplicated: tocopheryl acetate and tocopherol both represent vitamin e, which is not in already_recognized_actives, so vitamin e is the active beyond) (final: vitamin e is the active beyond table) (note: riboflavin (vitamin b2) is not in already_recognized_actives and is an active) (note: triethyl citrate is not typically classified as a primary active in skincare for antioxidant or cell-communicating effects; it is primarily a stabilizer, fragrance fixative, or plasticizer; not included as active beyond) (final actives beyond: vitamin e, riboflavin (vitamin b2))],",
+        "true (contains citrus aurantium dulcis peel oil (essential oil), limonene (fragrance component in citrus oils), gamma-undecalactone and gamma-decalactone (fragrance lactones))",
+        "{"
+      ],
+      "comedogenic_ingredients": [
+        "concern_fit_notes",
+        "has_fragrance_or_essential_oils",
+        "irritancy_tier",
+        "isopropyl myristate],",
+        "moderate,",
+        "true,",
+        "{}]}"
+      ],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "f6f3caa417c37ecd03b9b29e06c1fc6955b33adbc8eafe0f20df7d3a4e0bd839",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P441101": {
+      "actives_beyond_table": [
+        "betaphycus gelatinum extract",
+        "camellia sinensis leaf extract",
+        "chondrus crispus extract",
+        "cladosiphon okamuranus extract",
+        "inositol",
+        "malva sylvestris (mallow) flower extract",
+        "origanum majorana leaf extract",
+        "oryza sativa (rice) bran extract",
+        "panax ginseng root extract",
+        "phytosteryl macadamiate",
+        "saccharomyces/rice ferment filtrate",
+        "sericin",
+        "thymus serpyllum extract",
+        "tocopherol"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "18a2943de868a3dddc52d523fb72b79114169ad109f9fb1076de2d830dbea565",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P442563": {
+      "actives_beyond_table": [
+        "sodium_hyaluronate_crosspolymer,"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "f7981ef32ee7e32384ec42e7cecaa16f4992147594920d83fa74bf46398c111b",
+      "irritancy_tier": "high",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P443833": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "10e57eb928fe7dab80d53511334096c29f30030a14cedba5967e75271392ee7a",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P443842": {
+      "actives_beyond_table": [
+        "comedogenic_ingredients_ge_3:[",
+        "sodium ascorbate, tocopherol, tocopheryl acetate, hydroxypinacolone retinoate, palmitoyl tetrapeptide-7, palmitoyl tripeptide-1, glycine soja (soybean) extract, glycine soja (soybean) sterol, leuconostoc/radish root ferment filtrate, glycolipids, phospholipids, caprylic/capric glycerides, dicaprylyl carbonate, butylene glycol, propanediol, dimethyl isosorbide, caprylyl glycol, phenoxyethanol, disodium edta, sodium hydroxide, carbomer, polysorbate 60, polysorbate 20, peg-40 hydrogenated castor oil, hydroxyethyl acrylate/sodium acryloyldimethyl taurate copolymer, dimethicone],"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "9fa8231193e4ebe4cd7be4125582991b2071a3530cd96211ab6edd74f1906b50",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P444718": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "a21a096d8fa8683b90294689961feb8d391c5aebec32119c6bcc6865c9d26503",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P448530": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "1bccf3d13bece999f0a0a524d16d776964d841679d6cb7f8f0f310bdde452750",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P448852": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "b1ea8c0ab105ba658e4297fb5b0fae2bc9fd8b4873084771c04ec0a9615e7cf1",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P454380": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "856b8cc0014fb7fa0427bc0cee99cc9531f16f527ec25bad7420019ec44ed7a9",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P455364": {
+      "actives_beyond_table": [
+        "avena sativa (oat) kernel flour, avena sativa (oat) kernel oil, ascorbyl palmitate, biosaccharide gum-4, candelilla cera, cetearyl alcohol, helianthus annuus (sunflower) seed oil, lecithin, peg-6 caprylic/capric glycerides, peg-60 almond glycerides, prunus amygdalus dulcis (sweet almond) oil, sorbitan stearate, silica, tribehenin, tocopherol],",
+        "avena sativa (oat) kernel flour, avena sativa (oat) kernel oil, candelilla cera, cetearyl alcohol, helianthus annuus (sunflower) seed oil, lecithin, peg-6 caprylic/capric glycerides, peg-60 almond glycerides, prunus amygdalus dulcis (sweet almond) oil, sorbitan stearate, silica, tribehenin],",
+        "comedogenic_ingredients_ge_3:[",
+        "concern_fit_notes:{",
+        "dryness:avena sativa (oat) kernel flour and avena sativa (oat) kernel oil are known to help soothe and support the skin barrier, which may benefit dryness; tocopherol and ascorbyl palmitate are antioxidants that may help protect against environmental stressors that contribute to dryness,",
+        "fragrance_or_essential_oils:no,",
+        "irritancy_tier:low,",
+        "notes:the ingredient 1,2-hexanediol appears to be a typo or formatting error in the inci list; it should likely be interpreted as 1,2-hexanediol, a common preservative and humectant, but as written it is not a valid inci name and is excluded from analysis.",
+        "sensitivity:avena sativa (oat) kernel flour and avena sativa (oat) kernel oil have soothing properties that may help reduce irritation and support sensitive skin; the formulation avoids known fragrances and essential oils, lowering irritation risk,",
+        "},"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "0c80f081e0659b00f2bb48a01e38ccfaa598c2117130b98569304cfb970e459c",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P455369": {
+      "actives_beyond_table": [
+        "tocopheryl acetate, acetyl hexapeptide-37, pentapeptide-48."
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "6530110e30b2f3c5957d4002b34a569c5b438299d8f0eeba319b661504c7f835",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P456218": {
+      "actives_beyond_table": [
+        "avobenzone 3% (uv filter) - not in already_recognized_actives; octisalate 5% (uv filter) - not in already_recognized_actives; octocrylene 10% (uv filter) - not in already_recognized_actives; butyloctyl salicylate (uv filter booster) - not in already_recognized_actives; titanium dioxide (uv filter) - not in already_recognized_actives; ferulic acid (antioxidant) - not in already_recognized_actives; tocopherol (antioxidant) - not in already_recognized_actives; pantothenic acid (skin conditioning) - not in already_recognized_actives; theobroma cacao (cocoa) seed extract (antioxidant) - not in already_recognized_actives; limonium gerberi extract (antioxidant) - not in already_recognized_actives; leuconostoc/radish root ferment filtrate (skin conditioning) - not in already_recognized_actives; phospholipids (skin conditioning) - not in already_recognized_actives; helianthus annuus (sunflower) seed oil (emollient) - not in already_recognized_actives; arginine (skin conditioning) - not in already_recognized_actives; hydroxyacetophenone (antioxidant) - not in already_recognized_actives; trisodium ethylenediamine disuccinate (chelating agent) - not in already_recognized_actives; chlorphenesin (preservative) - not in already_recognized_actives; acrylates/c10-30 alkyl acrylate crosspolymer (film former) - not in already_recognized_actives; iron oxides (pigment) - not in already_recognized_actives; bismuth oxychloride (pigment) - not in already_recognized_actives; mica (pigment) - not in already_recognized_actives],"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "123afb0daceb99732b492af3ee1fde4ba21c9d5a4d83c6be8f22a2ef4f7f8165",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P456392": {
+      "actives_beyond_table": [
+        "butyloctyl salicylate (salicylate derivative, uvb filter) (note: not a standardized active in the provided table; observed as a uv filter ingredient)",
+        "ethylhexyl methoxycrylene (uv filter, stabilizer; not a standardized active in the provided table)"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "74d41622396586c12178829fe97f6962f32f1d92fa9cf64c499b25b05bb82b7c",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P457008": {
+      "actives_beyond_table": [
+        "algin",
+        "anhydroxylitol",
+        "betaine",
+        "calcium chloride",
+        "citric acid",
+        "dipotassium glycyrrhizate",
+        "glucose",
+        "hydroxyacetophenone",
+        "laminaria japonica extract*",
+        "potassium chloride",
+        "sodium citrate",
+        "sucrose",
+        "tocopherol",
+        "trehalose",
+        "xylitol",
+        "xylitylglucoside"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "0a199632746d4e16590bfbe353745b89f6f9f6712129aecc62698cef1e8753b3",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P458219": {
+      "actives_beyond_table": [
+        "betaine_salicylate",
+        "brassica_oleracea_capitata_leaf_extract",
+        "citrullus_lanatus_fruit_extract",
+        "cucumis_sativus_fruit_extract",
+        "glycyrrhiza_glabra_root_extract",
+        "hibiscus_sabdariffa_flower_extract",
+        "ipomoea_batatas_root_extract",
+        "lactobacillus_watermelon_fruit_ferment_extract",
+        "levulinic_acid",
+        "melaleuca_alternifolia_tea_tree_extract",
+        "opuntia_ficus_indica_extract",
+        "paeonia_suffruticosa_root_extract",
+        "scutellaria_baicalensis_root_extract",
+        "sodium_levulinate",
+        "sodium_polyglutamate",
+        "sorbitan_oleate",
+        "sucrose_officinarum_extract"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "3092e9b288180144d6005098d74fb0da3af631f6602be5c0465f1cd267fff815",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P461537": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "3c909456ab6331c48d9f94988562d2f704e00f4734cd4a11d7594c8b3c038508",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P466123": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "e2db5d1fa8c37cf9b6c77ba9b8e6755a695feab1d432c22627583cbda1f40bc4",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P467249": {
+      "actives_beyond_table": [
+        "adansonia digitata pulp extract",
+        "aloe barbadensis leaf juice",
+        "barosma betulina leaf extract",
+        "benzyl salicylate",
+        "citral",
+        "citrullus lanatus (watermelon) seed extract",
+        "ethoxydiglycol",
+        "hexyl cinnamal",
+        "limonene",
+        "linalool",
+        "phenoxyethanol",
+        "potassium sorbate",
+        "red 33.",
+        "sodium benzoate",
+        "tocopherol",
+        "tocopheryl acetate"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "3be7efab1970b80879e59cb0ed88416a1fc26395708faf3b40d83739966ade6d",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P467976": {
+      "actives_beyond_table": [
+        "ascorbyl palmitate (vitamin c derivative)"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "58641646c57f9cc309f984556a149c8fede346d066a8f1b07d1c85b708ea1c95",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P469515": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "df667864b8e1e01994ceccdff8f09e2968592adfdc13691c82adc29b1d2a6254",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P469517": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "adf262322073efa38bb0a89ef47a285dd847e1b8209d00def70747d0f1e35e44",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P469520": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "fd1d2436c1527705bd28b51055f39246fec3f2fb5107bf8aecb58f4df5876e9d",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P476733": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "0e065e30e3c7e538e733cf5055ed467f8065ba8d802774fe054dc8dc1b394d70",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P479348": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "df5fa5bd257e64d7bbd3a391332856e78212be531e01ec8b9e88bb5dfc5c69cf",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P502749": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "8b21897ce804dfb2195dfe02c30d5b76511859c1038235b6baa358f7b38d3061",
+      "irritancy_tier": "high",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P504283": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "fd81136adbb9e47c809373d64e11ba90e13fbd2fd2962d96d7792e311c15ce15",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P504614": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "20691620426766f5e4ff15bba0bd2f7821414b7329b1100d96f5a2a2d7ae6780",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P505711": {
+      "actives_beyond_table": [
+        "butyl methoxydibenzoylmethane",
+        "camellia sinensis (purple tea) leaf extract",
+        "ethylhexyl salicylate",
+        "hydroxyacetophenone",
+        "ipomoea batatas (purple sweet potato) root extract",
+        "lactobacillus ferment lysate",
+        "octocrylene",
+        "oryza sativa (purple rice) hull extract",
+        "phenylbenzimidazole sulfonic acid",
+        "polyglutamic acid",
+        "saccharomyces ferment",
+        "saccharomyces lysate"
+      ],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": false,
+      "inci_sha256": "00367512e59e6a7b0c32a11a4dac8f5581e39aa0cb6234b82a232bc7069ab15d",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    },
+    "P7880": {
+      "actives_beyond_table": [],
+      "comedogenic_ingredients": [],
+      "concern_fit_notes": {},
+      "fragrance_or_essential_oils": true,
+      "inci_sha256": "d9afc490a142d37ec90e400bdc56efb111c0c46c00fd5f854154b255e2f298f3",
+      "irritancy_tier": "low",
+      "model_id": "nvidia/nemotron-3-super-120b-a12b:free",
+      "prompt_version": "p1"
+    }
+  },
+  "prompt_version": "p1",
+  "schema_version": "recsys-store-1",
+  "version": "v1"
+}

@@ -1,0 +1,65 @@
+{
+  "schema_version": "recsys-registry-1",
+  "stores": [
+    {
+      "builder": "recsys.tools.build_ingredient_analysis@1",
+      "coverage": {
+        "catalog_products": 60,
+        "products": 60
+      },
+      "kind": "ingredient_analysis",
+      "name": "ingredient_analysis",
+      "path": "signals/ingredient_analysis.v1.json",
+      "sha256": "3202339938ca13cc954be53e0417a32d53bd4aa410d0529b368e3c5303f05de3",
+      "source": {
+        "catalog_sha256": "d226b575bad767075b11245e42e4122613752c53575716ee883807f8e79702a5",
+        "model_ids": [
+          "nvidia/nemotron-3-super-120b-a12b:free"
+        ],
+        "prompt_version": "p1"
+      },
+      "status": "active",
+      "version": "v1"
+    },
+    {
+      "builder": "recsys.tools.build_popularity@1",
+      "coverage": {
+        "catalog_products": 60,
+        "products": 60
+      },
+      "kind": "popularity",
+      "name": "popularity",
+      "path": "signals/popularity.v1.json",
+      "sha256": "062b5c4a50ced80e6cf6fab698c2ecc48a9e7d80b7b8f0c59a966b52751e3e38",
+      "source": {
+        "catalog_sha256": "d226b575bad767075b11245e42e4122613752c53575716ee883807f8e79702a5",
+        "product_info_sha256": "d5ddb391be522e7bfcecbba93dd61129217c1381bf14a7580c0f6097ac8da063"
+      },
+      "status": "active",
+      "version": "v1"
+    },
+    {
+      "builder": "recsys.tools.build_review_stats@1",
+      "coverage": {
+        "catalog_products": 60,
+        "products": 59
+      },
+      "kind": "review_stats",
+      "name": "review_stats",
+      "path": "signals/review_stats.v1.json",
+      "sha256": "d679ac3a1039659b7679e15ca4bd3e2e45c389a103da24d480d98edb4c19bd7b",
+      "source": {
+        "catalog_sha256": "d226b575bad767075b11245e42e4122613752c53575716ee883807f8e79702a5",
+        "reviews_csv_sha256s": [
+          "97c0e4beb282c8e85172dba7d7d08af454665a9c3cee95e446ae344639e27a82",
+          "54d9ec2339dab3661ce2d58af883f8c8c29080918ce906b0bc0c83997d12cab0",
+          "a84ce0dae70025d22d16bd8488d88223e9401a448fad42b10c8446b913c26133",
+          "7ebed9367af4325ac3ebef6d21971932d9cb1476aa681cfc91a7fbf0e7f767d5",
+          "2db1f683b8512eda6894f2ebbc3cde5b899c7a680da5bae97ff4f70c0945a6ca"
+        ]
+      },
+      "status": "active",
+      "version": "v1"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "products": [
+    {
+      "product_id": "P436359",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.glowrecipe.com/products/glow-recipe-blueberry-bounce-gentle-cleanser",
+          "retrieved_at": "2026-07-16T21:17:00Z",
+          "source_sha256": "c1f3ed140fa8fe8b0f24b4d00807a82386b0a38c3d97f52dbe52041570e997e6",
+          "facts": {
+            "routine_roles": ["cleanser"],
+            "cadence": "twice_daily",
+            "cadence_source": "https://www.glowrecipe.com/products/glow-recipe-blueberry-bounce-gentle-cleanser"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P309308",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://sundayriley.com/products/good-genes-lactic-acid-treatment",
+          "retrieved_at": "2026-07-16T21:17:00Z",
+          "source_sha256": "21561800650e50a780bec3a10f8df4a919f3d829ef59dfee714dbc3216336e69",
+          "facts": {
+            "routine_roles": ["serum"],
+            "cadence": "once_daily",
+            "cadence_source": "https://sundayriley.com/products/good-genes-lactic-acid-treatment"
+          }
+        }
+      ]
+    },
+    {
+      "product_id": "P422007",
+      "assertions": [
+        {
+          "status": "proposed",
+          "source_url": "https://www.kiehls.com/skincare/face-cleansers-scrubs/ultra-facial-cleanser/714.html",
+          "retrieved_at": "2026-07-16T21:18:39Z",
+          "source_sha256": "0fd29f1d8c3051758aecf843d4bb77a61dfc4ddb138359ff60f590311b7c3389",
+          "facts": {
+            "routine_roles": ["cleanser"],
+            "cadence": "am_pm",
+            "cadence_source": "https://www.kiehls.com/skincare/face-cleansers-scrubs/ultra-facial-cleanser/714.html"
+          }
+        }
+      ]
+    }
+  ],
+  "rejects": [
+    {
+      "product_id": "P446930",
+      "reason": "no noncomedogenic claim on manufacturer page: us.laneige.com Cream Skin Toner & Moisturizer FAQ explicitly states 'Our milky toner is not tested to be non-comedogenic', so noncomedogenic_claim_not_verified cannot be cleared"
+    }
+  ]
+}

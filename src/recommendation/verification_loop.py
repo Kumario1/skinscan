@@ -58,7 +58,8 @@ SUPPORT_ROLES = ("cleanser", "moisturizer", "sunscreen")
 # ponytail: third copy of the modeled-path table (import_dailymed.MODELED_STRENGTHS,
 # build_completeness_report.modeled); consolidate in schema.py if a fourth appears.
 PATH_SPECS = {
-    "azelaic_acid_10": (("azelaic_acid", "10%"),),
+    # azelaic_acid_10 dropped 2026-07-16: no drug product exists at 10% (Rx is
+    # 15/20%), so the path could never be filled and blocked coverage forever
     "benzoyl_peroxide_2_5": (("benzoyl_peroxide", "2.5%"),),
     "adapalene_0_1_benzoyl_peroxide_2_5": (
         ("adapalene", "0.1%"), ("benzoyl_peroxide", "2.5%"),
@@ -68,14 +69,16 @@ FRESHNESS_DAYS = {"regulatory_label": 180, "default": 90}
 ACTIVE_STATES = {"researching", "proposed", "approved"}
 
 REASON_HINTS = {
-    "intended_area_not_face": 'facts.intended_areas must include "face"',
+    "intended_area_not_face": (
+        "facts.intended_areas names a non-face area; if the product really is "
+        'not for the face, reject it -- never assert "face" without a source'
+    ),
     "routine_role_not_verified": "facts.routine_roles must include the target role",
     "format_unknown": "facts.format (e.g. gel, lotion, cream, cleanser)",
     "exposure_unknown": 'facts.exposure ("leave_on" or "rinse_off")',
     "non_daily_format": "mask/scrub/peel cannot fill a daily role - likely reject",
     "instruction_cadence_unknown": "facts.cadence plus facts.cadence_source",
     "instruction_cadence_source_missing": "facts.cadence_source (URL stating the cadence)",
-    "otc_status_not_verified": "facts.otc_drug true, per a current DailyMed SPL",
     "drug_active_not_verified": "facts.drug_actives [{name, strength, source}]",
     "drug_active_strength_missing": "every facts.drug_actives entry needs strength",
     "drug_active_source_missing": "every facts.drug_actives entry needs source",
@@ -364,7 +367,7 @@ def cmd_select(paths: Paths, args) -> int:
         return quarantine.get(product_id, {}).get("quarantined_roles", {}).get(role, [])
 
     def pick(product_id: str, target: str) -> None:
-        role = target if target in SUPPORT_ROLES else "treatment"
+        role = target if target in SUPPORT_ROLES + ("serum",) else "treatment"
         picks.append((product_id, target, quarantined_for(product_id, role)))
         taken.add(product_id)
 
@@ -437,8 +440,17 @@ def cmd_select(paths: Paths, args) -> int:
                          f"facts fresh: {keys}\n")
         if target in PATH_SPECS:
             spec = ", ".join(f"{n} {s}" for n, s in PATH_SPECS[target])
+            # DailyMed only, not "or the manufacturer's own page": recsys's drug
+            # door (recsys/catalog.py LABEL_PREFIX) refuses any per-active source
+            # that is not a DailyMed label, so a batch researched against a
+            # manufacturer page imports here and then fails there. The brief
+            # states the stricter contract both engines can honour.
             lines.append(f"- Treatment path target: exactly [{spec}] verified via a "
-                         "current DailyMed SPL (facts.drug_actives + otc_drug + label fields).\n")
+                         "current DailyMed SPL label; label_source and every "
+                         "facts.drug_actives[].source must cite the DailyMed label "
+                         "(https://dailymed.nlm.nih.gov/...) -- a manufacturer page "
+                         "does not qualify for drug rows "
+                         "(D-033: OTC status recorded but not required).\n")
         for reason in reasons:
             lines.append(f"- {reason}: {REASON_HINTS.get(reason, 'resolve from source')}\n")
     brief = batch_dir / "RESEARCH_BRIEF.md"
@@ -655,7 +667,7 @@ def cmd_rebuild(paths: Paths, args) -> int:
     union_quarantine = build_quarantine_report(products, truly_unmatched)["products"]
 
     def outcome(product_id: str, target: str) -> list[str]:
-        role = target if target in SUPPORT_ROLES else "treatment"
+        role = target if target in SUPPORT_ROLES + ("serum",) else "treatment"
         reasons = union_quarantine.get(product_id, {}).get(
             "quarantined_roles", {}).get(role, [])
         if product_id in truly_unmatched:
@@ -672,7 +684,7 @@ def cmd_rebuild(paths: Paths, args) -> int:
     for product_id, patch in overlay.items():
         if product_id not in manifest["products"]:
             roles = patch.get("routine_roles") or ["treatment"]
-            target = roles[0] if roles[0] in SUPPORT_ROLES else "treatment"
+            target = roles[0] if roles[0] in SUPPORT_ROLES + ("serum",) else "treatment"
             reasons = outcome(product_id, target)
             set_state(manifest, product_id, "quarantined" if reasons else "eligible",
                       batch="legacy", target=target, reasons=reasons)

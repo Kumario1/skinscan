@@ -31,13 +31,12 @@ file.
 it with:
 
 ```bash
-python -m src.recommendation.catalog_completeness \
-  data/processed/catalog.json data/processed/catalog_tier2.json \
-  --out data/verification/catalog_completeness.json
+python -m src.recommendation.verification_loop rebuild --support-minimum 25
 ```
 
-The command exits non-zero until every support role has 25 eligible products
-and every modeled treatment path has at least one exact eligible product.
+The report records whether every support role has 25 eligible products and
+every modeled treatment path has at least one exact eligible product; `status`
+is the command that exits non-zero until it does.
 
 ## Loop orchestrator
 

@@ -15,15 +15,24 @@ import time
 from collections.abc import Mapping, Sequence
 
 from ..config import load_config
-from ..recommendation.engine import Recommendation as LegacyRecommendation, recommend
-from ..recommendation.decision import conservative_unreviewed_policy
+from ..recommendation.engine import Recommendation as LegacyRecommendation
 from ..recommendation.import_catalog import load_catalog
 from ..recommendation.schema import (
     ConcernReport, Product, Recommendation, UserProfile, SKIN_TYPES,
     PREGNANCY_STATUSES,
 )
-from ..recommendation.therapy import load_therapy_policy
-from .provenance import build_provenance, catalog_bundle_identity, file_identity, sha256_file
+from ..recommendation.lesion_care import (
+    MvpFixtureAuthorization,
+    authorize_mvp_fixture_inputs,
+    build_care_pathways,
+    build_lesion_findings,
+    decide_exact_label_care,
+    exact_label_therapy_plan,
+    load_lesion_care_policy,
+)
+from .provenance import (
+    build_provenance, catalog_bundle_identity, file_identity, sha256_bytes,
+)
 from .regions import locate_regions
 from .sarpn import (
     SarpnSettings,
@@ -33,7 +42,7 @@ from .sarpn import (
     draw_lesion_sheet,
     draw_region_overlay,
     infer_native_tiles,
-    load_rgb,
+    load_rgb_bytes,
     observation_to_dict,
     sanitize_endpoint,
 )
@@ -69,6 +78,13 @@ def load_optional_catalog(
     except (OSError, TypeError, ValueError, AssertionError) as exc:
         return None, f"catalog is unreadable or invalid: {exc}"
 
+
+# The standalone engine is a subprocess at the end of the pipeline; a wedged one
+# must not hold the whole run open. recsys/pipeline.py puts timeout=10 on its own
+# git subprocess -- this is the same idiom at the integration seam, with room for
+# a real catalog load.
+RECSYS_TIMEOUT_SECONDS = 300
+RECSYS_STDERR_TAIL_CHARS = 500
 
 # Catalog gaps the drugstore can fill: named OTC pointers for targets no
 # stocked product carries (e2e 2026-07-13: adapalene coverage is honestly 0).
@@ -418,6 +434,11 @@ def run_pipeline(
     pregnant_or_nursing: bool | None = None,
     top: int = 2,
     therapy_policy_path: Path | None = None,
+    lesion_policy_path: Path | None = None,
+    mvp_synthetic: bool = False,
+    execution_environment: str | None = None,
+    profile_path: Path | None = None,
+    mvp_fixture_manifest_path: Path | None = None,
     dataset_name: str = "unknown",
     sample_id: str | None = None,
     dataset_split: str = "unknown",
@@ -427,21 +448,56 @@ def run_pipeline(
     clock=lambda: datetime.now(timezone.utc),
     git_reader=_read_git_state,
     eligibility_debug: bool = False,
+    recsys_enabled: bool = False,
+    recsys_data_root: Path | None = None,
+    recsys_catalog: Path | None = None,
+    recsys_eligibility_mode: str | None = None,
 ) -> PipelineResult:
     if profile is None:
         profile = UserProfile(
             skin_type=skin_type or "unknown",
             pregnant_or_nursing=pregnant_or_nursing,
         )
-    therapy_policy = load_therapy_policy(therapy_policy_path)
-    triage_policy = conservative_unreviewed_policy()
-    catalog, catalog_reason = load_optional_catalog(
-        catalog_path, catalog_tier2_path, catalog_drug_path
+    normalized_profile = json.loads(json.dumps(profile.to_dict(), sort_keys=True))
+    # Read once: authorization, decoding, inference, diagnostics, and provenance
+    # all refer to this immutable buffer, so a path swap cannot change the
+    # processed input after it is authorized.
+    image_bytes = image_path.read_bytes()
+    source_image_sha256 = sha256_bytes(image_bytes)
+    # The audited policy is intentionally executable only for fixture images
+    # plus synthetic profiles in development/test.  Omitting --mvp-synthetic
+    # still emits findings, but every affected path defers and no routine is
+    # selected.
+    if lesion_policy_path is None:
+        lesion_policy_path = Path(__file__).resolve().parents[2] / "lesion_care_policy.proposed.json"
+    report_path = Path(__file__).resolve().parents[2] / "LESION_CARE_EVIDENCE_REPORT.md"
+    fixture_authorization = authorize_mvp_fixture_inputs(
+        mvp_fixture_manifest_path,
+        image_bytes=image_bytes,
+        profile_path=profile_path,
+        environment=execution_environment,
+        dataset_name=dataset_name,
+        split_proof=split_proof,
+        normalized_profile=normalized_profile,
+    ) if mvp_synthetic else MvpFixtureAuthorization(
+        False, None, ("mvp_synthetic_not_requested",)
     )
-    if catalog_reason is None and not catalog:
-        catalog_reason = "catalog is empty"
+    fixture_inputs_authorized = mvp_synthetic and fixture_authorization.authorized
+    lesion_policy = load_lesion_care_policy(
+        lesion_policy_path,
+        report_path=report_path,
+        environment=execution_environment,
+        input_types=(
+            ("synthetic_profile", "fixture_image")
+            if fixture_inputs_authorized else ()
+        ),
+        scope_prerequisite_reasons=(
+            () if not mvp_synthetic or fixture_authorization.authorized
+            else fixture_authorization.reasons
+        ),
+    )
 
-    rgb = load_rgb(image_path)
+    rgb = load_rgb_bytes(image_bytes)
     # infer_native_tiles dedupes internally (dedupe=True default) — production
     # dedupe has exactly one owner there; do not dedupe a second time here
     # (Finding 13).
@@ -463,17 +519,20 @@ def run_pipeline(
         evidence_source=("annotation_oracle" if oracle_annotations else "prediction"),
     )
 
-    from ..recommendation.decision import decide_care
-    from ..recommendation.therapy import plan_therapy
-    decision = decide_care(report, triage_policy)
-    therapy_plan = plan_therapy(decision, report, profile, therapy_policy)
-    if decision.therapy_disposition == "active_treatment" and therapy_plan.primary is None:
-        decision = replace(decision, therapy_disposition="defer")
+    lesion_findings = build_lesion_findings(
+        observations, evidence_source=("annotation_oracle" if oracle_annotations else "prediction")
+    )
+    care_pathways = build_care_pathways(
+        lesion_findings, normalized_profile, lesion_policy,
+    )
+    decision = decide_exact_label_care(lesion_findings, care_pathways)
+    decision["policy_version"] = lesion_policy.identity
+    therapy_plan = exact_label_therapy_plan(care_pathways, lesion_policy)
 
     runtime_config = load_config()
     provenance = build_provenance(
         {
-            "source_image_sha256": sha256_file(image_path),
+            "source_image_sha256": source_image_sha256,
             "evidence_source": evidence_source,
             "oracle_annotations": file_identity(oracle_annotations),
             "dataset": {
@@ -482,7 +541,7 @@ def run_pipeline(
                 "split": dataset_split,
                 "split_proof": split_proof,
             },
-            "input_profile": profile.to_dict(),
+            "input_profile": normalized_profile,
             "effective_config": {
                 "pipeline": ("acnescu-voc-oracle" if oracle_annotations
                              else "sa-rpn-native-tiles"),
@@ -513,20 +572,29 @@ def run_pipeline(
             ),
             "ranker": {"state": "none", "sha256": None},
             "policies": {
-                "triage": {
-                    "identity": triage_policy.identifier,
-                    "reviewed": triage_policy.approved,
-                    "sha256": None,
-                },
-                "therapy": {
-                    **file_identity(therapy_policy_path),
-                    "identity": therapy_policy.identifier,
-                    "reviewed": therapy_policy.reviewed,
+                "lesion_care": {
+                    "identity": lesion_policy.identity,
+                    "sha256": lesion_policy.sha256,
+                    "report_sha256": lesion_policy.report_sha256,
+                    "audit_approved": lesion_policy.audit_approved,
+                    "scope_authorized": lesion_policy.scope_authorized,
+                    "scope_reasons": list(lesion_policy.scope_reasons),
+                    "input_scope": (
+                        "synthetic_fixture" if fixture_inputs_authorized else "unauthorized"
+                    ),
+                    "fixture_manifest_sha256": fixture_authorization.manifest_sha256,
+                    "fixture_image_sha256": fixture_authorization.image_sha256,
+                    "fixture_profile_sha256": fixture_authorization.profile_sha256,
+                    "fixture_normalized_profile_sha256": (
+                        fixture_authorization.normalized_profile_sha256
+                    ),
+                    "source_manifest_sha256": lesion_policy.manifest_sha256,
                 },
             },
         },
         clock=clock,
         git_reader=git_reader,
+        schema_version="4",
     )
 
     analysis: dict[str, object] = {
@@ -542,36 +610,24 @@ def run_pipeline(
             "dedupe_threshold": settings.dedupe_threshold,
         },
         "detections": [observation_to_dict(item) for item in observations],
+        "lesion_findings": lesion_findings,
+        "care_pathways": care_pathways,
         "concerns": [concern_to_dict(concern) for concern in report.concerns],
         "clear_skin": report.clear_skin,
         "skin_tone": asdict(tone),
         "region_mapping": dict(region_result.metadata),
         "safety_observations": [asdict(item) for item in safety],
-        "decision": decision.to_dict(),
-        "therapy_plan": therapy_plan.to_dict(),
-        "recommendation_status": "unavailable",
+        "decision": decision,
+        "therapy_plan": therapy_plan,
+        "recommendation_status": (
+            "delegated_to_recsys" if recsys_enabled else "unavailable"
+        ),
     }
 
     routine: dict[str, object] | None = None
     debug_rejections: dict[str, object] | None = None
-    if catalog_reason:
-        analysis["recommendation_reason"] = catalog_reason
-    else:
-        try:
-            recommendation = recommend(
-                report, catalog or [], profile,
-                triage_policy=triage_policy,
-                therapy_policy=therapy_policy,
-                concern_scorer=None,
-                pooled_ranker=None,
-                collect_eligibility_details=eligibility_debug,
-            )
-            fields, routine, debug_rejections = recommendation_artifacts(
-                recommendation, provenance
-            )
-            analysis.update(fields)
-        except Exception as exc:
-            analysis["recommendation_reason"] = f"recommendation unavailable: {exc}"
+    if not recsys_enabled:
+        analysis["recommendation_reason"] = "recsys_not_enabled"
 
     output_dir = output_dir.resolve()
     output_dir.parent.mkdir(parents=True, exist_ok=True)
@@ -581,16 +637,129 @@ def run_pipeline(
         draw_region_overlay(rgb, observations, region_result, staging / "region_overlay.jpg")
         draw_lesion_sheet(rgb, observations, staging / "lesion_sheet.jpg")
         (staging / "analysis.json").write_text(json.dumps(analysis, indent=2) + "\n")
-        if routine is not None:
-            (staging / "routine.json").write_text(json.dumps(routine, indent=2) + "\n")
         if debug_rejections is not None:
             (staging / "eligibility_rejections.json").write_text(
                 json.dumps(debug_rejections, indent=2) + "\n"
             )
+        if recsys_enabled:
+            recommendations_path = staging / "recommendations.json"
+            if recsys_data_root is None and recsys_catalog is None:
+                _write_recsys_unavailable(
+                    recommendations_path,
+                    "standalone catalog not configured; pass --recsys-catalog or "
+                    "--recsys-data-root",
+                )
+            elif recsys_data_root is None:
+                # A catalog without its data root strands every signal store: the
+                # stores are keyed by the sha256 of the catalog they were built
+                # against, so they load from the default data root, mismatch, and
+                # are skipped with only a warning -- leaving the ranker to score a
+                # neutral 0.5 on every store-backed signal while still reporting
+                # 'partial' with priced routines, exactly what a healthy run
+                # reports. Refusing here is the same fail-closed treatment the
+                # neither-configured case above already gets, and the worse of the
+                # two cases: that one fails loudly, this one does not fail at all.
+                _write_recsys_unavailable(
+                    recommendations_path,
+                    "standalone signal stores are keyed to a catalog; pass "
+                    "--recsys-data-root alongside --recsys-catalog",
+                )
+            else:
+                command = [
+                    sys.executable, "-m", "recsys", "recommend",
+                    "--analysis", str(staging / "analysis.json"),
+                    "--out", str(recommendations_path),
+                ]
+                if recsys_data_root is not None:
+                    command += ["--data-root", str(recsys_data_root)]
+                if recsys_catalog is not None:
+                    command += ["--catalog", str(recsys_catalog)]
+                if recsys_eligibility_mode is not None:
+                    command += ["--eligibility-mode", recsys_eligibility_mode]
+                try:
+                    completed = subprocess.run(
+                        command,
+                        cwd=Path(__file__).resolve().parents[2],
+                        capture_output=True,
+                        text=True,
+                        timeout=RECSYS_TIMEOUT_SECONDS,
+                    )
+                except subprocess.TimeoutExpired:
+                    # Without a timeout a wedged child hangs run_pipeline forever
+                    # with no diagnostic at all. Unavailable-with-a-reason is the
+                    # contract for every other way this step can fail.
+                    _write_recsys_unavailable(
+                        recommendations_path,
+                        "standalone recommendation process did not finish within "
+                        f"{RECSYS_TIMEOUT_SECONDS}s",
+                    )
+                else:
+                    if completed.returncode:
+                        _write_recsys_unavailable(
+                            recommendations_path,
+                            "standalone recommendation process exited with status "
+                            f"{completed.returncode}"
+                            + _stderr_tail(completed.stderr),
+                        )
+                    else:
+                        recommendation_document = json.loads(
+                            recommendations_path.read_text(encoding="utf-8")
+                        )
+                        routine = legacy_routine_from_recsys(
+                            recommendation_document, provenance,
+                        )
+            if routine is not None:
+                (staging / "routine.json").write_text(
+                    json.dumps(routine, indent=2) + "\n", encoding="utf-8"
+                )
         _publish_staging(staging, output_dir)
     finally:
         _remove_path(staging)
     return PipelineResult(analysis, routine, output_dir)
+
+
+def _stderr_tail(stderr: str | None, limit: int = RECSYS_STDERR_TAIL_CHARS) -> str:
+    """The child's own diagnostic, appended to the reason.
+
+    capture_output=True puts the reason the run failed in stderr and then only the
+    returncode reached the operator: a missing catalog arrived as 'exited with
+    status 1', and a contract_violation:<field> would have been just as invisible.
+    The bytes are already in memory; the tail is the part that names the cause.
+    """
+    text = (stderr or "").strip()
+    if not text:
+        return ""
+    if len(text) > limit:
+        text = "..." + text[-limit:]
+    return f": {text}"
+
+
+def _write_recsys_unavailable(path: Path, reason: str) -> None:
+    path.write_text(json.dumps({
+        "schema_version": "recsys-1",
+        "status": "unavailable",
+        "reason": reason,
+        "routines": [],
+    }, indent=2) + "\n")
+
+
+def legacy_routine_from_recsys(
+    document: Mapping[str, object], provenance: Mapping[str, object]
+) -> dict[str, object] | None:
+    """Compatibility artifact projected from the sole selector's result."""
+    selected = document.get("selected_regimen")
+    if document.get("status") != "ok" or not isinstance(selected, Mapping):
+        return None
+    return {
+        **dict(provenance),
+        "schema_version": "3",
+        "source_schema_version": document.get("schema_version"),
+        "generated_by": "recsys",
+        "selected_products": dict(document.get("selected_products") or {}),
+        "selected_regimen": dict(selected),
+        "lesion_coverage": list(document.get("lesion_coverage") or []),
+        "validation_status": "valid",
+    }
 
 
 def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
@@ -605,6 +774,14 @@ def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
     parser.add_argument("--catalog-tier2", type=Path, default=None)
     parser.add_argument("--catalog-drug", type=Path, default=None)
     parser.add_argument("--eligibility-debug", action="store_true")
+    parser.add_argument("--recsys", action="store_true",
+                        help="also write standalone recsys recommendations.json")
+    parser.add_argument("--recsys-data-root", type=Path, default=None)
+    parser.add_argument("--recsys-catalog", type=Path, default=None)
+    parser.add_argument("--recsys-eligibility-mode", default=None,
+                        choices=("strict", "hybrid"),
+                        help="passed through to recsys; hybrid is the D-035 default, "
+                             "strict is a deprecated compatibility alias")
     parser.add_argument("--face-landmarker", type=Path, default=Path(paths["face_landmarker"]))
     parser.add_argument("--tile-size", type=int, default=sa_rpn["tile_size"])
     parser.add_argument("--overlap", type=int, default=sa_rpn["tile_overlap"])
@@ -624,8 +801,28 @@ def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
     parser.add_argument("--pregnancy-status", choices=sorted(PREGNANCY_STATUSES),
                         default=None)
     parser.add_argument("--pregnant", action="store_true")
-    parser.add_argument("--therapy-policy", type=Path, default=None,
-                        help="clinician-reviewed therapy policy JSON; missing defers therapy")
+    policy_path = config["recommendation"].get("therapy_policy_path")
+    parser.add_argument("--therapy-policy", type=Path,
+                        default=Path(policy_path) if policy_path else None,
+                        help="deprecated schema-3 compatibility policy")
+    lesion_policy_path = config["recommendation"].get("lesion_care_policy_path")
+    parser.add_argument(
+        "--lesion-care-policy", type=Path,
+        default=Path(lesion_policy_path) if lesion_policy_path else None,
+        help="audited exact-label MVP policy JSON",
+    )
+    parser.add_argument(
+        "--mvp-synthetic", action="store_true",
+        help="request the synthetic-MVP path; the environment and hash-pinned "
+             "fixture manifest must independently authorize both inputs",
+    )
+    parser.add_argument(
+        "--environment",
+        choices=("development", "test", "production", "unknown"),
+        default=os.environ.get("SKINSCAN_ENV", "unknown"),
+        help="deployment environment (default: SKINSCAN_ENV or unknown)",
+    )
+    parser.add_argument("--mvp-fixture-manifest", type=Path, default=None)
     parser.add_argument("--dataset-name", default="unknown")
     parser.add_argument("--sample-id", default=None)
     parser.add_argument(
@@ -685,6 +882,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             profile=profile,
             top=args.top,
             therapy_policy_path=args.therapy_policy,
+            lesion_policy_path=args.lesion_care_policy,
+            mvp_synthetic=args.mvp_synthetic,
+            execution_environment=args.environment,
+            profile_path=args.profile,
+            mvp_fixture_manifest_path=args.mvp_fixture_manifest,
             dataset_name=args.dataset_name,
             sample_id=args.sample_id,
             dataset_split=args.dataset_split,
@@ -692,6 +894,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             detector_sha256=args.detector_sha256,
             oracle_annotations=args.oracle_annotations,
             eligibility_debug=args.eligibility_debug,
+            recsys_enabled=args.recsys,
+            recsys_data_root=args.recsys_data_root,
+            recsys_catalog=args.recsys_catalog,
+            recsys_eligibility_mode=args.recsys_eligibility_mode,
         )
     except Exception as exc:
         print(f"analysis failed: {exc}", file=sys.stderr)
@@ -710,7 +916,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"  ⚑ referral: {reason}")
     _print_safety_escalations(result.analysis)
     if result.routine is not None:
-        for flag in result.routine["flags"]:
+        for flag in result.routine.get("flags", []):
             print(f"  ⚑ {flag}")
     return 0
 
@@ -718,9 +924,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 def _print_safety_escalations(analysis: Mapping[str, object]) -> None:
     """Surface derm-escalation signals straight from the analysis, so they
     show up even when no catalog/routine is available (Findings 6+7)."""
-    for concern in analysis["concerns"]:
-        if concern["severity"] >= 4 or concern["concern"] == "acne_cystic":
-            print(f"  ⚑ severe {concern['concern']} — see a dermatologist")
+    for finding in analysis.get("lesion_findings", []):
+        if finding.get("count", 0) and finding.get("lesion_type") in {
+            "nodule", "atrophic_scar", "hypertrophic_scar",
+        }:
+            print(
+                f"  ⚑ {finding['lesion_type']} finding — clinician assessment recommended"
+            )
     for observation in analysis["safety_observations"]:
         if observation["professional_review"]:
             print(f"  ⚑ {observation['code']}: professional review recommended")

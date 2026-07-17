@@ -1,0 +1,103 @@
+{
+  "products": [
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:59:06.050225Z",
+          "facts": {
+            "cadence": "per_label",
+            "cadence_source": "https://supergoop.com/products/everyday-sunscreen",
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "exposure": "leave_on",
+            "format": "lotion",
+            "intended_areas": [
+              "face",
+              "body"
+            ],
+            "routine_roles": [
+              "sunscreen"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:51:13Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "308c9d78ececc30941c9e30009fb316e5e4a631276c8752f432468820bcd6574",
+          "source_url": "https://supergoop.com/products/everyday-sunscreen",
+          "status": "approved"
+        },
+        {
+          "approved_at": "2026-07-16T18:59:06.050225Z",
+          "facts": {
+            "broad_spectrum": true,
+            "label_effective_date": "20260604",
+            "label_source": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0428eebc-4ffb-4981-b738-2c9ecf2a6a2e.xml",
+            "label_verified_at": "2026-07-16",
+            "label_version": "9",
+            "otc_drug": true,
+            "source_set_id": "0428eebc-4ffb-4981-b738-2c9ecf2a6a2e",
+            "spf": 50
+          },
+          "retrieved_at": "2026-07-16T18:49:50Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "18017378d37e1eacc196be655be99c2f7e0a223d6aa2f6f78b152a745a81c449",
+          "source_url": "https://dailymed.nlm.nih.gov/dailymed/services/v2/spls/0428eebc-4ffb-4981-b738-2c9ecf2a6a2e.xml",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P454383"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:59:06.050225Z",
+          "facts": {
+            "comedogenic_claim": "claimed_noncomedogenic",
+            "evidence_grade": "manufacturer_product_page",
+            "exposure": "rinse_off",
+            "format": "oil",
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:51:15Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "27dcf2d0e5516e77efa8733fba929e804511fe6d95aed5d3040d2cb90c441664",
+          "source_url": "https://tatcha.com/products/the-camellia-cleansing-oil-and-makeup-remover",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P392235"
+    },
+    {
+      "assertions": [
+        {
+          "approved_at": "2026-07-16T18:59:06.050225Z",
+          "facts": {
+            "cadence": "am_pm",
+            "cadence_source": "https://www.theinkeylist.com/products/oat-cleansing-balm-150ml",
+            "evidence_grade": "manufacturer_product_page",
+            "evidence_roles": [
+              "daily_support"
+            ],
+            "exposure": "rinse_off",
+            "format": "balm",
+            "routine_roles": [
+              "cleanser"
+            ]
+          },
+          "retrieved_at": "2026-07-16T18:51:19Z",
+          "reviewer_id": "claude-fable-5",
+          "reviewer_type": "agent",
+          "source_sha256": "28e4d69f5550ca82daf4f1f4a30d61278518b9f457a34c002e43fd0240f69c1b",
+          "source_url": "https://www.theinkeylist.com/products/oat-cleansing-balm-150ml",
+          "status": "approved"
+        }
+      ],
+      "product_id": "P455364"
+    }
+  ],
+  "schema_version": "2"
+}

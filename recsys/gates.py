@@ -1,0 +1,229 @@
+"""Hard vetoes with deterministic reason codes. Scores never participate here
+and never override a veto.
+
+Semantics ported from src/recommendation/eligibility.py: pregnancy status
+unknown/trying/nursing/pregnant excludes retinoids (unknown is data, never a
+favorable default), allergies and current actives veto on any carried active,
+SPF products must be >= min_spf.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from .catalog import CatalogProduct
+from .contracts import Profile
+from .inci import allergy_matches, contains_retinoid
+from .knowledge import Knowledge
+from .signals import TargetLesion
+
+
+@dataclass(frozen=True)
+class Veto:
+    product_id: str
+    slot: str
+    reason: str
+
+    def to_dict(self) -> dict:
+        return {"product_id": self.product_id, "slot": self.slot, "reason": self.reason}
+
+
+# Compatibility export from the superseded hybrid engine. D-036 handles
+# missing non-safety facts by ranking (verification_status), not by softening
+# reasons — a reason emitted here is always a hard veto.
+SOFT_REASON_PREFIXES = frozenset()
+ALLOWED_FORMATS = {
+    "cleanser": frozenset({"cleanser", "gel", "foam", "cream", "bar", "wash"}),
+    "treatment": frozenset({"gel", "cream", "lotion", "serum", "suspension", "solution"}),
+    "serum": frozenset({"serum", "gel", "solution", "suspension"}),
+    "scar_care": frozenset({"silicone_sheet", "silicone_gel"}),
+    "moisturizer": frozenset({"cream", "lotion", "gel", "balm", "emulsion"}),
+    "spf": frozenset({"sunscreen", "cream", "lotion", "gel", "fluid", "stick"}),
+}
+
+
+def _reason_is_soft(reason: str) -> bool:
+    return reason.split(":", 1)[0] in SOFT_REASON_PREFIXES
+
+
+# An OTC drug label states a target ("cover the entire affected area") but almost
+# never names the face, so requiring an explicit "face" vetoes every
+# label-verified product and leaves the fact satisfiable only by inventing it.
+# Veto a positive claim to another area instead; unknown/empty stays open.
+#
+# Only these values are absence of evidence. Every other stated area is a claim
+# to somewhere that is not the face, derived from the product's own areas rather
+# than enumerated: an enumerated list has to mirror the area vocabulary, and a
+# value added there but forgotten here (scalp) would make a non-face product
+# silently eligible for a facial routine. Deriving keeps a new area fail-closed.
+_AREA_ABSENCE_OF_EVIDENCE = frozenset({"unknown"})
+
+
+def _excludes_face(intended_areas) -> bool:
+    areas = set(intended_areas)
+    return "face" not in areas and bool(areas - _AREA_ABSENCE_OF_EVIDENCE)
+
+
+def _normalize_condition(value: str) -> str:
+    """Fold case and surrounding whitespace so a declared "Sensitive" or
+    "Warfarin " still meets a product's "sensitive"/"warfarin". Unlike
+    current_actives there is no closed vocabulary to validate a contraindication
+    against — both sides are free text off the evidence overlay — so matching
+    raw would fail this HARD gate open on nothing worse than a capital letter.
+    """
+    return value.strip().lower()
+
+
+def profile_gate_reasons(
+    product: CatalogProduct,
+    slot: str,
+    profile: Profile,
+    knowledge: Knowledge,
+    targets: tuple[TargetLesion, ...] = (),
+) -> list[str]:
+    reasons: list[str] = []
+    actives = set(product.actives)
+    expected_role = "sunscreen" if slot == "spf" else slot
+    # Every ingredient gate below reads actives/inci, so a row carrying neither
+    # clears all of them vacuously -- a "+Retinol" moisturizer with nothing
+    # parsed passes the pregnancy exclusion because there is no active to match
+    # and no INCI to scan. Unknown is data, never a favorable default. A drug row
+    # publishes no INCI but names its actives, and a plain moisturizer carries a
+    # real INCI and no actives; both are known. Only neither is unknown.
+    if not product.inci and not actives:
+        reasons.append("ingredients_unknown")
+    if _excludes_face(product.intended_areas):
+        reasons.append("intended_area_not_verified:face")
+    if expected_role not in product.routine_roles:
+        reasons.append(f"role_not_verified:{expected_role}")
+    # D-036: an unknown format is a missing non-safety fact — it lowers
+    # verification_status and ranking, it does not remove the product. Only a
+    # KNOWN format that conflicts with the role stays a hard veto.
+    if product.format is not None and product.format not in ALLOWED_FORMATS.get(slot, frozenset()):
+        reasons.append(f"format_not_allowed_for_role:{product.format}")
+    expected_exposure = "rinse_off" if slot == "cleanser" else "leave_on"
+    if product.exposure != expected_exposure:
+        reasons.append(f"exposure_not_verified:{expected_exposure}")
+    if product.cadence is None or not product.cadence_source:
+        reasons.append("cadence_unverified")
+    elif product.cadence not in ("am", "pm", "am_pm", "daily", "once_daily",
+                                 "twice_daily", "per_label"):
+        reasons.append("cadence_not_daily")
+    if product.amount is not None and not product.amount_source:
+        reasons.append("amount_source_unverified")
+    profile_contraindications = {
+        _normalize_condition(condition) for condition in (
+            *profile.sensitivity_conditions,
+            *profile.current_medications,
+            profile.pregnancy_status,
+        )
+    }
+    product_contraindications = {
+        _normalize_condition(condition) for condition in product.contraindications
+    }
+    for condition in sorted(product_contraindications & profile_contraindications):
+        reasons.append(f"product_contraindication:{condition}")
+    if profile.pregnancy_status in knowledge.pregnancy_excluded_statuses and (
+        actives & knowledge.retinoids or contains_retinoid(product.inci)
+    ):
+        reasons.append("retinoid_pregnancy_status_excluded")
+    for allergy in sorted(set(profile.allergies)):
+        if allergy_matches(allergy, product.inci, product.actives):
+            reasons.append(f"profile_allergy:{allergy.strip().lower()}")
+    for duplicate in sorted(actives & set(profile.current_actives)):
+        reasons.append(f"duplicates_current_active:{duplicate}")
+    if slot in ("cleanser", "moisturizer", "spf"):
+        # D-036: unverified contraindications on a support role lower
+        # verification_status, never eligibility — the fact is structurally
+        # overlay-only, so gating on it reduced the pool to verified products.
+        # Declared contraindications still veto against the profile above, and
+        # treatments below still require explicit verified evidence.
+        for active in sorted(actives & knowledge.treatment_actives):
+            reasons.append(f"treatment_active_in_support_role:{active}")
+    if slot == "treatment":
+        minimum_ages = {
+            spec.get("minimum_age_years")
+            for target in targets if "treatment" in target.required_roles
+            for spec in target.target_specs
+            if spec.get("active_id") in actives
+            and isinstance(spec.get("minimum_age_years"), int)
+        }
+        if minimum_ages:
+            minimum_age = max(minimum_ages)
+            if profile.age_years is None:
+                reasons.append("treatment_age_unknown")
+            elif profile.age_years < minimum_age:
+                reasons.append(f"treatment_age_below_minimum:{minimum_age}")
+        if not product.contraindications_verified:
+            reasons.append("contraindications_unverified")
+        verified_drug_actives = {
+            active.get("name") for active in product.drug_actives
+            if isinstance(active, dict)
+        }
+        if not verified_drug_actives or not (verified_drug_actives & actives):
+            reasons.append("treatment_active_unverified")
+        if product.format in ("mask", "peel", "scrub"):
+            reasons.append(f"treatment_format_not_daily_leave_on:{product.format}")
+    if slot == "scar_care":
+        if "scar_care" not in product.evidence_roles:
+            reasons.append("scar_care_role_unverified")
+        if "silicone_scar_care" not in actives:
+            reasons.append("silicone_scar_formulation_unverified")
+        if not product.contraindications_verified:
+            reasons.append("scar_care_warnings_unverified")
+        if profile.wound_closed is not True:
+            reasons.append("closed_wound_not_confirmed")
+        if profile.scar_diagnosis_confirmed_by_clinician is not True:
+            reasons.append("raised_scar_diagnosis_not_confirmed")
+    if slot == "spf":
+        if product.spf is None or product.spf < knowledge.min_spf:
+            reasons.append("spf_below_30_or_unknown")
+        if product.broad_spectrum is False:
+            reasons.append("spf_not_broad_spectrum")
+        elif product.broad_spectrum is not True:
+            reasons.append("spf_broad_spectrum_unverified")
+    if profile.max_price_usd is not None:
+        if product.price_usd is None:
+            reasons.append("price_unknown_for_profile_cap")
+        elif product.price_usd > profile.max_price_usd:
+            reasons.append("price_above_profile_cap")
+    return reasons
+
+
+def apply_profile_gates(
+    candidates_by_slot: dict[str, list[CatalogProduct]],
+    profile: Profile,
+    knowledge: Knowledge,
+    strict: bool = True,
+    targets: tuple[TargetLesion, ...] = (),
+) -> tuple[dict[str, list[CatalogProduct]], list[Veto], dict[tuple[str, str], list[str]]]:
+    """Fail-closed eligibility. `strict` remains for source compatibility;
+    D-029 permits no mode that relaxes required evidence."""
+    kept: dict[str, list[CatalogProduct]] = {}
+    vetoes: list[Veto] = []
+    quality_flags: dict[tuple[str, str], list[str]] = {}
+    for slot, products in candidates_by_slot.items():
+        kept[slot] = []
+        for product in products:
+            reasons = profile_gate_reasons(
+                product, slot, profile, knowledge, targets=targets
+            )
+            if reasons:
+                vetoes.extend(Veto(product.product_id, slot, r) for r in reasons)
+            else:
+                kept[slot].append(product)
+    return kept, vetoes, quality_flags
+
+
+def duplicate_active_reasons(
+    candidate: CatalogProduct,
+    selected: list[CatalogProduct],
+    knowledge: Knowledge,
+) -> list[str]:
+    """Cross-product duplicate veto: only carried TREATMENT actives count —
+    repeating benign support ingredients (glycerin in cleanser + moisturizer)
+    is normal, not therapeutic duplication."""
+    selected_actives: set[str] = set()
+    for product in selected:
+        selected_actives |= set(product.actives)
+    duplicates = set(candidate.actives) & selected_actives & knowledge.treatment_actives
+    return [f"duplicates_selected_active:{d}" for d in sorted(duplicates)]

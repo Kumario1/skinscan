@@ -448,6 +448,8 @@ partially overwrites a prior result):
   --profile path/to/profile.json \
   [--catalog data/processed/catalog.json] \
   [--therapy-policy path/to/clinician-reviewed-policy.json] \
+  [--recsys --recsys-data-root recsys/data/derived \
+   --recsys-catalog recsys/data/derived/catalog_full.json] \
   [--dataset-name cohort-name --sample-id sample-1 \
    --dataset-split valid --split-proof manifest-sha256 \
    --detector-sha256 immutable-model-sha256]
@@ -464,7 +466,8 @@ Full CLI options: `--image, --out, --api, --catalog, --face-landmarker,
 --request-batch-size, --min-score, --dedupe-threshold, --profile, --skin-type,
 --pregnancy-status, --pregnant` (legacy migration), `--therapy-policy,
 --dataset-name, --sample-id, --dataset-split, --split-proof,
---detector-sha256, --oracle-annotations, --top`. Profile defaults are explicit
+--detector-sha256, --oracle-annotations, --recsys, --recsys-data-root,
+--recsys-catalog, --top`. Profile defaults are explicit
 unknowns; conflicting legacy/new pregnancy inputs fail before detector HTTP
 work. Writes into
 `runs/e2e/<image stem>/` (or `--out`):
@@ -473,6 +476,7 @@ work. Writes into
 analysis.json          always — schema_version "3", detections, concerns,
                         decision, provenance, recommendation_status
 routine.json           optional — only for a validated v3 regimen
+recommendations.json   optional — standalone recsys-1 output with --recsys
 detections.jpg
 region_overlay.jpg
 lesion_sheet.jpg
@@ -572,8 +576,12 @@ SKINSCAN_REAL_FACE_IMAGE=path/to/photo.jpg .venv/bin/python -m pytest -m real_mo
 <summary>Optional: rebuild the recommendation data (Sephora catalog, ingredient KB, concern labels, ranker)</summary>
 
 ```bash
-# Learned-ranker bake-off (ships only if it beats StatsRanker — it currently doesn't):
-.venv/bin/python -m src.recommendation.ranker
+# The learned-ranker bake-off (src.recommendation.ranker, StatsRanker) was
+# deleted in 5c07cab; review-derived ranking now lives in the recsys signal
+# stores — see "Rebuild the data" in recsys/README.md:
+.venv/bin/python -m recsys.tools.build_review_stats --raw-dir data/raw/sephora \
+  --catalog recsys/data/catalog/seed_catalog.json \
+  --out recsys/data/signals/review_stats.v1.json --data-root recsys/data
 
 # Ingredient KB + tier-2 catalog (manual download; dataset is CC-BY-NC-4.0):
 mkdir -p data/raw/beautyapi
@@ -592,7 +600,13 @@ curl -L -o data/raw/beautyapi/beauty_data.jsonl \
 .venv/bin/python -m src.recommendation.concern_labels probe
 .venv/bin/python -m src.recommendation.concern_labels calibrate
 .venv/bin/python -m src.recommendation.concern_labels label --yes --p2-approved
-.venv/bin/python -m src.recommendation.concern_stats
+# (src.recommendation.concern_stats was deleted in 5c07cab; the recsys store replaces it)
+.venv/bin/python -m recsys.tools.build_concern_efficacy \
+  --labels data/processed/review_concern_labels.jsonl \
+  --catalog recsys/data/catalog/seed_catalog.json \
+  --out recsys/data/signals/concern_efficacy.v1.json --data-root recsys/data
+# Add --prompt-version p11 when the append-only labels file contains older
+# policy versions; a mixed-version build is refused unless one is selected.
 ```
 
 </details>

@@ -110,7 +110,10 @@ def decide_care(report: ConcernReport, policy: TriagePolicy) -> CareDecision:
 
     if nodule_evidence:
         reviewed_gate = policy.approved and policy.nodule_gate is not None
-        if not all(item.calibrated for item in nodule_evidence) or not reviewed_gate:
+        # A calibrator that produced no probability has calibrated nothing: the
+        # gates below would silently skip it and fall through to treatment.
+        if (not all(item.calibrated and item.probability is not None
+                    for item in nodule_evidence) or not reviewed_gate):
             return CareDecision(
                 "abstain", ["unvalidated_nodule_evidence"], "supportive_only",
                 evidence, policy.identifier, policy.approved,

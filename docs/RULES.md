@@ -228,9 +228,11 @@ the production `src.pipeline.e2e` SA-RPN path.
 - **Ranker default.** Production `src.pipeline.e2e` always calls
   `recommend(report, catalog, profile=profile, ranker=None)` — every run
   ships the deterministic rules-only order (§2c, D-019). The duck-typed
-  ranker hook and `StatsRanker` (D-022) remain available to
-  `src.recommendation.ranker` / standalone bake-off evaluation only; nothing
-  in the production e2e CLI activates them.
+  ranker hook still exists on the engine, but `StatsRanker` and the bake-off
+  module (`src.recommendation.ranker`, D-022) were deleted in 5c07cab;
+  review-derived ranking now lives in the standalone recsys engine
+  (`recsys/signals.py`, stores built by `recsys/tools/build_review_stats`).
+  Nothing in the production e2e CLI activates the hook.
 
 ---
 

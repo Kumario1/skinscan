@@ -42,7 +42,8 @@ sa_rpn:
 recommendation:
   concern_confidence_cutoff: 0.5    # below -> "possible, verify" (RULES.md §5)
   downrank_comedogenic: true
-  therapy_policy_path: null         # no production clinician-reviewed policy is bundled
+  therapy_policy_path: null         # deprecated schema-3 policy; no production policy is bundled
+  lesion_care_policy_path: lesion_care_policy.proposed.json  # audited synthetic-MVP policy; requires --mvp-synthetic
   triage_policy_status: unreviewed  # numeric nodule gates must come from external review
 
 evaluation:
@@ -100,12 +101,16 @@ concern:                              # concern-efficacy labeling (D-023, spec 2
   stats_path: data/processed/concern_stats.json             # smoothed product x concern cells
   batch_state_path: runs/concern/batches.json               # batch-id resume state
   batch_spool_dir: runs/concern/openrouter_batches           # durable synchronous-request results
-  labeling_model: qwen/qwen3-235b-a22b-2507                  # capable, inexpensive structured-output model
-  input_price_per_million: 0.09
-  output_price_per_million: 0.10
-  max_budget_usd: 8.50                 # preflight estimate ceiling; leaves retry headroom
-  reviews_per_request: 10              # amortize the system prompt without losing uid attribution
-  request_concurrency: 10
+  azure_usage_path: runs/concern/azure_usage.jsonl           # ignored token ledger for paid budget verification
+  labeling_model: nvidia/nemotron-3-ultra-550b-a55b:free    # strongest available free MoE; strict JSON verified before full pass
+  input_price_per_million: 0.0
+  output_price_per_million: 0.0
+  max_budget_usd: 90.0                 # hard cumulative ceiling for calibration + labeling (Azure credit ~$100)
+  azure_max_requests: 1400             # cumulative request ceiling, including failed/retried calls (~1153 planned + retry headroom)
+  azure_reasoning_effort: medium       # reasoning effort for Azure labeling calls (AZURE_REASONING_EFFORT overrides)
+  azure_timeout_seconds: 900           # per-request HTTP timeout; leaves room for TPM-queued reasoning batches
+  reviews_per_request: 175             # proven-reliable Azure batch; amortizes reasoning tokens (~1153 reqs for 202k rows)
+  request_concurrency: 3               # sustained ~43k tok/min, safely under the 100k TPM rolling window (4x oscillated into timeouts)
   text_truncate_chars: 1200           # review text sent to the labeler is capped here
   batch_chunk_size: 1000              # rows checkpointed per local batch
   calibration_sample_size: 2000       # gate P2 sample

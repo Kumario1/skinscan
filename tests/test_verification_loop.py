@@ -13,6 +13,7 @@ CSV = """product_id,name,brand,category,ingredients,price
 C1,Gentle Wash,BrandA,cleanser,"Water, Glycerin",9
 M1,Daily Lotion,BrandA,moisturizer,"Water, Ceramides",12
 S1,Sun Shield,BrandB,spf,"Water, Zinc Oxide",15
+S2,Clear Serum,BrandD,serum,"Water, Niacinamide",14
 T1,Azelaic Gel,BrandC,treatment,"Azelaic Acid",20
 T2,BP Lotion,BrandC,treatment,"Benzoyl Peroxide",18
 T3,Combo Gel,BrandC,treatment,"Adapalene, Benzoyl Peroxide",25
@@ -31,6 +32,9 @@ SUPPORT_FACTS = {
            "cadence_source": "https://brandb.example/spf", "broad_spectrum": True,
            "spf": 40, "label_source": "https://brandb.example/spf",
            "label_verified_at": "2026-07-14", "comedogenic_claim": "claimed_noncomedogenic"},
+    "S2": {"intended_areas": ["face"], "routine_roles": ["serum"],
+           "format": "serum", "exposure": "leave_on", "cadence": "am_pm",
+           "cadence_source": "https://brandd.example/serum"},
 }
 TREATMENT_ACTIVES = {
     "T1": [{"name": "azelaic_acid", "strength": "10%"}],
@@ -103,16 +107,18 @@ def test_full_cycle_to_stopping_criteria(root: Path, capsys):
     assert rebuild(root) == 0
     report = json.loads((root / "data/verification/catalog_completeness.json").read_text())
     assert not report["complete"] and report["shortfalls"] == {
-        "cleanser": 1, "moisturizer": 1, "sunscreen": 1}
+        "cleanser": 1, "moisturizer": 1, "sunscreen": 1, "serum": 1}
 
     assert loop(root, "select", "--batch-size", "6") == 0
     m = manifest(root)
     batch = sorted(m["batches"])[0]
     members = {p for p, e in m["products"].items() if e.get("batch") == batch}
-    assert members == {"C1", "M1", "S1", "T1", "T2", "T3"}
-    assert all(e["state"] == "researching" for e in m["products"].values())
+    # T1 (azelaic 10%) is no longer selected: the path was dropped as unfillable
+    assert members == {"C1", "M1", "S1", "S2", "T2", "T3"}
+    assert all(e["state"] == "researching" for e in m["products"].values()
+               if e.get("batch") == batch)
     brief = (root / "data/verification/batches" / batch / "RESEARCH_BRIEF.md").read_text()
-    assert "routine_role_not_verified" in brief and "azelaic_acid 10%" in brief
+    assert "routine_role_not_verified" in brief and "benzoyl_peroxide 2.5%" in brief
 
     write_proposed(root, batch, sorted(members))
     assert loop(root, "ingest", "--batch", batch) == 0

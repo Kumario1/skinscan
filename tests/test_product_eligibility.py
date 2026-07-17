@@ -61,12 +61,13 @@ def test_direct_verified_azelaic_leave_on_treatment_passes():
     assert check_eligibility(treatment(), "treatment", option(), profile()).eligible
 
 
-def test_non_otc_or_unknown_treatment_is_rejected():
+def test_non_otc_treatment_is_not_rejected_for_otc_status():
+    # D-033: verified actives + label suffice; OTC status no longer gates
     for value in (False, None):
         result = check_eligibility(
             treatment(otc_drug=value), "treatment", option(), profile()
         )
-        assert "otc_status_not_verified" in result.reasons
+        assert result.eligible
 
 
 def test_treatment_cadence_must_match_concrete_policy_direction():
@@ -115,6 +116,17 @@ def test_neck_serum_fails_facial_moisturizer():
     assert "intended_area_not_face" in check_eligibility(
         product, "moisturizer", None, profile()
     ).reasons
+
+
+def test_unstated_area_is_not_a_non_face_claim():
+    # An OTC drug label says "cover the entire affected area" and never names
+    # the face, so an unstated area must not veto: requiring an explicit "face"
+    # is satisfiable only by inventing the fact. A stated face wins over a
+    # co-stated body.
+    for areas in ([], ["unknown"], ["face", "body"]):
+        assert "intended_area_not_face" not in check_eligibility(
+            support("moisturizer", intended_areas=areas), "moisturizer", None, profile()
+        ).reasons
 
 
 def test_mask_scrub_and_peel_fail_daily_leave_on_treatment():
