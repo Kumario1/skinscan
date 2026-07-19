@@ -14,6 +14,8 @@ import tempfile
 import time
 from collections.abc import Mapping, Sequence
 
+from agentrec.engine import run_research as agentrec_research
+
 from ..config import load_config
 from ..recommendation.engine import Recommendation as LegacyRecommendation
 from ..recommendation.import_catalog import load_catalog
@@ -78,13 +80,6 @@ def load_optional_catalog(
     except (OSError, TypeError, ValueError, AssertionError) as exc:
         return None, f"catalog is unreadable or invalid: {exc}"
 
-
-# The standalone engine is a subprocess at the end of the pipeline; a wedged one
-# must not hold the whole run open. recsys/pipeline.py puts timeout=10 on its own
-# git subprocess -- this is the same idiom at the integration seam, with room for
-# a real catalog load.
-RECSYS_TIMEOUT_SECONDS = 300
-RECSYS_STDERR_TAIL_CHARS = 500
 
 # Catalog gaps the drugstore can fill: named OTC pointers for targets no
 # stocked product carries (e2e 2026-07-13: adapalene coverage is honestly 0).
@@ -448,10 +443,8 @@ def run_pipeline(
     clock=lambda: datetime.now(timezone.utc),
     git_reader=_read_git_state,
     eligibility_debug: bool = False,
-    recsys_enabled: bool = False,
-    recsys_data_root: Path | None = None,
-    recsys_catalog: Path | None = None,
-    recsys_eligibility_mode: str | None = None,
+    agentrec_enabled: bool = False,
+    agentrec_model: str | None = None,
 ) -> PipelineResult:
     if profile is None:
         profile = UserProfile(
@@ -620,14 +613,14 @@ def run_pipeline(
         "decision": decision,
         "therapy_plan": therapy_plan,
         "recommendation_status": (
-            "delegated_to_recsys" if recsys_enabled else "unavailable"
+            "delegated_to_agentrec" if agentrec_enabled else "unavailable"
         ),
     }
 
     routine: dict[str, object] | None = None
     debug_rejections: dict[str, object] | None = None
-    if not recsys_enabled:
-        analysis["recommendation_reason"] = "recsys_not_enabled"
+    if not agentrec_enabled:
+        analysis["recommendation_reason"] = "agentrec_not_enabled"
 
     output_dir = output_dir.resolve()
     output_dir.parent.mkdir(parents=True, exist_ok=True)
@@ -641,76 +634,24 @@ def run_pipeline(
             (staging / "eligibility_rejections.json").write_text(
                 json.dumps(debug_rejections, indent=2) + "\n"
             )
-        if recsys_enabled:
-            recommendations_path = staging / "recommendations.json"
-            if recsys_data_root is None and recsys_catalog is None:
-                _write_recsys_unavailable(
-                    recommendations_path,
-                    "standalone catalog not configured; pass --recsys-catalog or "
-                    "--recsys-data-root",
+        if agentrec_enabled:
+            # In-process delegation to the headless research agent (claude -p on
+            # the Max plan — the permanent engine by owner decision). run_research
+            # writes claude-research.json on success and a raw.txt tail on
+            # failure; unavailable-with-a-reason mirrors the old recsys contract.
+            research_path = staging / "claude-research.json"
+            try:
+                delegation = agentrec_research(
+                    staging / "analysis.json",
+                    [staging / "lesion_sheet.jpg", staging / "detections.jpg"],
+                    research_path,
+                    model=agentrec_model,
                 )
-            elif recsys_data_root is None:
-                # A catalog without its data root strands every signal store: the
-                # stores are keyed by the sha256 of the catalog they were built
-                # against, so they load from the default data root, mismatch, and
-                # are skipped with only a warning -- leaving the ranker to score a
-                # neutral 0.5 on every store-backed signal while still reporting
-                # 'partial' with priced routines, exactly what a healthy run
-                # reports. Refusing here is the same fail-closed treatment the
-                # neither-configured case above already gets, and the worse of the
-                # two cases: that one fails loudly, this one does not fail at all.
-                _write_recsys_unavailable(
-                    recommendations_path,
-                    "standalone signal stores are keyed to a catalog; pass "
-                    "--recsys-data-root alongside --recsys-catalog",
-                )
-            else:
-                command = [
-                    sys.executable, "-m", "recsys", "recommend",
-                    "--analysis", str(staging / "analysis.json"),
-                    "--out", str(recommendations_path),
-                ]
-                if recsys_data_root is not None:
-                    command += ["--data-root", str(recsys_data_root)]
-                if recsys_catalog is not None:
-                    command += ["--catalog", str(recsys_catalog)]
-                if recsys_eligibility_mode is not None:
-                    command += ["--eligibility-mode", recsys_eligibility_mode]
-                try:
-                    completed = subprocess.run(
-                        command,
-                        cwd=Path(__file__).resolve().parents[2],
-                        capture_output=True,
-                        text=True,
-                        timeout=RECSYS_TIMEOUT_SECONDS,
-                    )
-                except subprocess.TimeoutExpired:
-                    # Without a timeout a wedged child hangs run_pipeline forever
-                    # with no diagnostic at all. Unavailable-with-a-reason is the
-                    # contract for every other way this step can fail.
-                    _write_recsys_unavailable(
-                        recommendations_path,
-                        "standalone recommendation process did not finish within "
-                        f"{RECSYS_TIMEOUT_SECONDS}s",
-                    )
-                else:
-                    if completed.returncode:
-                        _write_recsys_unavailable(
-                            recommendations_path,
-                            "standalone recommendation process exited with status "
-                            f"{completed.returncode}"
-                            + _stderr_tail(completed.stderr),
-                        )
-                    else:
-                        recommendation_document = json.loads(
-                            recommendations_path.read_text(encoding="utf-8")
-                        )
-                        routine = legacy_routine_from_recsys(
-                            recommendation_document, provenance,
-                        )
-            if routine is not None:
-                (staging / "routine.json").write_text(
-                    json.dumps(routine, indent=2) + "\n", encoding="utf-8"
+            except Exception as exc:  # a delegation crash must never erase the analysis
+                delegation = {"ok": False, "error": f"agentrec delegation raised: {exc}"}
+            if not delegation.get("ok"):
+                _write_agentrec_unavailable(
+                    research_path, str(delegation.get("error") or "unknown failure")
                 )
         _publish_staging(staging, output_dir)
     finally:
@@ -718,48 +659,12 @@ def run_pipeline(
     return PipelineResult(analysis, routine, output_dir)
 
 
-def _stderr_tail(stderr: str | None, limit: int = RECSYS_STDERR_TAIL_CHARS) -> str:
-    """The child's own diagnostic, appended to the reason.
-
-    capture_output=True puts the reason the run failed in stderr and then only the
-    returncode reached the operator: a missing catalog arrived as 'exited with
-    status 1', and a contract_violation:<field> would have been just as invisible.
-    The bytes are already in memory; the tail is the part that names the cause.
-    """
-    text = (stderr or "").strip()
-    if not text:
-        return ""
-    if len(text) > limit:
-        text = "..." + text[-limit:]
-    return f": {text}"
-
-
-def _write_recsys_unavailable(path: Path, reason: str) -> None:
+def _write_agentrec_unavailable(path: Path, reason: str) -> None:
     path.write_text(json.dumps({
-        "schema_version": "recsys-1",
+        "schema_version": "agentrec-1",
         "status": "unavailable",
         "reason": reason,
-        "routines": [],
     }, indent=2) + "\n")
-
-
-def legacy_routine_from_recsys(
-    document: Mapping[str, object], provenance: Mapping[str, object]
-) -> dict[str, object] | None:
-    """Compatibility artifact projected from the sole selector's result."""
-    selected = document.get("selected_regimen")
-    if document.get("status") != "ok" or not isinstance(selected, Mapping):
-        return None
-    return {
-        **dict(provenance),
-        "schema_version": "3",
-        "source_schema_version": document.get("schema_version"),
-        "generated_by": "recsys",
-        "selected_products": dict(document.get("selected_products") or {}),
-        "selected_regimen": dict(selected),
-        "lesion_coverage": list(document.get("lesion_coverage") or []),
-        "validation_status": "valid",
-    }
 
 
 def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
@@ -774,14 +679,12 @@ def _parser(config: dict[str, object]) -> argparse.ArgumentParser:
     parser.add_argument("--catalog-tier2", type=Path, default=None)
     parser.add_argument("--catalog-drug", type=Path, default=None)
     parser.add_argument("--eligibility-debug", action="store_true")
-    parser.add_argument("--recsys", action="store_true",
-                        help="also write standalone recsys recommendations.json")
-    parser.add_argument("--recsys-data-root", type=Path, default=None)
-    parser.add_argument("--recsys-catalog", type=Path, default=None)
-    parser.add_argument("--recsys-eligibility-mode", default=None,
-                        choices=("strict", "hybrid"),
-                        help="passed through to recsys; hybrid is the D-035 default, "
-                             "strict is a deprecated compatibility alias")
+    parser.add_argument("--agentrec", action="store_true",
+                        help="delegate recommendations to the headless research "
+                             "agent (writes claude-research.json; needs an "
+                             "authenticated `claude` CLI)")
+    parser.add_argument("--agentrec-model", default=None,
+                        help="passthrough to claude --model for the agentrec run")
     parser.add_argument("--face-landmarker", type=Path, default=Path(paths["face_landmarker"]))
     parser.add_argument("--tile-size", type=int, default=sa_rpn["tile_size"])
     parser.add_argument("--overlap", type=int, default=sa_rpn["tile_overlap"])
@@ -894,10 +797,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             detector_sha256=args.detector_sha256,
             oracle_annotations=args.oracle_annotations,
             eligibility_debug=args.eligibility_debug,
-            recsys_enabled=args.recsys,
-            recsys_data_root=args.recsys_data_root,
-            recsys_catalog=args.recsys_catalog,
-            recsys_eligibility_mode=args.recsys_eligibility_mode,
+            agentrec_enabled=args.agentrec,
+            agentrec_model=args.agentrec_model,
         )
     except Exception as exc:
         print(f"analysis failed: {exc}", file=sys.stderr)
@@ -915,9 +816,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     for reason in decision["referral_reasons"]:
         print(f"  ⚑ referral: {reason}")
     _print_safety_escalations(result.analysis)
-    if result.routine is not None:
-        for flag in result.routine.get("flags", []):
-            print(f"  ⚑ {flag}")
     return 0
 
 
