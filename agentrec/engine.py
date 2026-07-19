@@ -9,9 +9,9 @@ Requires an authenticated `claude` CLI on PATH (bills the Max plan). Output goes
 agentrec/out/<name>/research.json unless --out is given; unusable results land in a
 sibling research.raw.txt.
 
-Deploy-time engine swap: run_claude() is the only transport-coupled function. Port it
-to the Claude Agent SDK (`claude-agent-sdk`: requires ANTHROPIC_API_KEY + per-token
-API billing, native json_schema structured output) and everything else carries over.
+The `claude -p` CLI on the Max subscription is the permanent engine by owner
+decision (2026-07-19) — no Agent SDK port; the SDK requires API-key per-token
+billing, which this project deliberately avoids.
 """
 
 import argparse
