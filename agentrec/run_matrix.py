@@ -127,9 +127,12 @@ def check_global(research, fixture):
             failures.append(f"{label}: options_to_discuss_with_doctor on non-doctor_first entry")
         if entry.get("pathway_status") == "monitoring_only" and entry.get("products"):
             failures.append(f"{label}: monitoring_only entry has products")
-    product_arrays = [e.get("products") or [] for e in entries(research)]
-    product_arrays.append(research.get("supporting_products") or [])
-    for products in product_arrays:
+    rank_groups = [e.get("products") or [] for e in entries(research)]
+    supporting = research.get("supporting_products") or []
+    # supporting ranks are per role (normally all 1) — group before the uniqueness check
+    roles = {p.get("role") for p in supporting if isinstance(p, dict)}
+    rank_groups += [[p for p in supporting if p.get("role") == role] for role in roles]
+    for products in rank_groups:
         if not products:
             continue
         try:
