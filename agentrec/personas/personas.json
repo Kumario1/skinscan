@@ -1,0 +1,44 @@
+{
+  "heavy-real": {
+    "analysis": "heavy-real.analysis.json",
+    "images": [
+      "runs/e2e/real-recommendations-v4-20260716/high-real/lesion_sheet.jpg",
+      "runs/e2e/real-recommendations-v4-20260716/high-real/detections.jpg"
+    ],
+    "triage_level": "routine_plus_review"
+  },
+  "light-real": {
+    "analysis": "light-real.analysis.json",
+    "images": [
+      "runs/e2e/postmerge-v4-authorized-20260716/compact-lesions/lesion_sheet.jpg",
+      "runs/e2e/postmerge-v4-authorized-20260716/compact-lesions/detections.jpg"
+    ],
+    "triage_level": "routine_plus_review"
+  },
+  "light-routine": {
+    "analysis": "light-routine.analysis.json",
+    "images": [],
+    "triage_level": "routine"
+  },
+  "medium-dry": {
+    "analysis": "medium-dry.analysis.json",
+    "images": [
+      "runs/e2e/real-recommendations-v4-20260716/low-real/lesion_sheet.jpg",
+      "runs/e2e/real-recommendations-v4-20260716/low-real/detections.jpg"
+    ],
+    "triage_level": "routine_plus_review"
+  },
+  "medium-oily": {
+    "analysis": "medium-oily.analysis.json",
+    "images": [
+      "runs/e2e/real-recommendations-v4-20260716/low-real/lesion_sheet.jpg",
+      "runs/e2e/real-recommendations-v4-20260716/low-real/detections.jpg"
+    ],
+    "triage_level": "routine_plus_review"
+  },
+  "severe-nodular": {
+    "analysis": "severe-nodular.analysis.json",
+    "images": [],
+    "triage_level": "derm_first"
+  }
+}

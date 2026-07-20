@@ -302,7 +302,7 @@ def test_fixture_e2e_writes_schema4_analysis_without_legacy_selector(
     assert analysis["region_mapping"]["method"] == "grid_fallback"
     assert "missing" in analysis["region_mapping"]["reason"].lower()
     assert analysis["recommendation_status"] == "unavailable"
-    assert analysis["recommendation_reason"] == "recsys_not_enabled"
+    assert analysis["recommendation_reason"] == "agentrec_not_enabled"
     assert not (output_dir / "routine.json").exists()
     assert len(analysis["lesion_findings"]) == 10
     papule = next(row for row in analysis["lesion_findings"]
@@ -449,74 +449,50 @@ def test_pipeline_snapshots_the_normalized_profile_once(
     assert analysis["input_profile"]["age_years"] == 25
 
 
-def test_recsys_flag_adds_standalone_recommendations_artifact(
-    tmp_path, fake_sarpn_server,
+def test_agentrec_flag_delegates_to_research_agent(
+    tmp_path, fake_sarpn_server, monkeypatch,
 ):
     image_path = tmp_path / "face.jpg"
     catalog_path = tmp_path / "catalog.json"
     output_dir = tmp_path / "output"
     _write_image(image_path)
     _write_verified_catalog(catalog_path)
+    calls = []
+
+    def fake_research(analysis_path, images, out_path, *, model=None, **kwargs):
+        analysis = json.loads(Path(analysis_path).read_text())
+        calls.append({
+            "analysis_keys": set(analysis),
+            "images": [Path(p).name for p in images],
+            "model": model,
+        })
+        Path(out_path).write_text(json.dumps({
+            "claude": {"total_cost_usd": 1.23},
+            "research": {"see_doctor_first": False},
+        }) + "\n")
+        return {"ok": True, "out": str(out_path), "cost": 1.23, "duration": 1.0,
+                "research": {"see_doctor_first": False}}
+
+    monkeypatch.setattr("src.pipeline.e2e.agentrec_research", fake_research)
     args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
-    # The data root, not a bare --recsys-catalog: the signal stores are keyed to
-    # the catalog's sha256, and a catalog passed alone leaves them mismatched and
-    # silently skipped. This test used to normalize exactly that invocation.
-    args += [
-        "--recsys",
-        "--recsys-data-root", str(ROOT / "recsys/data"),
-    ]
+    args += ["--agentrec", "--agentrec-model", "opus"]
 
     assert main(args) == 0
 
-    recommendations = json.loads((output_dir / "recommendations.json").read_text())
-    assert recommendations["schema_version"] == "recsys-1"
-    assert recommendations["status"] == "ok"
-    assert recommendations["data_versions"]["signals"], "signal stores must have loaded"
-    assert len(recommendations["routines"]) >= 1
-    assert set(recommendations["selected_products"]) == {
-        "cleanser", "treatment", "moisturizer", "spf",
-    }
-    assert recommendations["care_decision"]["therapy_disposition"] == "active_treatment"
-    assert recommendations["treatment_fulfillment"]["status"] == "included"
-    assert recommendations["lesion_coverage"][0]["status"] == "covered_by_product"
-    routine = json.loads((output_dir / "routine.json").read_text())
-    assert routine["generated_by"] == "recsys"
-    assert routine["lesion_coverage"] == recommendations["lesion_coverage"]
-    import hashlib
-    assert recommendations["inputs"]["analysis_sha256"] == hashlib.sha256(
-        (output_dir / "analysis.json").read_bytes()
-    ).hexdigest()
+    analysis = json.loads((output_dir / "analysis.json").read_text())
+    assert analysis["recommendation_status"] == "delegated_to_agentrec"
+    assert "recommendation_reason" not in analysis
+    research = json.loads((output_dir / "claude-research.json").read_text())
+    assert research["research"]["see_doctor_first"] is False
+    assert not (output_dir / "routine.json").exists()
+    (call,) = calls
+    assert call["images"] == ["lesion_sheet.jpg", "detections.jpg"]
+    assert call["model"] == "opus"
+    assert "lesion_findings" in call["analysis_keys"]
 
 
-def test_recsys_eligibility_mode_reaches_the_standalone_engine(
-    tmp_path, fake_sarpn_server,
-):
-    # The flag has to survive CLI -> run() -> subprocess argv. A passthrough that
-    # is accepted and silently dropped leaves the integrated path stuck on the
-    # default mode, which is how it shipped without one at all.
-    image_path = tmp_path / "face.jpg"
-    catalog_path = tmp_path / "catalog.json"
-    output_dir = tmp_path / "output"
-    _write_image(image_path)
-    _write_verified_catalog(catalog_path)
-    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
-    args += [
-        "--recsys",
-        "--recsys-data-root", str(ROOT / "recsys/data"),
-        "--recsys-eligibility-mode", "hybrid",
-    ]
-
-    assert main(args) == 0
-
-    recommendations = json.loads((output_dir / "recommendations.json").read_text())
-    assert recommendations["engine"]["eligibility_mode"] == "hybrid"
-    assert recommendations["engine"]["requested_eligibility_mode"] == "hybrid"
-    assert not any("retired by D-035" in warning for warning in recommendations["warnings"])
-    assert "prescription_options" in recommendations
-
-
-def test_recsys_failure_publishes_analysis_with_unavailable_artifact(
-    tmp_path, fake_sarpn_server,
+def test_agentrec_failure_publishes_analysis_with_unavailable_artifact(
+    tmp_path, fake_sarpn_server, monkeypatch,
 ):
     image_path = tmp_path / "face.jpg"
     catalog_path = tmp_path / "catalog.json"
@@ -526,76 +502,24 @@ def test_recsys_failure_publishes_analysis_with_unavailable_artifact(
     output_dir.mkdir()
     prior = '{"marker": "prior-published-output"}\n'
     (output_dir / "analysis.json").write_text(prior)
+
+    def failing_research(analysis_path, images, out_path, **kwargs):
+        return {"ok": False, "error": "claude exited 1 (session limit)", "out": None}
+
+    monkeypatch.setattr("src.pipeline.e2e.agentrec_research", failing_research)
     args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
-    args += [
-        "--recsys",
-        "--recsys-data-root", str(ROOT / "recsys/data"),
-        "--recsys-catalog", str(tmp_path / "missing.json"),
-    ]
+    args.append("--agentrec")
 
     assert main(args) == 0
 
     analysis = json.loads((output_dir / "analysis.json").read_text())
-    recommendations = json.loads((output_dir / "recommendations.json").read_text())
     assert analysis["image_id"] == "face.jpg"
-    assert recommendations["schema_version"] == "recsys-1"
-    assert recommendations["status"] == "unavailable"
-    assert recommendations["routines"] == []
-    # The reason carries the child's stderr tail: "exited with status 1" alone
-    # hid a FileNotFoundError traceback the operator needed. Exact-equality here
-    # is what used to enshrine that loss.
-    assert recommendations["reason"].startswith(
-        "standalone recommendation process exited with status 1"
-    )
-    assert "missing.json" in recommendations["reason"]
+    assert analysis["recommendation_status"] == "delegated_to_agentrec"
+    research = json.loads((output_dir / "claude-research.json").read_text())
+    assert research["schema_version"] == "agentrec-1"
+    assert research["status"] == "unavailable"
+    assert "session limit" in research["reason"]
     assert prior not in (output_dir / "analysis.json").read_text()
-
-
-def test_recsys_catalog_without_data_root_is_refused_not_silently_blind(
-    tmp_path, fake_sarpn_server,
-):
-    """A catalog passed alone leaves every signal store keyed to a different
-    catalog: skipped with a warning, ranker scoring neutral 0.5, and a 'partial'
-    document indistinguishable from a healthy run. The guard refuses the
-    invocation outright -- the same fail-closed treatment the neither-configured
-    case gets, and the worse of the two, because this one never failed at all."""
-    image_path = tmp_path / "face.jpg"
-    catalog_path = tmp_path / "catalog.json"
-    output_dir = tmp_path / "output"
-    _write_image(image_path)
-    _write_verified_catalog(catalog_path)
-    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
-    args += [
-        "--recsys",
-        "--recsys-catalog", str(ROOT / "recsys/data/catalog/seed_catalog.json"),
-    ]
-
-    assert main(args) == 0
-
-    recommendations = json.loads((output_dir / "recommendations.json").read_text())
-    assert recommendations["status"] == "unavailable"
-    assert "signal stores are keyed to a catalog" in recommendations["reason"]
-
-
-def test_recsys_without_explicit_catalog_is_unavailable(
-    tmp_path, fake_sarpn_server,
-):
-    image_path = tmp_path / "face.jpg"
-    catalog_path = tmp_path / "catalog.json"
-    output_dir = tmp_path / "output"
-    _write_image(image_path)
-    _write_verified_catalog(catalog_path)
-    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
-    args.append("--recsys")
-
-    assert main(args) == 0
-
-    recommendations = json.loads((output_dir / "recommendations.json").read_text())
-    assert recommendations["status"] == "unavailable"
-    assert recommendations["reason"] == (
-        "standalone catalog not configured; pass --recsys-catalog or "
-        "--recsys-data-root"
-    )
 
 
 def test_oracle_xml_is_annotation_derived_and_replay_distinct(tmp_path, fake_sarpn_server):
@@ -626,27 +550,6 @@ def test_oracle_xml_is_annotation_derived_and_replay_distinct(tmp_path, fake_sar
     assert oracle["source_image_sha256"] == prediction["source_image_sha256"]
 
 
-def test_pipeline_emits_selected_regimen_not_category_menu(tmp_path, fake_sarpn_server):
-    image_path = tmp_path / "face.jpg"
-    catalog_path = tmp_path / "catalog.json"
-    output_dir = tmp_path / "output"
-    _write_image(image_path)
-    _write_verified_catalog(catalog_path)
-
-    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path) + [
-        "--recsys", "--recsys-data-root", str(ROOT / "recsys/data"),
-    ]
-    assert main(args) == 0
-
-    routine = json.loads((output_dir / "routine.json").read_text())
-    assert "routines" not in routine
-    assert set(routine["selected_regimen"]) >= {"am", "pm", "per_label"}
-    assert routine["generated_by"] == "recsys"
-    assert len(routine["selected_products"].values()) == len(
-        set(routine["selected_products"].values())
-    )
-
-
 def test_eligibility_debug_is_opt_in_and_stale_file_is_removed(
     tmp_path, fake_sarpn_server,
 ):
@@ -675,7 +578,7 @@ def test_routine_payload_carries_independent_decision_axes(tmp_path, fake_sarpn_
     analysis = json.loads((output_dir / "analysis.json").read_text())
     assert analysis["decision"]["triage_level"] == "routine"
     assert analysis["decision"]["therapy_disposition"] == "active_treatment"
-    assert analysis["recommendation_reason"] == "recsys_not_enabled"
+    assert analysis["recommendation_reason"] == "agentrec_not_enabled"
     assert next(row for row in analysis["care_pathways"]
                 if row["lesion_type"] == "papule")["status"] == "retail_eligible"
     assert not (output_dir / "routine.json").exists()
@@ -797,7 +700,7 @@ def test_legacy_catalog_cannot_select_products(tmp_path, fake_sarpn_server):
     assert main(_args(image_path, output_dir, fake_sarpn_server.url, catalog_path)) == 0
     analysis = json.loads((output_dir / "analysis.json").read_text())
     assert analysis["recommendation_status"] == "unavailable"
-    assert analysis["recommendation_reason"] == "recsys_not_enabled"
+    assert analysis["recommendation_reason"] == "agentrec_not_enabled"
     assert analysis["decision"]["therapy_disposition"] == "active_treatment"
     assert not (output_dir / "routine.json").exists()
 
@@ -821,7 +724,7 @@ def test_catalog_failure_keeps_analysis_and_diagnostics(
     assert analysis["recommendation_status"] == "unavailable"
     # The legacy catalog is provenance-only. It cannot invoke a selector or
     # affect the care result when recsys is disabled.
-    assert analysis["recommendation_reason"] == "recsys_not_enabled"
+    assert analysis["recommendation_reason"] == "agentrec_not_enabled"
     assert not (output_dir / "routine.json").exists()
     assert {path.name for path in output_dir.iterdir()} == {
         "analysis.json", "detections.jpg", "region_overlay.jpg", "lesion_sheet.jpg",
@@ -836,66 +739,25 @@ def test_recommendation_exception_does_not_erase_analysis(
     output_dir = tmp_path / "output"
     _write_image(image_path, width=800)
     _write_catalog(catalog_path)
-    real_run = subprocess.run
 
-    def fail_recsys(command, **kwargs):
-        if "recsys" in command:
-            return SimpleNamespace(returncode=23, stderr="recommendation exploded")
-        return real_run(command, **kwargs)
+    def exploding_research(*args, **kwargs):
+        raise RuntimeError("recommendation exploded")
 
-    monkeypatch.setattr("src.pipeline.e2e.subprocess.run", fail_recsys)
-    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path) + [
-        "--recsys", "--recsys-data-root", str(ROOT / "recsys/data"),
-    ]
+    monkeypatch.setattr("src.pipeline.e2e.agentrec_research", exploding_research)
+    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path)
+    args.append("--agentrec")
     assert main(args) == 0
 
     analysis = json.loads((output_dir / "analysis.json").read_text())
     assert fake_sarpn_server.request_count == 1
-    assert analysis["recommendation_status"] == "delegated_to_recsys"
-    recsys = json.loads((output_dir / "recommendations.json").read_text())
-    assert recsys["status"] == "unavailable"
-    assert "recommendation exploded" in recsys["reason"]
+    assert analysis["recommendation_status"] == "delegated_to_agentrec"
+    research = json.loads((output_dir / "claude-research.json").read_text())
+    assert research["status"] == "unavailable"
+    assert "recommendation exploded" in research["reason"]
     assert not (output_dir / "routine.json").exists()
     assert all((output_dir / name).exists() for name in (
         "analysis.json", "detections.jpg", "region_overlay.jpg", "lesion_sheet.jpg",
     ))
-
-
-def test_invalid_recsys_result_keeps_analysis_and_refuses_routine(
-    tmp_path, fake_sarpn_server, monkeypatch,
-):
-    import src.pipeline.e2e as e2e_module
-
-    image_path = tmp_path / "face.jpg"
-    catalog_path = tmp_path / "catalog.json"
-    output_dir = tmp_path / "output"
-    _write_image(image_path, width=800)
-    _write_verified_catalog(catalog_path)
-    real_run = subprocess.run
-
-    def invalid(command, **kwargs):
-        if "recsys" not in command:
-            return real_run(command, **kwargs)
-        out = Path(command[command.index("--out") + 1])
-        out.write_text(json.dumps({
-            "schema_version": "recsys-1",
-            "status": "invalid",
-            "reason": "injected_whole_regimen_failure",
-            "routines": [],
-        }))
-        return SimpleNamespace(returncode=0, stderr="")
-
-    monkeypatch.setattr(e2e_module.subprocess, "run", invalid)
-    args = _args(image_path, output_dir, fake_sarpn_server.url, catalog_path) + [
-        "--recsys", "--recsys-data-root", str(ROOT / "recsys/data"),
-    ]
-    assert main(args) == 0
-    analysis = json.loads((output_dir / "analysis.json").read_text())
-    assert analysis["recommendation_status"] == "delegated_to_recsys"
-    recommendation = json.loads((output_dir / "recommendations.json").read_text())
-    assert recommendation["status"] == "invalid"
-    assert recommendation["reason"] == "injected_whole_regimen_failure"
-    assert not (output_dir / "routine.json").exists()
 
 
 def test_failed_identification_preserves_previous_output(tmp_path, capsys):
@@ -985,7 +847,7 @@ def test_empty_catalog_is_treated_as_unavailable(tmp_path, fake_sarpn_server):
 
     analysis = json.loads((output_dir / "analysis.json").read_text())
     assert analysis["recommendation_status"] == "unavailable"
-    assert analysis["recommendation_reason"] == "recsys_not_enabled"
+    assert analysis["recommendation_reason"] == "agentrec_not_enabled"
     assert not (output_dir / "routine.json").exists()
 
 
