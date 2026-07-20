@@ -1,0 +1,5473 @@
+{
+  "care_pathways": [
+    {
+      "clinician_options": [
+        {
+          "channel": "prescription_discussion",
+          "option": "topical retinoid or combination therapy when OTC care is unsuitable or unsuccessful"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "azelaic acid when clinically appropriate"
+        }
+      ],
+      "lesion_type": "closed_comedo",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "reason_codes": [
+        "exact_label_closed_comedo",
+        "comedonal_path_proposed",
+        "mvp_ai_research_approved"
+      ],
+      "required_answers": [],
+      "required_product_roles": [
+        "treatment"
+      ],
+      "retail_target_actives": [
+        {
+          "active_id": "adapalene",
+          "cadence": "per Drug Facts only; no agent-invented introductory cadence",
+          "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review",
+          "formulation": "FDA-labeled OTC leave-on acne drug",
+          "minimum_age_years": 12,
+          "strength": "0.1%"
+        },
+        {
+          "active_id": "salicylic_acid",
+          "cadence": "per Drug Facts",
+          "eligibility": "no allergy, conflicting current active, or product contraindication",
+          "formulation": "FDA-compliant OTC acne drug with exact exposure and directions",
+          "strength": "0.5%-2%"
+        }
+      ],
+      "status": "retail_eligible"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "prescription_discussion",
+          "option": "topical retinoid or combination therapy when OTC care is unsuitable or unsuccessful"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "azelaic acid when clinically appropriate"
+        }
+      ],
+      "lesion_type": "open_comedo",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "reason_codes": [
+        "exact_label_open_comedo",
+        "comedonal_path_proposed",
+        "mvp_ai_research_approved"
+      ],
+      "required_answers": [],
+      "required_product_roles": [
+        "treatment"
+      ],
+      "retail_target_actives": [
+        {
+          "active_id": "adapalene",
+          "cadence": "per Drug Facts only; no agent-invented introductory cadence",
+          "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review",
+          "formulation": "FDA-labeled OTC leave-on acne drug",
+          "minimum_age_years": 12,
+          "strength": "0.1%"
+        },
+        {
+          "active_id": "salicylic_acid",
+          "cadence": "per Drug Facts",
+          "eligibility": "no allergy, conflicting current active, or product contraindication",
+          "formulation": "FDA-compliant OTC acne drug with exact exposure and directions",
+          "strength": "0.5%-2%"
+        }
+      ],
+      "status": "retail_eligible"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "prescription_discussion",
+          "option": "fixed topical combination therapy"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "azelaic acid"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "oral therapy for clinically assessed moderate-to-severe acne"
+        }
+      ],
+      "lesion_type": "papule",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "reason_codes": [
+        "exact_label_papule",
+        "inflammatory_path_proposed",
+        "mvp_ai_research_approved"
+      ],
+      "required_answers": [],
+      "required_product_roles": [
+        "treatment"
+      ],
+      "retail_target_actives": [
+        {
+          "active_id": "benzoyl_peroxide",
+          "cadence": "per Drug Facts; alternate-day or short-contact introduction may be considered only in approved wording",
+          "eligibility": "no allergy, conflicting current active, or product contraindication",
+          "formulation": "FDA-compliant OTC acne drug; exact reviewed path must state leave-on or short-contact exposure",
+          "strength": "2.5%-10%"
+        },
+        {
+          "active_id": "adapalene",
+          "cadence": "per Drug Facts",
+          "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review",
+          "formulation": "FDA-labeled OTC leave-on acne drug, including an exact fixed benzoyl-peroxide combination when the label supports it",
+          "minimum_age_years": 12,
+          "strength": "0.1%"
+        }
+      ],
+      "status": "retail_eligible"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "prescription_discussion",
+          "option": "fixed topical combination therapy"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "azelaic acid"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "oral therapy for clinically assessed moderate-to-severe acne"
+        }
+      ],
+      "lesion_type": "pustule",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "reason_codes": [
+        "exact_label_pustule",
+        "inflammatory_path_proposed",
+        "mvp_ai_research_approved"
+      ],
+      "required_answers": [],
+      "required_product_roles": [
+        "treatment"
+      ],
+      "retail_target_actives": [
+        {
+          "active_id": "benzoyl_peroxide",
+          "cadence": "per Drug Facts; alternate-day or short-contact introduction may be considered only in approved wording",
+          "eligibility": "no allergy, conflicting current active, or product contraindication",
+          "formulation": "FDA-compliant OTC acne drug; exact reviewed path must state leave-on or short-contact exposure",
+          "strength": "2.5%-10%"
+        },
+        {
+          "active_id": "adapalene",
+          "cadence": "per Drug Facts",
+          "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review",
+          "formulation": "FDA-labeled OTC leave-on acne drug, including an exact fixed benzoyl-peroxide combination when the label supports it",
+          "minimum_age_years": 12,
+          "strength": "0.1%"
+        }
+      ],
+      "status": "retail_eligible"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "clinician_discussion",
+          "option": "confirm nodular or nodulocystic acne and assess severity and scarring risk"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "systemic therapy, including isotretinoin when clinically indicated"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "combination topical and systemic therapy"
+        },
+        {
+          "channel": "clinician_discussion",
+          "option": "intralesional corticosteroid for selected large lesions"
+        }
+      ],
+      "lesion_type": "nodule",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S01",
+        "S02",
+        "S06",
+        "S07"
+      ],
+      "reason_codes": [
+        "exact_label_nodule",
+        "photo_cannot_confirm_depth",
+        "nodular_acne_referral",
+        "no_retail_product_match"
+      ],
+      "required_answers": [],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "not_detected"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "procedure",
+          "option": "control active acne before scar procedures"
+        },
+        {
+          "channel": "clinician_discussion",
+          "option": "scar-subtype assessment"
+        },
+        {
+          "channel": "procedure",
+          "option": "microneedling, laser, chemical reconstruction, filler, punch techniques, or surgery selected by a dermatologist"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "topical retinoid or salicylic acid for selected mild scarring only after clinical assessment"
+        }
+      ],
+      "lesion_type": "atrophic_scar",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S02",
+        "S08",
+        "S18"
+      ],
+      "reason_codes": [
+        "exact_label_atrophic_scar",
+        "scar_subtype_requires_confirmation",
+        "procedure_discussion_only",
+        "no_retail_product_match",
+        "required_intake_unknown:active_acne_controlled",
+        "required_intake_unknown:scar_duration_months"
+      ],
+      "required_answers": [
+        "active_acne_controlled",
+        "scar_duration_months"
+      ],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "clinician_only"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "clinician_discussion",
+          "option": "confirm hypertrophic scar versus keloid and whether the wound is fully closed"
+        },
+        {
+          "channel": "clinician_discussion",
+          "option": "silicone sheet or silicone gel discussion, with explicit acknowledgement that comparative evidence is low certainty"
+        },
+        {
+          "channel": "procedure",
+          "option": "injection, laser, cryotherapy, or surgery selected for the confirmed scar type"
+        }
+      ],
+      "lesion_type": "hypertrophic_scar",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S09",
+        "S10",
+        "S18"
+      ],
+      "reason_codes": [
+        "exact_label_hypertrophic_scar",
+        "scar_subtype_requires_confirmation",
+        "silicone_evidence_very_low_certainty",
+        "verified_scar_product_gap"
+      ],
+      "required_answers": [],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "not_detected"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "prescription_discussion",
+          "option": "hydroquinone prescription therapy"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "triple-combination prescription therapy"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "azelaic acid, kojic acid, or vitamin C in a clinician-selected plan"
+        },
+        {
+          "channel": "procedure",
+          "option": "carefully selected procedure after diagnosis and pigment-risk assessment"
+        }
+      ],
+      "lesion_type": "melasma",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S05",
+        "S11",
+        "S12",
+        "S13",
+        "S18"
+      ],
+      "reason_codes": [
+        "exact_label_melasma",
+        "diagnosis_not_confirmed_by_photo",
+        "iron_oxide_spf_path_proposed",
+        "mvp_ai_research_approved",
+        "required_intake_unknown:spot_new_or_changing",
+        "required_intake_unknown:spot_bleeding",
+        "required_intake_unknown:spot_itching",
+        "required_intake_unknown:spot_painful",
+        "required_intake_unknown:spot_other_symptoms",
+        "required_intake_unknown:pregnancy_or_hormonal_medication_onset"
+      ],
+      "required_answers": [
+        "spot_new_or_changing",
+        "spot_bleeding",
+        "spot_itching",
+        "spot_painful",
+        "spot_other_symptoms",
+        "pregnancy_or_hormonal_medication_onset"
+      ],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "deferred"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "clinician_discussion",
+          "option": "dermatoscopic examination"
+        },
+        {
+          "channel": "procedure",
+          "option": "biopsy or clinician removal when suspicious or bothersome"
+        }
+      ],
+      "lesion_type": "nevus",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S14",
+        "S15",
+        "S16",
+        "S17",
+        "S19"
+      ],
+      "reason_codes": [
+        "exact_label_nevus",
+        "not_a_skin_cancer_screen",
+        "monitor_or_refer_only",
+        "no_product_match",
+        "required_intake_unknown:spot_new_or_changing",
+        "required_intake_unknown:spot_bleeding",
+        "required_intake_unknown:spot_itching",
+        "required_intake_unknown:spot_painful",
+        "required_intake_unknown:spot_other_symptoms",
+        "required_intake_unknown:abcde_change_present"
+      ],
+      "required_answers": [
+        "spot_new_or_changing",
+        "spot_bleeding",
+        "spot_itching",
+        "spot_painful",
+        "spot_other_symptoms",
+        "abcde_change_present"
+      ],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "monitoring_only"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "clinician_discussion",
+          "option": "history and examination to establish a diagnosis"
+        }
+      ],
+      "lesion_type": "other",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S07",
+        "S16",
+        "S19"
+      ],
+      "reason_codes": [
+        "exact_label_other",
+        "unsupported_finding",
+        "no_product_match"
+      ],
+      "required_answers": [],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "not_detected"
+    }
+  ],
+  "catalog": {
+    "drug": {
+      "name": "catalog_drug.json",
+      "sha256": "771e7b1a01b4523180cad6188a81bb61a8e439dcf69299b485125a950a3071f4",
+      "state": "available"
+    },
+    "primary": {
+      "name": "catalog.json",
+      "sha256": "d2af5387b45a00950f78a4c9a3dfe5f1e6e7186e0b205bff38d2bee1f21d7233",
+      "state": "available"
+    },
+    "sha256": "15c538ef7164233e6c1ddaa276f4d9337435a4111e2c43a4420cf1ad9b232290",
+    "state": "available",
+    "tier2": {
+      "name": "catalog_tier2.json",
+      "sha256": "d170f91a5991ce553089ea53714cd6995688d231846ef334d385e9f614544bf4",
+      "state": "available"
+    }
+  },
+  "clear_skin": false,
+  "code": {
+    "dirty": true,
+    "git_commit": "d364e19f1f9c5e61bcf12f0bb51db6f750abc084"
+  },
+  "concerns": [
+    {
+      "concern": "acne_comedonal",
+      "confidence": 0.6326929824561404,
+      "evidence": {
+        "affected_region_count": 6,
+        "labels": {
+          "closed_comedo": 26,
+          "open_comedo": 31
+        },
+        "max_confidence": 0.9764,
+        "source": "prediction"
+      },
+      "lesion_count": 57,
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "nose",
+        "perioral",
+        "right_cheek"
+      ],
+      "severity": 4
+    },
+    {
+      "concern": "acne_inflammatory",
+      "confidence": 0.8506958333333333,
+      "evidence": {
+        "affected_region_count": 5,
+        "labels": {
+          "papule": 22,
+          "pustule": 2
+        },
+        "max_confidence": 0.9808,
+        "source": "prediction"
+      },
+      "lesion_count": 24,
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "perioral",
+        "right_cheek"
+      ],
+      "severity": 3
+    },
+    {
+      "concern": "acne_scarring",
+      "confidence": 0.718118085106383,
+      "evidence": {
+        "affected_region_count": 5,
+        "labels": {
+          "atrophic_scar": 94
+        },
+        "max_confidence": 0.9929,
+        "source": "prediction"
+      },
+      "lesion_count": 94,
+      "regions": [
+        "forehead",
+        "left_cheek",
+        "nose",
+        "perioral",
+        "right_cheek"
+      ],
+      "severity": 4
+    },
+    {
+      "concern": "hyperpigmentation",
+      "confidence": 0.78266,
+      "evidence": {
+        "affected_region_count": 2,
+        "labels": {
+          "melasma": 5
+        },
+        "max_confidence": 0.947,
+        "source": "prediction"
+      },
+      "lesion_count": 5,
+      "regions": [
+        "left_cheek",
+        "right_cheek"
+      ],
+      "severity": 2
+    }
+  ],
+  "config_sha256": "86b1b8abb6b430e47da3e6a0c27c2d30ef869bd5a585dd149243c74484560187",
+  "dataset": {
+    "name": "AcneSCU",
+    "sample_id": "high-real",
+    "split": "external",
+    "split_proof": "hash-pinned-external-e2e"
+  },
+  "decision": {
+    "decision_evidence": [
+      {
+        "calibrated": false,
+        "lesion_type": "closed_comedo",
+        "probability": null,
+        "quality": "high",
+        "reasons": [
+          "exact_detector_label",
+          "lesion_count_26"
+        ],
+        "source": "prediction"
+      },
+      {
+        "calibrated": false,
+        "lesion_type": "open_comedo",
+        "probability": null,
+        "quality": "high",
+        "reasons": [
+          "exact_detector_label",
+          "lesion_count_31"
+        ],
+        "source": "prediction"
+      },
+      {
+        "calibrated": false,
+        "lesion_type": "papule",
+        "probability": null,
+        "quality": "high",
+        "reasons": [
+          "exact_detector_label",
+          "lesion_count_22"
+        ],
+        "source": "prediction"
+      },
+      {
+        "calibrated": false,
+        "lesion_type": "pustule",
+        "probability": null,
+        "quality": "high",
+        "reasons": [
+          "exact_detector_label",
+          "lesion_count_2"
+        ],
+        "source": "prediction"
+      },
+      {
+        "calibrated": false,
+        "lesion_type": "atrophic_scar",
+        "probability": null,
+        "quality": "high",
+        "reasons": [
+          "exact_detector_label",
+          "lesion_count_94"
+        ],
+        "source": "prediction"
+      },
+      {
+        "calibrated": false,
+        "lesion_type": "melasma",
+        "probability": null,
+        "quality": "high",
+        "reasons": [
+          "exact_detector_label",
+          "lesion_count_5"
+        ],
+        "source": "prediction"
+      },
+      {
+        "calibrated": false,
+        "lesion_type": "nevus",
+        "probability": null,
+        "quality": "high",
+        "reasons": [
+          "exact_detector_label",
+          "lesion_count_2"
+        ],
+        "source": "prediction"
+      }
+    ],
+    "policy_reviewed": false,
+    "policy_version": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+    "referral_reasons": [
+      "scar_subtype_assessment",
+      "pigment_diagnosis_confirmation",
+      "nevus_monitoring_or_assessment"
+    ],
+    "therapy_disposition": "active_treatment",
+    "triage_level": "routine_plus_review"
+  },
+  "detections": [
+    {
+      "box": [
+        967.4,
+        535.5,
+        1005.1,
+        565.8
+      ],
+      "confidence": 0.9761,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          0,
+          0,
+          1024,
+          1024
+        ],
+        "index": 0
+      }
+    },
+    {
+      "box": [
+        847.9,
+        848.3,
+        966.6,
+        953.9
+      ],
+      "confidence": 0.8785,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          0,
+          0,
+          1024,
+          1024
+        ],
+        "index": 0
+      }
+    },
+    {
+      "box": [
+        959.6,
+        983.1,
+        983.5,
+        1010.2
+      ],
+      "confidence": 0.6513,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          0,
+          0,
+          1024,
+          1024
+        ],
+        "index": 0
+      }
+    },
+    {
+      "box": [
+        1581.1,
+        316.9,
+        1603.6,
+        334.3
+      ],
+      "confidence": 0.9305,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          0,
+          1832,
+          1024
+        ],
+        "index": 1
+      }
+    },
+    {
+      "box": [
+        1496.1,
+        704.1,
+        1567.8,
+        750.8
+      ],
+      "confidence": 0.9027,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          0,
+          1832,
+          1024
+        ],
+        "index": 1
+      }
+    },
+    {
+      "box": [
+        1148.9,
+        969.3,
+        1173.4,
+        994.0
+      ],
+      "confidence": 0.8728,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          0,
+          1832,
+          1024
+        ],
+        "index": 1
+      }
+    },
+    {
+      "box": [
+        1319.6,
+        543.3,
+        1339.6,
+        561.1
+      ],
+      "confidence": 0.689,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          0,
+          1832,
+          1024
+        ],
+        "index": 1
+      }
+    },
+    {
+      "box": [
+        1466.7,
+        760.2,
+        1494.8,
+        790.9
+      ],
+      "confidence": 0.6842,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          0,
+          1832,
+          1024
+        ],
+        "index": 1
+      }
+    },
+    {
+      "box": [
+        1138.6,
+        932.0,
+        1161.4,
+        954.9
+      ],
+      "confidence": 0.6717,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          0,
+          1832,
+          1024
+        ],
+        "index": 1
+      }
+    },
+    {
+      "box": [
+        1293.7,
+        964.7,
+        1314.1,
+        985.8
+      ],
+      "confidence": 0.4629,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          0,
+          1832,
+          1024
+        ],
+        "index": 1
+      }
+    },
+    {
+      "box": [
+        896.9,
+        452.8,
+        927.2,
+        478.8
+      ],
+      "confidence": 0.3518,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          0,
+          1832,
+          1024
+        ],
+        "index": 1
+      }
+    },
+    {
+      "box": [
+        2200.9,
+        668.0,
+        2266.9,
+        729.5
+      ],
+      "confidence": 0.9147,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          0,
+          2640,
+          1024
+        ],
+        "index": 2
+      }
+    },
+    {
+      "box": [
+        1769.5,
+        462.7,
+        1816.4,
+        491.6
+      ],
+      "confidence": 0.9001,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          0,
+          2640,
+          1024
+        ],
+        "index": 2
+      }
+    },
+    {
+      "box": [
+        1636.3,
+        545.3,
+        1660.7,
+        570.0
+      ],
+      "confidence": 0.8907,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          0,
+          2640,
+          1024
+        ],
+        "index": 2
+      }
+    },
+    {
+      "box": [
+        1971.7,
+        760.2,
+        2005.9,
+        792.5
+      ],
+      "confidence": 0.863,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          0,
+          2640,
+          1024
+        ],
+        "index": 2
+      }
+    },
+    {
+      "box": [
+        2205.4,
+        805.5,
+        2225.4,
+        825.2
+      ],
+      "confidence": 0.5817,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          0,
+          2640,
+          1024
+        ],
+        "index": 2
+      }
+    },
+    {
+      "box": [
+        2157.0,
+        419.8,
+        2177.2,
+        437.7
+      ],
+      "confidence": 0.5806,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          0,
+          2640,
+          1024
+        ],
+        "index": 2
+      }
+    },
+    {
+      "box": [
+        1825.2,
+        758.4,
+        1857.7,
+        800.0
+      ],
+      "confidence": 0.4813,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          0,
+          2640,
+          1024
+        ],
+        "index": 2
+      }
+    },
+    {
+      "box": [
+        1876.1,
+        867.1,
+        1920.8,
+        911.6
+      ],
+      "confidence": 0.4635,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          0,
+          2640,
+          1024
+        ],
+        "index": 2
+      }
+    },
+    {
+      "box": [
+        2760.3,
+        875.3,
+        2817.6,
+        939.0
+      ],
+      "confidence": 0.9715,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          2424,
+          0,
+          3448,
+          1024
+        ],
+        "index": 3
+      }
+    },
+    {
+      "box": [
+        309.7,
+        1683.4,
+        343.0,
+        1859.4
+      ],
+      "confidence": 0.9177,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          894,
+          1024,
+          1918
+        ],
+        "index": 4
+      }
+    },
+    {
+      "box": [
+        638.8,
+        1873.1,
+        661.0,
+        1896.4
+      ],
+      "confidence": 0.6764,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          894,
+          1024,
+          1918
+        ],
+        "index": 4
+      }
+    },
+    {
+      "box": [
+        748.7,
+        1791.3,
+        791.8,
+        1823.5
+      ],
+      "confidence": 0.5438,
+      "mapped_concern": "hyperpigmentation",
+      "normalized_label": "melasma",
+      "observation_status": "actionable",
+      "original_label": "melasma",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          894,
+          1024,
+          1918
+        ],
+        "index": 4
+      }
+    },
+    {
+      "box": [
+        266.4,
+        1606.0,
+        293.0,
+        1693.2
+      ],
+      "confidence": 0.4132,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          894,
+          1024,
+          1918
+        ],
+        "index": 4
+      }
+    },
+    {
+      "box": [
+        1508.7,
+        1063.8,
+        1589.0,
+        1146.0
+      ],
+      "confidence": 0.9804,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1456.4,
+        1154.6,
+        1503.6,
+        1192.3
+      ],
+      "confidence": 0.9497,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1770.2,
+        972.0,
+        1812.2,
+        1011.5
+      ],
+      "confidence": 0.9141,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1497.5,
+        1137.4,
+        1531.5,
+        1170.8
+      ],
+      "confidence": 0.8081,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1791.4,
+        1652.4,
+        1822.2,
+        1684.0
+      ],
+      "confidence": 0.7414,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1447.5,
+        1784.8,
+        1489.1,
+        1823.9
+      ],
+      "confidence": 0.6529,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1560.5,
+        1707.1,
+        1609.1,
+        1744.2
+      ],
+      "confidence": 0.6401,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1667.6,
+        1193.4,
+        1699.8,
+        1230.8
+      ],
+      "confidence": 0.4748,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1756.9,
+        1127.6,
+        1790.0,
+        1157.0
+      ],
+      "confidence": 0.4099,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1109.5,
+        951.4,
+        1132.5,
+        975.7
+      ],
+      "confidence": 0.3948,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1581.8,
+        1808.8,
+        1609.3,
+        1837.9
+      ],
+      "confidence": 0.3226,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          894,
+          1832,
+          1918
+        ],
+        "index": 5
+      }
+    },
+    {
+      "box": [
+        1696.1,
+        1633.3,
+        1750.9,
+        1681.2
+      ],
+      "confidence": 0.9929,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        2069.3,
+        904.3,
+        2162.3,
+        954.3
+      ],
+      "confidence": 0.9472,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        2168.0,
+        1191.3,
+        2191.5,
+        1230.3
+      ],
+      "confidence": 0.9404,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        1639.8,
+        1688.9,
+        1668.1,
+        1727.8
+      ],
+      "confidence": 0.9302,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        2086.9,
+        991.5,
+        2153.7,
+        1041.0
+      ],
+      "confidence": 0.9176,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        2096.2,
+        1132.8,
+        2149.1,
+        1181.9
+      ],
+      "confidence": 0.9049,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        1647.5,
+        1140.0,
+        1675.8,
+        1165.5
+      ],
+      "confidence": 0.9019,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        2006.7,
+        1004.5,
+        2080.1,
+        1049.0
+      ],
+      "confidence": 0.8869,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        2077.5,
+        1419.5,
+        2100.4,
+        1442.7
+      ],
+      "confidence": 0.8441,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        1933.1,
+        1617.4,
+        1984.5,
+        1672.1
+      ],
+      "confidence": 0.8243,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        1891.4,
+        1063.2,
+        1922.9,
+        1097.4
+      ],
+      "confidence": 0.7567,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        2242.8,
+        1763.0,
+        2265.5,
+        1783.1
+      ],
+      "confidence": 0.753,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        2118.4,
+        1063.3,
+        2162.2,
+        1098.2
+      ],
+      "confidence": 0.7002,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        2265.5,
+        1156.0,
+        2304.4,
+        1188.2
+      ],
+      "confidence": 0.58,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        1669.0,
+        1675.0,
+        1692.5,
+        1698.5
+      ],
+      "confidence": 0.5423,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        1644.3,
+        1004.4,
+        1676.8,
+        1037.5
+      ],
+      "confidence": 0.4731,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        1836.9,
+        1591.1,
+        1865.6,
+        1620.6
+      ],
+      "confidence": 0.3419,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        1804.6,
+        1267.5,
+        1834.2,
+        1295.8
+      ],
+      "confidence": 0.311,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          1616,
+          894,
+          2640,
+          1918
+        ],
+        "index": 6
+      }
+    },
+    {
+      "box": [
+        3172.4,
+        1583.5,
+        3200.7,
+        1658.1
+      ],
+      "confidence": 0.9827,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          894,
+          3448,
+          1918
+        ],
+        "index": 7
+      }
+    },
+    {
+      "box": [
+        3155.8,
+        1793.2,
+        3177.3,
+        1821.5
+      ],
+      "confidence": 0.9469,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          894,
+          3448,
+          1918
+        ],
+        "index": 7
+      }
+    },
+    {
+      "box": [
+        3303.1,
+        1257.1,
+        3339.0,
+        1309.8
+      ],
+      "confidence": 0.8888,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          2424,
+          894,
+          3448,
+          1918
+        ],
+        "index": 7
+      }
+    },
+    {
+      "box": [
+        3257.9,
+        1696.2,
+        3298.8,
+        1823.1
+      ],
+      "confidence": 0.8164,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          894,
+          3448,
+          1918
+        ],
+        "index": 7
+      }
+    },
+    {
+      "box": [
+        2651.2,
+        1095.1,
+        2668.5,
+        1119.5
+      ],
+      "confidence": 0.5253,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          2424,
+          894,
+          3448,
+          1918
+        ],
+        "index": 7
+      }
+    },
+    {
+      "box": [
+        3225.6,
+        1762.2,
+        3257.7,
+        1862.2
+      ],
+      "confidence": 0.507,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          894,
+          3448,
+          1918
+        ],
+        "index": 7
+      }
+    },
+    {
+      "box": [
+        2730.6,
+        1749.1,
+        2757.1,
+        1773.4
+      ],
+      "confidence": 0.5048,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          894,
+          3448,
+          1918
+        ],
+        "index": 7
+      }
+    },
+    {
+      "box": [
+        897.2,
+        2695.6,
+        935.1,
+        2743.5
+      ],
+      "confidence": 0.9879,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          1788,
+          1024,
+          2812
+        ],
+        "index": 8
+      }
+    },
+    {
+      "box": [
+        523.3,
+        2308.2,
+        590.0,
+        2373.1
+      ],
+      "confidence": 0.947,
+      "mapped_concern": "hyperpigmentation",
+      "normalized_label": "melasma",
+      "observation_status": "actionable",
+      "original_label": "melasma",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          1788,
+          1024,
+          2812
+        ],
+        "index": 8
+      }
+    },
+    {
+      "box": [
+        336.2,
+        1968.8,
+        362.4,
+        2015.2
+      ],
+      "confidence": 0.9165,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          1788,
+          1024,
+          2812
+        ],
+        "index": 8
+      }
+    },
+    {
+      "box": [
+        637.6,
+        2646.7,
+        738.7,
+        2748.0
+      ],
+      "confidence": 0.9025,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          1788,
+          1024,
+          2812
+        ],
+        "index": 8
+      }
+    },
+    {
+      "box": [
+        421.9,
+        2162.1,
+        450.0,
+        2201.9
+      ],
+      "confidence": 0.8417,
+      "mapped_concern": "hyperpigmentation",
+      "normalized_label": "melasma",
+      "observation_status": "actionable",
+      "original_label": "melasma",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          1788,
+          1024,
+          2812
+        ],
+        "index": 8
+      }
+    },
+    {
+      "box": [
+        817.7,
+        2550.2,
+        877.2,
+        2608.6
+      ],
+      "confidence": 0.7255,
+      "mapped_concern": "hyperpigmentation",
+      "normalized_label": "melasma",
+      "observation_status": "actionable",
+      "original_label": "melasma",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          1788,
+          1024,
+          2812
+        ],
+        "index": 8
+      }
+    },
+    {
+      "box": [
+        1384.6,
+        2441.1,
+        1413.1,
+        2470.3
+      ],
+      "confidence": 0.9695,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1015.6,
+        2650.9,
+        1059.7,
+        2683.7
+      ],
+      "confidence": 0.9668,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1744.4,
+        2485.3,
+        1785.4,
+        2525.6
+      ],
+      "confidence": 0.9248,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1755.6,
+        2534.8,
+        1782.2,
+        2559.7
+      ],
+      "confidence": 0.9045,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1262.5,
+        2538.2,
+        1289.9,
+        2577.8
+      ],
+      "confidence": 0.876,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1718.2,
+        2450.0,
+        1765.0,
+        2507.9
+      ],
+      "confidence": 0.8554,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1202.7,
+        2753.2,
+        1221.9,
+        2775.1
+      ],
+      "confidence": 0.729,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1141.5,
+        2668.9,
+        1167.9,
+        2694.2
+      ],
+      "confidence": 0.724,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1012.2,
+        2754.2,
+        1036.5,
+        2779.8
+      ],
+      "confidence": 0.6668,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1670.8,
+        2455.6,
+        1694.5,
+        2476.3
+      ],
+      "confidence": 0.5817,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1806.0,
+        2746.6,
+        1821.7,
+        2763.8
+      ],
+      "confidence": 0.4824,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1387.9,
+        2325.4,
+        1407.8,
+        2347.0
+      ],
+      "confidence": 0.465,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1345.5,
+        2455.4,
+        1364.8,
+        2482.0
+      ],
+      "confidence": 0.4454,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1717.8,
+        2596.9,
+        1738.5,
+        2616.0
+      ],
+      "confidence": 0.3718,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1791.0,
+        2357.9,
+        1808.8,
+        2377.7
+      ],
+      "confidence": 0.3715,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1176.2,
+        2559.2,
+        1223.9,
+        2597.4
+      ],
+      "confidence": 0.351,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1069.7,
+        2754.2,
+        1097.1,
+        2776.1
+      ],
+      "confidence": 0.3416,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1398.0,
+        2644.2,
+        1415.6,
+        2665.0
+      ],
+      "confidence": 0.3125,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1714.1,
+        2240.6,
+        1740.0,
+        2268.1
+      ],
+      "confidence": 0.3108,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        1368.2,
+        2408.4,
+        1386.6,
+        2426.2
+      ],
+      "confidence": 0.3055,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          1788,
+          1832,
+          2812
+        ],
+        "index": 9
+      }
+    },
+    {
+      "box": [
+        2235.3,
+        2379.7,
+        2279.0,
+        2449.2
+      ],
+      "confidence": 0.9854,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          1616,
+          1788,
+          2640,
+          2812
+        ],
+        "index": 10
+      }
+    },
+    {
+      "box": [
+        1680.3,
+        2677.4,
+        1704.2,
+        2701.5
+      ],
+      "confidence": 0.8449,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          1616,
+          1788,
+          2640,
+          2812
+        ],
+        "index": 10
+      }
+    },
+    {
+      "box": [
+        1757.4,
+        2406.9,
+        1778.6,
+        2427.2
+      ],
+      "confidence": 0.8178,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          1616,
+          1788,
+          2640,
+          2812
+        ],
+        "index": 10
+      }
+    },
+    {
+      "box": [
+        1822.5,
+        2237.0,
+        1844.1,
+        2257.2
+      ],
+      "confidence": 0.7739,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          1616,
+          1788,
+          2640,
+          2812
+        ],
+        "index": 10
+      }
+    },
+    {
+      "box": [
+        2144.9,
+        2250.3,
+        2174.2,
+        2284.8
+      ],
+      "confidence": 0.7562,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          1616,
+          1788,
+          2640,
+          2812
+        ],
+        "index": 10
+      }
+    },
+    {
+      "box": [
+        1836.8,
+        2587.5,
+        1862.1,
+        2609.7
+      ],
+      "confidence": 0.5647,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          1616,
+          1788,
+          2640,
+          2812
+        ],
+        "index": 10
+      }
+    },
+    {
+      "box": [
+        2281.5,
+        2419.0,
+        2300.4,
+        2449.6
+      ],
+      "confidence": 0.5074,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          1616,
+          1788,
+          2640,
+          2812
+        ],
+        "index": 10
+      }
+    },
+    {
+      "box": [
+        2389.4,
+        2475.9,
+        2410.2,
+        2499.0
+      ],
+      "confidence": 0.4835,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          1616,
+          1788,
+          2640,
+          2812
+        ],
+        "index": 10
+      }
+    },
+    {
+      "box": [
+        2449.1,
+        2550.4,
+        2488.4,
+        2586.9
+      ],
+      "confidence": 0.3729,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          1616,
+          1788,
+          2640,
+          2812
+        ],
+        "index": 10
+      }
+    },
+    {
+      "box": [
+        2359.2,
+        2496.0,
+        2380.1,
+        2516.6
+      ],
+      "confidence": 0.3139,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          1616,
+          1788,
+          2640,
+          2812
+        ],
+        "index": 10
+      }
+    },
+    {
+      "box": [
+        3026.5,
+        2363.7,
+        3071.5,
+        2411.2
+      ],
+      "confidence": 0.9393,
+      "mapped_concern": null,
+      "normalized_label": "nevus",
+      "observation_status": "non_actionable",
+      "original_label": "nevus",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          1788,
+          3448,
+          2812
+        ],
+        "index": 11
+      }
+    },
+    {
+      "box": [
+        3193.8,
+        2026.5,
+        3228.9,
+        2073.3
+      ],
+      "confidence": 0.8553,
+      "mapped_concern": "hyperpigmentation",
+      "normalized_label": "melasma",
+      "observation_status": "actionable",
+      "original_label": "melasma",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          1788,
+          3448,
+          2812
+        ],
+        "index": 11
+      }
+    },
+    {
+      "box": [
+        3160.9,
+        2473.8,
+        3189.8,
+        2526.6
+      ],
+      "confidence": 0.3596,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          1788,
+          3448,
+          2812
+        ],
+        "index": 11
+      }
+    },
+    {
+      "box": [
+        751.8,
+        3228.4,
+        788.2,
+        3266.9
+      ],
+      "confidence": 0.9869,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        730.0,
+        3412.8,
+        808.2,
+        3493.5
+      ],
+      "confidence": 0.9808,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        653.8,
+        3221.2,
+        721.6,
+        3293.4
+      ],
+      "confidence": 0.9741,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        949.9,
+        3287.4,
+        986.7,
+        3327.8
+      ],
+      "confidence": 0.9664,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        674.3,
+        2912.8,
+        710.7,
+        2954.4
+      ],
+      "confidence": 0.9652,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        664.5,
+        3530.1,
+        721.8,
+        3603.0
+      ],
+      "confidence": 0.9589,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "pustule",
+      "observation_status": "actionable",
+      "original_label": "pustule",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        883.1,
+        3317.9,
+        915.4,
+        3344.9
+      ],
+      "confidence": 0.9544,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        565.4,
+        2904.2,
+        626.9,
+        2968.2
+      ],
+      "confidence": 0.9011,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        528.1,
+        3288.9,
+        613.4,
+        3409.0
+      ],
+      "confidence": 0.8835,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        667.1,
+        3097.9,
+        705.5,
+        3167.1
+      ],
+      "confidence": 0.8371,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        439.2,
+        3177.1,
+        493.1,
+        3252.0
+      ],
+      "confidence": 0.8337,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        507.1,
+        3034.4,
+        541.5,
+        3082.9
+      ],
+      "confidence": 0.8235,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        560.4,
+        3036.1,
+        583.6,
+        3069.8
+      ],
+      "confidence": 0.783,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        782.0,
+        3204.1,
+        801.4,
+        3223.2
+      ],
+      "confidence": 0.6965,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        798.6,
+        2963.7,
+        832.3,
+        2992.1
+      ],
+      "confidence": 0.637,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        545.1,
+        2869.0,
+        569.1,
+        2893.1
+      ],
+      "confidence": 0.6029,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        646.9,
+        2854.5,
+        672.4,
+        2891.8
+      ],
+      "confidence": 0.5776,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        463.3,
+        2874.0,
+        484.2,
+        2914.1
+      ],
+      "confidence": 0.5216,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        703.2,
+        3042.9,
+        725.7,
+        3069.3
+      ],
+      "confidence": 0.4629,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        528.5,
+        3114.4,
+        555.2,
+        3143.8
+      ],
+      "confidence": 0.459,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        695.1,
+        3295.9,
+        719.7,
+        3315.9
+      ],
+      "confidence": 0.4168,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        441.6,
+        3303.3,
+        463.0,
+        3339.4
+      ],
+      "confidence": 0.412,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        603.9,
+        2984.3,
+        628.6,
+        3023.0
+      ],
+      "confidence": 0.4044,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        898.7,
+        2782.4,
+        933.4,
+        2817.7
+      ],
+      "confidence": 0.3268,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        769.1,
+        2850.2,
+        821.2,
+        2923.2
+      ],
+      "confidence": 0.3129,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        599.1,
+        3114.0,
+        628.7,
+        3157.4
+      ],
+      "confidence": 0.311,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          2682,
+          1024,
+          3706
+        ],
+        "index": 12
+      }
+    },
+    {
+      "box": [
+        911.3,
+        2845.0,
+        958.9,
+        2891.4
+      ],
+      "confidence": 0.9626,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          2682,
+          1832,
+          3706
+        ],
+        "index": 13
+      }
+    },
+    {
+      "box": [
+        1075.3,
+        2714.9,
+        1112.2,
+        2759.1
+      ],
+      "confidence": 0.9374,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          2682,
+          1832,
+          3706
+        ],
+        "index": 13
+      }
+    },
+    {
+      "box": [
+        828.9,
+        3253.6,
+        897.1,
+        3326.4
+      ],
+      "confidence": 0.9269,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          2682,
+          1832,
+          3706
+        ],
+        "index": 13
+      }
+    },
+    {
+      "box": [
+        915.9,
+        3332.8,
+        940.1,
+        3357.2
+      ],
+      "confidence": 0.9258,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          2682,
+          1832,
+          3706
+        ],
+        "index": 13
+      }
+    },
+    {
+      "box": [
+        1619.7,
+        3249.4,
+        1657.6,
+        3286.0
+      ],
+      "confidence": 0.8676,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "perioral",
+      "source_tile": {
+        "box": [
+          808,
+          2682,
+          1832,
+          3706
+        ],
+        "index": 13
+      }
+    },
+    {
+      "box": [
+        1005.7,
+        2691.8,
+        1041.5,
+        2730.3
+      ],
+      "confidence": 0.794,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          2682,
+          1832,
+          3706
+        ],
+        "index": 13
+      }
+    },
+    {
+      "box": [
+        1098.3,
+        2842.1,
+        1123.0,
+        2868.2
+      ],
+      "confidence": 0.63,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "right_cheek",
+      "source_tile": {
+        "box": [
+          808,
+          2682,
+          1832,
+          3706
+        ],
+        "index": 13
+      }
+    },
+    {
+      "box": [
+        1777.2,
+        3241.8,
+        1795.7,
+        3261.7
+      ],
+      "confidence": 0.5829,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "perioral",
+      "source_tile": {
+        "box": [
+          808,
+          2682,
+          1832,
+          3706
+        ],
+        "index": 13
+      }
+    },
+    {
+      "box": [
+        1363.6,
+        3176.6,
+        1382.5,
+        3195.7
+      ],
+      "confidence": 0.535,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          808,
+          2682,
+          1832,
+          3706
+        ],
+        "index": 13
+      }
+    },
+    {
+      "box": [
+        2613.9,
+        3113.8,
+        2637.7,
+        3141.7
+      ],
+      "confidence": 0.5744,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          1616,
+          2682,
+          2640,
+          3706
+        ],
+        "index": 14
+      }
+    },
+    {
+      "box": [
+        1650.0,
+        2824.0,
+        1665.2,
+        2839.2
+      ],
+      "confidence": 0.5415,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          1616,
+          2682,
+          2640,
+          3706
+        ],
+        "index": 14
+      }
+    },
+    {
+      "box": [
+        2249.6,
+        3025.2,
+        2265.8,
+        3042.6
+      ],
+      "confidence": 0.3783,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          1616,
+          2682,
+          2640,
+          3706
+        ],
+        "index": 14
+      }
+    },
+    {
+      "box": [
+        2595.3,
+        3074.6,
+        2619.5,
+        3099.5
+      ],
+      "confidence": 0.3569,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          1616,
+          2682,
+          2640,
+          3706
+        ],
+        "index": 14
+      }
+    },
+    {
+      "box": [
+        2623.5,
+        2836.1,
+        2700.5,
+        2896.6
+      ],
+      "confidence": 0.9924,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2874.0,
+        3271.0,
+        2908.1,
+        3320.5
+      ],
+      "confidence": 0.9848,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2899.0,
+        2853.5,
+        2929.1,
+        2898.2
+      ],
+      "confidence": 0.9813,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2766.3,
+        2751.2,
+        2813.6,
+        2789.9
+      ],
+      "confidence": 0.9777,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        3174.7,
+        2770.1,
+        3210.3,
+        2816.8
+      ],
+      "confidence": 0.9763,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2723.9,
+        3212.7,
+        2782.7,
+        3267.0
+      ],
+      "confidence": 0.9716,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2750.3,
+        3317.8,
+        2782.8,
+        3351.5
+      ],
+      "confidence": 0.9556,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2827.4,
+        3158.4,
+        2855.4,
+        3183.3
+      ],
+      "confidence": 0.8958,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2829.1,
+        2893.9,
+        2874.3,
+        2967.7
+      ],
+      "confidence": 0.8883,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2991.7,
+        2727.8,
+        3028.0,
+        2769.3
+      ],
+      "confidence": 0.8715,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2441.9,
+        2754.5,
+        2463.0,
+        2773.6
+      ],
+      "confidence": 0.8651,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "nose",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        3087.4,
+        2814.5,
+        3146.0,
+        2881.9
+      ],
+      "confidence": 0.8609,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2881.6,
+        3011.9,
+        2907.7,
+        3050.5
+      ],
+      "confidence": 0.8564,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2794.9,
+        3477.0,
+        2826.0,
+        3514.7
+      ],
+      "confidence": 0.8546,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2854.2,
+        2839.4,
+        2895.8,
+        2899.5
+      ],
+      "confidence": 0.8192,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2715.0,
+        3010.7,
+        2747.2,
+        3051.8
+      ],
+      "confidence": 0.7023,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2909.4,
+        3104.5,
+        2931.3,
+        3133.9
+      ],
+      "confidence": 0.5777,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        3167.5,
+        2831.9,
+        3229.9,
+        2924.9
+      ],
+      "confidence": 0.5375,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        3166.5,
+        3245.2,
+        3187.2,
+        3287.4
+      ],
+      "confidence": 0.5203,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2780.7,
+        2832.7,
+        2812.2,
+        2868.4
+      ],
+      "confidence": 0.4971,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2902.2,
+        3225.9,
+        2956.3,
+        3304.9
+      ],
+      "confidence": 0.4622,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2791.9,
+        2706.9,
+        2819.7,
+        2736.4
+      ],
+      "confidence": 0.4248,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2766.6,
+        3488.3,
+        2798.4,
+        3516.8
+      ],
+      "confidence": 0.3968,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        2770.7,
+        3066.8,
+        2824.5,
+        3132.6
+      ],
+      "confidence": 0.322,
+      "mapped_concern": "acne_scarring",
+      "normalized_label": "atrophic_scar",
+      "observation_status": "actionable",
+      "original_label": "atrophic_scar",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          2424,
+          2682,
+          3448,
+          3706
+        ],
+        "index": 15
+      }
+    },
+    {
+      "box": [
+        599.8,
+        3694.4,
+        657.1,
+        3799.5
+      ],
+      "confidence": 0.7484,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          0,
+          3576,
+          1024,
+          4600
+        ],
+        "index": 16
+      }
+    },
+    {
+      "box": [
+        846.8,
+        3675.7,
+        884.7,
+        3720.2
+      ],
+      "confidence": 0.9478,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          808,
+          3576,
+          1832,
+          4600
+        ],
+        "index": 17
+      }
+    },
+    {
+      "box": [
+        1424.7,
+        4277.0,
+        1476.8,
+        4327.6
+      ],
+      "confidence": 0.9203,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          808,
+          3576,
+          1832,
+          4600
+        ],
+        "index": 17
+      }
+    },
+    {
+      "box": [
+        1448.4,
+        4065.8,
+        1467.8,
+        4087.5
+      ],
+      "confidence": 0.8305,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "perioral",
+      "source_tile": {
+        "box": [
+          808,
+          3576,
+          1832,
+          4600
+        ],
+        "index": 17
+      }
+    },
+    {
+      "box": [
+        1359.1,
+        4146.1,
+        1428.5,
+        4216.5
+      ],
+      "confidence": 0.7968,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          808,
+          3576,
+          1832,
+          4600
+        ],
+        "index": 17
+      }
+    },
+    {
+      "box": [
+        1279.7,
+        4021.8,
+        1336.7,
+        4077.9
+      ],
+      "confidence": 0.765,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "pustule",
+      "observation_status": "actionable",
+      "original_label": "pustule",
+      "region": "perioral",
+      "source_tile": {
+        "box": [
+          808,
+          3576,
+          1832,
+          4600
+        ],
+        "index": 17
+      }
+    },
+    {
+      "box": [
+        1810.8,
+        4062.7,
+        1828.0,
+        4080.6
+      ],
+      "confidence": 0.5218,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "perioral",
+      "source_tile": {
+        "box": [
+          808,
+          3576,
+          1832,
+          4600
+        ],
+        "index": 17
+      }
+    },
+    {
+      "box": [
+        1161.0,
+        3918.3,
+        1199.1,
+        3957.3
+      ],
+      "confidence": 0.422,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "perioral",
+      "source_tile": {
+        "box": [
+          808,
+          3576,
+          1832,
+          4600
+        ],
+        "index": 17
+      }
+    },
+    {
+      "box": [
+        2250.3,
+        4219.1,
+        2311.9,
+        4284.4
+      ],
+      "confidence": 0.9496,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          1616,
+          3576,
+          2640,
+          4600
+        ],
+        "index": 18
+      }
+    },
+    {
+      "box": [
+        2349.7,
+        4118.2,
+        2374.5,
+        4144.3
+      ],
+      "confidence": 0.8806,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          1616,
+          3576,
+          2640,
+          4600
+        ],
+        "index": 18
+      }
+    },
+    {
+      "box": [
+        2314.8,
+        4173.6,
+        2375.9,
+        4241.8
+      ],
+      "confidence": 0.8547,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          1616,
+          3576,
+          2640,
+          4600
+        ],
+        "index": 18
+      }
+    },
+    {
+      "box": [
+        2474.0,
+        4249.1,
+        2492.6,
+        4268.4
+      ],
+      "confidence": 0.4042,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          1616,
+          3576,
+          2640,
+          4600
+        ],
+        "index": 18
+      }
+    },
+    {
+      "box": [
+        2517.8,
+        4219.0,
+        2564.8,
+        4278.6
+      ],
+      "confidence": 0.9785,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          2424,
+          3576,
+          3448,
+          4600
+        ],
+        "index": 19
+      }
+    },
+    {
+      "box": [
+        2461.8,
+        4156.4,
+        2494.5,
+        4197.0
+      ],
+      "confidence": 0.9764,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          2424,
+          3576,
+          3448,
+          4600
+        ],
+        "index": 19
+      }
+    },
+    {
+      "box": [
+        2877.4,
+        3915.1,
+        2932.8,
+        3971.0
+      ],
+      "confidence": 0.9629,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          2424,
+          3576,
+          3448,
+          4600
+        ],
+        "index": 19
+      }
+    },
+    {
+      "box": [
+        2967.4,
+        3773.6,
+        3024.5,
+        3850.3
+      ],
+      "confidence": 0.9188,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          2424,
+          3576,
+          3448,
+          4600
+        ],
+        "index": 19
+      }
+    },
+    {
+      "box": [
+        2752.0,
+        4036.6,
+        2813.3,
+        4110.6
+      ],
+      "confidence": 0.8037,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "papule",
+      "observation_status": "actionable",
+      "original_label": "papule",
+      "region": "chin_jaw",
+      "source_tile": {
+        "box": [
+          2424,
+          3576,
+          3448,
+          4600
+        ],
+        "index": 19
+      }
+    },
+    {
+      "box": [
+        2473.3,
+        3726.7,
+        2489.9,
+        3745.5
+      ],
+      "confidence": 0.4698,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "closed_comedo",
+      "observation_status": "actionable",
+      "original_label": "closed_comedo",
+      "region": "perioral",
+      "source_tile": {
+        "box": [
+          2424,
+          3576,
+          3448,
+          4600
+        ],
+        "index": 19
+      }
+    },
+    {
+      "box": [
+        2523.9,
+        3697.0,
+        2539.3,
+        3724.8
+      ],
+      "confidence": 0.4451,
+      "mapped_concern": null,
+      "normalized_label": "nevus",
+      "observation_status": "non_actionable",
+      "original_label": "nevus",
+      "region": "perioral",
+      "source_tile": {
+        "box": [
+          2424,
+          3576,
+          3448,
+          4600
+        ],
+        "index": 19
+      }
+    },
+    {
+      "box": [
+        2533.6,
+        3812.1,
+        2550.5,
+        3829.9
+      ],
+      "confidence": 0.3577,
+      "mapped_concern": "acne_comedonal",
+      "normalized_label": "open_comedo",
+      "observation_status": "actionable",
+      "original_label": "open_comedo",
+      "region": "perioral",
+      "source_tile": {
+        "box": [
+          2424,
+          3576,
+          3448,
+          4600
+        ],
+        "index": 19
+      }
+    }
+  ],
+  "generated_at": "2026-07-17T04:14:57.655596Z",
+  "image_id": "207_jpg.rf.d22fd4358524546f05d733657148108e.jpg",
+  "input_profile": {
+    "abcde_change_present": null,
+    "acne_duration_weeks": 16,
+    "active_acne_controlled": null,
+    "age_years": 25,
+    "allergies": [],
+    "current_actives": [],
+    "current_medications": [],
+    "finding_duration_weeks": null,
+    "max_price_usd": null,
+    "painful_or_deep_lesions": false,
+    "pregnancy_or_hormonal_medication_onset": null,
+    "pregnancy_status": "not_pregnant",
+    "prior_scarring": false,
+    "scar_diagnosis_confirmed_by_clinician": null,
+    "scar_duration_months": null,
+    "sensitivity_conditions": [],
+    "skin_type": "oily",
+    "spot_bleeding": null,
+    "spot_bleeding_itching_or_painful": null,
+    "spot_itching": null,
+    "spot_new_or_changing": null,
+    "spot_other_symptoms": null,
+    "spot_painful": null,
+    "tone_bucket": "medium",
+    "tone_source": "self_report",
+    "treatment_history": [],
+    "unknown_fields": [],
+    "wound_closed": null
+  },
+  "lesion_findings": [
+    {
+      "count": 26,
+      "evidence_source": "prediction",
+      "lesion_type": "closed_comedo",
+      "max_detector_confidence": 0.9764,
+      "mean_detector_confidence": 0.649,
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "nose",
+        "perioral",
+        "right_cheek"
+      ]
+    },
+    {
+      "count": 31,
+      "evidence_source": "prediction",
+      "lesion_type": "open_comedo",
+      "max_detector_confidence": 0.9695,
+      "mean_detector_confidence": 0.619016,
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "nose",
+        "perioral",
+        "right_cheek"
+      ]
+    },
+    {
+      "count": 22,
+      "evidence_source": "prediction",
+      "lesion_type": "papule",
+      "max_detector_confidence": 0.9808,
+      "mean_detector_confidence": 0.849673,
+      "regions": [
+        "chin_jaw",
+        "forehead",
+        "left_cheek",
+        "right_cheek"
+      ]
+    },
+    {
+      "count": 2,
+      "evidence_source": "prediction",
+      "lesion_type": "pustule",
+      "max_detector_confidence": 0.9589,
+      "mean_detector_confidence": 0.86195,
+      "regions": [
+        "perioral",
+        "right_cheek"
+      ]
+    },
+    {
+      "count": 0,
+      "evidence_source": "prediction",
+      "lesion_type": "nodule",
+      "max_detector_confidence": null,
+      "mean_detector_confidence": null,
+      "regions": []
+    },
+    {
+      "count": 94,
+      "evidence_source": "prediction",
+      "lesion_type": "atrophic_scar",
+      "max_detector_confidence": 0.9929,
+      "mean_detector_confidence": 0.718118,
+      "regions": [
+        "forehead",
+        "left_cheek",
+        "nose",
+        "perioral",
+        "right_cheek"
+      ]
+    },
+    {
+      "count": 0,
+      "evidence_source": "prediction",
+      "lesion_type": "hypertrophic_scar",
+      "max_detector_confidence": null,
+      "mean_detector_confidence": null,
+      "regions": []
+    },
+    {
+      "count": 5,
+      "evidence_source": "prediction",
+      "lesion_type": "melasma",
+      "max_detector_confidence": 0.947,
+      "mean_detector_confidence": 0.78266,
+      "regions": [
+        "left_cheek",
+        "right_cheek"
+      ]
+    },
+    {
+      "count": 2,
+      "evidence_source": "prediction",
+      "lesion_type": "nevus",
+      "max_detector_confidence": 0.9393,
+      "mean_detector_confidence": 0.6922,
+      "regions": [
+        "left_cheek",
+        "perioral"
+      ]
+    },
+    {
+      "count": 0,
+      "evidence_source": "prediction",
+      "lesion_type": "other",
+      "max_detector_confidence": null,
+      "mean_detector_confidence": null,
+      "regions": []
+    }
+  ],
+  "models": {
+    "classifier": {
+      "sha256": null,
+      "state": "not_applicable"
+    },
+    "detector": {
+      "identity": "remote_sa_rpn",
+      "sha256": "c17936dec47715c9f98ce59cca8054eb743d29ccd8c176e61f8985f24bdf4ed6"
+    }
+  },
+  "pipeline": {
+    "dedupe_threshold": 0.5,
+    "endpoint": "http://127.0.0.1:8000/predict",
+    "identifier": "sa-rpn-native-tiles",
+    "minimum_score": 0.3,
+    "overlap": 128,
+    "tile_size": 1024
+  },
+  "policies": {
+    "lesion_care": {
+      "audit_approved": true,
+      "fixture_image_sha256": "a610a706ac5e9b48846c4f80c2bc9968b5786a38cf7e9b8590c0de9112db30a0",
+      "fixture_manifest_sha256": "0808ee71b8d1f4e4b6d1dcc665e0ec3a44c9c45af645ab898d4496ace1731f37",
+      "fixture_normalized_profile_sha256": "9a7b21cd69a0254a9b372473079f4ae19a7f2f0c30afe0e21890e821ddcfff4c",
+      "fixture_profile_sha256": "a362655a68cda891c4841185801906961e22e198936ef3c1de9d55c2bc104a9e",
+      "identity": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "input_scope": "real_dataset_evaluation",
+      "report_sha256": "8e201d6d869a67e8635f29cc43452138e760561ae0e34d2b2b4b8ba1d6e4344d",
+      "scope_authorized": true,
+      "scope_reasons": [],
+      "sha256": "8d24399f076e7721a96b1fc6cf59174bb94390b655a15eb326c8d3a722ffbae1",
+      "source_manifest_sha256": "5f6f69e5d468ce947ae2eb6e321a8476267dd8cf1381758a2017011e97c50a2f"
+    }
+  },
+  "ranker": {
+    "sha256": null,
+    "state": "none"
+  },
+  "recommendation_status": "delegated_to_recsys",
+  "region_mapping": {
+    "face_box": [
+      222.38717675209045,
+      670.9673166275024,
+      3446.2872228622437,
+      4655.301284790039
+    ],
+    "face_detected": true,
+    "fallback": false,
+    "forced_assignments": [
+      0,
+      3,
+      6,
+      10,
+      12,
+      13,
+      16,
+      21,
+      22,
+      28,
+      29,
+      30,
+      34,
+      35,
+      38,
+      43,
+      44,
+      46,
+      49,
+      51,
+      59,
+      60,
+      63,
+      65,
+      66,
+      67,
+      70,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      98,
+      113,
+      115,
+      122,
+      123,
+      125,
+      126,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      137,
+      138,
+      140,
+      141,
+      146,
+      148,
+      152,
+      153,
+      157,
+      159
+    ],
+    "method": "mediapipe_face_landmarker",
+    "model_path": "models/face_landmarker.task",
+    "reason": null
+  },
+  "release_eligibility": {
+    "eligible": false,
+    "reasons": [
+      "code_dirty_or_unknown",
+      "clinician_policy_approval",
+      "adequate_calibration_cohort",
+      "external_clinical_review_set",
+      "verified_real_catalog_overlay"
+    ]
+  },
+  "replay_key": "08a893e2d60077aa326716cdce2d2d5424cd4adcdb9c0f66301aadc05b4a4cfd",
+  "safety_observations": [
+    {
+      "code": "nevus_observation",
+      "count": 2,
+      "labels": {
+        "nevus": 2
+      },
+      "max_confidence": 0.9393,
+      "message": "Non-actionable nevus observation",
+      "professional_review": true
+    }
+  ],
+  "schema_version": "4",
+  "semantic_inputs": {
+    "catalog": {
+      "drug": {
+        "name": "catalog_drug.json",
+        "sha256": "771e7b1a01b4523180cad6188a81bb61a8e439dcf69299b485125a950a3071f4",
+        "state": "available"
+      },
+      "primary": {
+        "name": "catalog.json",
+        "sha256": "d2af5387b45a00950f78a4c9a3dfe5f1e6e7186e0b205bff38d2bee1f21d7233",
+        "state": "available"
+      },
+      "sha256": "15c538ef7164233e6c1ddaa276f4d9337435a4111e2c43a4420cf1ad9b232290",
+      "state": "available",
+      "tier2": {
+        "name": "catalog_tier2.json",
+        "sha256": "d170f91a5991ce553089ea53714cd6995688d231846ef334d385e9f614544bf4",
+        "state": "available"
+      }
+    },
+    "code": {
+      "dirty": true,
+      "git_commit": "d364e19f1f9c5e61bcf12f0bb51db6f750abc084"
+    },
+    "dataset": {
+      "name": "AcneSCU",
+      "sample_id": "high-real",
+      "split": "external",
+      "split_proof": "hash-pinned-external-e2e"
+    },
+    "effective_config": {
+      "class_min_scores": {
+        "melasma": 0.5
+      },
+      "classification_crop_pad": 1.5,
+      "dedupe_threshold": 0.5,
+      "endpoint": "http://127.0.0.1:8000/predict",
+      "face_landmarker": {
+        "name": "face_landmarker.task",
+        "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+        "state": "available"
+      },
+      "minimum_score": 0.3,
+      "overlap": 128,
+      "pipeline": "sa-rpn-native-tiles",
+      "regions": {
+        "perioral_scale": 1.55
+      },
+      "severity": {
+        "broad_region_count": 3,
+        "confidence_cutoff": 0.5,
+        "count_thresholds": {
+          "acne_comedonal": [
+            1,
+            8,
+            20,
+            40
+          ],
+          "acne_inflammatory": [
+            1,
+            6,
+            15,
+            30
+          ],
+          "acne_scarring": [
+            1,
+            3,
+            8,
+            20
+          ],
+          "hyperpigmentation": [
+            1,
+            4,
+            10,
+            25
+          ]
+        },
+        "hypertrophic_scar_min_severity": 3,
+        "nodule_severity": 4,
+        "professional_review": {
+          "nevus": {
+            "min_confidence": 0.8,
+            "min_count": 3
+          },
+          "other": {
+            "min_confidence": 0.9,
+            "min_count": 5
+          }
+        }
+      },
+      "tile_size": 1024,
+      "tone": {
+        "ita_light_min": 41,
+        "ita_medium_min": 10,
+        "low_light_l_threshold": 35,
+        "min_sample_pixels": 100,
+        "profile_cheek_area_ratio": 0.5,
+        "sephora_tone_buckets": {
+          "deep": [
+            "deep",
+            "dark",
+            "rich",
+            "ebony"
+          ],
+          "light": [
+            "porcelain",
+            "fair",
+            "fairlight",
+            "light"
+          ],
+          "medium": [
+            "lightmedium",
+            "medium",
+            "mediumtan",
+            "olive",
+            "tan"
+          ]
+        },
+        "skin_lab_gate": {
+          "a_min": 0,
+          "b_min": 5,
+          "l_min": 5
+        },
+        "specular_rgb_min": 245,
+        "specular_rgb_range": 20
+      }
+    },
+    "evidence_source": "prediction",
+    "input_profile": {
+      "abcde_change_present": null,
+      "acne_duration_weeks": 16,
+      "active_acne_controlled": null,
+      "age_years": 25,
+      "allergies": [],
+      "current_actives": [],
+      "current_medications": [],
+      "finding_duration_weeks": null,
+      "max_price_usd": null,
+      "painful_or_deep_lesions": false,
+      "pregnancy_or_hormonal_medication_onset": null,
+      "pregnancy_status": "not_pregnant",
+      "prior_scarring": false,
+      "scar_diagnosis_confirmed_by_clinician": null,
+      "scar_duration_months": null,
+      "sensitivity_conditions": [],
+      "skin_type": "oily",
+      "spot_bleeding": null,
+      "spot_bleeding_itching_or_painful": null,
+      "spot_itching": null,
+      "spot_new_or_changing": null,
+      "spot_other_symptoms": null,
+      "spot_painful": null,
+      "tone_bucket": "medium",
+      "tone_source": "self_report",
+      "treatment_history": [],
+      "unknown_fields": [],
+      "wound_closed": null
+    },
+    "models": {
+      "classifier": {
+        "sha256": null,
+        "state": "not_applicable"
+      },
+      "detector": {
+        "identity": "remote_sa_rpn",
+        "sha256": "c17936dec47715c9f98ce59cca8054eb743d29ccd8c176e61f8985f24bdf4ed6"
+      }
+    },
+    "oracle_annotations": {
+      "sha256": null,
+      "state": "unavailable"
+    },
+    "policies": {
+      "lesion_care": {
+        "audit_approved": true,
+        "fixture_image_sha256": "a610a706ac5e9b48846c4f80c2bc9968b5786a38cf7e9b8590c0de9112db30a0",
+        "fixture_manifest_sha256": "0808ee71b8d1f4e4b6d1dcc665e0ec3a44c9c45af645ab898d4496ace1731f37",
+        "fixture_normalized_profile_sha256": "9a7b21cd69a0254a9b372473079f4ae19a7f2f0c30afe0e21890e821ddcfff4c",
+        "fixture_profile_sha256": "a362655a68cda891c4841185801906961e22e198936ef3c1de9d55c2bc104a9e",
+        "identity": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+        "input_scope": "real_dataset_evaluation",
+        "report_sha256": "8e201d6d869a67e8635f29cc43452138e760561ae0e34d2b2b4b8ba1d6e4344d",
+        "scope_authorized": true,
+        "scope_reasons": [],
+        "sha256": "8d24399f076e7721a96b1fc6cf59174bb94390b655a15eb326c8d3a722ffbae1",
+        "source_manifest_sha256": "5f6f69e5d468ce947ae2eb6e321a8476267dd8cf1381758a2017011e97c50a2f"
+      }
+    },
+    "ranker": {
+      "sha256": null,
+      "state": "none"
+    },
+    "schema_version": "4",
+    "source_image_sha256": "a610a706ac5e9b48846c4f80c2bc9968b5786a38cf7e9b8590c0de9112db30a0"
+  },
+  "skin_tone": {
+    "bucket": "medium",
+    "ita": 27.621296912672353,
+    "low_light": false,
+    "median_l": 60.42316515973198,
+    "sample_count": 3060766,
+    "source": "photo_estimate"
+  },
+  "source_image_sha256": "a610a706ac5e9b48846c4f80c2bc9968b5786a38cf7e9b8590c0de9112db30a0",
+  "therapy_plan": {
+    "alternatives": [],
+    "clinician_options": [
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "closed_comedo",
+        "option": "topical retinoid or combination therapy when OTC care is unsuitable or unsuccessful"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "closed_comedo",
+        "option": "azelaic acid when clinically appropriate"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "open_comedo",
+        "option": "topical retinoid or combination therapy when OTC care is unsuitable or unsuccessful"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "open_comedo",
+        "option": "azelaic acid when clinically appropriate"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "papule",
+        "option": "fixed topical combination therapy"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "papule",
+        "option": "azelaic acid"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "papule",
+        "option": "oral therapy for clinically assessed moderate-to-severe acne"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "pustule",
+        "option": "fixed topical combination therapy"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "pustule",
+        "option": "azelaic acid"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "pustule",
+        "option": "oral therapy for clinically assessed moderate-to-severe acne"
+      },
+      {
+        "channel": "procedure",
+        "lesion_type": "atrophic_scar",
+        "option": "control active acne before scar procedures"
+      },
+      {
+        "channel": "clinician_discussion",
+        "lesion_type": "atrophic_scar",
+        "option": "scar-subtype assessment"
+      },
+      {
+        "channel": "procedure",
+        "lesion_type": "atrophic_scar",
+        "option": "microneedling, laser, chemical reconstruction, filler, punch techniques, or surgery selected by a dermatologist"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "atrophic_scar",
+        "option": "topical retinoid or salicylic acid for selected mild scarring only after clinical assessment"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "melasma",
+        "option": "hydroquinone prescription therapy"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "melasma",
+        "option": "triple-combination prescription therapy"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "melasma",
+        "option": "azelaic acid, kojic acid, or vitamin C in a clinician-selected plan"
+      },
+      {
+        "channel": "procedure",
+        "lesion_type": "melasma",
+        "option": "carefully selected procedure after diagnosis and pigment-risk assessment"
+      },
+      {
+        "channel": "clinician_discussion",
+        "lesion_type": "nevus",
+        "option": "dermatoscopic examination"
+      },
+      {
+        "channel": "procedure",
+        "lesion_type": "nevus",
+        "option": "biopsy or clinician removal when suspicious or bothersome"
+      }
+    ],
+    "deferred_reasons": [
+      "exact_label_melasma",
+      "diagnosis_not_confirmed_by_photo",
+      "iron_oxide_spf_path_proposed",
+      "mvp_ai_research_approved",
+      "required_intake_unknown:spot_new_or_changing",
+      "required_intake_unknown:spot_bleeding",
+      "required_intake_unknown:spot_itching",
+      "required_intake_unknown:spot_painful",
+      "required_intake_unknown:spot_other_symptoms",
+      "required_intake_unknown:pregnancy_or_hormonal_medication_onset"
+    ],
+    "lesion_types": [
+      "closed_comedo",
+      "open_comedo",
+      "papule",
+      "pustule",
+      "atrophic_scar",
+      "melasma",
+      "nevus"
+    ],
+    "policy_version": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+    "primary": null,
+    "support_roles": [
+      "cleanser",
+      "moisturizer",
+      "sunscreen"
+    ]
+  }
+}

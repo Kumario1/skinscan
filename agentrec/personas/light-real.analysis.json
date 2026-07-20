@@ -1,0 +1,1042 @@
+{
+  "care_pathways": [
+    {
+      "clinician_options": [
+        {
+          "channel": "prescription_discussion",
+          "option": "topical retinoid or combination therapy when OTC care is unsuitable or unsuccessful"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "azelaic acid when clinically appropriate"
+        }
+      ],
+      "lesion_type": "closed_comedo",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "reason_codes": [
+        "exact_label_closed_comedo",
+        "comedonal_path_proposed",
+        "mvp_ai_research_approved"
+      ],
+      "required_answers": [],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "not_detected"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "prescription_discussion",
+          "option": "topical retinoid or combination therapy when OTC care is unsuitable or unsuccessful"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "azelaic acid when clinically appropriate"
+        }
+      ],
+      "lesion_type": "open_comedo",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "reason_codes": [
+        "exact_label_open_comedo",
+        "comedonal_path_proposed",
+        "mvp_ai_research_approved"
+      ],
+      "required_answers": [],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "not_detected"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "prescription_discussion",
+          "option": "fixed topical combination therapy"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "azelaic acid"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "oral therapy for clinically assessed moderate-to-severe acne"
+        }
+      ],
+      "lesion_type": "papule",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "reason_codes": [
+        "exact_label_papule",
+        "inflammatory_path_proposed",
+        "mvp_ai_research_approved"
+      ],
+      "required_answers": [],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "not_detected"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "prescription_discussion",
+          "option": "fixed topical combination therapy"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "azelaic acid"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "oral therapy for clinically assessed moderate-to-severe acne"
+        }
+      ],
+      "lesion_type": "pustule",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07"
+      ],
+      "reason_codes": [
+        "exact_label_pustule",
+        "inflammatory_path_proposed",
+        "mvp_ai_research_approved"
+      ],
+      "required_answers": [],
+      "required_product_roles": [
+        "treatment"
+      ],
+      "retail_target_actives": [
+        {
+          "active_id": "benzoyl_peroxide",
+          "cadence": "per Drug Facts; alternate-day or short-contact introduction may be considered only in approved wording",
+          "eligibility": "no allergy, conflicting current active, or product contraindication",
+          "formulation": "FDA-compliant OTC acne drug; exact reviewed path must state leave-on or short-contact exposure",
+          "strength": "2.5%-10%"
+        },
+        {
+          "active_id": "adapalene",
+          "cadence": "per Drug Facts",
+          "eligibility": "age 12 or older; exclude pregnant or trying; defer nursing or unknown pregnancy status for clinician review",
+          "formulation": "FDA-labeled OTC leave-on acne drug, including an exact fixed benzoyl-peroxide combination when the label supports it",
+          "minimum_age_years": 12,
+          "strength": "0.1%"
+        }
+      ],
+      "status": "retail_eligible"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "clinician_discussion",
+          "option": "confirm nodular or nodulocystic acne and assess severity and scarring risk"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "systemic therapy, including isotretinoin when clinically indicated"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "combination topical and systemic therapy"
+        },
+        {
+          "channel": "clinician_discussion",
+          "option": "intralesional corticosteroid for selected large lesions"
+        }
+      ],
+      "lesion_type": "nodule",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S01",
+        "S02",
+        "S06",
+        "S07"
+      ],
+      "reason_codes": [
+        "exact_label_nodule",
+        "photo_cannot_confirm_depth",
+        "nodular_acne_referral",
+        "no_retail_product_match"
+      ],
+      "required_answers": [],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "not_detected"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "procedure",
+          "option": "control active acne before scar procedures"
+        },
+        {
+          "channel": "clinician_discussion",
+          "option": "scar-subtype assessment"
+        },
+        {
+          "channel": "procedure",
+          "option": "microneedling, laser, chemical reconstruction, filler, punch techniques, or surgery selected by a dermatologist"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "topical retinoid or salicylic acid for selected mild scarring only after clinical assessment"
+        }
+      ],
+      "lesion_type": "atrophic_scar",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S02",
+        "S08",
+        "S18"
+      ],
+      "reason_codes": [
+        "exact_label_atrophic_scar",
+        "scar_subtype_requires_confirmation",
+        "procedure_discussion_only",
+        "no_retail_product_match"
+      ],
+      "required_answers": [],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "not_detected"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "clinician_discussion",
+          "option": "confirm hypertrophic scar versus keloid and whether the wound is fully closed"
+        },
+        {
+          "channel": "clinician_discussion",
+          "option": "silicone sheet or silicone gel discussion, with explicit acknowledgement that comparative evidence is low certainty"
+        },
+        {
+          "channel": "procedure",
+          "option": "injection, laser, cryotherapy, or surgery selected for the confirmed scar type"
+        }
+      ],
+      "lesion_type": "hypertrophic_scar",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S09",
+        "S10",
+        "S18"
+      ],
+      "reason_codes": [
+        "exact_label_hypertrophic_scar",
+        "scar_subtype_requires_confirmation",
+        "silicone_evidence_very_low_certainty",
+        "verified_scar_product_gap"
+      ],
+      "required_answers": [],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "not_detected"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "prescription_discussion",
+          "option": "hydroquinone prescription therapy"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "triple-combination prescription therapy"
+        },
+        {
+          "channel": "prescription_discussion",
+          "option": "azelaic acid, kojic acid, or vitamin C in a clinician-selected plan"
+        },
+        {
+          "channel": "procedure",
+          "option": "carefully selected procedure after diagnosis and pigment-risk assessment"
+        }
+      ],
+      "lesion_type": "melasma",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S05",
+        "S11",
+        "S12",
+        "S13",
+        "S18"
+      ],
+      "reason_codes": [
+        "exact_label_melasma",
+        "diagnosis_not_confirmed_by_photo",
+        "iron_oxide_spf_path_proposed",
+        "mvp_ai_research_approved",
+        "required_intake_unknown:spot_new_or_changing",
+        "required_intake_unknown:spot_bleeding",
+        "required_intake_unknown:spot_itching",
+        "required_intake_unknown:spot_painful",
+        "required_intake_unknown:spot_other_symptoms",
+        "required_intake_unknown:pregnancy_or_hormonal_medication_onset"
+      ],
+      "required_answers": [
+        "spot_new_or_changing",
+        "spot_bleeding",
+        "spot_itching",
+        "spot_painful",
+        "spot_other_symptoms",
+        "pregnancy_or_hormonal_medication_onset"
+      ],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "deferred"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "clinician_discussion",
+          "option": "dermatoscopic examination"
+        },
+        {
+          "channel": "procedure",
+          "option": "biopsy or clinician removal when suspicious or bothersome"
+        }
+      ],
+      "lesion_type": "nevus",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S14",
+        "S15",
+        "S16",
+        "S17",
+        "S19"
+      ],
+      "reason_codes": [
+        "exact_label_nevus",
+        "not_a_skin_cancer_screen",
+        "monitor_or_refer_only",
+        "no_product_match",
+        "required_intake_unknown:spot_new_or_changing",
+        "required_intake_unknown:spot_bleeding",
+        "required_intake_unknown:spot_itching",
+        "required_intake_unknown:spot_painful",
+        "required_intake_unknown:spot_other_symptoms",
+        "required_intake_unknown:abcde_change_present"
+      ],
+      "required_answers": [
+        "spot_new_or_changing",
+        "spot_bleeding",
+        "spot_itching",
+        "spot_painful",
+        "spot_other_symptoms",
+        "abcde_change_present"
+      ],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "monitoring_only"
+    },
+    {
+      "clinician_options": [
+        {
+          "channel": "clinician_discussion",
+          "option": "history and examination to establish a diagnosis"
+        }
+      ],
+      "lesion_type": "other",
+      "policy_id": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "policy_source_ids": [
+        "S07",
+        "S16",
+        "S19"
+      ],
+      "reason_codes": [
+        "exact_label_other",
+        "unsupported_finding",
+        "no_product_match"
+      ],
+      "required_answers": [],
+      "required_product_roles": [],
+      "retail_target_actives": [],
+      "status": "not_detected"
+    }
+  ],
+  "catalog": {
+    "drug": {
+      "name": "catalog_drug.json",
+      "sha256": "771e7b1a01b4523180cad6188a81bb61a8e439dcf69299b485125a950a3071f4",
+      "state": "available"
+    },
+    "primary": {
+      "name": "catalog.json",
+      "sha256": "d2af5387b45a00950f78a4c9a3dfe5f1e6e7186e0b205bff38d2bee1f21d7233",
+      "state": "available"
+    },
+    "sha256": "15c538ef7164233e6c1ddaa276f4d9337435a4111e2c43a4420cf1ad9b232290",
+    "state": "available",
+    "tier2": {
+      "name": "catalog_tier2.json",
+      "sha256": "d170f91a5991ce553089ea53714cd6995688d231846ef334d385e9f614544bf4",
+      "state": "available"
+    }
+  },
+  "clear_skin": false,
+  "code": {
+    "dirty": true,
+    "git_commit": "d364e19f1f9c5e61bcf12f0bb51db6f750abc084"
+  },
+  "concerns": [
+    {
+      "concern": "acne_inflammatory",
+      "confidence": 1.0,
+      "evidence": {
+        "affected_region_count": 1,
+        "labels": {
+          "pustule": 1
+        },
+        "max_confidence": 1.0,
+        "source": "annotation_oracle"
+      },
+      "lesion_count": 1,
+      "regions": [
+        "forehead"
+      ],
+      "severity": 1
+    },
+    {
+      "concern": "hyperpigmentation",
+      "confidence": 1.0,
+      "evidence": {
+        "affected_region_count": 1,
+        "labels": {
+          "melasma": 1
+        },
+        "max_confidence": 1.0,
+        "source": "annotation_oracle"
+      },
+      "lesion_count": 1,
+      "regions": [
+        "left_cheek"
+      ],
+      "severity": 1
+    }
+  ],
+  "config_sha256": "fc6fef5552998dccaabf669dd9edb066ee3370fd980b1acb2ea4a280b6395600",
+  "dataset": {
+    "name": "fixture",
+    "sample_id": "compact-lesions",
+    "split": "smoke",
+    "split_proof": "synthetic-test-fixture"
+  },
+  "decision": {
+    "decision_evidence": [
+      {
+        "calibrated": false,
+        "lesion_type": "pustule",
+        "probability": null,
+        "quality": "high",
+        "reasons": [
+          "exact_detector_label",
+          "lesion_count_1"
+        ],
+        "source": "annotation_oracle"
+      },
+      {
+        "calibrated": false,
+        "lesion_type": "melasma",
+        "probability": null,
+        "quality": "high",
+        "reasons": [
+          "exact_detector_label",
+          "lesion_count_1"
+        ],
+        "source": "annotation_oracle"
+      },
+      {
+        "calibrated": false,
+        "lesion_type": "nevus",
+        "probability": null,
+        "quality": "high",
+        "reasons": [
+          "exact_detector_label",
+          "lesion_count_1"
+        ],
+        "source": "annotation_oracle"
+      }
+    ],
+    "policy_reviewed": false,
+    "policy_version": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+    "referral_reasons": [
+      "pigment_diagnosis_confirmation",
+      "nevus_monitoring_or_assessment"
+    ],
+    "therapy_disposition": "active_treatment",
+    "triage_level": "routine_plus_review"
+  },
+  "detections": [
+    {
+      "box": [
+        180.0,
+        170.0,
+        250.0,
+        240.0
+      ],
+      "confidence": 1.0,
+      "mapped_concern": "acne_inflammatory",
+      "normalized_label": "pustule",
+      "observation_status": "actionable",
+      "original_label": "pustule",
+      "region": "forehead",
+      "source_tile": {
+        "box": [
+          0,
+          0,
+          800,
+          700
+        ],
+        "index": -1
+      }
+    },
+    {
+      "box": [
+        480.0,
+        250.0,
+        610.0,
+        350.0
+      ],
+      "confidence": 1.0,
+      "mapped_concern": "hyperpigmentation",
+      "normalized_label": "melasma",
+      "observation_status": "actionable",
+      "original_label": "melasma",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          0,
+          800,
+          700
+        ],
+        "index": -1
+      }
+    },
+    {
+      "box": [
+        650.0,
+        420.0,
+        680.0,
+        450.0
+      ],
+      "confidence": 1.0,
+      "mapped_concern": null,
+      "normalized_label": "nevus",
+      "observation_status": "non_actionable",
+      "original_label": "nevus",
+      "region": "left_cheek",
+      "source_tile": {
+        "box": [
+          0,
+          0,
+          800,
+          700
+        ],
+        "index": -1
+      }
+    }
+  ],
+  "generated_at": "2026-07-17T03:31:42.633927Z",
+  "image_id": "compact.jpg",
+  "input_profile": {
+    "abcde_change_present": null,
+    "acne_duration_weeks": 16,
+    "active_acne_controlled": null,
+    "age_years": 25,
+    "allergies": [],
+    "current_actives": [],
+    "current_medications": [],
+    "finding_duration_weeks": null,
+    "max_price_usd": null,
+    "painful_or_deep_lesions": false,
+    "pregnancy_or_hormonal_medication_onset": null,
+    "pregnancy_status": "not_pregnant",
+    "prior_scarring": false,
+    "scar_diagnosis_confirmed_by_clinician": null,
+    "scar_duration_months": null,
+    "sensitivity_conditions": [],
+    "skin_type": "oily",
+    "spot_bleeding": null,
+    "spot_bleeding_itching_or_painful": null,
+    "spot_itching": null,
+    "spot_new_or_changing": null,
+    "spot_other_symptoms": null,
+    "spot_painful": null,
+    "tone_bucket": "medium",
+    "tone_source": "self_report",
+    "treatment_history": [],
+    "unknown_fields": [],
+    "wound_closed": null
+  },
+  "lesion_findings": [
+    {
+      "count": 0,
+      "evidence_source": "annotation_oracle",
+      "lesion_type": "closed_comedo",
+      "max_detector_confidence": null,
+      "mean_detector_confidence": null,
+      "regions": []
+    },
+    {
+      "count": 0,
+      "evidence_source": "annotation_oracle",
+      "lesion_type": "open_comedo",
+      "max_detector_confidence": null,
+      "mean_detector_confidence": null,
+      "regions": []
+    },
+    {
+      "count": 0,
+      "evidence_source": "annotation_oracle",
+      "lesion_type": "papule",
+      "max_detector_confidence": null,
+      "mean_detector_confidence": null,
+      "regions": []
+    },
+    {
+      "count": 1,
+      "evidence_source": "annotation_oracle",
+      "lesion_type": "pustule",
+      "max_detector_confidence": 1.0,
+      "mean_detector_confidence": 1.0,
+      "regions": [
+        "forehead"
+      ]
+    },
+    {
+      "count": 0,
+      "evidence_source": "annotation_oracle",
+      "lesion_type": "nodule",
+      "max_detector_confidence": null,
+      "mean_detector_confidence": null,
+      "regions": []
+    },
+    {
+      "count": 0,
+      "evidence_source": "annotation_oracle",
+      "lesion_type": "atrophic_scar",
+      "max_detector_confidence": null,
+      "mean_detector_confidence": null,
+      "regions": []
+    },
+    {
+      "count": 0,
+      "evidence_source": "annotation_oracle",
+      "lesion_type": "hypertrophic_scar",
+      "max_detector_confidence": null,
+      "mean_detector_confidence": null,
+      "regions": []
+    },
+    {
+      "count": 1,
+      "evidence_source": "annotation_oracle",
+      "lesion_type": "melasma",
+      "max_detector_confidence": 1.0,
+      "mean_detector_confidence": 1.0,
+      "regions": [
+        "left_cheek"
+      ]
+    },
+    {
+      "count": 1,
+      "evidence_source": "annotation_oracle",
+      "lesion_type": "nevus",
+      "max_detector_confidence": 1.0,
+      "mean_detector_confidence": 1.0,
+      "regions": [
+        "left_cheek"
+      ]
+    },
+    {
+      "count": 0,
+      "evidence_source": "annotation_oracle",
+      "lesion_type": "other",
+      "max_detector_confidence": null,
+      "mean_detector_confidence": null,
+      "regions": []
+    }
+  ],
+  "models": {
+    "classifier": {
+      "sha256": null,
+      "state": "not_applicable"
+    },
+    "detector": {
+      "identity": "annotation_oracle",
+      "sha256": null,
+      "state": "not_applicable"
+    }
+  },
+  "pipeline": {
+    "dedupe_threshold": 0.5,
+    "endpoint": "http://127.0.0.1:8000/predict",
+    "identifier": "acnescu-voc-oracle",
+    "minimum_score": 0.3,
+    "overlap": 128,
+    "tile_size": 1024
+  },
+  "policies": {
+    "lesion_care": {
+      "audit_approved": true,
+      "fixture_image_sha256": "0dfbdbfbf9b63d6b90314fb856db4efa395570a9197488e6fb2085fa23bc2698",
+      "fixture_manifest_sha256": "b99cb2aad5f53f6855fbc449c456692a4e9e4702b195c34fb7275dd575fccb25",
+      "fixture_normalized_profile_sha256": "9a7b21cd69a0254a9b372473079f4ae19a7f2f0c30afe0e21890e821ddcfff4c",
+      "fixture_profile_sha256": "a362655a68cda891c4841185801906961e22e198936ef3c1de9d55c2bc104a9e",
+      "identity": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+      "input_scope": "synthetic_fixture",
+      "report_sha256": "8e201d6d869a67e8635f29cc43452138e760561ae0e34d2b2b4b8ba1d6e4344d",
+      "scope_authorized": true,
+      "scope_reasons": [],
+      "sha256": "8d24399f076e7721a96b1fc6cf59174bb94390b655a15eb326c8d3a722ffbae1",
+      "source_manifest_sha256": "5f6f69e5d468ce947ae2eb6e321a8476267dd8cf1381758a2017011e97c50a2f"
+    }
+  },
+  "ranker": {
+    "sha256": null,
+    "state": "none"
+  },
+  "recommendation_status": "delegated_to_recsys",
+  "region_mapping": {
+    "face_box": null,
+    "face_detected": false,
+    "fallback": true,
+    "forced_assignments": [],
+    "method": "grid_fallback",
+    "reason": "FaceLandmarker found no face"
+  },
+  "release_eligibility": {
+    "eligible": false,
+    "reasons": [
+      "code_dirty_or_unknown",
+      "detector_identity_unknown",
+      "clinician_policy_approval",
+      "adequate_calibration_cohort",
+      "external_clinical_review_set",
+      "verified_real_catalog_overlay"
+    ]
+  },
+  "replay_key": "f4c765d2444975c9a24cb331ec6b20d68aa3e06ea7dd0ea0e89debc993b4732e",
+  "safety_observations": [
+    {
+      "code": "nevus_observation",
+      "count": 1,
+      "labels": {
+        "nevus": 1
+      },
+      "max_confidence": 1.0,
+      "message": "Non-actionable nevus observation",
+      "professional_review": true
+    }
+  ],
+  "schema_version": "4",
+  "semantic_inputs": {
+    "catalog": {
+      "drug": {
+        "name": "catalog_drug.json",
+        "sha256": "771e7b1a01b4523180cad6188a81bb61a8e439dcf69299b485125a950a3071f4",
+        "state": "available"
+      },
+      "primary": {
+        "name": "catalog.json",
+        "sha256": "d2af5387b45a00950f78a4c9a3dfe5f1e6e7186e0b205bff38d2bee1f21d7233",
+        "state": "available"
+      },
+      "sha256": "15c538ef7164233e6c1ddaa276f4d9337435a4111e2c43a4420cf1ad9b232290",
+      "state": "available",
+      "tier2": {
+        "name": "catalog_tier2.json",
+        "sha256": "d170f91a5991ce553089ea53714cd6995688d231846ef334d385e9f614544bf4",
+        "state": "available"
+      }
+    },
+    "code": {
+      "dirty": true,
+      "git_commit": "d364e19f1f9c5e61bcf12f0bb51db6f750abc084"
+    },
+    "dataset": {
+      "name": "fixture",
+      "sample_id": "compact-lesions",
+      "split": "smoke",
+      "split_proof": "synthetic-test-fixture"
+    },
+    "effective_config": {
+      "class_min_scores": {
+        "melasma": 0.5
+      },
+      "classification_crop_pad": 1.5,
+      "dedupe_threshold": 0.5,
+      "endpoint": "http://127.0.0.1:8000/predict",
+      "face_landmarker": {
+        "name": "face_landmarker.task",
+        "sha256": "64184e229b263107bc2b804c6625db1341ff2bb731874b0bcc2fe6544e0bc9ff",
+        "state": "available"
+      },
+      "minimum_score": 0.3,
+      "overlap": 128,
+      "pipeline": "acnescu-voc-oracle",
+      "regions": {
+        "perioral_scale": 1.55
+      },
+      "severity": {
+        "broad_region_count": 3,
+        "confidence_cutoff": 0.5,
+        "count_thresholds": {
+          "acne_comedonal": [
+            1,
+            8,
+            20,
+            40
+          ],
+          "acne_inflammatory": [
+            1,
+            6,
+            15,
+            30
+          ],
+          "acne_scarring": [
+            1,
+            3,
+            8,
+            20
+          ],
+          "hyperpigmentation": [
+            1,
+            4,
+            10,
+            25
+          ]
+        },
+        "hypertrophic_scar_min_severity": 3,
+        "nodule_severity": 4,
+        "professional_review": {
+          "nevus": {
+            "min_confidence": 0.8,
+            "min_count": 3
+          },
+          "other": {
+            "min_confidence": 0.9,
+            "min_count": 5
+          }
+        }
+      },
+      "tile_size": 1024,
+      "tone": {
+        "ita_light_min": 41,
+        "ita_medium_min": 10,
+        "low_light_l_threshold": 35,
+        "min_sample_pixels": 100,
+        "profile_cheek_area_ratio": 0.5,
+        "sephora_tone_buckets": {
+          "deep": [
+            "deep",
+            "dark",
+            "rich",
+            "ebony"
+          ],
+          "light": [
+            "porcelain",
+            "fair",
+            "fairlight",
+            "light"
+          ],
+          "medium": [
+            "lightmedium",
+            "medium",
+            "mediumtan",
+            "olive",
+            "tan"
+          ]
+        },
+        "skin_lab_gate": {
+          "a_min": 0,
+          "b_min": 5,
+          "l_min": 5
+        },
+        "specular_rgb_min": 245,
+        "specular_rgb_range": 20
+      }
+    },
+    "evidence_source": "oracle",
+    "input_profile": {
+      "abcde_change_present": null,
+      "acne_duration_weeks": 16,
+      "active_acne_controlled": null,
+      "age_years": 25,
+      "allergies": [],
+      "current_actives": [],
+      "current_medications": [],
+      "finding_duration_weeks": null,
+      "max_price_usd": null,
+      "painful_or_deep_lesions": false,
+      "pregnancy_or_hormonal_medication_onset": null,
+      "pregnancy_status": "not_pregnant",
+      "prior_scarring": false,
+      "scar_diagnosis_confirmed_by_clinician": null,
+      "scar_duration_months": null,
+      "sensitivity_conditions": [],
+      "skin_type": "oily",
+      "spot_bleeding": null,
+      "spot_bleeding_itching_or_painful": null,
+      "spot_itching": null,
+      "spot_new_or_changing": null,
+      "spot_other_symptoms": null,
+      "spot_painful": null,
+      "tone_bucket": "medium",
+      "tone_source": "self_report",
+      "treatment_history": [],
+      "unknown_fields": [],
+      "wound_closed": null
+    },
+    "models": {
+      "classifier": {
+        "sha256": null,
+        "state": "not_applicable"
+      },
+      "detector": {
+        "identity": "annotation_oracle",
+        "sha256": null,
+        "state": "not_applicable"
+      }
+    },
+    "oracle_annotations": {
+      "name": "compact.xml",
+      "sha256": "42d29c7abdbd803aa3fbc585ede28e865810e007e95719fbbea92859f21d8132",
+      "state": "available"
+    },
+    "policies": {
+      "lesion_care": {
+        "audit_approved": true,
+        "fixture_image_sha256": "0dfbdbfbf9b63d6b90314fb856db4efa395570a9197488e6fb2085fa23bc2698",
+        "fixture_manifest_sha256": "b99cb2aad5f53f6855fbc449c456692a4e9e4702b195c34fb7275dd575fccb25",
+        "fixture_normalized_profile_sha256": "9a7b21cd69a0254a9b372473079f4ae19a7f2f0c30afe0e21890e821ddcfff4c",
+        "fixture_profile_sha256": "a362655a68cda891c4841185801906961e22e198936ef3c1de9d55c2bc104a9e",
+        "identity": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+        "input_scope": "synthetic_fixture",
+        "report_sha256": "8e201d6d869a67e8635f29cc43452138e760561ae0e34d2b2b4b8ba1d6e4344d",
+        "scope_authorized": true,
+        "scope_reasons": [],
+        "sha256": "8d24399f076e7721a96b1fc6cf59174bb94390b655a15eb326c8d3a722ffbae1",
+        "source_manifest_sha256": "5f6f69e5d468ce947ae2eb6e321a8476267dd8cf1381758a2017011e97c50a2f"
+      }
+    },
+    "ranker": {
+      "sha256": null,
+      "state": "none"
+    },
+    "schema_version": "4",
+    "source_image_sha256": "0dfbdbfbf9b63d6b90314fb856db4efa395570a9197488e6fb2085fa23bc2698"
+  },
+  "skin_tone": {
+    "bucket": "medium",
+    "ita": 29.71774133444016,
+    "low_light": false,
+    "median_l": 67.79403753805524,
+    "sample_count": 108098,
+    "source": "photo_estimate"
+  },
+  "source_image_sha256": "0dfbdbfbf9b63d6b90314fb856db4efa395570a9197488e6fb2085fa23bc2698",
+  "therapy_plan": {
+    "alternatives": [],
+    "clinician_options": [
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "pustule",
+        "option": "fixed topical combination therapy"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "pustule",
+        "option": "azelaic acid"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "pustule",
+        "option": "oral therapy for clinically assessed moderate-to-severe acne"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "melasma",
+        "option": "hydroquinone prescription therapy"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "melasma",
+        "option": "triple-combination prescription therapy"
+      },
+      {
+        "channel": "prescription_discussion",
+        "lesion_type": "melasma",
+        "option": "azelaic acid, kojic acid, or vitamin C in a clinician-selected plan"
+      },
+      {
+        "channel": "procedure",
+        "lesion_type": "melasma",
+        "option": "carefully selected procedure after diagnosis and pigment-risk assessment"
+      },
+      {
+        "channel": "clinician_discussion",
+        "lesion_type": "nevus",
+        "option": "dermatoscopic examination"
+      },
+      {
+        "channel": "procedure",
+        "lesion_type": "nevus",
+        "option": "biopsy or clinician removal when suspicious or bothersome"
+      }
+    ],
+    "deferred_reasons": [
+      "exact_label_melasma",
+      "diagnosis_not_confirmed_by_photo",
+      "iron_oxide_spf_path_proposed",
+      "mvp_ai_research_approved",
+      "required_intake_unknown:spot_new_or_changing",
+      "required_intake_unknown:spot_bleeding",
+      "required_intake_unknown:spot_itching",
+      "required_intake_unknown:spot_painful",
+      "required_intake_unknown:spot_other_symptoms",
+      "required_intake_unknown:pregnancy_or_hormonal_medication_onset"
+    ],
+    "lesion_types": [
+      "pustule",
+      "melasma",
+      "nevus"
+    ],
+    "policy_version": "skinscan-lesion-care-us:2026-07-16-mvp.1",
+    "primary": null,
+    "support_roles": [
+      "cleanser",
+      "moisturizer",
+      "sunscreen"
+    ]
+  }
+}

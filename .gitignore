@@ -39,3 +39,4 @@ mutants/
 
 # run outputs
 runs/e2e/
+agentrec/out/
